@@ -1,20 +1,21 @@
-import type { UsersId } from "db/public";
-import { MemberRole } from "db/public";
+import type { UsersId } from "db/public"
+
+import { MemberRole } from "db/public"
 
 const adminBase = {
 	id: "0cd4b908-b4f6-41be-9463-28979fefb4cd" as UsersId,
 	role: MemberRole.admin,
-} as const;
+} as const
 
 const editorBase = {
 	id: "5973c4af-da36-48d2-848c-97bc45f186a1" as UsersId,
 	role: MemberRole.editor,
-} as const;
+} as const
 
 const contributorBase = {
 	id: "a54fd9b7-7d8f-43c9-bc00-400652a118c0" as UsersId,
 	role: MemberRole.contributor,
-} as const;
+} as const
 
 export const usersNew = {
 	admin: {
@@ -50,7 +51,7 @@ export const usersNew = {
 		isSuperAdmin: false,
 		isVerified: true,
 	},
-} as const;
+} as const
 
 export const usersExisting = {
 	admin: {
@@ -65,4 +66,4 @@ export const usersExisting = {
 		...contributorBase,
 		existing: true,
 	},
-} as const;
+} as const

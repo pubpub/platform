@@ -1,12 +1,15 @@
-"use client";
+"use client"
 
-import { useCallback, useMemo } from "react";
-import Link from "next/link";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { useForm } from "react-hook-form";
+import type { UsersId } from "db/public"
+import type { ClientExceptionOptions } from "~/lib/serverActions"
+import type { SignupFormSchema } from "./schema"
 
-import type { UsersId } from "db/public";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { useCallback, useMemo } from "react"
+import Link from "next/link"
+import { typeboxResolver } from "@hookform/resolvers/typebox"
+import { useForm } from "react-hook-form"
+
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
 import {
 	Form,
 	FormControl,
@@ -15,55 +18,53 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Input } from "ui/input";
-import { FormSubmitButton } from "ui/submit-button";
+} from "ui/form"
+import { Input } from "ui/input"
+import { FormSubmitButton } from "ui/submit-button"
 
-import type { SignupFormSchema } from "./schema";
-import type { ClientExceptionOptions } from "~/lib/serverActions";
-import { useServerAction } from "~/lib/serverActions";
-import { compiledSignupFormSchema } from "./schema";
+import { useServerAction } from "~/lib/serverActions"
+import { compiledSignupFormSchema } from "./schema"
 
 type SignupAction = (input: {
-	id?: UsersId;
-	firstName: string;
-	lastName: string;
-	email: string;
-	password: string;
-	redirectTo?: string;
-	slug?: string;
+	id?: UsersId
+	firstName: string
+	lastName: string
+	email: string
+	password: string
+	redirectTo?: string
+	slug?: string
 }) => Promise<
 	| {
-			success: boolean;
-			report?: string;
+			success: boolean
+			report?: string
 	  }
 	| ClientExceptionOptions
->;
+>
 
 export function SignupForm(props: {
-	signupAction: SignupAction;
-	redirectTo?: string;
-	defaultValues?: Partial<SignupFormSchema>;
-	mustUseSameEmail?: boolean;
+	signupAction: SignupAction
+	redirectTo?: string
+	defaultValues?: Partial<SignupFormSchema>
+	mustUseSameEmail?: boolean
 }) {
-	const resolver = useMemo(() => typeboxResolver(compiledSignupFormSchema), []);
+	const resolver = useMemo(() => typeboxResolver(compiledSignupFormSchema), [])
 
 	const form = useForm<SignupFormSchema>({
 		resolver,
 		defaultValues: props.defaultValues,
-	});
+	})
 
-	const runSignup = useServerAction(props.signupAction);
+	const runSignup = useServerAction(props.signupAction)
 
 	const handleSubmit = useCallback(
 		async (data: SignupFormSchema) => {
-			const result = await runSignup({
+			const _result = await runSignup({
 				...data,
 				redirectTo: props.redirectTo,
-			});
+			})
 		},
 		[runSignup, props.redirectTo]
-	);
+	)
 
 	return (
 		<Form {...form}>
@@ -166,5 +167,5 @@ export function SignupForm(props: {
 				</Card>
 			</form>
 		</Form>
-	);
+	)
 }

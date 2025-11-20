@@ -1,32 +1,33 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import type { ButtonState } from "ui/submit-button"
 
-import type { ButtonState } from "ui/submit-button";
-import { SubmitButton } from "ui/submit-button";
+import { useState } from "react"
 
-import { sendVerifyEmailMail } from "~/lib/authentication/actions";
-import { useServerAction } from "~/lib/serverActions";
+import { SubmitButton } from "ui/submit-button"
+
+import { sendVerifyEmailMail } from "~/lib/authentication/actions"
+import { useServerAction } from "~/lib/serverActions"
 
 export const ResendVerificationButton = ({
 	email,
 	redirectTo,
 }: {
-	email: string;
-	redirectTo?: string;
+	email: string
+	redirectTo?: string
 }) => {
-	const [status, setStatus] = useState<ButtonState>("idle");
-	const sendVerifyEmail = useServerAction(sendVerifyEmailMail);
+	const [status, setStatus] = useState<ButtonState>("idle")
+	const sendVerifyEmail = useServerAction(sendVerifyEmailMail)
 
 	const handleResend = async () => {
-		setStatus("pending");
-		const result = await sendVerifyEmail({ email, redirectTo });
+		setStatus("pending")
+		const result = await sendVerifyEmail({ email, redirectTo })
 		if ("error" in result) {
-			setStatus("error");
+			setStatus("error")
 		} else {
-			setStatus("success");
+			setStatus("success")
 		}
-	};
+	}
 
 	return (
 		<SubmitButton
@@ -35,5 +36,5 @@ export const ResendVerificationButton = ({
 			idleText="Resend verification email"
 			pendingText="Sending..."
 		/>
-	);
-};
+	)
+}

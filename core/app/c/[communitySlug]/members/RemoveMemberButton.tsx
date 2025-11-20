@@ -1,4 +1,6 @@
-"use client";
+"use client"
+
+import type { TableMember } from "./getMemberTableColumns"
 
 import {
 	AlertDialog,
@@ -8,18 +10,17 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTrigger,
-} from "ui/alert-dialog";
-import { Button } from "ui/button";
-import { Trash } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { toast } from "ui/use-toast";
+} from "ui/alert-dialog"
+import { Button } from "ui/button"
+import { Trash } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { toast } from "ui/use-toast"
 
-import type { TableMember } from "./getMemberTableColumns";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import * as actions from "./actions"
 
 export const RemoveMemberButton = ({ member }: { member: TableMember }) => {
-	const runRemoveMember = useServerAction(actions.removeMember);
+	const runRemoveMember = useServerAction(actions.removeMember)
 	return (
 		<AlertDialog>
 			<Tooltip>
@@ -49,13 +50,13 @@ export const RemoveMemberButton = ({ member }: { member: TableMember }) => {
 					<Button asChild variant="destructive">
 						<AlertDialogAction
 							onClick={async () => {
-								const response = await runRemoveMember({ member });
+								const response = await runRemoveMember({ member })
 								if (didSucceed(response)) {
 									toast({
 										title: "Success",
 										description: "Member successfully removed",
 										variant: "default",
-									});
+									})
 								}
 							}}
 						>
@@ -66,5 +67,5 @@ export const RemoveMemberButton = ({ member }: { member: TableMember }) => {
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>
-	);
-};
+	)
+}

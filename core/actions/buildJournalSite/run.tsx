@@ -1,44 +1,45 @@
-"use server";
+"use server"
 
-import { initClient } from "@ts-rest/core";
+import type { action } from "./action"
 
-import { siteBuilderApi } from "contracts/resources/site-builder";
-import { logger } from "logger";
-import { tryCatch } from "utils/try-catch";
+import { initClient } from "@ts-rest/core"
 
-import type { action } from "./action";
-import { env } from "~/lib/env/env";
-import { getSiteBuilderToken } from "~/lib/server/apiAccessTokens";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { defineRun } from "../types";
+import { siteBuilderApi } from "contracts/resources/site-builder"
+import { logger } from "logger"
+import { tryCatch } from "utils/try-catch"
+
+import { env } from "~/lib/env/env"
+import { getSiteBuilderToken } from "~/lib/server/apiAccessTokens"
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { defineRun } from "../types"
 
 export const run = defineRun<typeof action>(async ({ pub, config }) => {
-	const siteBuilderToken = await getSiteBuilderToken(pub.communityId);
+	const siteBuilderToken = await getSiteBuilderToken(pub.communityId)
 
 	if (!siteBuilderToken) {
-		throw new Error("Site builder token not found");
+		throw new Error("Site builder token not found")
 	}
 
-	const communitySlug = await getCommunitySlug();
+	const communitySlug = await getCommunitySlug()
 
 	const siteBuilderClient = initClient(siteBuilderApi, {
 		baseUrl: env.SITE_BUILDER_ENDPOINT!,
 		headers: {
 			authorization: `Bearer ${siteBuilderToken}`,
 		},
-	});
+	})
 
-	const [healthError, health] = await tryCatch(siteBuilderClient.health());
+	const [healthError, health] = await tryCatch(siteBuilderClient.health())
 	if (healthError) {
-		logger.error({ msg: "Site builder server is not healthy", healthError });
-		throw new Error("Site builder server cannot be reached");
+		logger.error({ msg: "Site builder server is not healthy", healthError })
+		throw new Error("Site builder server cannot be reached")
 	}
 	if (health.status !== 200) {
-		logger.error({ msg: "Site builder server is not healthy", health });
-		throw new Error("Site builder server is not healthy");
+		logger.error({ msg: "Site builder server is not healthy", health })
+		throw new Error("Site builder server is not healthy")
 	}
 
-	const siteUrl = config.siteUrl ?? "http://localhost:4321";
+	const siteUrl = config.siteUrl ?? "http://localhost:4321"
 
 	logger.debug({
 		msg: `Initializing site build`,
@@ -49,7 +50,7 @@ export const run = defineRun<typeof action>(async ({ pub, config }) => {
 		headers: {
 			authorization: `Bearer ${siteBuilderToken}`,
 		},
-	});
+	})
 	const [buildError, result] = await tryCatch(
 		siteBuilderClient.build({
 			body: {
@@ -62,28 +63,25 @@ export const run = defineRun<typeof action>(async ({ pub, config }) => {
 				authorization: `Bearer ${siteBuilderToken}`,
 			},
 		})
-	);
+	)
 	if (buildError) {
-		logger.error({ msg: "Failed to build journal site", buildError });
+		logger.error({ msg: "Failed to build journal site", buildError })
 		return {
 			title: "Failed to build journal site",
 			error: buildError.message,
-		};
+		}
 	}
 
 	if (result.status !== 200) {
-		logger.error({ msg: "Failed to build journal site", result, status: result.status });
-		throw new Error("Failed to build journal site");
-		return {
-			error: "Failed to build journal site",
-		};
+		logger.error({ msg: "Failed to build journal site", result, status: result.status })
+		throw new Error("Failed to build journal site")
 	}
 
-	const data = result.body;
+	const data = result.body
 
-	logger.info({ msg: "Journal site built", data });
+	logger.info({ msg: "Journal site built", data })
 
-	const dataUrl = new URL(data.url);
+	const dataUrl = new URL(data.url)
 
 	return {
 		success: true as const,
@@ -101,5 +99,5 @@ export const run = defineRun<typeof action>(async ({ pub, config }) => {
 			...data,
 			url: dataUrl.toString(),
 		},
-	};
-});
+	}
+})

@@ -1,7 +1,7 @@
-import type { Preview } from "@storybook/nextjs-vite";
+import type { Preview } from "@storybook/nextjs-vite"
 
 // Import our tailwind styles
-import "ui/styles.css";
+import "ui/styles.css"
 
 const preview: Preview = {
 	parameters: {
@@ -15,6 +15,6 @@ const preview: Preview = {
 			},
 		},
 	},
-};
+}
 
-export default preview;
+export default preview

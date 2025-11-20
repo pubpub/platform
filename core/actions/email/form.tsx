@@ -1,13 +1,13 @@
-import { InputWithTokens, MarkdownEditor } from "ui/editors";
-import { FieldSet } from "ui/field";
+import { InputWithTokens, MarkdownEditor } from "ui/editors"
+import { FieldSet } from "ui/field"
 
-import { ActionField } from "../_lib/ActionField";
-import { useActionForm } from "../_lib/ActionForm";
-import MemberSelectClientFetch from "./DynamicSelectFetch";
+import { ActionField } from "../_lib/ActionField"
+import { useActionForm } from "../_lib/ActionForm"
+import MemberSelectClientFetch from "./DynamicSelectFetch"
 
 export default function EmailActionForm() {
-	const { form } = useActionForm();
-	const [recipientMember, recipientEmail] = form.watch(["recipientMember", "recipientEmail"]);
+	const { form } = useActionForm()
+	const [recipientMember, recipientEmail] = form.watch(["recipientMember", "recipientEmail"])
 	return (
 		<FieldSet>
 			<ActionField name="senderName" label="Sender Name" />
@@ -52,5 +52,5 @@ export default function EmailActionForm() {
 				)}
 			/>
 		</FieldSet>
-	);
+	)
 }

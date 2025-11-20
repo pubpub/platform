@@ -1,2 +1,2 @@
-export * from "./pubValues";
-export * from "./hasChanged";
+export * from "./hasChanged"
+export * from "./pubValues"

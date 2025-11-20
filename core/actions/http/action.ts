@@ -1,10 +1,10 @@
-import * as z from "zod";
+import * as z from "zod"
 
-import { jsonSchema } from "contracts";
-import { Action } from "db/public";
-import { Globe } from "ui/icon";
+import { jsonSchema } from "contracts"
+import { Action } from "db/public"
+import { Globe } from "ui/icon"
 
-import { defineAction } from "../types";
+import { defineAction } from "../types"
 
 const schema = z.object({
 	url: z.string().url().describe("URL to send the request to"),
@@ -27,7 +27,7 @@ const schema = z.object({
 		.array(z.object({ pubField: z.string(), responseField: z.string() }))
 		.optional()
 		.describe("Map of JSON paths to pub fields"),
-});
+})
 
 export const action = defineAction({
 	name: Action.http,
@@ -38,4 +38,4 @@ export const action = defineAction({
 	description: "Make an arbitrary HTTP request",
 	icon: Globe,
 	experimental: true,
-});
+})

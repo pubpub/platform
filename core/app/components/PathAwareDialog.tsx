@@ -1,67 +1,68 @@
-"use client";
+"use client"
 
-import React, { forwardRef, Suspense, useCallback, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { ButtonProps } from "ui/button"
+import type { LucideIcon } from "ui/icon"
 
-import type { ButtonProps } from "ui/button";
-import type { LucideIcon } from "ui/icon";
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog";
-import { cn } from "utils";
+import React, { forwardRef, Suspense, useCallback, useEffect } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
-import { SkeletonCard } from "./skeletons/SkeletonCard";
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog"
+import { cn } from "utils"
+
+import { SkeletonCard } from "./skeletons/SkeletonCard"
 
 export type PathAwareDialogProps = {
-	children: React.ReactNode;
+	children: React.ReactNode
 	/**
 	 * String that is necessary to identify this form from other froms,
 	 * otherwise if multiple of the same button are rendered on the page
 	 * multiple forms will	 be opened at the same time.
 	 */
-	id: string;
-	className?: string;
-	title: string;
-	buttonText: string;
-	buttonLabel?: string;
-	buttonIcon?: LucideIcon;
-	buttonVariant?: ButtonProps["variant"];
-	buttonSize?: ButtonProps["size"];
-	disabled?: boolean;
-	icon: React.ReactElement;
-	param: string;
+	id: string
+	className?: string
+	title: string
+	buttonText: string
+	buttonLabel?: string
+	buttonIcon?: LucideIcon
+	buttonVariant?: ButtonProps["variant"]
+	buttonSize?: ButtonProps["size"]
+	disabled?: boolean
+	icon: React.ReactElement
+	param: string
 	/**
 	 * If true, will only display the icon, and the button text will be rendered
 	 * only for screen readers.
 	 */
-	iconOnly?: boolean;
-};
+	iconOnly?: boolean
+}
 
-export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => {
-	const searchParams = useSearchParams();
-	const pathname = usePathname();
-	const router = useRouter();
-	const isOpen = searchParams.get(props.param) === props.id;
+export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, _ref) => {
+	const searchParams = useSearchParams()
+	const pathname = usePathname()
+	const router = useRouter()
+	const isOpen = searchParams.get(props.param) === props.id
 
 	const close = useCallback(
 		(open: boolean) => {
-			const nextSearchParams = new URLSearchParams(searchParams);
+			const nextSearchParams = new URLSearchParams(searchParams)
 
 			if (open) {
-				nextSearchParams.set(props.param, props.id);
-				router.push(`${pathname}?${nextSearchParams.toString()}`);
-				return;
+				nextSearchParams.set(props.param, props.id)
+				router.push(`${pathname}?${nextSearchParams.toString()}`)
+				return
 			}
 
-			nextSearchParams.delete(props.param);
-			router.push(`${pathname}?${nextSearchParams.toString()}`);
+			nextSearchParams.delete(props.param)
+			router.push(`${pathname}?${nextSearchParams.toString()}`)
 		},
-		[pathname, router, searchParams]
-	);
+		[pathname, router, searchParams, props.id, props.param]
+	)
 
-	const [isReallyOpen, setIsReallyOpen] = React.useState(false);
+	const [isReallyOpen, setIsReallyOpen] = React.useState(false)
 	useEffect(() => {
-		setIsReallyOpen(isOpen);
-	}, [isOpen]);
+		setIsReallyOpen(isOpen)
+	}, [isOpen])
 
 	return (
 		<Dialog onOpenChange={close} defaultOpen={false} open={isReallyOpen}>
@@ -83,5 +84,5 @@ export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => 
 				{isOpen && <Suspense fallback={<SkeletonCard />}>{props.children}</Suspense>}
 			</DialogContent>
 		</Dialog>
-	);
-});
+	)
+})

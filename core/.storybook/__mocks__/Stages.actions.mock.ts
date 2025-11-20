@@ -1,3 +1,3 @@
-import { fn } from "storybook/test";
+import { fn } from "storybook/test"
 
-export const move = fn().mockName("move");
+export const move = fn().mockName("move")

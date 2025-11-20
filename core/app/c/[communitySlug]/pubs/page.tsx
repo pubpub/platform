@@ -1,38 +1,38 @@
-import type { Metadata } from "next";
+import type { CommunitiesId } from "db/public"
+import type { Metadata } from "next"
 
-import { Suspense } from "react";
-import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { Suspense } from "react"
+import Link from "next/link"
+import { BookOpen } from "lucide-react"
 
-import type { CommunitiesId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
-import { Button } from "ui/button";
+import { Capabilities, MembershipType } from "db/public"
+import { Button } from "ui/button"
 
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan, userCanCreateAnyPub } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { ContentLayout } from "../ContentLayout";
-import { PaginatedPubList } from "./PubList";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan, userCanCreateAnyPub } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { ContentLayout } from "../ContentLayout"
+import { PaginatedPubList } from "./PubList"
 
 export const metadata: Metadata = {
 	title: "Pubs",
-};
+}
 
 type Props = {
-	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-};
+	params: Promise<{ communitySlug: string }>
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
 
 export default async function Page(props: Props) {
-	const searchParams = await props.searchParams;
-	const params = await props.params;
+	const searchParams = await props.searchParams
+	const _params = await props.params
 
-	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!community) {
-		return null;
+		return null
 	}
 
 	const [canEditTypes, canCreateAnyPub] = await Promise.all([
@@ -45,9 +45,9 @@ export default async function Page(props: Props) {
 			user.id
 		),
 		userCanCreateAnyPub(user.id, community.id),
-	]);
+	])
 
-	const basePath = `/c/${community.slug}/pubs`;
+	const basePath = `/c/${community.slug}/pubs`
 
 	return (
 		<ContentLayout
@@ -82,5 +82,5 @@ export default async function Page(props: Props) {
 				userId={user.id}
 			/>
 		</ContentLayout>
-	);
+	)
 }

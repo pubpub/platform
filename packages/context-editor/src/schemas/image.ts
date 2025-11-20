@@ -1,4 +1,4 @@
-import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
+import type { DOMOutputSpec, NodeSpec } from "prosemirror-model"
 
 export enum Alignment {
 	left = "left",
@@ -9,15 +9,15 @@ export enum Alignment {
 }
 
 export type ImageAttrs = {
-	id: string | null;
-	class: string | null;
-	alt: string;
-	src: string;
-	linkTo: string;
-	width: number;
-	align: Alignment;
-	fullResolution: boolean;
-};
+	id: string | null
+	class: string | null
+	alt: string
+	src: string
+	linkTo: string
+	width: number
+	align: Alignment
+	fullResolution: boolean
+}
 
 export default {
 	atom: true,
@@ -46,14 +46,14 @@ export default {
 					width: Number(node.getAttribute("data-width")) || 100,
 					align: (node.getAttribute("data-align") as Alignment) || "center",
 					fullResolution: node.getAttribute("data-full-resolution") === "true",
-				};
-				return attrs;
+				}
+				return attrs
 			},
 		},
 	],
 	toDOM: (node) => {
-		const attrs = node.attrs as ImageAttrs;
-		const { id, class: className, alt, src, linkTo, width, align } = attrs;
+		const attrs = node.attrs as ImageAttrs
+		const { id, class: className, alt, src, linkTo, width, align } = attrs
 
 		return [
 			"img",
@@ -67,6 +67,6 @@ export default {
 				"data-align": align,
 				"data-node-type": "image",
 			},
-		] as DOMOutputSpec;
+		] as DOMOutputSpec
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec

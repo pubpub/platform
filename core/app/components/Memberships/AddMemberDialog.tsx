@@ -1,18 +1,19 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import type { DialogProps } from "./types"
 
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
-import { UserPlus } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { cn } from "utils";
+import { useState } from "react"
 
-import type { DialogProps } from "./types";
-import { MemberInviteForm } from "./MemberInviteForm";
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog"
+import { UserPlus } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { cn } from "utils"
+
+import { MemberInviteForm } from "./MemberInviteForm"
 
 export const AddMemberDialog = (props: DialogProps & { className?: string }) => {
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(false)
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<Tooltip>
@@ -34,5 +35,5 @@ export const AddMemberDialog = (props: DialogProps & { className?: string }) => 
 				<MemberInviteForm closeForm={() => setOpen(false)} {...props} />
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

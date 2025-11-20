@@ -1,12 +1,13 @@
-"use client";
+"use client"
 
-import type { z } from "zod";
+import type { z } from "zod"
+import type { MemberEditDialogProps } from "./types"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 
-import { MemberRole } from "db/public";
-import { Button } from "ui/button";
+import { MemberRole } from "db/public"
+import { Button } from "ui/button"
 import {
 	Form,
 	FormControl,
@@ -15,17 +16,16 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Loader2, UserPlus } from "ui/icon";
-import { MultiSelect } from "ui/multi-select";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { toast } from "ui/use-toast";
+} from "ui/form"
+import { Loader2, UserPlus } from "ui/icon"
+import { MultiSelect } from "ui/multi-select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { toast } from "ui/use-toast"
 
-import type { MemberEditDialogProps } from "./types";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { updateMember } from "./actions";
-import { descriptions } from "./constants";
-import { memberEditFormSchema } from "./memberInviteFormSchema";
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { updateMember } from "./actions"
+import { descriptions } from "./constants"
+import { memberEditFormSchema } from "./memberInviteFormSchema"
 
 export const MemberEditForm = ({
 	member,
@@ -34,9 +34,9 @@ export const MemberEditForm = ({
 	membershipType,
 	availableForms,
 }: MemberEditDialogProps & {
-	closeForm: () => void;
+	closeForm: () => void
 }) => {
-	const runUpdateMember = useServerAction(updateMember);
+	const runUpdateMember = useServerAction(updateMember)
 
 	const form = useForm<z.infer<typeof memberEditFormSchema>>({
 		resolver: zodResolver(memberEditFormSchema),
@@ -45,7 +45,7 @@ export const MemberEditForm = ({
 			forms: member.forms,
 		},
 		mode: "onChange",
-	});
+	})
 
 	async function onSubmit(data: z.infer<typeof memberEditFormSchema>) {
 		const result = await runUpdateMember({
@@ -54,19 +54,19 @@ export const MemberEditForm = ({
 			forms: data.forms,
 			targetId: membershipTargetId,
 			targetType: membershipType,
-		});
+		})
 
 		if (didSucceed(result)) {
 			toast({
 				title: "Success",
 				description: "Member updated successfully",
-			});
+			})
 
-			closeForm();
+			closeForm()
 		}
 	}
 
-	const isContributor = form.watch("role") === MemberRole.contributor;
+	const isContributor = form.watch("role") === MemberRole.contributor
 
 	return (
 		<Form {...form}>
@@ -118,7 +118,7 @@ export const MemberEditForm = ({
 								control={form.control}
 								name="forms"
 								render={({ field }) => {
-									const description = descriptions[membershipType];
+									const description = descriptions[membershipType]
 									return (
 										<FormItem>
 											<FormLabel>Edit/View Access</FormLabel>
@@ -127,7 +127,7 @@ export const MemberEditForm = ({
 													{...field}
 													defaultValue={field.value ?? []}
 													onValueChange={(newValues) => {
-														field.onChange(newValues);
+														field.onChange(newValues)
 													}}
 													options={availableForms.map((f) => ({
 														label: f.name,
@@ -139,7 +139,7 @@ export const MemberEditForm = ({
 											<FormDescription>{description}</FormDescription>
 											<FormMessage />
 										</FormItem>
-									);
+									)
 								}}
 							/>
 						)}
@@ -156,5 +156,5 @@ export const MemberEditForm = ({
 				</Button>
 			</form>
 		</Form>
-	);
-};
+	)
+}

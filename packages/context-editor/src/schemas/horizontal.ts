@@ -1,4 +1,4 @@
-import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
+import type { DOMOutputSpec, NodeSpec } from "prosemirror-model"
 
 export default {
 	attrs: {
@@ -13,12 +13,12 @@ export default {
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
-				};
+				}
 			},
 		},
 	],
 	selectable: true,
 	toDOM: () => {
-		return ["div", ["hr"]] as DOMOutputSpec;
+		return ["div", ["hr"]] as DOMOutputSpec
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec

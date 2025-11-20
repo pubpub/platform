@@ -1,20 +1,19 @@
-import { readFile } from "fs/promises";
+import type { CommunitiesId, PubsId } from "db/public"
 
-import { faker } from "@faker-js/faker";
-import { defaultMarkdownParser } from "prosemirror-markdown";
+import { readFile } from "node:fs/promises"
+import { faker } from "@faker-js/faker"
 
-import type { CommunitiesId, PubsId } from "db/public";
-import { CoreSchemaType, MemberRole } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public"
 
-import { db } from "~/kysely/database";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { seedCommunity } from "../seed/seedCommunity";
-import { usersExisting } from "./users";
+import { db } from "~/kysely/database"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { seedCommunity } from "../seed/seedCommunity"
+import { usersExisting } from "./users"
 
-const abstract = `<p>The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. <em>However</em>, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae</p>`;
+const abstract = `<p>The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. <em>However</em>, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae</p>`
 
 export const seedLegacy = async (communityId?: CommunitiesId) => {
-	const poniesText = await readFile(new URL("./ponies.snippet.html", import.meta.url), "utf-8");
+	const poniesText = await readFile(new URL("./ponies.snippet.html", import.meta.url), "utf-8")
 
 	const articleSeed = (number = 1_000, asRelation = false) =>
 		Array.from({ length: number }, (_, idx) => {
@@ -119,21 +118,21 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 						},
 					],
 				},
-			};
+			}
 
 			if (!asRelation) {
-				return pub;
+				return pub
 			}
 
 			return {
 				value: "",
 				pub,
-			};
-		}) as any;
+			}
+		}) as any
 
-	const articleId2 = crypto.randomUUID();
-	const articleId = crypto.randomUUID();
-	const authorId = crypto.randomUUID();
+	const articleId2 = crypto.randomUUID()
+	const articleId = crypto.randomUUID()
+	const authorId = crypto.randomUUID()
 
 	const seed = await seedCommunity(
 		{
@@ -712,7 +711,7 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 			randomSlug: false,
 			parallelPubs: true,
 		}
-	);
+	)
 
 	// Give jimothy a circular reference
 	await db
@@ -735,7 +734,7 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 				rank: "1",
 			},
 		])
-		.execute();
+		.execute()
 
-	return seed;
-};
+	return seed
+}

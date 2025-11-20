@@ -1,18 +1,18 @@
-import type { CommunitiesId, UsersId } from "db/public";
+import type { CommunitiesId, UsersId } from "db/public"
 
-import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
-import { PubsDataTable } from "./PubsDataTableClient";
-import { getFilterParamsFromSearch, searchParamsCache } from "./validations";
+import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server"
+import { PubsDataTable } from "./PubsDataTableClient"
+import { getFilterParamsFromSearch, searchParamsCache } from "./validations"
 
 type Props = {
-	communityId: CommunitiesId;
-	userId: UsersId;
-	searchParams: { [key: string]: string | string[] | undefined };
-};
+	communityId: CommunitiesId
+	userId: UsersId
+	searchParams: { [key: string]: string | string[] | undefined }
+}
 
 export const PubsDataTableServer = async ({ communityId, userId, searchParams }: Props) => {
-	const search = searchParamsCache.parse(searchParams);
-	const { limit, offset, orderBy, orderDirection } = getFilterParamsFromSearch(search);
+	const search = searchParamsCache.parse(searchParams)
+	const { limit, offset, orderBy, orderDirection } = getFilterParamsFromSearch(search)
 	const promises = Promise.all([
 		getPubsCount({ communityId }),
 		getPubsWithRelatedValues(
@@ -28,6 +28,6 @@ export const PubsDataTableServer = async ({ communityId, userId, searchParams }:
 				withValues: false,
 			}
 		),
-	]);
-	return <PubsDataTable promises={promises} perPage={search.perPage} />;
-};
+	])
+	return <PubsDataTable promises={promises} perPage={search.perPage} />
+}

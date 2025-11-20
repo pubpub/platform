@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { useEditorEffect } from "@handlewithcare/react-prosemirror";
-import { RectangleEllipsis, StickyNote, ToyBrick } from "lucide-react";
+import type { SuggestProps } from "../ContextEditor"
 
-import type { SuggestProps } from "../ContextEditor";
-import { reactPropsKey } from "../plugins/reactProps";
+import * as React from "react"
+import { useEffect, useState } from "react"
+import { useEditorEffect } from "@handlewithcare/react-prosemirror"
+import { RectangleEllipsis, StickyNote, ToyBrick } from "lucide-react"
+
+import { reactPropsKey } from "../plugins/reactProps"
 
 type Props = {
-	suggestData: SuggestProps;
-	setSuggestData: any;
-	containerRef: React.RefObject<HTMLDivElement | null>;
-};
+	suggestData: SuggestProps
+	setSuggestData: React.Dispatch<React.SetStateAction<SuggestProps>>
+	containerRef: React.RefObject<HTMLDivElement | null>
+}
 export default function SuggestPanel({ suggestData, setSuggestData, containerRef }: Props) {
-	const { isOpen, selectedIndex, items, filter } = suggestData;
-	const [position, setPosition] = useState([0, 0]);
+	const { isOpen, selectedIndex, items, filter } = suggestData
+	const [position, setPosition] = useState([0, 0])
 
 	/**
 	 * In order to get the suggestions to the plugin, we pass props through
@@ -20,33 +22,33 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 	 */
 	useEditorEffect(
 		(view) => {
-			if (!view) return;
-			const reactPropsOld = reactPropsKey.getState(view.state);
+			if (!view) return
+			const reactPropsOld = reactPropsKey.getState(view.state)
 			const tr = view.state.tr.setMeta(reactPropsKey, {
 				...reactPropsOld,
 				suggestData,
 				setSuggestData,
-			});
-			view.dispatch(tr);
+			})
+			view.dispatch(tr)
 		},
 		[suggestData]
-	);
+	)
 
 	useEffect(() => {
-		const span = document.getElementsByClassName("autocomplete")[0];
+		const span = document.getElementsByClassName("autocomplete")[0]
 		if (span) {
-			const rect = span.getBoundingClientRect();
-			const container = containerRef.current;
+			const rect = span.getBoundingClientRect()
+			const container = containerRef.current
 			if (container) {
-				const containerBound = container.getBoundingClientRect();
-				const topOffset = -1 * containerBound.top + container.scrollTop + 16;
-				const leftOffset = -1 * containerBound.left + 16;
-				setPosition([rect.top + 20 + topOffset, rect.left + leftOffset]);
+				const containerBound = container.getBoundingClientRect()
+				const topOffset = -1 * containerBound.top + container.scrollTop + 16
+				const leftOffset = -1 * containerBound.left + 16
+				setPosition([rect.top + 20 + topOffset, rect.left + leftOffset])
 			}
 		}
-	}, [isOpen, filter, containerRef]);
+	}, [containerRef])
 	if (!isOpen) {
-		return null;
+		return null
 	}
 	return (
 		<div
@@ -60,8 +62,8 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 			}}
 		>
 			{items.map((item, index) => {
-				const itemIsPub = item.pubTypeId;
-				const itemIsField = item.schemaName;
+				const itemIsPub = item.pubTypeId
+				const itemIsField = item.schemaName
 				return (
 					<div
 						key={item.id}
@@ -96,8 +98,8 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 							</div>
 						)}
 					</div>
-				);
+				)
 			})}
 		</div>
-	);
+	)
 }

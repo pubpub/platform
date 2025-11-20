@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 
-import { client, retryPolicy } from "~/lib/api";
+import { client, retryPolicy } from "~/lib/api"
 
 export function ReactQueryProvider({ children }: React.PropsWithChildren) {
 	const queryClient = new QueryClient({
@@ -12,12 +12,12 @@ export function ReactQueryProvider({ children }: React.PropsWithChildren) {
 				retry: retryPolicy,
 			},
 		},
-	});
+	})
 
 	return (
 		<QueryClientProvider client={queryClient}>
 			<client.ReactQueryProvider>{children}</client.ReactQueryProvider>
 			<ReactQueryDevtools />
 		</QueryClientProvider>
-	);
+	)
 }

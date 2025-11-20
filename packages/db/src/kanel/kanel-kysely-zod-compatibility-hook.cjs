@@ -1,54 +1,54 @@
 // @ts-check
 
-const kanelZodCastRegex = /as unknown as z.Schema<(.*?)(Mutator|Initializer)?>/;
+const kanelZodCastRegex = /as unknown as z.Schema<(.*?)(Mutator|Initializer)?>/
 
 /**
  * @param {string} schemaName
  */
-const asZodObject = (schemaName) =>
-	`as z.ZodObject<{[K in keyof ${schemaName}]: z.Schema<${schemaName}[K]>}>`;
+const _asZodObject = (schemaName) =>
+	`as z.ZodObject<{[K in keyof ${schemaName}]: z.Schema<${schemaName}[K]>}>`
 
 const replaceSchemaCast = (/** @type {string} */ line) => {
 	// replace undefined with z.string() for tsvector columns
-	line = line.replace(/: undefined\./g, ": z.string().");
+	line = line.replace(/: undefined\./g, ": z.string().")
 
-	line = line.replace(/(\w+?: [^z][^.]\w+)/, "$1Schema");
+	line = line.replace(/(\w+?: [^z][^.]\w+)/, "$1Schema")
 
 	if (!line.includes("as unknown as z.Schema")) {
-		return line;
+		return line
 	}
 
-	const replacedLine = line.replace(kanelZodCastRegex, (_, typeName, mutatorOrInitializer) => {
+	const replacedLine = line.replace(kanelZodCastRegex, (_, _typeName, _mutatorOrInitializer) => {
 		// TODO: write custom maps for unknown types, that way i don't need to do this
-		return "";
-		if (!mutatorOrInitializer) {
-			return asZodObject(typeName);
-		}
+		return ""
+		// if (!mutatorOrInitializer) {
+		// 	return asZodObject(typeName)
+		// }
 
-		if (mutatorOrInitializer === "Mutator") {
-			return asZodObject(`${typeName}Update`);
-		}
+		// if (mutatorOrInitializer === "Mutator") {
+		// 	return asZodObject(`${typeName}Update`)
+		// }
 
-		return asZodObject(`New${typeName}`);
-	});
-	return replacedLine;
-};
+		// return asZodObject(`New${typeName}`)
+	})
+	return replacedLine
+}
 
 /**
  * @param {import("kanel").TypeImport} typeImport
  */
 const renameImportToUseSchemaSuffix = (typeImport) => {
-	const { importAsType, isDefault, name, isAbsolute, path } = typeImport;
-	const isSchemaImport = !isAbsolute && !isDefault && !importAsType;
+	const { importAsType, isDefault, name, isAbsolute, path } = typeImport
+	const isSchemaImport = !isAbsolute && !isDefault && !importAsType
 	if (!isSchemaImport) {
-		return typeImport;
+		return typeImport
 	}
 
 	return {
 		...typeImport,
 		name: `${name}Schema`,
-	};
-};
+	}
+}
 
 /**
  * even though they are not enforced to be uuids in the database
@@ -56,7 +56,7 @@ const renameImportToUseSchemaSuffix = (typeImport) => {
  * to be uuids when parsing, as we use uuids everywhere
  * @param {string} line
  */
-const makeUuid = (line) => line.replace(/z.string\(\) /, "z.string().uuid() ");
+const makeUuid = (line) => line.replace(/z.string\(\) /, "z.string().uuid() ")
 
 /**
  * tables with composite primary keys that are NOT FK references to another table's PK end up
@@ -65,7 +65,7 @@ const makeUuid = (line) => line.replace(/z.string\(\) /, "z.string().uuid() ");
  * @param {string} line
  */
 const appendSchemaToIdentifiers = (line) =>
-	line.replace(/^([^.]+) as unknown/, "$1Schema as unknown");
+	line.replace(/^([^.]+) as unknown/, "$1Schema as unknown")
 
 /**
  * @type {import("kanel").PreRenderHook}
@@ -78,54 +78,54 @@ const appendSchemaToIdentifiers = (line) =>
  * This makes sure that if you do `usersSchema.parse(user)` it will return a type compatible with `Users`.
  * 3. Replaces `undefinedSchema.nullable()` with `z.string().nullable()` for tsvector columns since kysely-zod doesn't handle them well.
  */
-function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig) {
+function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, _instantiatedConfig) {
 	const renamedSchemas = Object.fromEntries(
 		Object.entries(outputAcc).map(([name, o]) => {
-			const { declarations } = o;
+			const { declarations } = o
 
 			return [
 				name,
 				{
 					declarations: declarations.map((declaration) => {
 						if (declaration.declarationType !== "constant") {
-							return declaration;
+							return declaration
 						}
 
 						// change enum into native enum
 						if (declaration.comment?.[0]?.startsWith("Zod schema for ")) {
 							const enumName =
-								declaration.comment?.[0].match(/Zod schema for (.*)/)?.[1];
+								declaration.comment?.[0].match(/Zod schema for (.*)/)?.[1]
 
 							const value = Array.isArray(declaration.value)
 								? declaration.value[0]
-								: declaration.value;
+								: declaration.value
 
 							if (enumName && value.startsWith("z.enum")) {
-								declaration.value = [`z.nativeEnum(${enumName})`];
+								declaration.value = [`z.nativeEnum(${enumName})`]
 							}
 						}
 
 						/**
 						 * rename all the imports to use the Schema suffix
 						 */
-						const imports = declaration.typeImports?.map(renameImportToUseSchemaSuffix);
+						const imports = declaration.typeImports?.map(renameImportToUseSchemaSuffix)
 
 						const declValue = Array.isArray(declaration.value)
 							? declaration.value.map(replaceSchemaCast) // these are all the id schemas.
-							: appendSchemaToIdentifiers(makeUuid(declaration.value));
+							: appendSchemaToIdentifiers(makeUuid(declaration.value))
 						return {
 							...declaration,
 							typeImports: imports,
 							value: declValue,
 							name: `${declaration.name}Schema`,
-						};
+						}
 					}),
 				},
-			];
+			]
 		})
-	);
+	)
 
-	return renamedSchemas;
+	return renamedSchemas
 }
 
-module.exports = { kanelKyselyZodCompatibilityPreRenderHook };
+module.exports = { kanelKyselyZodCompatibilityPreRenderHook }

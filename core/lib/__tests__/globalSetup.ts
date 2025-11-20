@@ -1,9 +1,8 @@
 /* eslint-disable no-restricted-properties */
-import { spawnSync } from "child_process";
+import { spawnSync } from "node:child_process"
+import { config } from "dotenv"
 
-import { config } from "dotenv";
-
-import { logger } from "logger";
+import { logger } from "logger"
 
 export const setup = async () => {
 	config({
@@ -11,26 +10,26 @@ export const setup = async () => {
 			new URL("../../.env.development", import.meta.url).pathname,
 			new URL("../../.env.local", import.meta.url).pathname,
 		],
-	});
+	})
 
 	if (process.env.SKIP_RESET) {
-		return;
+		return
 	}
 
-	logger.info("Resetting database...");
+	logger.info("Resetting database...")
 	const result = spawnSync("pnpm -F core reset-base", {
 		shell: true,
 		stdio: "inherit",
-	});
-	const { stderr, error } = result;
+	})
+	const { stderr, error } = result
 	if (!error) {
-		logger.info("Database reset successful");
+		logger.info("Database reset successful")
 	} else {
 		logger.error(
 			"Something went wrong while trying to reset the database before running tests."
-		);
-		throw error;
+		)
+		throw error
 	}
-};
+}
 
-export default setup;
+export default setup

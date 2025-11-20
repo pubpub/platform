@@ -1,21 +1,22 @@
-"use client";
+"use client"
 
-import type { PubsId } from "db/public";
-import { Checkbox } from "ui/checkbox";
+import type { PubsId } from "db/public"
 
-import { usePubsSelectedContext } from "./PubsSelectedContext";
+import { Checkbox } from "ui/checkbox"
+
+import { usePubsSelectedContext } from "./PubsSelectedContext"
 
 export const PubSelector = ({ pubId, className }: { pubId: PubsId; className?: string }) => {
-	const { isSelected, toggle } = usePubsSelectedContext();
+	const { isSelected, toggle } = usePubsSelectedContext()
 
 	return (
 		<Checkbox
 			aria-label="Select pub"
 			checked={isSelected(pubId)}
 			onCheckedChange={() => {
-				toggle(pubId);
+				toggle(pubId)
 			}}
 			className={className}
 		/>
-	);
-};
+	)
+}

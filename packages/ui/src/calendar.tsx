@@ -1,19 +1,18 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
-import { DayPicker, getDefaultClassNames } from "react-day-picker";
+import * as React from "react"
+import { DayPicker, getDefaultClassNames } from "react-day-picker"
 
-import "react-day-picker/style.css";
+import "react-day-picker/style.css"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import { buttonVariants } from "./button";
+import { buttonVariants } from "./button"
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>;
+export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
-	const defaultClassNames = getDefaultClassNames();
+	const defaultClassNames = getDefaultClassNames()
 
 	return (
 		<DayPicker
@@ -38,27 +37,27 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
 					defaultClassNames.button_next
 				),
 				month_caption: cn(
-					"h-(--cell-size) px-(--cell-size) flex w-full items-center justify-center",
+					"flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
 					defaultClassNames.month_caption
 				),
 				dropdowns: cn(
-					"h-(--cell-size) flex w-full items-center justify-center gap-1.5 text-sm font-medium",
+					"flex h-(--cell-size) w-full items-center justify-center gap-1.5 font-medium text-sm",
 					defaultClassNames.dropdowns
 				),
 				dropdown_root: cn(
-					"has-focus:border-ring shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] relative rounded-md border border-input",
+					"relative rounded-md border border-input shadow-xs has-focus:border-ring has-focus:ring-[3px] has-focus:ring-ring/50",
 					defaultClassNames.dropdown_root
 				),
 				dropdown: cn("absolute inset-0 bg-popover opacity-0", defaultClassNames.dropdown),
 				caption_label: cn(
 					"select-none font-medium",
-					"flex h-8 items-center gap-1 rounded-md pl-2 pr-1 text-sm [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
+					"flex h-8 items-center gap-1 rounded-md pr-1 pl-2 text-sm [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
 					defaultClassNames.caption_label
 				),
 				table: "w-full border-collapse",
 				weekdays: cn("flex", defaultClassNames.weekdays),
 				weekday: cn(
-					"flex-1 select-none rounded-md text-[0.8rem] font-normal text-muted-foreground",
+					"flex-1 select-none rounded-md font-normal text-[0.8rem] text-muted-foreground",
 					defaultClassNames.weekday
 				),
 				week: cn("mt-2 flex w-full", defaultClassNames.week),
@@ -91,8 +90,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
 			}}
 			{...props}
 		/>
-	);
+	)
 }
-Calendar.displayName = "Calendar";
+Calendar.displayName = "Calendar"
 
-export { Calendar };
+export { Calendar }

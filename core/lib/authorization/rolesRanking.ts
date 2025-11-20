@@ -1,24 +1,24 @@
-import { MemberRole } from "db/public";
+import { MemberRole } from "db/public"
 
 export const MemberRoleRanking = {
 	[MemberRole.admin]: 2,
 	[MemberRole.editor]: 1,
 	[MemberRole.contributor]: 0,
-} as const;
+} as const
 
 export const getHighestRole = <T extends { role: MemberRole }[]>(memberships: T) => {
 	const highestRole = memberships.reduce(
 		(highestRole, m) => {
 			if (!highestRole || compareMemberRoles(m.role, ">", highestRole)) {
-				return m.role;
+				return m.role
 			}
-			return highestRole;
+			return highestRole
 		},
 		undefined as MemberRole | undefined
-	);
+	)
 
-	return highestRole;
-};
+	return highestRole
+}
 
 /**
  * Compare two member roles
@@ -32,23 +32,23 @@ export const compareMemberRoles = (
 	operator: ">" | ">=" | "<" | "<=" | "==" | "!=",
 	b: MemberRole
 ) => {
-	const aRank = MemberRoleRanking[a];
-	const bRank = MemberRoleRanking[b];
+	const aRank = MemberRoleRanking[a]
+	const bRank = MemberRoleRanking[b]
 
 	switch (operator) {
 		case ">":
-			return aRank > bRank;
+			return aRank > bRank
 		case ">=":
-			return aRank >= bRank;
+			return aRank >= bRank
 		case "<":
-			return aRank < bRank;
+			return aRank < bRank
 		case "<=":
-			return aRank <= bRank;
+			return aRank <= bRank
 		case "==":
-			return aRank === bRank;
+			return aRank === bRank
 		case "!=":
-			return aRank !== bRank;
+			return aRank !== bRank
 		default:
-			return false;
+			return false
 	}
-};
+}

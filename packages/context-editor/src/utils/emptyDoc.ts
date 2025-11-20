@@ -12,4 +12,4 @@ export const EMPTY_DOC = {
 			},
 		},
 	],
-};
+}

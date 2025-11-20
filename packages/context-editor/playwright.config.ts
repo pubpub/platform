@@ -1,6 +1,6 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test"
 
-const baseURL = "http://localhost:6006";
+const baseURL = "http://localhost:6006"
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -86,4 +86,4 @@ export default defineConfig({
 		//   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
 		// },
 	],
-});
+})

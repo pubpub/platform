@@ -1,49 +1,46 @@
-import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
+import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror"
 
-import React, { forwardRef, useEffect, useState } from "react";
-import { useIsNodeSelected } from "@handlewithcare/react-prosemirror";
-import { CsvToHtmlTable } from "react-csv-to-table";
+import React, { forwardRef, useEffect, useState } from "react"
+import { useIsNodeSelected } from "@handlewithcare/react-prosemirror"
+import { CsvToHtmlTable } from "react-csv-to-table"
 
 export const AtomRenderer = forwardRef<
 	HTMLDivElement,
 	NodeViewComponentProps & { selected?: boolean }
 >(function AtomRenderer({ nodeProps, selected, ...props }, ref) {
-	const { node } = nodeProps;
-	const [activeData, setActiveData] = useState("");
-	const activeNode = node;
-	if (!activeNode) {
-		return null;
-	}
+	const { node } = nodeProps
+	const [activeData, setActiveData] = useState("")
+	const activeNode = node
 
 	const isImageUrl = (url: string) => {
 		// Regular expression to match common image file extensions
-		const imagePattern = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i;
+		const imagePattern = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i
 
 		// Test the string against the pattern
-		return imagePattern.test(url);
-	};
+		return imagePattern.test(url)
+	}
 	const isVideoUrl = (url: string) => {
 		// Regular expression to match common video file extensions
-		const videoPattern = /\.(mp4|avi|mkv|webm|mov|flv|wmv|m4v)$/i;
+		const videoPattern = /\.(mp4|avi|mkv|webm|mov|flv|wmv|m4v)$/i
 
 		// Test the string against the pattern
-		return videoPattern.test(url);
-	};
+		return videoPattern.test(url)
+	}
 	function isAudioUrl(url: string) {
 		// Regular expression to match common audio file extensions
-		const audioPattern = /\.(mp3|wav|ogg|m4a|flac|aac|aiff)$/i;
+		const audioPattern = /\.(mp3|wav|ogg|m4a|flac|aac|aiff)$/i
 
 		// Test the string against the pattern
-		return audioPattern.test(url);
+		return audioPattern.test(url)
 	}
 	function isDataUrl(url: string) {
 		// Regular expression to match common audio file extensions
-		const audioPattern = /\.(csv)$/i;
+		const audioPattern = /\.(csv)$/i
 
 		// Test the string against the pattern
-		return audioPattern.test(url);
+		return audioPattern.test(url)
 	}
-	const isDataset = activeNode.attrs.pubTypeId === "6db3e01b-5391-413b-97e2-155e00e396c9";
+	const isDataset = activeNode.attrs.pubTypeId === "6db3e01b-5391-413b-97e2-155e00e396c9"
 
 	useEffect(() => {
 		if (isDataset && isDataUrl(activeNode.attrs.data["rd:source"])) {
@@ -51,10 +48,14 @@ export const AtomRenderer = forwardRef<
 			fetch(activeNode.attrs.data["rd:source"])
 				.then((r) => r.text())
 				.then((text) => {
-					setActiveData(text);
-				});
+					setActiveData(text)
+				})
 		}
-	}, [node]);
+	}, [activeNode.attrs.data["rd:source"], isDataUrl, isDataset])
+
+	if (!activeNode) {
+		return null
+	}
 
 	// console.log(activeNode, activeNode.attrs.data["rd:source"]);
 	return (
@@ -81,12 +82,14 @@ export const AtomRenderer = forwardRef<
 					{activeNode.attrs.data["rd:source"] &&
 						isVideoUrl(activeNode.attrs.data["rd:source"]) && (
 							<video width="640" height="360" controls>
+								<track kind="captions" />
 								<source src={activeNode.attrs.data["rd:source"]} />
 							</video>
 						)}
 					{activeNode.attrs.data["rd:source"] &&
 						isAudioUrl(activeNode.attrs.data["rd:source"]) && (
 							<audio controls>
+								<track kind="captions" />
 								<source src={activeNode.attrs.data["rd:source"]} />
 							</audio>
 						)}
@@ -111,8 +114,8 @@ export const AtomRenderer = forwardRef<
 
 			{/* {JSON.stringify(activeNode, null, 2)} */}
 		</section>
-	);
-});
+	)
+})
 
 /**
  * Wrapper around AtomRenderer which uses a react-prosemirror hook.
@@ -123,6 +126,6 @@ export default forwardRef<HTMLDivElement, NodeViewComponentProps>(function Conte
 	{ nodeProps, ...props },
 	ref
 ) {
-	const selected = useIsNodeSelected();
-	return <AtomRenderer ref={ref} nodeProps={nodeProps} selected={selected} {...props} />;
-});
+	const selected = useIsNodeSelected()
+	return <AtomRenderer ref={ref} nodeProps={nodeProps} selected={selected} {...props} />
+})

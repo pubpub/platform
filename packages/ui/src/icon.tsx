@@ -1,8 +1,12 @@
-import type { LucideIcon, LucideProps } from "lucide-react";
+/** biome-ignore-all lint/a11y/noSvgWithoutTitle: we don't need a title for the icons */
 
-import React from "react";
+import type { LucideProps } from "lucide-react"
 
-import { cn } from "utils";
+import React from "react"
+
+import { cn } from "utils"
+
+export type { LucideIcon } from "lucide-react"
 
 export {
 	Activity,
@@ -28,10 +32,10 @@ export {
 	CheckCircle,
 	CheckSquare,
 	ChevronDown,
-	ChevronRight,
 	ChevronLeft,
-	ChevronUp,
+	ChevronRight,
 	ChevronsUpDown,
+	ChevronUp,
 	CircleCheck,
 	CircleDashed,
 	CircleDollarSign,
@@ -96,9 +100,7 @@ export {
 	Wand2,
 	X,
 	XCircle,
-} from "lucide-react";
-
-export type { LucideIcon } from "lucide-react";
+} from "lucide-react"
 
 export const Form = ({ className, size = 16, ...props }: LucideProps) => (
 	<svg
@@ -120,7 +122,7 @@ export const Form = ({ className, size = 16, ...props }: LucideProps) => (
 		<path d="M8 18h1" />
 		<path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" />
 	</svg>
-);
+)
 
 export const Stages = ({ className, size = 16, ...props }: LucideProps) => (
 	<svg
@@ -166,7 +168,7 @@ export const Stages = ({ className, size = 16, ...props }: LucideProps) => (
 			</clipPath>
 		</defs>
 	</svg>
-);
+)
 
 export const Pub = ({ className, size = 16, ...props }: LucideProps) => (
 	<svg
@@ -198,7 +200,7 @@ export const Pub = ({ className, size = 16, ...props }: LucideProps) => (
 			</clipPath>
 		</defs>
 	</svg>
-);
+)
 
 export const Integration = ({ className, size = 16, ...props }: LucideProps) => (
 	<svg
@@ -230,4 +232,4 @@ export const Integration = ({ className, size = 16, ...props }: LucideProps) => 
 			</clipPath>
 		</defs>
 	</svg>
-);
+)

@@ -1,18 +1,19 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { UserCog } from "lucide-react";
+import type { MemberEditDialogProps } from "./types"
 
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { cn } from "utils";
+import { useState } from "react"
+import { UserCog } from "lucide-react"
 
-import type { MemberEditDialogProps } from "./types";
-import { MemberEditForm } from "./MemberEditForm";
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { cn } from "utils"
+
+import { MemberEditForm } from "./MemberEditForm"
 
 export const EditMemberDialog = (props: MemberEditDialogProps & { className?: string }) => {
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(false)
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<Tooltip>
@@ -35,5 +36,5 @@ export const EditMemberDialog = (props: MemberEditDialogProps & { className?: st
 				<MemberEditForm closeForm={() => setOpen(false)} {...props} />
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

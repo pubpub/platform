@@ -1,33 +1,34 @@
-import { defaultComponent } from "schemas";
+import type { ProcessedPub } from "contracts"
+import type { CommunityMembershipsId, PubsId } from "db/public"
+import type { PubFieldElement, PubFieldElementComponent } from "./types"
 
-import type { ProcessedPub } from "contracts";
-import type { CommunityMembershipsId, PubsId } from "db/public";
-import { CoreSchemaType, InputComponent } from "db/public";
-import { logger } from "logger";
+import { defaultComponent } from "schemas"
 
-import type { PubFieldElement, PubFieldElementComponent } from "./types";
-import { CheckboxElement } from "./elements/CheckboxElement";
-import { CheckboxGroupElement } from "./elements/CheckboxGroupElement";
-import { ColorPickerElement } from "./elements/ColorPickerElement";
-import { ConfidenceElement } from "./elements/ConfidenceElement";
-import { ContextEditorElement } from "./elements/ContextEditorElement";
-import { DateElement } from "./elements/DateElement";
-import { FileUploadElement } from "./elements/FileUploadElement";
-import { MemberSelectElement } from "./elements/MemberSelectElement";
-import { MultivalueInputElement } from "./elements/MultivalueInputElement";
-import { RadioGroupElement } from "./elements/RadioGroupElement";
-import { SelectDropdownElement } from "./elements/SelectDropdownElement";
-import { TextAreaElement } from "./elements/TextAreaElement";
-import { TextInputElement } from "./elements/TextInputElement";
+import { CoreSchemaType, InputComponent } from "db/public"
+import { logger } from "logger"
+
+import { CheckboxElement } from "./elements/CheckboxElement"
+import { CheckboxGroupElement } from "./elements/CheckboxGroupElement"
+import { ColorPickerElement } from "./elements/ColorPickerElement"
+import { ConfidenceElement } from "./elements/ConfidenceElement"
+import { ContextEditorElement } from "./elements/ContextEditorElement"
+import { DateElement } from "./elements/DateElement"
+import { FileUploadElement } from "./elements/FileUploadElement"
+import { MemberSelectElement } from "./elements/MemberSelectElement"
+import { MultivalueInputElement } from "./elements/MultivalueInputElement"
+import { RadioGroupElement } from "./elements/RadioGroupElement"
+import { SelectDropdownElement } from "./elements/SelectDropdownElement"
+import { TextAreaElement } from "./elements/TextAreaElement"
+import { TextInputElement } from "./elements/TextInputElement"
 
 export type PubFieldFormElementProps<
 	I extends PubFieldElementComponent = PubFieldElementComponent,
 	isRelation extends boolean = boolean,
 > = {
-	pubId: PubsId;
-	element: I extends PubFieldElementComponent ? PubFieldElement<I, isRelation> : never;
-	values: ProcessedPub["values"];
-};
+	pubId: PubsId
+	element: I extends PubFieldElementComponent ? PubFieldElement<I, isRelation> : never
+	values: ProcessedPub["values"]
+}
 
 export const PubFieldFormElement = ({
 	pubId,
@@ -41,12 +42,12 @@ export const PubFieldFormElement = ({
 		component:
 			propElement.component ??
 			(propElement.schemaName ? defaultComponent(propElement.schemaName) : null),
-	} as typeof propElement;
+	} as typeof propElement
 
 	const basicProps = {
 		label,
 		slug,
-	};
+	}
 
 	if (element.component === InputComponent.textInput) {
 		return (
@@ -56,7 +57,7 @@ export const PubFieldFormElement = ({
 				schemaName={element.schemaName}
 				type={element.schemaName === CoreSchemaType.Number ? "number" : undefined}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.textArea) {
 		return (
@@ -65,7 +66,7 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.checkbox) {
 		return (
@@ -74,7 +75,7 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.fileUpload) {
 		return (
@@ -84,7 +85,7 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.confidenceInterval) {
 		return (
@@ -93,17 +94,17 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.datePicker) {
 		return (
 			<DateElement {...basicProps} config={element.config} schemaName={element.schemaName} />
-		);
+		)
 	}
 	if (element.component === InputComponent.memberSelect) {
 		const userId = values.find((v) => v.fieldSlug === element.slug)?.value as
 			| CommunityMembershipsId
-			| undefined;
+			| undefined
 		return (
 			<MemberSelectElement
 				{...basicProps}
@@ -111,7 +112,7 @@ export const PubFieldFormElement = ({
 				schemaName={element.schemaName}
 				value={userId}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.radioGroup) {
 		return (
@@ -120,7 +121,7 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.checkboxGroup) {
 		return (
@@ -129,7 +130,7 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.selectDropdown) {
 		return (
@@ -138,7 +139,7 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.multivalueInput) {
 		return (
@@ -147,7 +148,7 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.richText) {
 		return (
@@ -156,7 +157,7 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 	if (element.component === InputComponent.colorPicker) {
 		return (
@@ -165,7 +166,7 @@ export const PubFieldFormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 
 	logger.error({
@@ -173,6 +174,6 @@ export const PubFieldFormElement = ({
 		component: element.component,
 		element,
 		pubId,
-	});
-	return null;
-};
+	})
+	return null
+}

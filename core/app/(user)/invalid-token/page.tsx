@@ -1,15 +1,15 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import { Button } from "ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { AlertCircle } from "ui/icon";
+import { Button } from "ui/button"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { AlertCircle } from "ui/icon"
 
 export default async function InvalidTokenPage(props: {
-	searchParams: Promise<{ redirectTo: string }>;
+	searchParams: Promise<{ redirectTo: string }>
 }) {
-	const searchParams = await props.searchParams;
+	const searchParams = await props.searchParams
 
-	const { redirectTo } = searchParams;
+	const { redirectTo } = searchParams
 
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background">
@@ -18,7 +18,7 @@ export default async function InvalidTokenPage(props: {
 					<div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
 						<AlertCircle className="h-10 w-10 text-destructive" />
 					</div>
-					<CardTitle className="mt-4 text-center text-2xl font-bold">
+					<CardTitle className="mt-4 text-center font-bold text-2xl">
 						Invalid Token
 					</CardTitle>
 				</CardHeader>
@@ -34,5 +34,5 @@ export default async function InvalidTokenPage(props: {
 				</CardFooter>
 			</Card>
 		</div>
-	);
+	)
 }

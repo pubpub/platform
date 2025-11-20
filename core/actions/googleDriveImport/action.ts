@@ -1,9 +1,9 @@
-import { SiGoogledrive } from "@icons-pack/react-simple-icons";
-import { z } from "zod";
+import { SiGoogledrive } from "@icons-pack/react-simple-icons"
+import { z } from "zod"
 
-import { Action } from "db/public";
+import { Action } from "db/public"
 
-import { defineAction } from "../types";
+import { defineAction } from "../types"
 
 const sharedSchema = z.object({
 	folderUrl: z
@@ -14,7 +14,7 @@ const sharedSchema = z.object({
 			"The URL must be a valid Google Drive folder URL like https://drive.google.com/drive/folders/<id>"
 		)
 		.describe("The URL of the Google Drive folder to import"),
-});
+})
 
 export const action = defineAction({
 	name: Action.googleDriveImport,
@@ -26,4 +26,4 @@ export const action = defineAction({
 	},
 	experimental: true,
 	superAdminOnly: true,
-});
+})

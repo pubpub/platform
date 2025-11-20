@@ -1,11 +1,11 @@
-import type { DOMOutputSpec, MarkSpec } from "prosemirror-model";
+import type { DOMOutputSpec, MarkSpec } from "prosemirror-model"
 
 const getAttrs = (node: HTMLElement) => {
 	return {
 		id: (node as Element).getAttribute("id"),
 		class: (node as Element).getAttribute("class"),
-	};
-};
+	}
+}
 
 export default {
 	attrs: {
@@ -24,6 +24,6 @@ export default {
 				class: mark.attrs.class,
 				...(mark.attrs.id && { id: mark.attrs.id }),
 			},
-		] as DOMOutputSpec;
+		] as DOMOutputSpec
 	},
-} satisfies MarkSpec;
+} satisfies MarkSpec

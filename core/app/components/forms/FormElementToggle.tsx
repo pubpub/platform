@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react"
 
-import { Toggle } from "ui/toggle";
+import { Toggle } from "ui/toggle"
 
-import { useFormElementToggleContext } from "./FormElementToggleContext";
+import { useFormElementToggleContext } from "./FormElementToggleContext"
 
 export const FormElementToggle = (props: PropsWithChildren<{ slug: string }>) => {
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(props.slug);
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(props.slug)
 	return (
 		<div className="flex gap-2">
 			<Toggle
@@ -22,5 +22,5 @@ export const FormElementToggle = (props: PropsWithChildren<{ slug: string }>) =>
 			/>
 			<div className="w-full">{props.children}</div>
 		</div>
-	);
-};
+	)
+}

@@ -1,24 +1,25 @@
-"use client";
+"use client"
 
-import { Value } from "@sinclair/typebox/value";
-import { useFormContext } from "react-hook-form";
-import { checkboxConfigSchema } from "schemas";
+import type { InputComponent } from "db/public"
+import type { ElementProps } from "../types"
 
-import type { InputComponent } from "db/public";
-import { Checkbox } from "ui/checkbox";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Value } from "@sinclair/typebox/value"
+import { useFormContext } from "react-hook-form"
+import { checkboxConfigSchema } from "schemas"
 
-import type { ElementProps } from "../types";
-import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { Checkbox } from "ui/checkbox"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+
+import { useFormElementToggleContext } from "../FormElementToggleContext"
 
 export const CheckboxElement = ({ slug, label, config }: ElementProps<InputComponent.checkbox>) => {
-	const { control } = useFormContext();
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
+	const { control } = useFormContext()
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(slug)
 
-	Value.Default(checkboxConfigSchema, config);
+	Value.Default(checkboxConfigSchema, config)
 	if (!Value.Check(checkboxConfigSchema, config)) {
-		return null;
+		return null
 	}
 
 	return (
@@ -33,14 +34,14 @@ export const CheckboxElement = ({ slug, label, config }: ElementProps<InputCompo
 							<FormControl>
 								<Checkbox
 									checked={
-										field.value != undefined
+										field.value !== undefined
 											? Boolean(field.value)
 											: config.defaultValue
 									}
 									disabled={!isEnabled}
 									onCheckedChange={(change) => {
 										if (typeof change === "boolean") {
-											field.onChange(change);
+											field.onChange(change)
 										}
 									}}
 									className="rounded"
@@ -51,8 +52,8 @@ export const CheckboxElement = ({ slug, label, config }: ElementProps<InputCompo
 						{config.help && <FormDescription>{config.help}</FormDescription>}
 						<FormMessage />
 					</FormItem>
-				);
+				)
 			}}
 		/>
-	);
-};
+	)
+}

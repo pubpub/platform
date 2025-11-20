@@ -1,4 +1,4 @@
-import { Skeleton } from "ui/skeleton";
+import { Skeleton } from "ui/skeleton"
 
 export const SkeletonCard = () => {
 	return (
@@ -9,5 +9,5 @@ export const SkeletonCard = () => {
 				<Skeleton className="h-4 w-[200px]" />
 			</div>
 		</div>
-	);
-};
+	)
+}

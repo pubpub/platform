@@ -1,17 +1,18 @@
-import * as React from "react";
+import type { AutoFormInputComponentProps } from "../types"
 
-import type { AutoFormInputComponentProps } from "../types";
-import { Checkbox } from "../../checkbox";
-import { FormControl, FormItem } from "../../form";
+import React from "react"
+
+import { Checkbox } from "../../checkbox"
+import { FormControl, FormItem } from "../../form"
 import {
 	PubFieldSelect,
 	PubFieldSelectProvider,
 	PubFieldSelectToggleButton,
 	PubFieldSelectWrapper,
-} from "../../pubFields/pubFieldSelect";
-import AutoFormDescription from "../common/description";
-import AutoFormLabel from "../common/label";
-import AutoFormTooltip from "../common/tooltip";
+} from "../../pubFields/pubFieldSelect"
+import AutoFormDescription from "../common/description"
+import AutoFormLabel from "../common/label"
+import AutoFormTooltip from "../common/tooltip"
 
 export default function AutoFormCheckbox({
 	label,
@@ -52,5 +53,5 @@ export default function AutoFormCheckbox({
 				<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 			</div>
 		</PubFieldSelectProvider>
-	);
+	)
 }

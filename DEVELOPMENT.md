@@ -35,12 +35,6 @@ docker compose -f docker-compose.dev.yml up
 
 you can now address on `localhost:3000` as before. note that `pnpm dev` uses the same ports and cannot be running at the same time.
 
-## Prettier
-
-At the moment, the repo simply uses prettier before adding any additional complexity with ESLint configs. Just auto-format (either on save, or on commit), and let the .prettierrc hold the small subset of decisions.
-
-For a nicer DX, bind `Format Document` to a familiar keyboard shortcut so you can format the doc as you go (similar to format-on-save and then saving frequently).
-
 ## Git Hooks
 
 Two hooks are defined using `husky` and stored in `.husky`.

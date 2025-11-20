@@ -1,26 +1,26 @@
-"use client";
+"use client"
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation"
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { AlertCircle } from "ui/icon";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { AlertCircle } from "ui/icon"
 
-import LogoutButton from "~/app/components/LogoutButton";
+import LogoutButton from "~/app/components/LogoutButton"
 
 export const WrongUserLoggedIn = ({ email }: { email?: string }) => {
-	const path = usePathname();
-	const searchParams = useSearchParams();
+	const path = usePathname()
+	const searchParams = useSearchParams()
 
-	const currentUrl = `${path}?${searchParams.toString()}`;
+	const currentUrl = `${path}?${searchParams.toString()}`
 
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background">
 			<Card className="w-full max-w-md">
 				<CardHeader>
-					<div className="bg-warning/10 mx-auto flex h-20 w-20 items-center justify-center rounded-full">
-						<AlertCircle className="text-warning h-10 w-10" />
+					<div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-warning/10">
+						<AlertCircle className="h-10 w-10 text-warning" />
 					</div>
-					<CardTitle className="mt-4 text-center text-2xl font-bold">
+					<CardTitle className="mt-4 text-center font-bold text-2xl">
 						Wrong Account
 					</CardTitle>
 				</CardHeader>
@@ -41,5 +41,5 @@ export const WrongUserLoggedIn = ({ email }: { email?: string }) => {
 				</CardFooter>
 			</Card>
 		</div>
-	);
-};
+	)
+}

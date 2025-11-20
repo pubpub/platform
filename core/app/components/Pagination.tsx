@@ -6,20 +6,20 @@ import {
 	PaginationLink,
 	PaginationNext,
 	PaginationPrevious,
-} from "ui/pagination";
+} from "ui/pagination"
 
 export const BasicPagination = (props: {
-	basePath: string;
-	searchParams: Record<string, unknown>;
-	page: number;
-	totalPages: number;
+	basePath: string
+	searchParams: Record<string, unknown>
+	page: number
+	totalPages: number
 	/**
 	 * @default true
 	 */
-	hideIfSinglePage?: boolean;
+	hideIfSinglePage?: boolean
 }) => {
 	if (props.hideIfSinglePage !== false && props.totalPages === 1) {
-		return null;
+		return null
 	}
 
 	return (
@@ -124,5 +124,5 @@ export const BasicPagination = (props: {
 				)}
 			</PaginationContent>
 		</Pagination>
-	);
-};
+	)
+}

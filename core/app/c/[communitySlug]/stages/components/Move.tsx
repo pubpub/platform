@@ -1,86 +1,84 @@
-import type { ReactNode } from "react";
+import type { PubsId, StagesId } from "db/public"
+import type { ReactNode } from "react"
+import type { XOR } from "utils/types"
+import type { CommunityStage } from "~/lib/server/stages"
 
-import { Suspense } from "react";
+import { Suspense } from "react"
 
-import type { PubsId, StagesId, UsersId } from "db/public";
-import type { XOR } from "utils/types";
-import { Capabilities, MembershipType } from "db/public";
-import { Button } from "ui/button";
-import { ChevronDown, FlagTriangleRightIcon } from "ui/icon";
+import { Capabilities, MembershipType } from "db/public"
 
-import type { CommunityStage } from "~/lib/server/stages";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { makeStagesById } from "~/lib/stages";
-import { BasicMoveButton } from "./BasicMoveButton";
-import { MoveInteractive } from "./MoveInteractive";
+import { getLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { makeStagesById } from "~/lib/stages"
+import { BasicMoveButton } from "./BasicMoveButton"
+import { MoveInteractive } from "./MoveInteractive"
 
 type Props = {
-	pubId: PubsId;
-	stageId: StagesId;
-	button?: ReactNode;
+	pubId: PubsId
+	stageId: StagesId
+	button?: ReactNode
 	/**
 	 * If there are no source or destinations from the current stage, hide this component.
 	 * @default true
 	 */
-	hideIfNowhereToMove?: boolean;
-	stageName?: string;
+	hideIfNowhereToMove?: boolean
+	stageName?: string
 	/* if true, overrides the move pub capability check */
-	canMoveAllPubs?: boolean;
+	canMoveAllPubs?: boolean
 	/* if true, overrides the view stage capability check */
-	canViewAllStages?: boolean;
+	canViewAllStages?: boolean
 } & XOR<
 	{ communityStages: CommunityStage[] },
 	{
-		moveFrom: CommunityStage["moveConstraintSources"];
-		moveTo: CommunityStage["moveConstraints"];
+		moveFrom: CommunityStage["moveConstraintSources"]
+		moveTo: CommunityStage["moveConstraints"]
 	}
->;
+>
 
 const makeSourcesAndDestinations = ({ ...props }: Props) => {
 	if (!props.communityStages) {
 		return {
 			sources: props.moveFrom,
 			destinations: props.moveTo,
-		};
+		}
 	}
 
-	const stagesById = makeStagesById(props.communityStages);
-	const stage = stagesById[props.stageId];
-	const sources = stage ? stage.moveConstraintSources.map((mc) => stagesById[mc.id]) : [];
-	const destinations = stage ? stage.moveConstraints.map((mc) => stagesById[mc.id]) : [];
+	const stagesById = makeStagesById(props.communityStages)
+	const stage = stagesById[props.stageId]
+	const sources = stage ? stage.moveConstraintSources.map((mc) => stagesById[mc.id]) : []
+	const destinations = stage ? stage.moveConstraints.map((mc) => stagesById[mc.id]) : []
 
 	return {
 		sources,
 		destinations,
-	};
-};
+	}
+}
 
 const getStageDisplayName = (props: Props) => {
 	if (props.stageName) {
-		return props.stageName;
+		return props.stageName
 	}
 
 	if (!props.communityStages) {
-		return "Stage";
+		return "Stage"
 	}
 
-	const stagesById = makeStagesById(props.communityStages);
-	const stage = stagesById[props.stageId];
-	return stage?.name || "Stage";
-};
+	const stagesById = makeStagesById(props.communityStages)
+	const stage = stagesById[props.stageId]
+	return stage?.name || "Stage"
+}
 
 async function MoveButton({ hideIfNowhereToMove = true, ...props }: Props) {
-	const { sources, destinations } = makeSourcesAndDestinations(props);
-	const stageName = getStageDisplayName(props);
+	const { sources, destinations } = makeSourcesAndDestinations(props)
+	const stageName = getStageDisplayName(props)
 
 	if (destinations.length === 0 && sources.length === 0 && hideIfNowhereToMove) {
-		return <BasicMoveButton name={stageName} />;
+		return <BasicMoveButton name={stageName} />
 	}
 
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData.user) {
-		return <BasicMoveButton name={stageName} />;
+		return <BasicMoveButton name={stageName} />
 	}
 
 	const [canMovePub, canViewStage] = await Promise.all([
@@ -96,13 +94,13 @@ async function MoveButton({ hideIfNowhereToMove = true, ...props }: Props) {
 				{ type: MembershipType.stage, stageId: props.stageId },
 				loginData.user.id
 			),
-	]);
+	])
 
 	if (!canMovePub && !canViewStage) {
-		return <BasicMoveButton name={stageName} />;
+		return <BasicMoveButton name={stageName} />
 	}
 
-	const stageButton = props.button ?? <BasicMoveButton name={stageName} withDropdown={true} />;
+	const stageButton = props.button ?? <BasicMoveButton name={stageName} withDropdown={true} />
 
 	return (
 		<MoveInteractive
@@ -114,7 +112,7 @@ async function MoveButton({ hideIfNowhereToMove = true, ...props }: Props) {
 			button={stageButton}
 			hideIfNowhereToMove={hideIfNowhereToMove}
 		/>
-	);
+	)
 }
 
 export default function Move({ hideIfNowhereToMove = true, ...props }: Props) {
@@ -122,5 +120,5 @@ export default function Move({ hideIfNowhereToMove = true, ...props }: Props) {
 		<Suspense fallback={<BasicMoveButton name={getStageDisplayName(props)} />}>
 			<MoveButton hideIfNowhereToMove={hideIfNowhereToMove} {...props} />
 		</Suspense>
-	);
+	)
 }

@@ -1,7 +1,7 @@
-import { initContract } from "@ts-rest/core";
-import { z } from "zod";
+import { initContract } from "@ts-rest/core"
+import { z } from "zod"
 
-const contract = initContract();
+const contract = initContract()
 
 export const siteBuilderApi = contract.router(
 	{
@@ -53,4 +53,4 @@ export const siteBuilderApi = contract.router(
 	{
 		pathPrefix: "/services/site-builder",
 	}
-);
+)

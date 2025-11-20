@@ -1,7 +1,7 @@
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId } from "db/public"
 
-import { seedCommunity } from "../seed/seedCommunity";
-import { usersExisting } from "./users";
+import { seedCommunity } from "../seed/seedCommunity"
+import { usersExisting } from "./users"
 
 export async function seedBlank(communityId?: CommunitiesId) {
 	return seedCommunity(
@@ -23,5 +23,5 @@ export async function seedBlank(communityId?: CommunitiesId) {
 		{
 			randomSlug: false,
 		}
-	);
+	)
 }

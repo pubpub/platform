@@ -1,14 +1,15 @@
-import * as React from "react";
+import type { AutoFormInputComponentProps } from "../types"
 
-import { cn } from "utils";
+import React from "react"
 
-import type { AutoFormInputComponentProps } from "../types";
-import { FormControl, FormItem, FormMessage } from "../../form";
-import { Input } from "../../input";
-import { PubFieldSelectProvider } from "../../pubFields/pubFieldSelect";
-import AutoFormDescription from "../common/description";
-import AutoFormLabel from "../common/label";
-import AutoFormTooltip from "../common/tooltip";
+import { cn } from "utils"
+
+import { FormControl, FormItem, FormMessage } from "../../form"
+import { Input } from "../../input"
+import { PubFieldSelectProvider } from "../../pubFields/pubFieldSelect"
+import AutoFormDescription from "../common/description"
+import AutoFormLabel from "../common/label"
+import AutoFormTooltip from "../common/tooltip"
 
 // TODO: All inputs should have pubField and labels work the same way, makes it easier to standardize
 export default function AutoFormInput({
@@ -22,9 +23,9 @@ export default function AutoFormInput({
 	placeholder,
 	className,
 }: AutoFormInputComponentProps) {
-	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps;
-	const showLabel = _showLabel === undefined ? true : _showLabel;
-	const type = fieldProps.type || "text";
+	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps
+	const showLabel = _showLabel === undefined ? true : _showLabel
+	const type = fieldProps.type || "text"
 
 	return (
 		<PubFieldSelectProvider
@@ -55,5 +56,5 @@ export default function AutoFormInput({
 				</FormItem>
 			</div>
 		</PubFieldSelectProvider>
-	);
+	)
 }

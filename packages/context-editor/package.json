@@ -15,7 +15,6 @@
 		"./tailwind.config.cjs": "./tailwind.config.cjs"
 	},
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
 		"type-check": "tsc --noEmit",
 		"storybook": "storybook dev -p 6006 --no-open",
 		"build-storybook": "storybook build",
@@ -28,7 +27,6 @@
 		"@aws-sdk/s3-request-presigner": "^3.864.0",
 		"@chromatic-com/storybook": "^4.1.1",
 		"@playwright/test": "catalog:",
-		"@pubpub/prettier-config": "workspace:*",
 		"@storybook/addon-docs": "^9.1.2",
 		"@storybook/addon-links": "^9.1.2",
 		"@storybook/addon-onboarding": "^9.1.2",
@@ -128,12 +126,6 @@
 				"./tailwind.config.cjs": "./tailwind.config.cjs"
 			}
 		},
-		"entrypoints": [
-			"index.ts",
-			"schemas/index.ts",
-			"utils/index.ts",
-			"utils/serialize.ts"
-		]
-	},
-	"prettier": "@pubpub/prettier-config"
+		"entrypoints": ["index.ts", "schemas/index.ts", "utils/index.ts", "utils/serialize.ts"]
+	}
 }

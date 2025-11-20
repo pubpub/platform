@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { Value } from "@sinclair/typebox/value";
-import { useFormContext } from "react-hook-form";
-import { memberSelectConfigSchema } from "schemas";
+import type { CommunityMembershipsId, InputComponent } from "db/public"
+import type { ElementProps } from "../types"
 
-import type { CommunityMembershipsId } from "db/public";
-import { InputComponent } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Value } from "@sinclair/typebox/value"
+import { useFormContext } from "react-hook-form"
+import { memberSelectConfigSchema } from "schemas"
 
-import type { ElementProps } from "../types";
-import { MemberSelectClientFetch } from "../../MemberSelect/MemberSelectClientFetch";
-import { useCommunity } from "../../providers/CommunityProvider";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+
+import { MemberSelectClientFetch } from "../../MemberSelect/MemberSelectClientFetch"
+import { useCommunity } from "../../providers/CommunityProvider"
 
 export const MemberSelectElement = ({
 	slug,
@@ -18,18 +18,18 @@ export const MemberSelectElement = ({
 	value,
 	config,
 }: {
-	value?: CommunityMembershipsId;
+	value?: CommunityMembershipsId
 } & ElementProps<InputComponent.memberSelect>) => {
-	const community = useCommunity();
+	const community = useCommunity()
 
-	const { control } = useFormContext();
+	const { control } = useFormContext()
 
 	if (!community) {
-		return null;
+		return null
 	}
 
 	if (!Value.Check(memberSelectConfigSchema, config)) {
-		return null;
+		return null
 	}
 
 	return (
@@ -50,8 +50,8 @@ export const MemberSelectElement = ({
 						{config.help && <FormDescription>{config.help}</FormDescription>}
 						<FormMessage />
 					</FormItem>
-				);
+				)
 			}}
 		/>
-	);
-};
+	)
+}

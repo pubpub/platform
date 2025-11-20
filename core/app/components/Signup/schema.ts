@@ -1,10 +1,10 @@
-import type { Static } from "@sinclair/typebox";
+import type { Static } from "@sinclair/typebox"
 
-import { Type } from "@sinclair/typebox";
-import { TypeCompiler } from "@sinclair/typebox/compiler";
-import { registerFormats } from "schemas";
+import { Type } from "@sinclair/typebox"
+import { TypeCompiler } from "@sinclair/typebox/compiler"
+import { registerFormats } from "schemas"
 
-registerFormats();
+registerFormats()
 
 const signupFormSchema = Type.Object({
 	firstName: Type.String(),
@@ -14,8 +14,8 @@ const signupFormSchema = Type.Object({
 		minLength: 8,
 		maxLength: 72,
 	}),
-});
+})
 
-export const compiledSignupFormSchema = TypeCompiler.Compile(signupFormSchema);
+export const compiledSignupFormSchema = TypeCompiler.Compile(signupFormSchema)
 
-export type SignupFormSchema = Static<typeof signupFormSchema>;
+export type SignupFormSchema = Static<typeof signupFormSchema>

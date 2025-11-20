@@ -1,34 +1,35 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
-import { skipToken } from "@tanstack/react-query";
+import type { ProcessedPub } from "contracts"
+import type { PubsId } from "db/public"
 
-import type { ProcessedPub } from "contracts";
-import type { PubsId } from "db/public";
-import { Badge } from "ui/badge";
-import { Button } from "ui/button";
+import { useState } from "react"
+import Link from "next/link"
+import { skipToken } from "@tanstack/react-query"
+
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { ChevronDown } from "ui/icon";
-import { Skeleton } from "ui/skeleton";
+} from "ui/dropdown-menu"
+import { ChevronDown } from "ui/icon"
+import { Skeleton } from "ui/skeleton"
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { client } from "~/lib/api";
-import { getPubTitle } from "~/lib/pubs";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { client } from "~/lib/api"
+import { getPubTitle } from "~/lib/pubs"
 
 type Props = {
-	pubId: PubsId;
-	numRelations: number;
-};
+	pubId: PubsId
+	numRelations: number
+}
 
 export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
-	const community = useCommunity();
-	const [isOpen, setIsOpen] = useState(false);
+	const community = useCommunity()
+	const [isOpen, setIsOpen] = useState(false)
 
 	const { data, isLoading } = client.pubs.get.useQuery({
 		queryKey: ["getPub", pubId],
@@ -38,21 +39,21 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 					params: { communitySlug: community.slug, pubId },
 				}
 			: skipToken,
-	});
+	})
 
 	const relatedPubs = (data?.body.values
 		?.filter((v) => v.relatedPub)
 		.flatMap((v) => (v.relatedPub ? [v.relatedPub] : [])) ?? []) as ProcessedPub<{
-		withRelatedPubs: true;
-		withPubType: true;
-	}>[];
+		withRelatedPubs: true
+		withPubType: true
+	}>[]
 
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
 			<DropdownMenuTrigger asChild>
 				<Button
 					variant="outline"
-					className="flex h-[22px] gap-1 px-2 px-[.35rem] text-xs font-semibold shadow-none"
+					className="flex h-[22px] gap-1 px-2 px-[.35rem] font-semibold text-xs shadow-none"
 				>
 					<span className="rounded bg-slate-100 px-1 text-[10px]">{numRelations}</span>
 					Relations
@@ -77,25 +78,25 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 								<DropdownMenuItem key={relatedPub.id}>
 									<Badge
 										variant="secondary"
-										className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 text-[10px] font-semibold leading-4 tracking-[-.1px]"
+										className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 font-semibold text-[10px] leading-4 tracking-[-.1px]"
 									>
 										{relatedPub.pubType.name}
 									</Badge>
 									<div className="truncate">
 										<Link
 											href={`/c/${community.slug}/pubs/${relatedPub.id}`}
-											className="text-xs font-bold"
+											className="font-bold text-xs"
 										>
 											{getPubTitle(relatedPub)}
 										</Link>
 										{/* TODO: pub description */}
 									</div>
 								</DropdownMenuItem>
-							);
+							)
 						})}
 						{relatedPubs.length !== numRelations && (
 							<DropdownMenuItem>
-								<p className="w-full text-center text-xs font-medium text-muted-foreground">
+								<p className="w-full text-center font-medium text-muted-foreground text-xs">
 									{numRelations - relatedPubs.length} related Pubs are not visible
 									to you
 								</p>
@@ -104,12 +105,12 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 					</>
 				) : (
 					<DropdownMenuItem>
-						<p className="w-full text-center text-xs font-medium text-muted-foreground">
+						<p className="w-full text-center font-medium text-muted-foreground text-xs">
 							No related Pubs are visible to you
 						</p>
 					</DropdownMenuItem>
 				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}

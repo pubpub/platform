@@ -1,46 +1,46 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
+import type { CommunitiesId, FormsId, UsersId } from "db/public"
 
-import type { CommunitiesId, FormsId, UsersId } from "db/public";
-import { MemberRole, MembershipType } from "db/public";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Badge } from "ui/badge";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
-import { DataTableColumnHeader } from "ui/data-table";
+import { MemberRole, MembershipType } from "db/public"
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { DataTableColumnHeader } from "ui/data-table"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { MoreVertical } from "ui/icon";
+} from "ui/dropdown-menu"
+import { MoreVertical } from "ui/icon"
 
-import { descriptions } from "~/app/components/Memberships/constants";
-import { EditMemberDialog } from "~/app/components/Memberships/EditMemberDialog";
-import { RemoveMemberButton } from "./RemoveMemberButton";
+import { descriptions } from "~/app/components/Memberships/constants"
+import { EditMemberDialog } from "~/app/components/Memberships/EditMemberDialog"
+import { RemoveMemberButton } from "./RemoveMemberButton"
 
 export type TableMember = {
-	id: UsersId;
-	avatar: string | null;
-	email: string;
-	firstName: string;
-	lastName: string | null;
-	role: MemberRole;
+	id: UsersId
+	avatar: string | null
+	email: string
+	firstName: string
+	lastName: string | null
+	role: MemberRole
 	forms?: {
-		id: FormsId;
-		slug: string;
-		name: string;
-	}[];
-	joined: string;
-};
+		id: FormsId
+		slug: string
+		name: string
+	}[]
+	joined: string
+}
 
 type TableColumnsProps = {
-	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
-	communityId: CommunitiesId;
-};
+	availableForms: { id: FormsId; name: string; isDefault: boolean }[]
+	communityId: CommunitiesId
+}
 
 export const getMemberTableColumns = (props: TableColumnsProps) =>
 	[
@@ -71,8 +71,8 @@ export const getMemberTableColumns = (props: TableColumnsProps) =>
 			header: "",
 			accessorKey: "avatar",
 			cell: ({ row, getValue }) => {
-				const firstName = row.getValue("firstName") as string;
-				const lastName = row.getValue("lastName") as string | null;
+				const firstName = row.getValue("firstName") as string
+				const lastName = row.getValue("lastName") as string | null
 
 				return (
 					<Avatar className="h-8 w-8">
@@ -85,7 +85,7 @@ export const getMemberTableColumns = (props: TableColumnsProps) =>
 							{lastName?.[0] ?? ""}
 						</AvatarFallback>
 					</Avatar>
-				);
+				)
 			},
 		},
 		{
@@ -104,7 +104,7 @@ export const getMemberTableColumns = (props: TableColumnsProps) =>
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
 			accessorKey: "role",
 			cell: ({ getValue }) => {
-				const role = getValue() as MemberRole;
+				const role = getValue() as MemberRole
 				return role ? (
 					<Badge
 						variant={
@@ -119,7 +119,7 @@ export const getMemberTableColumns = (props: TableColumnsProps) =>
 					</Badge>
 				) : (
 					"-"
-				);
+				)
 			},
 		},
 		{
@@ -132,7 +132,7 @@ export const getMemberTableColumns = (props: TableColumnsProps) =>
 			),
 			accessorKey: "forms",
 			cell: ({ getValue, row }) => {
-				const forms = getValue() as TableMember["forms"];
+				const forms = getValue() as TableMember["forms"]
 				return forms && row.original.role === MemberRole.contributor ? (
 					<div className="flex gap-2 overflow-x-scroll whitespace-nowrap">
 						{forms.map((form) => (
@@ -143,14 +143,14 @@ export const getMemberTableColumns = (props: TableColumnsProps) =>
 					</div>
 				) : (
 					"-"
-				);
+				)
 			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Joined" />,
 			accessorKey: "joined",
 			cell: ({ getValue }) => {
-				return new Date(getValue() as string).toLocaleDateString();
+				return new Date(getValue() as string).toLocaleDateString()
 			},
 		},
 		{
@@ -185,7 +185,7 @@ export const getMemberTableColumns = (props: TableColumnsProps) =>
 							</div>
 						</DropdownMenuContent>
 					</DropdownMenu>
-				);
+				)
 			},
 		},
-	] as const satisfies ColumnDef<TableMember, unknown>[];
+	] as const satisfies ColumnDef<TableMember, unknown>[]

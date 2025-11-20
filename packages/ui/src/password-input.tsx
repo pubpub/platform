@@ -1,19 +1,20 @@
-"use client";
+"use client"
+
+import type { InputProps } from "./input"
 
 // from https://gist.github.com/mjbalcueva/b21f39a8787e558d4c536bf68e267398#file-password-input-tsx
-import * as React from "react";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import * as React from "react"
+import { EyeIcon, EyeOffIcon } from "lucide-react"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import type { InputProps } from "./input";
-import { Button } from "./button";
-import { Input } from "./input";
+import { Button } from "./button"
+import { Input } from "./input"
 
 const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
 	({ className, ...props }, ref) => {
-		const [showPassword, setShowPassword] = React.useState(false);
-		const disabled = props.value === "" || props.value === undefined || props.disabled;
+		const [showPassword, setShowPassword] = React.useState(false)
+		const disabled = props.value === "" || props.value === undefined || props.disabled
 
 		return (
 			<div className="relative">
@@ -27,7 +28,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
 					type="button"
 					variant="ghost"
 					size="sm"
-					className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+					className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
 					onClick={() => setShowPassword((prev) => !prev)}
 					disabled={disabled}
 				>
@@ -51,9 +52,9 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
 					}
 				`}</style>
 			</div>
-		);
+		)
 	}
-);
-PasswordInput.displayName = "PasswordInput";
+)
+PasswordInput.displayName = "PasswordInput"
 
-export { PasswordInput };
+export { PasswordInput }

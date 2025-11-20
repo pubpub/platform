@@ -6,15 +6,17 @@
  * * No theme or copy button
  */
 
-import type { NodeView } from "prosemirror-view";
+import type { Node } from "prosemirror-model"
+import type { NodeView, EditorView as PMEditorView } from "prosemirror-view"
+import type { CodeBlockSettings } from "./types"
 
 import {
 	autocompletion,
 	closeBrackets,
 	closeBracketsKeymap,
 	completionKeymap,
-} from "@codemirror/autocomplete";
-import { defaultKeymap, indentWithTab } from "@codemirror/commands";
+} from "@codemirror/autocomplete"
+import { defaultKeymap, indentWithTab } from "@codemirror/commands"
 import {
 	bracketMatching,
 	defaultHighlightStyle,
@@ -22,9 +24,9 @@ import {
 	foldKeymap,
 	indentOnInput,
 	syntaxHighlighting,
-} from "@codemirror/language";
-import { highlightSelectionMatches, selectNextOccurrence } from "@codemirror/search";
-import { Compartment, EditorState } from "@codemirror/state";
+} from "@codemirror/language"
+import { highlightSelectionMatches, selectNextOccurrence } from "@codemirror/search"
+import { Compartment, EditorState } from "@codemirror/state"
 import {
 	drawSelection,
 	EditorView,
@@ -33,12 +35,9 @@ import {
 	keymap,
 	lineNumbers,
 	rectangularSelection,
-} from "@codemirror/view";
-import { exitCode, selectAll } from "prosemirror-commands";
-import { Node } from "prosemirror-model";
-import { EditorView as PMEditorView } from "prosemirror-view";
+} from "@codemirror/view"
+import { exitCode, selectAll } from "prosemirror-commands"
 
-import type { CodeBlockSettings } from "./types";
 import {
 	backspaceHandler,
 	computeChange,
@@ -46,18 +45,18 @@ import {
 	maybeEscape,
 	setMode,
 	valueChanged,
-} from "./utils";
+} from "./utils"
 
 export const codeMirrorBlockNodeView = (settings: CodeBlockSettings) => {
 	return (pmNode: Node, view: PMEditorView, getPos: (() => number) | boolean): NodeView => {
-		let node = pmNode;
-		let updating = false;
-		const wrap = document.createElement("pre");
-		wrap.className = "codeblock-wrapper";
-		const dom = document.createElement("code");
-		wrap.append(dom);
-		dom.className = "codeblock-root";
-		const languageConf = new Compartment();
+		let node = pmNode
+		let updating = false
+		const wrap = document.createElement("pre")
+		wrap.className = "codeblock-wrapper"
+		const dom = document.createElement("code")
+		wrap.append(dom)
+		dom.className = "codeblock-root"
+		const languageConf = new Compartment()
 		const state = EditorState.create({
 			extensions: [
 				EditorState.readOnly.of(settings.readOnly),
@@ -77,8 +76,8 @@ export const codeMirrorBlockNodeView = (settings: CodeBlockSettings) => {
 				languageConf.of([]),
 				indentOnInput(),
 				EditorView.domEventHandlers({
-					blur(event, cmView) {
-						cmView.dispatch({ selection: { anchor: 0 } });
+					blur(_event, cmView) {
+						cmView.dispatch({ selection: { anchor: 0 } })
 					},
 				}),
 				keymap.of([
@@ -116,41 +115,41 @@ export const codeMirrorBlockNodeView = (settings: CodeBlockSettings) => {
 					{
 						key: "Mod-a",
 						run: () => {
-							const result = selectAll(view.state, view.dispatch);
-							view.focus();
-							return result;
+							const result = selectAll(view.state, view.dispatch)
+							view.focus()
+							return result
 						},
 					},
 					{
 						key: "Enter",
 						run: (cmView) => {
-							const sel = cmView.state.selection.main;
+							const sel = cmView.state.selection.main
 							if (
 								cmView.state.doc.line(cmView.state.doc.lines).text === "" &&
 								sel.from === sel.to &&
 								sel.from === cmView.state.doc.length
 							) {
-								exitCode(view.state, view.dispatch);
-								view.focus();
-								return true;
+								exitCode(view.state, view.dispatch)
+								view.focus()
+								return true
 							}
-							return false;
+							return false
 						},
 					},
 					{
 						key: "Enter",
 						run: (cmView) => {
-							const sel = cmView.state.selection.main;
+							const sel = cmView.state.selection.main
 							if (
 								cmView.state.doc.line(cmView.state.doc.lines).text === "" &&
 								sel.from === sel.to &&
 								sel.from === cmView.state.doc.length
 							) {
-								exitCode(view.state, view.dispatch);
-								view.focus();
-								return true;
+								exitCode(view.state, view.dispatch)
+								view.focus()
+								return true
 							}
-							return false;
+							return false
 						},
 					},
 					...defaultKeymap,
@@ -162,48 +161,48 @@ export const codeMirrorBlockNodeView = (settings: CodeBlockSettings) => {
 				...(settings.theme ? settings.theme : []),
 			],
 			doc: node.textContent,
-		});
+		})
 
 		const codeMirrorView = new EditorView({
 			state,
 			dispatch: (tr) => {
-				codeMirrorView.update([tr]);
+				codeMirrorView.update([tr])
 				if (!updating) {
-					const textUpdate = tr.state.toJSON().doc;
-					valueChanged(textUpdate, node, getPos, view);
-					forwardSelection(codeMirrorView, view, getPos);
+					const textUpdate = tr.state.toJSON().doc
+					valueChanged(textUpdate, node, getPos, view)
+					forwardSelection(codeMirrorView, view, getPos)
 				}
 			},
-		});
-		dom.append(codeMirrorView.dom);
+		})
+		dom.append(codeMirrorView.dom)
 
-		const selectDeleteCB = settings.createSelect(settings, dom, node, view, getPos);
-		setMode(node.attrs.lang, codeMirrorView, settings, languageConf);
+		const selectDeleteCB = settings.createSelect(settings, dom, node, view, getPos)
+		setMode(node.attrs.lang, codeMirrorView, settings, languageConf)
 
 		return {
 			dom: wrap,
 			selectNode() {
-				codeMirrorView.focus();
+				codeMirrorView.focus()
 			},
 			stopEvent: (e: Event) => settings.stopEvent(e, node, getPos, view, dom),
 			setSelection: (anchor, head) => {
-				codeMirrorView.focus();
-				forwardSelection(codeMirrorView, view, getPos);
-				updating = true;
+				codeMirrorView.focus()
+				forwardSelection(codeMirrorView, view, getPos)
+				updating = true
 				codeMirrorView.dispatch({
 					selection: { anchor, head },
-				});
-				updating = false;
+				})
+				updating = false
 			},
 			update: (updateNode) => {
-				if (updateNode.type.name !== node.type.name) return false;
+				if (updateNode.type.name !== node.type.name) return false
 				if (updateNode.attrs.lang !== node.attrs.lang)
-					setMode(updateNode.attrs.lang, codeMirrorView, settings, languageConf);
-				const oldNode = node;
-				node = updateNode;
-				const change = computeChange(codeMirrorView.state.doc.toString(), node.textContent);
+					setMode(updateNode.attrs.lang, codeMirrorView, settings, languageConf)
+				const oldNode = node
+				node = updateNode
+				const change = computeChange(codeMirrorView.state.doc.toString(), node.textContent)
 				if (change) {
-					updating = true;
+					updating = true
 					codeMirrorView.dispatch({
 						changes: {
 							from: change.from,
@@ -211,16 +210,16 @@ export const codeMirrorBlockNodeView = (settings: CodeBlockSettings) => {
 							insert: change.text,
 						},
 						selection: { anchor: change.from + change.text.length },
-					});
-					updating = false;
+					})
+					updating = false
 				}
-				settings.updateSelect(settings, dom, updateNode, view, getPos, oldNode);
-				return true;
+				settings.updateSelect(settings, dom, updateNode, view, getPos, oldNode)
+				return true
 			},
 			ignoreMutation: () => true,
 			destroy: () => {
-				selectDeleteCB();
+				selectDeleteCB()
 			},
-		};
-	};
-};
+		}
+	}
+}

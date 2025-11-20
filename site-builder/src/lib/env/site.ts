@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-core";
-import { z } from "zod";
+import { createEnv } from "@t3-oss/env-core"
+import { z } from "zod"
 
 export const SITE_ENV = createEnv({
 	server: {
@@ -9,4 +9,4 @@ export const SITE_ENV = createEnv({
 	},
 	runtimeEnv: import.meta.env,
 	emptyStringAsUndefined: true,
-});
+})

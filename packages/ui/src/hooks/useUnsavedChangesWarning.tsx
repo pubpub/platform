@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import * as React from "react";
+import * as React from "react"
 
 export const useUnsavedChangesWarning = (enabled = true) => {
 	React.useEffect(() => {
@@ -8,12 +8,12 @@ export const useUnsavedChangesWarning = (enabled = true) => {
 			if (enabled) {
 				// The preventDefault call is necessary to trigger the browser's
 				// confirmation dialog.
-				event.preventDefault();
+				event.preventDefault()
 			}
-		};
-		window.addEventListener("beforeunload", handleBeforeUnload);
+		}
+		window.addEventListener("beforeunload", handleBeforeUnload)
 		return () => {
-			window.removeEventListener("beforeunload", handleBeforeUnload);
-		};
-	}, [enabled]);
-};
+			window.removeEventListener("beforeunload", handleBeforeUnload)
+		}
+	}, [enabled])
+}

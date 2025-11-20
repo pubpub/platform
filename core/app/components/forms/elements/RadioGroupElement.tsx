@@ -1,18 +1,19 @@
-"use client";
+"use client"
 
-import { useMemo, useState } from "react";
-import { Value } from "@sinclair/typebox/value";
-import { useFormContext } from "react-hook-form";
-import { radioGroupConfigSchema } from "schemas";
+import type { InputComponent } from "db/public"
+import type { ElementProps } from "../types"
 
-import type { InputComponent } from "db/public";
-import { CoreSchemaType } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { RadioGroup, RadioGroupItem } from "ui/radio-group";
+import { useMemo, useState } from "react"
+import { Value } from "@sinclair/typebox/value"
+import { useFormContext } from "react-hook-form"
+import { radioGroupConfigSchema } from "schemas"
 
-import type { ElementProps } from "../types";
-import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { CoreSchemaType } from "db/public"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { RadioGroup, RadioGroupItem } from "ui/radio-group"
+
+import { useFormElementToggleContext } from "../FormElementToggleContext"
 
 export const RadioGroupElement = ({
 	slug,
@@ -20,21 +21,21 @@ export const RadioGroupElement = ({
 	config,
 	schemaName,
 }: ElementProps<InputComponent.radioGroup>) => {
-	const { control, getValues } = useFormContext();
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
-	const isNumeric = schemaName === CoreSchemaType.NumericArray;
+	const { control, getValues } = useFormContext()
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(slug)
+	const isNumeric = schemaName === CoreSchemaType.NumericArray
 
 	const initialOther = useMemo(() => {
-		const initialValues: string[] | number[] = getValues()[slug];
-		const other = initialValues.filter((iv) => !config.values.some((cv) => cv === iv));
-		return other[0] ?? "";
-	}, []);
-	const [other, setOther] = useState<string | number>(initialOther);
+		const initialValues: string[] | number[] = getValues()[slug]
+		const other = initialValues.filter((iv) => !config.values.some((cv) => cv === iv))
+		return other[0] ?? ""
+	}, [config.values.some, getValues, slug])
+	const [other, setOther] = useState<string | number>(initialOther)
 
-	Value.Default(radioGroupConfigSchema, config);
+	Value.Default(radioGroupConfigSchema, config)
 	if (!Value.Check(radioGroupConfigSchema, config)) {
-		return null;
+		return null
 	}
 
 	return (
@@ -43,9 +44,9 @@ export const RadioGroupElement = ({
 			name={slug}
 			render={({ field }) => {
 				const handleRadioChange = (value: string) => {
-					field.onChange([isNumeric ? +value : value]);
-					setOther("");
-				};
+					field.onChange([isNumeric ? +value : value])
+					setOther("")
+				}
 				return (
 					<FormItem>
 						<FormLabel className="flex">{label}</FormLabel>
@@ -77,7 +78,7 @@ export const RadioGroupElement = ({
 											</FormControl>
 											<FormLabel>{v}</FormLabel>
 										</FormItem>
-									);
+									)
 								})}
 								{config.includeOther ? (
 									<FormItem className="flex items-center gap-2 space-y-0">
@@ -89,19 +90,19 @@ export const RadioGroupElement = ({
 												value={other}
 												disabled={!isEnabled}
 												onChange={(e) => {
-													const { value, valueAsNumber } = e.target;
-													let v: string | number = value;
+													const { value, valueAsNumber } = e.target
+													let v: string | number = value
 													if (isNumeric) {
-														if (isNaN(valueAsNumber)) {
-															setOther("");
-															field.onChange([]);
-															return;
+														if (Number.isNaN(valueAsNumber)) {
+															setOther("")
+															field.onChange([])
+															return
 														}
-														v = valueAsNumber;
+														v = valueAsNumber
 													}
 
-													setOther(v);
-													field.onChange([v]);
+													setOther(v)
+													field.onChange([v])
 												}}
 												data-testid="other-field"
 											/>
@@ -113,8 +114,8 @@ export const RadioGroupElement = ({
 						{config.help && <FormDescription>{config.help}</FormDescription>}
 						<FormMessage />
 					</FormItem>
-				);
+				)
 			}}
 		/>
-	);
-};
+	)
+}

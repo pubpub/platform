@@ -1,30 +1,31 @@
-import { useMemo } from "react";
-import { useFormContext } from "react-hook-form";
+import type { FormBuilderSchema } from "./types"
 
-import { Button } from "ui/button";
-import { FormLabel } from "ui/form";
-import { FormInput, Pencil, Plus } from "ui/icon";
-import { cn } from "utils";
+import { useMemo } from "react"
+import { useFormContext } from "react-hook-form"
 
-import type { FormBuilderSchema } from "./types";
-import { useBuilder } from "./BuilderContext";
-import { isButtonElement } from "./types";
+import { Button } from "ui/button"
+import { FormLabel } from "ui/form"
+import { FormInput, Pencil, Plus } from "ui/icon"
+import { cn } from "utils"
+
+import { useBuilder } from "./BuilderContext"
+import { isButtonElement } from "./types"
 
 export const ButtonOption = ({
 	label,
 	id,
 	readOnly,
 }: {
-	label: string;
-	id?: string;
-	readOnly?: boolean;
+	label: string
+	id?: string
+	readOnly?: boolean
 }) => {
 	// TODO: need a way to determine if button is primary or secondary
-	const buttonType: string = "primary";
-	const { openButtonConfigPanel } = useBuilder();
+	const buttonType: string = "primary"
+	const { openButtonConfigPanel } = useBuilder()
 	const handleClick = () => {
-		openButtonConfigPanel(id ?? label);
-	};
+		openButtonConfigPanel(id ?? label)
+	}
 	return (
 		// overflow-hidden to keep the div that is only a color inside the border radius
 		<div
@@ -39,7 +40,7 @@ export const ButtonOption = ({
 			<div className="ml-7 flex items-center gap-3">
 				<FormInput width="20px" />
 				<div className="flex h-full flex-col py-3">
-					<span className="text-sm font-medium text-muted-foreground">
+					<span className="font-medium text-muted-foreground text-sm">
 						{buttonType === "primary" ? "Primary Button" : "Secondary Button"}
 					</span>
 					<span className="font-semibold">{label}</span>
@@ -57,29 +58,29 @@ export const ButtonOption = ({
 				</Button>
 			) : null}
 		</div>
-	);
-};
+	)
+}
 
 export const SubmissionSettings = () => {
-	const { openButtonConfigPanel } = useBuilder();
+	const { openButtonConfigPanel } = useBuilder()
 	// This uses the parent's form context to get the most up to date version of 'elements'
-	const { getValues } = useFormContext<FormBuilderSchema>();
+	const { getValues } = useFormContext<FormBuilderSchema>()
 	const buttons = useMemo(() => {
-		const elements = getValues()["elements"];
-		return elements.filter((e) => isButtonElement(e));
-	}, []);
-	const showAddButton = buttons.length < 2;
+		const elements = getValues().elements
+		return elements.filter((e) => isButtonElement(e))
+	}, [getValues])
+	const showAddButton = buttons.length < 2
 	const handleAddNew = () => {
-		openButtonConfigPanel();
-	};
+		openButtonConfigPanel()
+	}
 
 	return (
 		<div>
-			<FormLabel className="text-sm uppercase text-gray-500">Submission Settings</FormLabel>
+			<FormLabel className="text-gray-500 text-sm uppercase">Submission Settings</FormLabel>
 			<hr className="my-2" />
 			<div className="flex flex-col items-start gap-3">
 				{buttons.map((b) => {
-					return <ButtonOption id={b.elementId} key={b.label} label={b.label} />;
+					return <ButtonOption id={b.elementId} key={b.label} label={b.label} />
 				})}
 				{showAddButton ? (
 					<Button
@@ -94,5 +95,5 @@ export const SubmissionSettings = () => {
 				) : null}
 			</div>
 		</div>
-	);
-};
+	)
+}

@@ -1,4 +1,4 @@
-import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
+import type { DOMOutputSpec, NodeSpec } from "prosemirror-model"
 
 const orderedList = {
 	content: "list_item+",
@@ -20,7 +20,7 @@ const orderedList = {
 					order: (node as Element).hasAttribute("start")
 						? +(node as Element).getAttribute("start")!
 						: 1,
-				};
+				}
 			},
 		},
 	],
@@ -33,9 +33,9 @@ const orderedList = {
 				start: node.attrs.order === 1 ? null : node.attrs.order,
 			},
 			0,
-		] as DOMOutputSpec;
+		] as DOMOutputSpec
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec
 
 const bulletList = {
 	content: "list_item+",
@@ -52,7 +52,7 @@ const bulletList = {
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
-				};
+				}
 			},
 		},
 	],
@@ -64,9 +64,9 @@ const bulletList = {
 				...(node.attrs.id && { id: node.attrs.id }),
 			},
 			0,
-		] as DOMOutputSpec;
+		] as DOMOutputSpec
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec
 
 const listItem = {
 	attrs: {
@@ -83,13 +83,13 @@ const listItem = {
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
-				};
+				}
 			},
 		},
 	],
 	toDOM: () => {
-		return ["li", 0] as DOMOutputSpec;
+		return ["li", 0] as DOMOutputSpec
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec
 
-export default { bulletList, orderedList, listItem };
+export default { bulletList, orderedList, listItem }

@@ -1,14 +1,15 @@
-import { describe, expect, expectTypeOf, it } from "vitest";
+import type { Seed } from "~/prisma/seed/createSeed"
 
-import { CoreSchemaType, MemberRole } from "db/public";
+import { describe, expect, it } from "vitest"
 
-import type { Seed } from "~/prisma/seed/createSeed";
-import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
+import { CoreSchemaType, MemberRole } from "db/public"
 
-const { createForEachMockedTransaction, testDb } = await mockServerCode();
+import { mockServerCode } from "~/lib/__tests__/utils"
+import { createSeed } from "~/prisma/seed/createSeed"
 
-const { getTrx } = createForEachMockedTransaction();
+const { createForEachMockedTransaction, testDb } = await mockServerCode()
+
+const { getTrx } = createForEachMockedTransaction()
 
 const communitySeed = createSeed({
 	community: {
@@ -75,112 +76,112 @@ const communitySeed = createSeed({
 			},
 		},
 	],
-});
+})
 
 const seed = async <T extends Seed | undefined>(trx = testDb, seed?: T) => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+	const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 	if (!seed) {
-		return seedCommunity(communitySeed, undefined, trx);
+		return seedCommunity(communitySeed, undefined, trx)
 	}
 
-	const seeded = await seedCommunity(seed, undefined, trx);
+	const seeded = await seedCommunity(seed, undefined, trx)
 
-	return seeded;
-};
+	return seeded
+}
 
 describe("fullTextSearch", () => {
 	it("should find exact matches in titles", async () => {
-		const trx = await getTrx();
-		const seeded = await seed(trx);
-		const { fullTextSearch } = await import("./pub");
+		const trx = await getTrx()
+		const seeded = await seed(trx)
+		const { fullTextSearch } = await import("./pub")
 
 		const results = await fullTextSearch(
 			"Machine Learning",
 			seeded.community.id,
 			seeded.users.admin.id
-		);
+		)
 
-		expect(results).toHaveLength(1);
-		expect(results[0].title).toBe("Machine Learning Fundamentals");
-		expect(results[0].titleHighlights).toContain("<mark>Machine</mark>");
-		expect(results[0].titleHighlights).toContain("<mark>Learning</mark>");
-	});
+		expect(results).toHaveLength(1)
+		expect(results[0].title).toBe("Machine Learning Fundamentals")
+		expect(results[0].titleHighlights).toContain("<mark>Machine</mark>")
+		expect(results[0].titleHighlights).toContain("<mark>Learning</mark>")
+	})
 
 	it("should find matches in content", async () => {
-		const trx = await getTrx();
-		const seeded = await seed(trx);
-		const { fullTextSearch } = await import("./pub");
+		const trx = await getTrx()
+		const seeded = await seed(trx)
+		const { fullTextSearch } = await import("./pub")
 
 		const results = await fullTextSearch(
 			"neural networks",
 			seeded.community.id,
 			seeded.users.admin.id
-		);
+		)
 
-		expect(results).toHaveLength(2);
-		expect(results.some((r) => r.title === "Machine Learning Fundamentals")).toBe(true);
-		expect(results.some((r) => r.title === "Deep Learning Applications")).toBe(true);
+		expect(results).toHaveLength(2)
+		expect(results.some((r) => r.title === "Machine Learning Fundamentals")).toBe(true)
+		expect(results.some((r) => r.title === "Deep Learning Applications")).toBe(true)
 
-		const matchingValues = results[0].matchingValues;
-		expect(matchingValues).toBeDefined();
-		expect(matchingValues.some((v) => v.highlights.includes("<mark>neural</mark>"))).toBe(true);
+		const matchingValues = results[0].matchingValues
+		expect(matchingValues).toBeDefined()
+		expect(matchingValues.some((v) => v.highlights.includes("<mark>neural</mark>"))).toBe(true)
 		expect(matchingValues.some((v) => v.highlights.includes("<mark>networks</mark>"))).toBe(
 			true
-		);
-	});
+		)
+	})
 
 	it("should find matches in tags", async () => {
-		const trx = await getTrx();
-		const seeded = await seed(trx);
-		const { fullTextSearch } = await import("./pub");
+		const trx = await getTrx()
+		const seeded = await seed(trx)
+		const { fullTextSearch } = await import("./pub")
 
-		const results = await fullTextSearch("AI", seeded.community.id, seeded.users.admin.id);
+		const results = await fullTextSearch("AI", seeded.community.id, seeded.users.admin.id)
 
-		expect(results).toHaveLength(2);
-		expect(results.some((r) => r.title === "Machine Learning Fundamentals")).toBe(true);
-		expect(results.some((r) => r.title === "Deep Learning Applications")).toBe(true);
+		expect(results).toHaveLength(2)
+		expect(results.some((r) => r.title === "Machine Learning Fundamentals")).toBe(true)
+		expect(results.some((r) => r.title === "Deep Learning Applications")).toBe(true)
 
-		const matchingValues = results[0].matchingValues;
-		expect(matchingValues).toBeDefined();
-		expect(matchingValues.some((v) => v.highlights.includes("<mark>AI</mark>"))).toBe(true);
-	});
+		const matchingValues = results[0].matchingValues
+		expect(matchingValues).toBeDefined()
+		expect(matchingValues.some((v) => v.highlights.includes("<mark>AI</mark>"))).toBe(true)
+	})
 
 	it("should handle partial word matches", async () => {
-		const trx = await getTrx();
-		const seeded = await seed(trx);
-		const { fullTextSearch } = await import("./pub");
+		const trx = await getTrx()
+		const seeded = await seed(trx)
+		const { fullTextSearch } = await import("./pub")
 
-		const results = await fullTextSearch("learn", seeded.community.id, seeded.users.admin.id);
+		const results = await fullTextSearch("learn", seeded.community.id, seeded.users.admin.id)
 
-		expect(results.length).toBeGreaterThan(0);
+		expect(results.length).toBeGreaterThan(0)
 		results.forEach((result) => {
 			const hasMatch =
 				result.title?.toLowerCase().includes("learn") ||
 				result.matchingValues.some((v) =>
 					(v.value as string).toLowerCase().includes("learn")
-				);
-			expect(hasMatch).toBe(true);
-		});
-	});
+				)
+			expect(hasMatch).toBe(true)
+		})
+	})
 
 	it("should rank results by relevance", async () => {
-		const trx = await getTrx();
-		const seeded = await seed(trx);
-		const { fullTextSearch } = await import("./pub");
+		const trx = await getTrx()
+		const seeded = await seed(trx)
+		const { fullTextSearch } = await import("./pub")
 
 		const results = await fullTextSearch(
 			"database SQL",
 			seeded.community.id,
 			seeded.users.admin.id
-		);
+		)
 
-		expect(results.length).toBeGreaterThan(0);
+		expect(results.length).toBeGreaterThan(0)
 		// The pub with both "database" and "SQL" in title/content should be ranked first
-		expect(results[0].title).toBe("Database Design Patterns");
-	});
+		expect(results[0].title).toBe("Database Design Patterns")
+	})
 
 	it("should limit results to 10 items", async () => {
-		const trx = await getTrx();
+		const trx = await getTrx()
 		// Create a seed with more than 10 matching items
 		const manyPubsSeed = {
 			...communitySeed,
@@ -195,41 +196,41 @@ describe("fullTextSearch", () => {
 						Tags: "test",
 					},
 				})),
-		} as Seed;
+		} as Seed
 
-		const seeded = await seed(trx, manyPubsSeed);
-		const { fullTextSearch } = await import("./pub");
+		const seeded = await seed(trx, manyPubsSeed)
+		const { fullTextSearch } = await import("./pub")
 
-		const results = await fullTextSearch("test", seeded.community.id, seeded.users.admin.id);
+		const results = await fullTextSearch("test", seeded.community.id, seeded.users.admin.id)
 
-		expect(results).toHaveLength(10);
-	});
+		expect(results).toHaveLength(10)
+	})
 
 	it("should handle empty or invalid queries gracefully", async () => {
-		const trx = await getTrx();
-		const seeded = await seed(trx);
-		const { fullTextSearch } = await import("./pub");
+		const trx = await getTrx()
+		const seeded = await seed(trx)
+		const { fullTextSearch } = await import("./pub")
 
-		const emptyResults = await fullTextSearch("", seeded.community.id, seeded.users.admin.id);
-		expect(emptyResults).toHaveLength(0);
+		const emptyResults = await fullTextSearch("", seeded.community.id, seeded.users.admin.id)
+		expect(emptyResults).toHaveLength(0)
 
 		const invalidResults = await fullTextSearch(
 			"!@#$%^",
 			seeded.community.id,
 			seeded.users.admin.id
-		);
-		expect(invalidResults).toHaveLength(0);
-	});
-});
+		)
+		expect(invalidResults).toHaveLength(0)
+	})
+})
 
 describe("searching", () => {
 	it("should find pubs by full text search", async () => {
 		// const { community, pubFields, pubTypes } = await seedCommunity(seed);
 
-		const trx = getTrx();
-		const seeded = await seed(trx);
+		const trx = getTrx()
+		const seeded = await seed(trx)
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		// search for "machine learning" - should find pub1
 		const searchResults1 = await getPubsWithRelatedValues(
@@ -241,58 +242,58 @@ describe("searching", () => {
 				withPubType: true,
 				withStage: true,
 			}
-		);
+		)
 
-		expect(searchResults1).toHaveLength(1);
+		expect(searchResults1).toHaveLength(1)
 
 		// search for "climate" - should find pub2
 		const searchResults2 = await getPubsWithRelatedValues(
 			{ communityId: seeded.community.id },
 			{ search: "machine" }
-		);
+		)
 
-		expect(searchResults2).toHaveLength(1);
+		expect(searchResults2).toHaveLength(1)
 
 		// search for "research" - should find pub1 (in title)
 		const searchResults3 = await getPubsWithRelatedValues(
 			{ communityId: seeded.community.id },
 			{ search: "machine" }
-		);
+		)
 
-		expect(searchResults3).toHaveLength(1);
-	});
+		expect(searchResults3).toHaveLength(1)
+	})
 
 	it("should return empty results for non-matching search terms", async () => {
-		const trx = getTrx();
-		const seeded = await seed(trx);
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const trx = getTrx()
+		const seeded = await seed(trx)
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const searchResults = await getPubsWithRelatedValues(
 			{ communityId: seeded.community.id },
 			{ search: "nonexistent term" }
-		);
+		)
 
-		expect(searchResults).toHaveLength(0);
-	});
+		expect(searchResults).toHaveLength(0)
+	})
 
 	it("should handle search with multiple terms", async () => {
-		const trx = getTrx();
-		const seeded = await seed(trx);
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const trx = getTrx()
+		const seeded = await seed(trx)
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		// search with multiple terms - should find the pub
 		const searchResults = await getPubsWithRelatedValues(
 			{ communityId: seeded.community.id },
 			{ search: "machine learning neural" }
-		);
+		)
 
-		expect(searchResults).toHaveLength(1);
-	});
+		expect(searchResults).toHaveLength(1)
+	})
 
 	it("should combine search with other filters", async () => {
-		const trx = getTrx();
-		const seeded = await seed(trx);
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const trx = getTrx()
+		const seeded = await seed(trx)
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		// create pubs of different types
 
@@ -300,8 +301,8 @@ describe("searching", () => {
 		const searchResults = await getPubsWithRelatedValues(
 			{ communityId: seeded.community.id, pubTypeId: [seeded.pubTypes["Basic Pub"].id] },
 			{ search: "machine" }
-		);
+		)
 
-		expect(searchResults).toHaveLength(1);
-	});
-});
+		expect(searchResults).toHaveLength(1)
+	})
+})

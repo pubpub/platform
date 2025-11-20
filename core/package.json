@@ -28,16 +28,12 @@
 		"build:turbo": "SKIP_VALIDATION=true NODE_OPTIONS=\"--max-old-space-size=8192\" next build --turbo",
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
 		"load-test": "dotenv -e .env.local -e .env.development artillery run load-test.yaml",
-		"lint": "eslint",
-		"lint:fix": "eslint --fix",
 		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm --filter db make-kysely-types",
 		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
 		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
 		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
 		"prisma": "dotenv -e .env.local -e .env.development prisma",
 		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
-		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore",
-		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore",
 		"start": "next start",
 		"start:dev": "dotenv -e .env.local -e .env.development pnpm start | pino-pretty",
 		"reset-base": "dotenv -e .env.local -e .env.development prisma migrate reset -- --preview-feature --force | pino-pretty",
@@ -52,10 +48,7 @@
 		"storybook": "SKIP_VALIDATION=true PUBPUB_URL=http://localhost:6006 storybook dev -p 6006 --no-open",
 		"build-storybook": "SKIP_VALIDATION=true storybook build"
 	},
-	"files": [
-		".next",
-		"public"
-	],
+	"files": [".next", "public"],
 	"prisma": {
 		"__comment": "The #register-loader goes to the correct file based on the .imports setting below",
 		"seed": "tsx --import #register-loader prisma/seed.ts"
@@ -127,8 +120,8 @@
 		"nuqs": "catalog:",
 		"openapi3-ts": "^4.5.0",
 		"oslo": "^1.2.1",
-		"parse-english": "^7.0.0",
 		"p-map": "^7.0.3",
+		"parse-english": "^7.0.0",
 		"pg": "^8.16.3",
 		"prosemirror-markdown": "^1.13.2",
 		"prosemirror-model": "catalog:",
@@ -165,14 +158,13 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "^2.3.6",
 		"@chromatic-com/storybook": "^4.1.1",
 		"@hookform/devtools": "^4.4.0",
 		"@playwright/test": "catalog:",
 		"@preconstruct/next": "^4.0.0",
 		"@prisma/generator-helper": "^5.22.0",
 		"@prisma/internals": "^5.22.0",
-		"@pubpub/eslint-config": "workspace:*",
-		"@pubpub/prettier-config": "workspace:*",
 		"@storybook/addon-docs": "^9.1.2",
 		"@storybook/addon-onboarding": "^9.1.2",
 		"@storybook/addon-vitest": "9.0.8",
@@ -227,7 +219,6 @@
 		"vitest": "catalog:",
 		"yargs": "^17.7.2"
 	},
-	"prettier": "@pubpub/prettier-config",
 	"imports": {
 		"#register-loader": "./prisma/seed/stubs/register-loader.js"
 	}

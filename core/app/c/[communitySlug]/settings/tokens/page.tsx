@@ -1,37 +1,37 @@
-import type { Metadata } from "next";
+import type { CreateTokenFormContext } from "db/types"
+import type { Metadata } from "next"
 
-import { notFound } from "next/navigation";
-import { Key } from "lucide-react";
+import { notFound } from "next/navigation"
+import { Key } from "lucide-react"
 
-import type { CreateTokenFormContext } from "db/types";
-import { Capabilities, MembershipType } from "db/public";
-import { NO_STAGE_OPTION } from "db/types";
-import { cn } from "utils";
+import { Capabilities, MembershipType } from "db/public"
+import { NO_STAGE_OPTION } from "db/types"
+import { cn } from "utils"
 
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { getAllPubTypesForCommunity } from "~/lib/server";
-import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
-import { getStages } from "~/lib/server/stages";
-import { ContentLayout } from "../../ContentLayout";
-import { CreateTokenButton } from "./CreateTokenButton";
-import { ExistingToken } from "./ExistingToken";
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { getAllPubTypesForCommunity } from "~/lib/server"
+import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
+import { getStages } from "~/lib/server/stages"
+import { ContentLayout } from "../../ContentLayout"
+import { CreateTokenButton } from "./CreateTokenButton"
+import { ExistingToken } from "./ExistingToken"
 
 export const metadata: Metadata = {
 	title: "API Access Tokens",
-};
+}
 
-export default async function Page(props: { params: { communitySlug: string } }) {
-	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+export default async function Page(_props: { params: { communitySlug: string } }) {
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!user) {
-		redirectToLogin();
+		redirectToLogin()
 	}
 
 	if (!community) {
-		return notFound();
+		return notFound()
 	}
 
 	const [canEditCommunity, stages, pubTypes, existingTokens] = await Promise.all([
@@ -46,10 +46,10 @@ export default async function Page(props: { params: { communitySlug: string } })
 		getStages({ communityId: community.id, userId: user.id }).execute(),
 		getAllPubTypesForCommunity(community.slug).execute(),
 		getApiAccessTokensByCommunity(community.id).execute(),
-	]);
+	])
 
 	if (!canEditCommunity) {
-		return await redirectToUnauthorized();
+		return await redirectToUnauthorized()
 	}
 
 	const stagesOptions = {
@@ -62,7 +62,7 @@ export default async function Page(props: { params: { communitySlug: string } })
 			})),
 		],
 		allValues: [NO_STAGE_OPTION.value, ...stages.map((stage) => stage.id)],
-	} satisfies CreateTokenFormContext["stages"];
+	} satisfies CreateTokenFormContext["stages"]
 
 	const pubTypesOptions = {
 		pubTypes,
@@ -71,7 +71,7 @@ export default async function Page(props: { params: { communitySlug: string } })
 			value: pubType.id,
 		})),
 		allValues: pubTypes.map((pubType) => pubType.id),
-	} satisfies CreateTokenFormContext["pubTypes"];
+	} satisfies CreateTokenFormContext["pubTypes"]
 
 	return (
 		<ContentLayout
@@ -111,5 +111,5 @@ export default async function Page(props: { params: { communitySlug: string } })
 				</div>
 			</div>
 		</ContentLayout>
-	);
+	)
 }

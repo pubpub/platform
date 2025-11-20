@@ -1,10 +1,10 @@
-import { describe, expect, test } from "vitest";
+import type { CommunitiesId, StagesId } from "db/public"
 
-import type { CommunitiesId, StagesId } from "db/public";
+import { describe, expect, test } from "vitest"
 
-import { getOrderedStages } from "./stages";
+import { getOrderedStages } from "./stages"
 
-const date = new Date();
+const date = new Date()
 const biconnectedStages = [
 	{
 		moveConstraints: [
@@ -83,7 +83,7 @@ const biconnectedStages = [
 		order: "aa",
 		communityId: "5419787f-4958-4a47-8519-eefc85613177" as CommunitiesId,
 	},
-];
+]
 
 const stages = [
 	{
@@ -198,31 +198,31 @@ const stages = [
 		order: "gg",
 		communityId: "5419787f-4958-4a47-8519-eefc85613177" as CommunitiesId,
 	},
-];
+]
 
 describe("stage sorting", () => {
 	test("it includes stages from biconnected graphs (even though they can't be sorted)", () => {
-		const sorted = getOrderedStages(biconnectedStages);
-		expect(sorted.length).toBe(3);
-	});
+		const sorted = getOrderedStages(biconnectedStages)
+		expect(sorted.length).toBe(3)
+	})
 
 	test("it renders the last stage last", () => {
-		const sorted = getOrderedStages(stages);
-		expect(sorted[sorted.length - 1].name).toBe("Published");
-	});
+		const sorted = getOrderedStages(stages)
+		expect(sorted[sorted.length - 1].name).toBe("Published")
+	})
 
 	test("it doesn't duplicate stages when there are multiple roots", () => {
-		const sorted = getOrderedStages(stages);
-		expect(sorted.length).toEqual(new Set(sorted.map((stage) => stage.name)).size);
-	});
+		const sorted = getOrderedStages(stages)
+		expect(sorted.length).toEqual(new Set(sorted.map((stage) => stage.name)).size)
+	})
 	test("it doesn't crash or duplicate stages when a graph includes a cycle", () => {
-		const biconnected = structuredClone(biconnectedStages);
-		const stagesWithCycle = [...structuredClone(stages), ...biconnected];
+		const biconnected = structuredClone(biconnectedStages)
+		const stagesWithCycle = [...structuredClone(stages), ...biconnected]
 		stagesWithCycle[0].moveConstraints.push({
 			id: biconnected[0].id,
 			name: biconnected[0].name,
-		});
-		const sorted = getOrderedStages(stagesWithCycle);
-		expect(sorted.length).toEqual(new Set(sorted.map((stage) => stage.name)).size);
-	});
-});
+		})
+		const sorted = getOrderedStages(stagesWithCycle)
+		expect(sorted.length).toEqual(new Set(sorted.map((stage) => stage.name)).size)
+	})
+})

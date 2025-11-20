@@ -14,17 +14,17 @@ const makeNamedTypeImports = (declaration) => {
 			...typeImport,
 			isDefault: false,
 		})),
-	};
+	}
 
 	if ("properties" in declaration) {
 		return {
 			...declarationWithNonDefaultImports,
 			properties: declaration.properties.map(makeNamedTypeImports),
-		};
+		}
 	}
 
-	return declarationWithNonDefaultImports;
-};
+	return declarationWithNonDefaultImports
+}
 
 /**
  * This hook makes all the default exports of the database be named exports, so that they can be imported with `import { Table } from "db/table"`.
@@ -33,18 +33,18 @@ const makeNamedTypeImports = (declaration) => {
  *
  * @type {import("kanel").PreRenderHook}
  */
-function kanelDatabaseDefaultExportFixPreRenderHook(outputAcc, instantiatedConfig) {
+function kanelDatabaseDefaultExportFixPreRenderHook(outputAcc, _instantiatedConfig) {
 	return Object.fromEntries(
 		Object.entries(outputAcc).map(([name, output]) => {
 			output.declarations = output.declarations.flatMap((declaration) => {
-				const declarationWithNamedImports = makeNamedTypeImports(declaration);
+				const declarationWithNamedImports = makeNamedTypeImports(declaration)
 
-				return declarationWithNamedImports;
-			});
+				return declarationWithNamedImports
+			})
 
-			return [name, output];
+			return [name, output]
 		})
-	);
+	)
 }
 
-module.exports = { kanelDatabaseDefaultExportFixPreRenderHook };
+module.exports = { kanelDatabaseDefaultExportFixPreRenderHook }

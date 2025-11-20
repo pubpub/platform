@@ -1,11 +1,11 @@
-import type { Static, TObject } from "@sinclair/typebox";
+import type { Static, TObject } from "@sinclair/typebox"
 
-import { Type } from "@sinclair/typebox";
+import { Type } from "@sinclair/typebox"
 
-import { CoreSchemaType, InputComponent } from "db/public";
+import { CoreSchemaType, InputComponent } from "db/public"
 
 export const defaultComponent = <T extends CoreSchemaType>(schemaName: T) =>
-	componentsBySchema[schemaName][0] ?? null;
+	componentsBySchema[schemaName][0] ?? null
 
 export const componentsBySchema = {
 	[CoreSchemaType.Boolean]: [InputComponent.checkbox],
@@ -32,9 +32,9 @@ export const componentsBySchema = {
 	[CoreSchemaType.Null]: [],
 	[CoreSchemaType.RichText]: [InputComponent.richText],
 	[CoreSchemaType.Color]: [InputComponent.colorPicker],
-} as const satisfies Record<CoreSchemaType, InputComponent[]>;
+} as const satisfies Record<CoreSchemaType, InputComponent[]>
 
-export type ComponentsBySchemaType = typeof componentsBySchema;
+export type ComponentsBySchemaType = typeof componentsBySchema
 
 /**
  * Map of InputComponent to CoreSchemaType
@@ -47,15 +47,15 @@ export type SchemaTypeByInputComponent = {
 	[K in InputComponent]: {
 		[SchemaType in CoreSchemaType as K extends ComponentsBySchemaType[SchemaType][number]
 			? SchemaType
-			: never]: SchemaType;
+			: never]: SchemaType
 	} extends infer T
 		? keyof T extends never
 			? // for non-schematype specific InputComponents, like relationBlock
 				CoreSchemaType
 			: // for schematype specific InputComponents, like checkbox
 				T[keyof T]
-		: never;
-};
+		: never
+}
 
 export const checkboxConfigSchema = Type.Object({
 	checkboxLabel: Type.Optional(Type.String()),
@@ -63,7 +63,7 @@ export const checkboxConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	defaultValue: Type.Boolean({ default: false }),
 	help: Type.Optional(Type.String()),
-});
+})
 
 export const textAreaConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
@@ -71,28 +71,28 @@ export const textAreaConfigSchema = Type.Object({
 	help: Type.Optional(Type.String()),
 	maxLength: Type.Optional(Type.Integer()),
 	minLength: Type.Optional(Type.Integer()),
-});
+})
 export const textInputConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	placeholder: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-});
+})
 export const datePickerConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-});
+})
 export const fileUploadConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-});
+})
 export const memberSelectConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-});
+})
 export const confidenceIntervalConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-});
+})
 export const checkboxGroupConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
@@ -100,26 +100,26 @@ export const checkboxGroupConfigSchema = Type.Object({
 	includeOther: Type.Optional(Type.Boolean()),
 	userShouldSelect: Type.Optional(Type.String()),
 	numCheckboxes: Type.Optional(Type.Number()),
-});
+})
 export const radioGroupConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())], { default: [] }),
 	includeOther: Type.Optional(Type.Boolean()),
-});
+})
 export const selectDropdownConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 	values: Type.Union([Type.Array(Type.String()), Type.Array(Type.Number())], { default: [] }),
-});
+})
 export const multivalueInputConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-});
+})
 export const richTextInputConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-});
+})
 export const relationBlockConfigSchema = Type.Object(
 	{
 		// "relationshipConfig" is the config 'around' the related values
@@ -131,7 +131,7 @@ export const relationBlockConfigSchema = Type.Object(
 	},
 	// For the "related values", which can be of any of the above ConfigSchema types
 	{ additionalProperties: true }
-);
+)
 
 export enum ColorPickerType {
 	Hex = "hex",
@@ -157,7 +157,7 @@ export const colorPickerConfigSchema = Type.Object({
 		)
 	),
 	presetsOnly: Type.Optional(Type.Boolean({ default: false })),
-});
+})
 
 export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
@@ -174,8 +174,8 @@ export const componentConfigSchemas = {
 	[InputComponent.multivalueInput]: multivalueInputConfigSchema,
 	[InputComponent.relationBlock]: relationBlockConfigSchema,
 	[InputComponent.colorPicker]: colorPickerConfigSchema,
-} as const satisfies Record<InputComponent, TObject>;
+} as const satisfies Record<InputComponent, TObject>
 
 export type InputComponentConfigSchema<T extends InputComponent> = Static<
 	(typeof componentConfigSchemas)[T]
->;
+>

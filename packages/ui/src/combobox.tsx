@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react"
+import { Check, ChevronsUpDown } from "lucide-react"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import { Button } from "./button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "./command";
-import { Popover, PopoverContent, PopoverTrigger } from "./popover";
+import { Button } from "./button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "./command"
+import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 
 const frameworks = [
 	{
@@ -30,11 +30,11 @@ const frameworks = [
 		value: "astro",
 		label: "Astro",
 	},
-];
+]
 
 export function ComboboxDemo() {
-	const [open, setOpen] = React.useState(false);
-	const [value, setValue] = React.useState("");
+	const [open, setOpen] = React.useState(false)
+	const [value, setValue] = React.useState("")
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -61,8 +61,8 @@ export function ComboboxDemo() {
 								key={framework.value}
 								value={framework.value}
 								onSelect={(currentValue) => {
-									setValue(currentValue === value ? "" : currentValue);
-									setOpen(false);
+									setValue(currentValue === value ? "" : currentValue)
+									setOpen(false)
 								}}
 							>
 								<Check
@@ -78,5 +78,5 @@ export function ComboboxDemo() {
 				</Command>
 			</PopoverContent>
 		</Popover>
-	);
+	)
 }

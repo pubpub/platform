@@ -1,4 +1,4 @@
 export type InstanceJobPayload<T> = {
-	instanceId: string;
-	body: T;
-};
+	instanceId: string
+	body: T
+}

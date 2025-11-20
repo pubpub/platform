@@ -1,4 +1,4 @@
-import { slugifyString } from "./string";
+import { slugifyString } from "./string"
 
-export const defaultFormName = (pubTypeName: string) => `${pubTypeName} (Default)`;
-export const defaultFormSlug = (pubTypeName: string) => `${slugifyString(pubTypeName)}-default`;
+export const defaultFormName = (pubTypeName: string) => `${pubTypeName} (Default)`
+export const defaultFormSlug = (pubTypeName: string) => `${slugifyString(pubTypeName)}-default`

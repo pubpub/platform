@@ -1,8 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
-import nextra from "nextra";
+import nextra from "nextra"
 
-import { path } from "./utils/path";
+import { path } from "./utils/path"
 
 const withNextra = nextra({
 	search: true,
@@ -11,7 +11,7 @@ const withNextra = nextra({
 			//
 		},
 	},
-});
+})
 
 const nextConfig: NextConfig = withNextra({
 	output: "export",
@@ -26,6 +26,6 @@ const nextConfig: NextConfig = withNextra({
 		parallelServerBuildTraces: true,
 		webpackBuildWorker: true,
 	},
-});
+})
 
-export default nextConfig;
+export default nextConfig

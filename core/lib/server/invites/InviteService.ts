@@ -1,10 +1,3 @@
-import crypto from "node:crypto";
-
-import type { ExpressionBuilder } from "kysely";
-import type { User } from "lucia";
-
-import { jsonObjectFrom } from "kysely/helpers/postgres";
-
 import type {
 	CommunitiesId,
 	FormsId,
@@ -13,22 +6,27 @@ import type {
 	PubsId,
 	StagesId,
 	UsersId,
-} from "db/public";
-import type { Invite, LastModifiedBy, NewInvite } from "db/types";
-import { InviteStatus, MembershipType } from "db/public";
-import { logger } from "logger";
-import { expect } from "utils";
+} from "db/public"
+import type { Invite, LastModifiedBy, NewInvite } from "db/types"
+import type { ExpressionBuilder } from "kysely"
+import type { SafeUser } from "../user"
+import type { InvitedByStep, NewUser } from "./InviteBuilder"
 
-import type { SafeUser } from "../user";
-import type { InvitedByStep, NewUser } from "./InviteBuilder";
-import { db } from "~/kysely/database";
-import { compareMemberRoles } from "~/lib/authorization/rolesRanking";
-import { env } from "~/lib/env/env";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { getLoginData } from "../../authentication/loginData";
-import { autoRevalidate } from "../cache/autoRevalidate";
-import { getCommunitySlug } from "../cache/getCommunitySlug";
-import { maybeWithTrx } from "../maybeWithTrx";
+import crypto from "node:crypto"
+import { jsonObjectFrom } from "kysely/helpers/postgres"
+
+import { InviteStatus, MembershipType } from "db/public"
+import { logger } from "logger"
+import { expect } from "utils"
+
+import { db } from "~/kysely/database"
+import { compareMemberRoles } from "~/lib/authorization/rolesRanking"
+import { env } from "~/lib/env/env"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { getLoginData } from "../../authentication/loginData"
+import { autoRevalidate } from "../cache/autoRevalidate"
+import { getCommunitySlug } from "../cache/getCommunitySlug"
+import { maybeWithTrx } from "../maybeWithTrx"
 import {
 	coalesceMemberships,
 	insertCommunityMembershipsOverrideRole,
@@ -37,10 +35,10 @@ import {
 	selectCommunityMemberships,
 	selectPubMemberships,
 	selectStageMemberships,
-} from "../member";
-import { addUser, generateUserSlug, getUser, SAFE_USER_SELECT } from "../user";
-import { withInvitedFormIds } from "./helpers";
-import { InviteBuilder } from "./InviteBuilder";
+} from "../member"
+import { addUser, generateUserSlug, getUser, SAFE_USER_SELECT } from "../user"
+import { withInvitedFormIds } from "./helpers"
+import { InviteBuilder } from "./InviteBuilder"
 
 /**
  * Collection of methods for managing invites
@@ -64,7 +62,7 @@ export namespace InviteService {
 		USER_NOT_LOGGED_IN: "User not logged in",
 		INVITE_USELESS: "Invite is useless, as it would not grant the user any new permissions",
 		UNKNOWN: "Unknown invite error",
-	} as const;
+	} as const
 
 	export const invalidInviteMap = {
 		[InviteStatus.rejected]: "REJECTED",
@@ -73,32 +71,32 @@ export namespace InviteService {
 		[InviteStatus.accepted]: false,
 		[InviteStatus.pending]: false,
 		[InviteStatus.completed]: false,
-	} satisfies Record<InviteStatus, false | InviteErrorType>;
+	} satisfies Record<InviteStatus, false | InviteErrorType>
 
-	export type InviteErrorType = keyof typeof INVITE_ERRORS;
+	export type InviteErrorType = keyof typeof INVITE_ERRORS
 
 	export class InviteError extends Error {
-		code: InviteErrorType;
-		status?: InviteStatus;
+		code: InviteErrorType
+		status?: InviteStatus
 		constructor(
 			code: InviteErrorType,
 			opts?: {
-				status?: InviteStatus;
-				additionalMessage?: string;
-				logContext?: Record<string, unknown>;
+				status?: InviteStatus
+				additionalMessage?: string
+				logContext?: Record<string, unknown>
 			}
 		) {
-			const msg = `${code}: ${INVITE_ERRORS[code]}.${opts?.additionalMessage ?? ""}`;
+			const msg = `${code}: ${INVITE_ERRORS[code]}.${opts?.additionalMessage ?? ""}`
 			if (opts?.logContext) {
 				// these are expected errors, so we don't want to log them as errors
 				logger.debug({
 					msg,
 					...opts.logContext,
-				});
+				})
 			}
-			super(msg);
-			this.code = code;
-			this.status = opts?.status;
+			super(msg)
+			this.code = code
+			this.status = opts?.status
 		}
 	}
 
@@ -107,7 +105,7 @@ export namespace InviteService {
 		user: { id: UsersId; email: string } | null
 	) => {
 		if (!user) {
-			return;
+			return
 		}
 
 		if (invite.userId && invite.userId !== user.id) {
@@ -117,25 +115,25 @@ export namespace InviteService {
 					userId: user.id,
 				},
 				status: invite.status,
-			});
+			})
 		}
-	};
+	}
 	//==============================================
 
 	/**
 	 * Invite someone and create an account for them
 	 */
-	export function inviteUser(user: NewUser): InvitedByStep;
+	export function inviteUser(user: NewUser): InvitedByStep
 	/**
 	 * Invite a specific user
 	 */
-	export function inviteUser(user: UsersId): InvitedByStep;
+	export function inviteUser(user: UsersId): InvitedByStep
 	export function inviteUser(user: UsersId | NewUser): InvitedByStep {
 		// this looks silly, is just for typescript
 		if (typeof user === "string") {
-			return InviteBuilder.inviteUser(user);
+			return InviteBuilder.inviteUser(user)
 		}
-		return InviteBuilder.inviteUser(user);
+		return InviteBuilder.inviteUser(user)
 	}
 
 	/**
@@ -189,7 +187,7 @@ export namespace InviteService {
 					.$notNull()
 					.as("user"),
 			])
-			.executeTakeFirst() as Promise<Invite | null>;
+			.executeTakeFirst() as Promise<Invite | null>
 	}
 
 	/**
@@ -207,13 +205,10 @@ export namespace InviteService {
 			userId,
 			provisionalUser,
 			...restData
-		} = data;
-		const communityFormSlugsOrIds = [
-			...(communityFormSlugs ?? []),
-			...(communityFormIds ?? []),
-		];
-		const pubFormSlugsOrIds = [...(pubFormSlugs ?? []), ...(pubFormIds ?? [])];
-		const stageFormSlugsOrIds = [...(stageFormSlugs ?? []), ...(stageFormIds ?? [])];
+		} = data
+		const communityFormSlugsOrIds = [...(communityFormSlugs ?? []), ...(communityFormIds ?? [])]
+		const pubFormSlugsOrIds = [...(pubFormSlugs ?? []), ...(pubFormIds ?? [])]
+		const stageFormSlugsOrIds = [...(stageFormSlugs ?? []), ...(stageFormIds ?? [])]
 
 		const type =
 			pubFormSlugsOrIds.length > 0
@@ -222,25 +217,25 @@ export namespace InviteService {
 					? MembershipType.stage
 					: communityFormSlugsOrIds.length > 0
 						? MembershipType.community
-						: null;
+						: null
 
-		const pubFormIdentifiersAreSlugs = Boolean(pubFormSlugs?.length);
-		const stageFormIdentifiersAreSlugs = Boolean(stageFormSlugs?.length);
-		const communityFormIdentifiersAreSlugs = Boolean(communityFormSlugs?.length);
+		const pubFormIdentifiersAreSlugs = Boolean(pubFormSlugs?.length)
+		const stageFormIdentifiersAreSlugs = Boolean(stageFormSlugs?.length)
+		const communityFormIdentifiersAreSlugs = Boolean(communityFormSlugs?.length)
 
 		const toBeInvitedUser = await getUser(
 			userId ? { id: userId } : { email: expect(provisionalUser).email },
 			trx
-		).executeTakeFirst();
-		let toBeInvitedUserId = toBeInvitedUser?.id;
+		).executeTakeFirst()
+		let toBeInvitedUserId = toBeInvitedUser?.id
 
 		if (!toBeInvitedUserId) {
 			if (userId) {
-				throw new Error("User not found. No user found with id: " + userId);
+				throw new Error(`User not found. No user found with id: ${userId}`)
 			}
 
-			const provUser = expect(data.provisionalUser);
-			expect(provUser);
+			const provUser = expect(data.provisionalUser)
+			expect(provUser)
 
 			const newUser = await addUser(
 				{
@@ -254,9 +249,9 @@ export namespace InviteService {
 					isProvisional: true,
 				},
 				trx
-			).executeTakeFirstOrThrow();
+			).executeTakeFirstOrThrow()
 
-			toBeInvitedUserId = newUser.id;
+			toBeInvitedUserId = newUser.id
 		}
 
 		const inviteBase = trx.with("invite", (db) =>
@@ -264,7 +259,7 @@ export namespace InviteService {
 				.insertInto("invites")
 				.values({ ...restData, userId: toBeInvitedUserId })
 				.returningAll()
-		);
+		)
 
 		const withFormSlugOrId = <EB extends ExpressionBuilder<any, any>>(
 			eb: EB,
@@ -272,7 +267,7 @@ export namespace InviteService {
 			isSlug: boolean
 		) => {
 			if (!isSlug) {
-				return identifier as FormsId;
+				return identifier as FormsId
 			}
 
 			return eb
@@ -280,8 +275,8 @@ export namespace InviteService {
 				.select("id")
 				.where("slug", "=", identifier)
 				.where("communityId", "=", data.communityId)
-				.limit(1);
-		};
+				.limit(1)
+		}
 
 		const inviteWithForms = type
 			? inviteBase.with("invite_forms", (db) =>
@@ -322,7 +317,7 @@ export namespace InviteService {
 						])
 						.returningAll()
 				)
-			: inviteBase;
+			: inviteBase
 
 		// for type safety this cast is necessary
 		const inviteFinal = (inviteWithForms as typeof inviteBase)
@@ -376,11 +371,11 @@ export namespace InviteService {
 				)
 					.$notNull()
 					.as("user"),
-			]);
+			])
 
-		const result = await autoRevalidate(inviteFinal).executeTakeFirstOrThrow();
+		const result = await autoRevalidate(inviteFinal).executeTakeFirstOrThrow()
 
-		return result as Invite & { user: SafeUser };
+		return result as Invite & { user: SafeUser }
 	}
 
 	/**
@@ -402,7 +397,7 @@ export namespace InviteService {
 					lastSentAt: status === InviteStatus.pending ? new Date() : undefined,
 				})
 				.where("id", "=", invite.id)
-		).execute();
+		).execute()
 	}
 
 	/**
@@ -421,25 +416,25 @@ export namespace InviteService {
 		_user?: { id: UsersId; email: string }
 	) {
 		const result = await maybeWithTrx(trx, async (trx) => {
-			const { user } = _user ? { user: _user } : await getLoginData();
+			const { user } = _user ? { user: _user } : await getLoginData()
 
 			if (!user) {
-				throw new InviteError("USER_NOT_LOGGED_IN");
+				throw new InviteError("USER_NOT_LOGGED_IN")
 			}
 
-			assertUserIsInvitee(invite, user);
+			assertUserIsInvitee(invite, user)
 
 			await setInviteStatus(
 				invite,
 				InviteStatus.completed,
 				createLastModifiedBy({ userId: user.id }),
 				trx
-			);
+			)
 
-			await grantInviteMemberships(invite, user, trx);
-		});
+			await grantInviteMemberships(invite, user, trx)
+		})
 
-		return result;
+		return result
 	}
 
 	/**
@@ -452,10 +447,10 @@ export namespace InviteService {
 	 * @throws {InviteError}
 	 */
 	export async function rejectInvite(invite: Invite, trx = db) {
-		const { user } = await getLoginData();
+		const { user } = await getLoginData()
 
 		if (user) {
-			assertUserIsInvitee(invite, user);
+			assertUserIsInvitee(invite, user)
 		}
 
 		await trx
@@ -467,7 +462,7 @@ export namespace InviteService {
 				lastModifiedBy: createLastModifiedBy(user ? { userId: user.id } : "system"),
 			})
 			.where("id", "=", invite.id)
-			.execute();
+			.execute()
 	}
 
 	/**
@@ -475,8 +470,12 @@ export namespace InviteService {
 	 *
 	 * TODO: implement
 	 */
-	export async function revokeInvite(token: string, communityId: CommunitiesId, reason?: string) {
-		throw new Error("Not implemented");
+	export async function revokeInvite(
+		_token: string,
+		_communityId: CommunitiesId,
+		_reason?: string
+	) {
+		throw new Error("Not implemented")
 	}
 
 	/**
@@ -486,26 +485,26 @@ export namespace InviteService {
 		const [invite, { user }] = await Promise.all([
 			getValidInvite(inviteToken, trx),
 			getLoginData(),
-		]);
+		])
 
-		assertUserIsInvitee(invite, user);
+		assertUserIsInvitee(invite, user)
 
 		return {
 			invite,
 			user: user!,
-		};
+		}
 	}
 
 	/**
 	 * User cannot be invited to a community if they are already a member of the community
 	 */
-	export async function canUserBeInvited(userId: UsersId, communityId: CommunitiesId, trx = db) {
+	export async function canUserBeInvited(userId: UsersId, communityId: CommunitiesId, _trx = db) {
 		const communityMember = await selectCommunityMemberships({
 			userId,
 			communityId,
-		}).executeTakeFirst();
+		}).executeTakeFirst()
 
-		return Boolean(communityMember);
+		return Boolean(communityMember)
 	}
 
 	/**
@@ -523,13 +522,13 @@ export namespace InviteService {
 		user: { id: UsersId; email: string },
 		trx = db
 	): Promise<{ useless: false } | { useless: true; reason: string }> {
-		assertUserIsInvitee(invite, user);
+		assertUserIsInvitee(invite, user)
 
 		if (invite.status !== InviteStatus.pending && invite.status !== InviteStatus.accepted) {
 			return {
 				useless: true,
 				reason: "Invite is not pending or accepted",
-			};
+			}
 		}
 
 		const communityMemberships = await selectCommunityMemberships(
@@ -538,15 +537,15 @@ export namespace InviteService {
 				communityId: invite.communityId,
 			},
 			trx
-		).execute();
+		).execute()
 
 		if (!communityMemberships?.length) {
 			return {
 				useless: false,
-			};
+			}
 		}
 
-		const communityMembership = coalesceMemberships(communityMemberships);
+		const communityMembership = coalesceMemberships(communityMemberships)
 
 		const isCommunityMemberUseless = isInviteUselessForMembership(
 			{
@@ -554,9 +553,9 @@ export namespace InviteService {
 				forms: invite.communityFormIds ?? [],
 			},
 			communityMembership
-		);
+		)
 		if (isCommunityOnlyInvite(invite)) {
-			return isCommunityMemberUseless;
+			return isCommunityMemberUseless
 		} else if (isPubInvite(invite)) {
 			const pubMemberships = await selectPubMemberships(
 				{
@@ -564,14 +563,14 @@ export namespace InviteService {
 					pubId: invite.pubId,
 				},
 				trx
-			).execute();
+			).execute()
 
 			if (!pubMemberships?.length) {
 				return {
 					useless: false,
-				};
+				}
 			}
-			const pubMember = coalesceMemberships(pubMemberships);
+			const pubMember = coalesceMemberships(pubMemberships)
 
 			const isPubMemberUseless = isInviteUselessForMembership(
 				{
@@ -579,9 +578,9 @@ export namespace InviteService {
 					forms: invite.pubFormIds ?? [],
 				},
 				pubMember
-			);
+			)
 
-			return isPubMemberUseless;
+			return isPubMemberUseless
 		} else if (isStageInvite(invite)) {
 			const stageMemberships = await selectStageMemberships(
 				{
@@ -589,14 +588,14 @@ export namespace InviteService {
 					stageId: invite.stageId,
 				},
 				trx
-			).execute();
+			).execute()
 
 			if (!stageMemberships?.length) {
 				return {
 					useless: false,
-				};
+				}
 			}
-			const stageMember = coalesceMemberships(stageMemberships);
+			const stageMember = coalesceMemberships(stageMemberships)
 
 			const stageMemberUseless = isInviteUselessForMembership(
 				{
@@ -604,12 +603,12 @@ export namespace InviteService {
 					forms: invite.stageFormIds ?? [],
 				},
 				stageMember
-			);
+			)
 
-			return stageMemberUseless;
+			return stageMemberUseless
 		}
 
-		throw new Error("Invalid invite");
+		throw new Error("Invalid invite")
 	}
 
 	/**
@@ -621,18 +620,18 @@ export namespace InviteService {
 		user: { id: UsersId; email: string },
 		trx = db
 	) {
-		assertUserIsInvitee(invite, user);
+		assertUserIsInvitee(invite, user)
 
-		const res = await maybeWithTrx(trx, async (trx) => {
-			const isInviteUseless = await isInviteUselessForUser(invite, user, trx);
+		const _res = await maybeWithTrx(trx, async (trx) => {
+			const isInviteUseless = await isInviteUselessForUser(invite, user, trx)
 			if (isInviteUseless.useless) {
 				logger.debug({
 					msg: "For some reason, useless invite was accepted",
 					invite,
 					user,
 					isInviteUseless,
-				});
-				return;
+				})
+				return
 			}
 
 			// TODO: override lower level of permissions if the user has already accepted another invite
@@ -645,9 +644,9 @@ export namespace InviteService {
 						forms: invite.communityFormIds ?? [],
 					},
 					trx
-				).executeTakeFirstOrThrow();
+				).executeTakeFirstOrThrow()
 			} else if (isPubInvite(invite)) {
-				const communityMember = await insertCommunityMembershipsOverrideRole(
+				const _communityMember = await insertCommunityMembershipsOverrideRole(
 					{
 						communityId: invite.communityId,
 						userId: user.id,
@@ -655,8 +654,8 @@ export namespace InviteService {
 						forms: invite.communityFormIds ?? [],
 					},
 					trx
-				).executeTakeFirstOrThrow();
-				const pubMember = await insertPubMembershipsOverrideRole(
+				).executeTakeFirstOrThrow()
+				const _pubMember = await insertPubMembershipsOverrideRole(
 					{
 						pubId: invite.pubId,
 						userId: user.id,
@@ -664,7 +663,7 @@ export namespace InviteService {
 						forms: invite.pubFormIds ?? [],
 					},
 					trx
-				).executeTakeFirstOrThrow();
+				).executeTakeFirstOrThrow()
 			} else if (isStageInvite(invite)) {
 				await insertCommunityMembershipsOverrideRole(
 					{
@@ -674,7 +673,7 @@ export namespace InviteService {
 						forms: invite.communityFormIds ?? [],
 					},
 					trx
-				).executeTakeFirstOrThrow();
+				).executeTakeFirstOrThrow()
 				await insertStageMembershipsOverrideRole(
 					{
 						stageId: invite.stageId,
@@ -683,11 +682,11 @@ export namespace InviteService {
 						forms: invite.stageFormIds ?? [],
 					},
 					trx
-				).executeTakeFirstOrThrow();
+				).executeTakeFirstOrThrow()
 			}
 
 			// TODO: change this as soon as Kalil has implemented the form permissions
-		});
+		})
 	}
 
 	/**
@@ -696,31 +695,31 @@ export namespace InviteService {
 	export async function createInviteLink(
 		invite: Invite,
 		options: {
-			redirectTo: string;
+			redirectTo: string
 			/**
 			 * If true, the url will be absolute
 			 * @default true
 			 */
-			absolute?: boolean;
+			absolute?: boolean
 		}
 	) {
-		const communitySlug = await getCommunitySlug();
-		const inviteToken = createInviteToken(invite);
+		const communitySlug = await getCommunitySlug()
+		const inviteToken = createInviteToken(invite)
 
-		const searchParams = new URLSearchParams();
-		searchParams.set("invite", inviteToken);
-		searchParams.set("redirectTo", options.redirectTo);
+		const searchParams = new URLSearchParams()
+		searchParams.set("invite", inviteToken)
+		searchParams.set("redirectTo", options.redirectTo)
 
-		return `${options?.absolute === false ? "" : env.PUBPUB_URL}/c/${communitySlug}/public/invite?${searchParams.toString()}`;
+		return `${options?.absolute === false ? "" : env.PUBPUB_URL}/c/${communitySlug}/public/invite?${searchParams.toString()}`
 	}
 
 	export function createInviteToken(invite: Invite) {
-		return `${invite.id}.${invite.token}`;
+		return `${invite.id}.${invite.token}`
 	}
 
 	export function parseInviteToken(inviteToken: string) {
-		const [id, token] = inviteToken.split(".");
-		return { id: id as InvitesId, token };
+		const [id, token] = inviteToken.split(".")
+		return { id: id as InvitesId, token }
 	}
 
 	/**
@@ -728,9 +727,9 @@ export namespace InviteService {
 	 * @throws {InviteError}
 	 */
 	export async function getValidInvite(inviteToken: string, trx = db) {
-		const { id, token } = parseInviteToken(inviteToken);
+		const { id, token } = parseInviteToken(inviteToken)
 
-		const dbInvite = await _getInvite(token, id, trx);
+		const dbInvite = await _getInvite(token, id, trx)
 
 		if (!dbInvite) {
 			throw new InviteError("NOT_FOUND", {
@@ -738,10 +737,10 @@ export namespace InviteService {
 					inviteToken,
 				},
 				status: InviteStatus.created,
-			});
+			})
 		}
 
-		const isInvalidInvite = invalidInviteMap[dbInvite.status];
+		const isInvalidInvite = invalidInviteMap[dbInvite.status]
 		if (isInvalidInvite) {
 			throw new InviteError(isInvalidInvite, {
 				logContext: {
@@ -749,7 +748,7 @@ export namespace InviteService {
 					invite: dbInvite,
 				},
 				status: dbInvite.status,
-			});
+			})
 		}
 
 		if (
@@ -764,7 +763,7 @@ export namespace InviteService {
 					invite: dbInvite,
 				},
 				status: dbInvite.status,
-			});
+			})
 		}
 
 		if (dbInvite.expiresAt < new Date()) {
@@ -774,24 +773,24 @@ export namespace InviteService {
 					invite: dbInvite,
 				},
 				status: dbInvite.status,
-			});
+			})
 		}
 
-		return dbInvite;
+		return dbInvite
 	}
 }
 
 // helpers, don't need to be part of the service
 function isCommunityOnlyInvite(invite: Invite): invite is Invite & { pubId: null; stageId: null } {
-	return invite.pubId === null && invite.stageId === null;
+	return invite.pubId === null && invite.stageId === null
 }
 
 function isPubInvite(invite: Invite): invite is Invite & { pubId: PubsId } {
-	return invite.pubId !== null;
+	return invite.pubId !== null
 }
 
 function isStageInvite(invite: Invite): invite is Invite & { stageId: StagesId } {
-	return invite.stageId !== null;
+	return invite.stageId !== null
 }
 
 /**
@@ -799,31 +798,31 @@ function isStageInvite(invite: Invite): invite is Invite & { stageId: StagesId }
  */
 function isInviteUselessForMembership(
 	invite: {
-		role: MemberRole;
-		forms: FormsId[];
+		role: MemberRole
+		forms: FormsId[]
 	},
 	existingMembership: { role: MemberRole; forms: FormsId[] } | undefined
 ) {
 	if (!existingMembership) {
 		return {
 			useless: false as const,
-		};
+		}
 	}
 
-	const hasHigherOrSameRole = compareMemberRoles(existingMembership.role, ">=", invite.role);
+	const hasHigherOrSameRole = compareMemberRoles(existingMembership.role, ">=", invite.role)
 
 	const inviteHasNoNewForms = invite.forms.some(
 		(formId) => !existingMembership.forms.includes(formId)
-	);
+	)
 
 	if (hasHigherOrSameRole && inviteHasNoNewForms) {
 		return {
 			useless: true as const,
 			reason: "Invite would not grant additional roles",
-		};
+		}
 	}
 
 	return {
 		useless: false as const,
-	};
+	}
 }

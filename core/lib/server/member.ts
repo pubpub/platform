@@ -1,7 +1,3 @@
-import type { OnConflictBuilder } from "kysely";
-
-import { jsonObjectFrom } from "kysely/helpers/postgres";
-
 import type {
 	CommunitiesId,
 	CommunityMembershipsId,
@@ -14,14 +10,18 @@ import type {
 	StageMembershipsId,
 	StagesId,
 	UsersId,
-} from "db/public";
-import type { XOR } from "utils/types";
-import { MemberRole } from "db/public";
+} from "db/public"
+import type { OnConflictBuilder } from "kysely"
+import type { XOR } from "utils/types"
 
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { SAFE_USER_SELECT } from "./user";
+import { jsonObjectFrom } from "kysely/helpers/postgres"
+
+import { MemberRole } from "db/public"
+
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { SAFE_USER_SELECT } from "./user"
 
 /**
  * Either get a membership by its community membership id, or all memberships by userId and communityId
@@ -60,8 +60,8 @@ export const selectCommunityMemberships = (
 				eb.where("community_memberships.communityId", "=", props.communityId!)
 			)
 			.$if(Boolean(props.id), (eb) => eb.where("community_memberships.id", "=", props.id!))
-	);
-};
+	)
+}
 
 export const selectAllCommunityMemberships = (
 	{ communityId }: { communityId: CommunitiesId },
@@ -88,7 +88,7 @@ export const selectAllCommunityMemberships = (
 					.as("user"),
 			])
 			.where("community_memberships.communityId", "=", communityId)
-	);
+	)
 
 export const selectStageMemberships = (
 	props: XOR<{ id: StageMembershipsId }, { userId: UsersId; stageId: StagesId }>,
@@ -123,8 +123,8 @@ export const selectStageMemberships = (
 				eb.where("stage_memberships.stageId", "=", props.stageId!)
 			)
 			.$if(Boolean(props.id), (eb) => eb.where("stage_memberships.id", "=", props.id!))
-	);
-};
+	)
+}
 
 export const selectPubMemberships = (
 	props: XOR<{ id: PubMembershipsId }, { userId: UsersId; pubId: PubsId }>,
@@ -157,15 +157,15 @@ export const selectPubMemberships = (
 			)
 			.$if(Boolean(props.pubId), (eb) => eb.where("pub_memberships.pubId", "=", props.pubId!))
 			.$if(Boolean(props.id), (eb) => eb.where("pub_memberships.id", "=", props.id!))
-	);
-};
+	)
+}
 
 const getMembershipRows = <T extends { role: MemberRole; forms: FormsId[]; userId: UsersId }>({
 	forms,
 	...membership
 }: T) => {
-	return forms.length ? forms.map((formId) => ({ ...membership, formId })) : [{ ...membership }];
-};
+	return forms.length ? forms.map((formId) => ({ ...membership, formId })) : [{ ...membership }]
+}
 
 export const insertCommunityMemberships = (
 	membership: Omit<NewCommunityMemberships, "formId"> & { userId: UsersId; forms: FormsId[] },
@@ -173,7 +173,7 @@ export const insertCommunityMemberships = (
 ) =>
 	autoRevalidate(
 		trx.insertInto("community_memberships").values(getMembershipRows(membership)).returningAll()
-	);
+	)
 
 export const deleteCommunityMemberships = (
 	{ userId, communityId }: { userId: UsersId; communityId: CommunitiesId },
@@ -187,7 +187,7 @@ export const deleteCommunityMemberships = (
 			.where("users.id", "=", userId)
 			.where("community_memberships.communityId", "=", communityId)
 			.returningAll()
-	);
+	)
 
 export const deletePubMemberships = (
 	{ userId, pubId }: { userId: UsersId; pubId: PubsId },
@@ -201,10 +201,10 @@ export const deletePubMemberships = (
 			.where("users.id", "=", userId)
 			.where("pub_memberships.pubId", "=", pubId)
 			.returningAll()
-	);
+	)
 
 export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =>
-	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
+	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll())
 
 export const onConflictOverrideRole = (
 	oc: OnConflictBuilder<any, any>,
@@ -228,8 +228,8 @@ export const onConflictOverrideRole = (
 				.then(eb.ref(`${type}_memberships.role`))
 				.else(eb.ref("excluded.role"))
 				.end(),
-		}));
-};
+		}))
+}
 
 export const insertCommunityMembershipsOverrideRole = (
 	props: NewCommunityMemberships & { userId: UsersId; forms: FormsId[] },
@@ -239,18 +239,18 @@ export const insertCommunityMembershipsOverrideRole = (
 		insertCommunityMemberships(props, trx).qb.onConflict((oc) =>
 			onConflictOverrideRole(oc, "community", props.formId !== null)
 		)
-	);
+	)
 
 export const insertStageMemberships = (
 	membership: NewStageMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
-) => autoRevalidate(trx.insertInto("stage_memberships").values(getMembershipRows(membership)));
+) => autoRevalidate(trx.insertInto("stage_memberships").values(getMembershipRows(membership)))
 
 export const deleteStageMemberships = (
 	params: { communityId: CommunitiesId; userId: UsersId },
 	trx?: typeof db
 ) => {
-	const executor = trx ?? db;
+	const executor = trx ?? db
 	return autoRevalidate(
 		executor
 			.deleteFrom("stage_memberships")
@@ -263,8 +263,8 @@ export const deleteStageMemberships = (
 					.select("stages.id")
 					.where("stages.communityId", "=", params.communityId)
 			)
-	);
-};
+	)
+}
 
 export const insertStageMembershipsOverrideRole = (
 	props: NewStageMemberships & { userId: UsersId; forms: FormsId[] },
@@ -274,7 +274,7 @@ export const insertStageMembershipsOverrideRole = (
 		insertStageMemberships(props, trx).qb.onConflict((oc) =>
 			onConflictOverrideRole(oc, "stage", props.formId !== null)
 		)
-	);
+	)
 
 export const insertPubMembershipsOverrideRole = (
 	props: NewPubMemberships & { userId: UsersId; forms: FormsId[] },
@@ -284,47 +284,47 @@ export const insertPubMembershipsOverrideRole = (
 		insertPubMemberships(props, trx).qb.onConflict((oc) =>
 			onConflictOverrideRole(oc, "pub", props.formId !== null)
 		)
-	);
+	)
 
 export const insertPubMemberships = (
 	membership: NewPubMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
-) => autoRevalidate(trx.insertInto("pub_memberships").values(getMembershipRows(membership)));
+) => autoRevalidate(trx.insertInto("pub_memberships").values(getMembershipRows(membership)))
 
 export const coalesceMemberships = <
 	T extends {
-		role: MemberRole;
-		formId: FormsId | null;
-		userId: UsersId | null;
-		createdAt?: Date | string;
-		updatedAt?: Date | string;
+		role: MemberRole
+		formId: FormsId | null
+		userId: UsersId | null
+		createdAt?: Date | string
+		updatedAt?: Date | string
 	},
 >(
 	memberships: T[]
 ) => {
-	const { formId, ...firstMembership } = memberships[0];
+	const { formId, ...firstMembership } = memberships[0]
 
 	return memberships.reduce(
 		(acc, { updatedAt, createdAt, formId, ...membership }) => {
-			let key: keyof typeof membership & string;
+			let key: keyof typeof membership & string
 			// check if all memberships are similar
 			for (key in membership) {
 				if (membership[key] !== acc[key as keyof typeof acc]) {
 					throw new Error(
 						`Membership ${key} mismatch between ${membership[key]} and ${acc[key as keyof typeof acc]}`
-					);
+					)
 				}
 			}
 
 			if (formId) {
-				acc.forms.push(formId);
+				acc.forms.push(formId)
 			}
 
-			return acc;
+			return acc
 		},
 		{
 			...firstMembership,
 			forms: formId ? [formId] : [],
 		} as Omit<T, "formId"> & { forms: FormsId[] }
-	);
-};
+	)
+}

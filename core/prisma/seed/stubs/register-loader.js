@@ -16,6 +16,6 @@
  * Extremely convoluted, wish there was a better solution
  */
 
-import { register } from "node:module";
+import { register } from "node:module"
 
-register("./module-loader.js", import.meta.url);
+register("./module-loader.js", import.meta.url)

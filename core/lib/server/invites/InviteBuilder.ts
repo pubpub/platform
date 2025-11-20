@@ -1,70 +1,70 @@
-import crypto from "node:crypto";
+import type { ActionRunsId, CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public"
+import type { Invite, NewInvite } from "db/types"
+import type { UserId } from "lucia"
+import type { XOR } from "utils/types"
 
-import type { UserId } from "lucia";
+import crypto from "node:crypto"
 
-import type { ActionRunsId, CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
-import type { Invite, NewInvite } from "db/types";
-import type { XOR } from "utils/types";
-import { formsIdSchema, InviteStatus, MemberRole } from "db/public";
-import { newInviteSchema } from "db/types";
-import { expect } from "utils";
+import { formsIdSchema, InviteStatus, MemberRole } from "db/public"
+import { newInviteSchema } from "db/types"
+import { expect } from "utils"
 
-import { db } from "~/kysely/database";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { findCommunityBySlug } from "~/lib/server/community";
-import * as Email from "~/lib/server/email";
-import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
-import { getUser } from "~/lib/server/user";
-import { InviteService } from "./InviteService";
+import { db } from "~/kysely/database"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { findCommunityBySlug } from "~/lib/server/community"
+import * as Email from "~/lib/server/email"
+import { maybeWithTrx } from "~/lib/server/maybeWithTrx"
+import { getUser } from "~/lib/server/user"
+import { InviteService } from "./InviteService"
 
-const BYTES_LENGTH = 16;
+const BYTES_LENGTH = 16
 
-const DEFAULT_EXPIRES_AT = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+const DEFAULT_EXPIRES_AT = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
 // Required initial steps
 export interface InvitedByStep {
-	invitedBy(inviter: { userId: UsersId } | { actionRunId: ActionRunsId }): CommunityStep;
+	invitedBy(inviter: { userId: UsersId } | { actionRunId: ActionRunsId }): CommunityStep
 }
 
 interface CommunityStep {
-	forCommunity(communityId: CommunitiesId): WithRoleStep<PubStageStep> & PubStageStep;
+	forCommunity(communityId: CommunitiesId): WithRoleStep<PubStageStep> & PubStageStep
 }
 
-type NextStep = OptionalStep | PubStageStep;
+type NextStep = OptionalStep | PubStageStep
 
 // After community, can either set community role or choose a target (pub/stage)
 interface WithRoleStep<Next extends NextStep> {
-	withRole(role: MemberRole): WithFormsStep<Next> & Next;
+	withRole(role: MemberRole): WithFormsStep<Next> & Next
 }
 
 interface PubStageStep extends OptionalStep {
-	forPub(pubId: PubsId): WithRoleStep<OptionalStep>;
-	forStage(stageId: StagesId): WithRoleStep<OptionalStep>;
+	forPub(pubId: PubsId): WithRoleStep<OptionalStep>
+	forStage(stageId: StagesId): WithRoleStep<OptionalStep>
 }
 
 interface WithFormsStep<Next extends NextStep> extends OptionalStep {
-	withForms(formIds: FormsId[]): Next;
-	withForms(slugs: string[]): Next;
+	withForms(formIds: FormsId[]): Next
+	withForms(slugs: string[]): Next
 }
 
 // If pub/stage is chosen, must set role
 
 // All optional steps after required steps are complete
 interface OptionalStep {
-	withMessage(message: string): OptionalStep;
-	expiresAt(date: Date): OptionalStep;
-	expiresInDays(days: number): OptionalStep;
-	create(trx?: typeof db): Promise<Invite>;
-	createAndSend(input: { redirectTo: string }, trx?: typeof db): Promise<Invite>;
+	withMessage(message: string): OptionalStep
+	expiresAt(date: Date): OptionalStep
+	expiresInDays(days: number): OptionalStep
+	create(trx?: typeof db): Promise<Invite>
+	createAndSend(input: { redirectTo: string }, trx?: typeof db): Promise<Invite>
 }
 
 export type NewUser = {
-	firstName: string;
-	lastName: string;
-	email: string;
-};
+	firstName: string
+	lastName: string
+	email: string
+}
 
-type InviteBuilderData = XOR<{ userId: UserId }, { provisionalUser: NewUser }>;
+type InviteBuilderData = XOR<{ userId: UserId }, { provisionalUser: NewUser }>
 
 export class InviteBuilder
 	implements
@@ -75,7 +75,7 @@ export class InviteBuilder
 		PubStageStep,
 		OptionalStep
 {
-	private data: Partial<NewInvite>;
+	private data: Partial<NewInvite>
 
 	// private constructor to force using static methods
 	private constructor(data: InviteBuilderData) {
@@ -84,165 +84,165 @@ export class InviteBuilder
 			status: InviteStatus.created,
 			expiresAt: DEFAULT_EXPIRES_AT,
 			communityRole: MemberRole.contributor,
-		};
+		}
 	}
 
 	/**
 	 * Invite a user and create an account for them
 	 */
-	static inviteUser(user: NewUser): InvitedByStep;
+	static inviteUser(user: NewUser): InvitedByStep
 	/**
 	 * Invite a specific user
 	 */
-	static inviteUser(user: UsersId): InvitedByStep;
+	static inviteUser(user: UsersId): InvitedByStep
 	static inviteUser(user: NewUser | UsersId): InvitedByStep {
-		const data = typeof user === "string" ? { userId: user } : { provisionalUser: user };
-		const builder = new InviteBuilder(data);
+		const data = typeof user === "string" ? { userId: user } : { provisionalUser: user }
+		const builder = new InviteBuilder(data)
 
-		return builder;
+		return builder
 	}
 
 	invitedBy(inviter: { userId: UsersId } | { actionRunId: ActionRunsId }): CommunityStep {
 		if ("userId" in inviter) {
-			this.data.invitedByUserId = inviter.userId;
-			this.data.invitedByActionRunId = null;
+			this.data.invitedByUserId = inviter.userId
+			this.data.invitedByActionRunId = null
 		} else {
-			this.data.invitedByActionRunId = inviter.actionRunId;
-			this.data.invitedByUserId = null;
+			this.data.invitedByActionRunId = inviter.actionRunId
+			this.data.invitedByUserId = null
 		}
-		return this;
+		return this
 	}
 
 	forCommunity(communityId: CommunitiesId): WithRoleStep<PubStageStep> & PubStageStep {
-		this.data.communityId = communityId;
-		return this as WithRoleStep<PubStageStep> & PubStageStep;
+		this.data.communityId = communityId
+		return this as WithRoleStep<PubStageStep> & PubStageStep
 	}
 
 	forPub(pubId: PubsId): WithRoleStep<OptionalStep> {
-		this.data.pubId = pubId;
-		this.data.stageId = null;
-		return this;
+		this.data.pubId = pubId
+		this.data.stageId = null
+		return this
 	}
 
 	forStage(stageId: StagesId): WithRoleStep<OptionalStep> {
-		this.data.stageId = stageId;
-		this.data.pubId = null;
-		return this;
+		this.data.stageId = stageId
+		this.data.pubId = null
+		return this
 	}
 
 	withRole(role: MemberRole): WithFormsStep<NextStep> & NextStep {
 		if (this.data.pubId) {
-			this.data.pubRole = role;
+			this.data.pubRole = role
 		} else if (this.data.stageId) {
-			this.data.stageRole = role;
+			this.data.stageRole = role
 		} else {
-			this.data.communityRole = role;
+			this.data.communityRole = role
 		}
 
-		return this;
+		return this
 	}
 
 	withForms(forms: FormsId[] | string[]): NextStep {
-		const uuids = forms.map((form) => formsIdSchema.safeParse(form).data);
+		const uuids = forms.map((form) => formsIdSchema.safeParse(form).data)
 
-		const hasUuids = uuids.some((uuid) => uuid != null);
-		const hasSlugs = uuids.some((slug) => slug == null);
+		const hasUuids = uuids.some((uuid) => uuid != null)
+		const hasSlugs = uuids.some((slug) => slug == null)
 
 		if (hasUuids && hasSlugs) {
-			throw new Error("Cannot provide both uuids and slugs");
+			throw new Error("Cannot provide both uuids and slugs")
 		}
 
 		if (this.data.pubId) {
 			if (hasUuids) {
-				this.data.pubFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
+				this.data.pubFormIds = uuids.filter((uuid) => uuid != null) as FormsId[]
 			} else {
-				this.data.pubFormSlugs = forms;
+				this.data.pubFormSlugs = forms
 			}
 		} else if (this.data.stageId) {
 			if (hasUuids) {
-				this.data.stageFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
+				this.data.stageFormIds = uuids.filter((uuid) => uuid != null) as FormsId[]
 			} else {
-				this.data.stageFormSlugs = forms;
+				this.data.stageFormSlugs = forms
 			}
 		} else {
 			if (hasUuids) {
-				this.data.communityFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
+				this.data.communityFormIds = uuids.filter((uuid) => uuid != null) as FormsId[]
 			} else {
-				this.data.communityFormSlugs = forms;
+				this.data.communityFormSlugs = forms
 			}
 		}
-		return this as NextStep;
+		return this as NextStep
 	}
 
 	withMessage(message: string): OptionalStep {
-		this.data.message = message;
-		return this;
+		this.data.message = message
+		return this
 	}
 
 	expiresAt(date: Date): OptionalStep {
-		this.data.expiresAt = date;
-		return this;
+		this.data.expiresAt = date
+		return this
 	}
 
 	expiresInDays(days: number): OptionalStep {
-		this.data.expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-		return this;
+		this.data.expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000)
+		return this
 	}
 
 	private generateToken(): string {
-		return crypto.randomBytes(BYTES_LENGTH).toString("base64url");
+		return crypto.randomBytes(BYTES_LENGTH).toString("base64url")
 	}
 
 	private validate() {
-		const newData = newInviteSchema.parse(this.data) as NewInvite;
-		this.data = newData;
-		return newData;
+		const newData = newInviteSchema.parse(this.data) as NewInvite
+		this.data = newData
+		return newData
 	}
 
 	async create(trx = db): Promise<Invite> {
-		const token = this.generateToken();
+		const token = this.generateToken()
 
-		this.data.token = token;
+		this.data.token = token
 
 		const lastModifiedBy = this.data.invitedByUserId
 			? createLastModifiedBy({ userId: this.data.invitedByUserId })
-			: createLastModifiedBy({ actionRunId: expect(this.data.invitedByActionRunId) });
+			: createLastModifiedBy({ actionRunId: expect(this.data.invitedByActionRunId) })
 
-		this.data.lastModifiedBy = lastModifiedBy;
+		this.data.lastModifiedBy = lastModifiedBy
 
-		const data = this.validate();
+		const data = this.validate()
 
-		return InviteService._createInvite({ ...data, token: token, lastModifiedBy }, trx);
+		return InviteService._createInvite({ ...data, token: token, lastModifiedBy }, trx)
 	}
 
 	async createAndSend(input: { redirectTo: string }, trx = db): Promise<Invite> {
 		return maybeWithTrx(trx, async (trx) => {
-			const invitePromise = this.create(trx);
+			const invitePromise = this.create(trx)
 
 			const existingUserPromise = getUser(
 				this.data.userId
 					? { id: this.data.userId }
 					: { email: expect(this.data.provisionalUser).email },
 				trx
-			).executeTakeFirstOrThrow();
+			).executeTakeFirstOrThrow()
 
-			const communityPromise = findCommunityBySlug();
+			const communityPromise = findCommunityBySlug()
 
 			const [invite, user, community] = await Promise.all([
 				invitePromise,
 				existingUserPromise,
 				communityPromise,
-			]);
+			])
 
-			let toBeInvitedUserId = user?.id;
+			const toBeInvitedUserId = user?.id
 
 			if (!toBeInvitedUserId) {
-				throw new Error("User not found");
+				throw new Error("User not found")
 			}
 
 			const inviteLink = await InviteService.createInviteLink(invite, {
 				redirectTo: input.redirectTo,
-			});
+			})
 
 			const props = invite.pubId
 				? ({
@@ -261,7 +261,7 @@ export class InviteBuilder
 					: ({
 							type: "community",
 							communityRole: invite.communityRole,
-						} as const);
+						} as const)
 
 			await Email.signupInvite(
 				{
@@ -271,7 +271,7 @@ export class InviteBuilder
 					...props,
 				},
 				trx
-			).send();
+			).send()
 
 			await trx
 				.updateTable("invites")
@@ -285,9 +285,9 @@ export class InviteBuilder
 					),
 				})
 				.where("id", "=", invite.id)
-				.execute();
+				.execute()
 
-			return invite;
-		});
+			return invite
+		})
 	}
 }

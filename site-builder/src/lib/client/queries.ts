@@ -1,32 +1,31 @@
-import { expect } from "utils/assert";
+import { expect } from "utils/assert"
 
-import { SITE_ENV } from "../env/site";
-import { getClient } from "./client";
+import { SITE_ENV } from "../env/site"
+import { getClient } from "./client"
 
 export const getPubType = async (name: string | string[]) => {
-	const nameArray = Array.isArray(name) ? name : [name];
+	const nameArray = Array.isArray(name) ? name : [name]
 
 	const pubTypeId = await getClient().pubTypes.getMany({
 		params: {
 			communitySlug: SITE_ENV.COMMUNITY_SLUG,
 		},
 		query: { name: nameArray },
-	});
+	})
 
 	if (pubTypeId.status !== 200) {
-		console.error(pubTypeId.body);
-		throw new Error("Failed to fetch pub type");
+		throw new Error("Failed to fetch pub type")
 	}
 
-	return expect(pubTypeId.body?.filter((pubType) => nameArray.includes(pubType.name)));
-};
+	return expect(pubTypeId.body?.filter((pubType) => nameArray.includes(pubType.name)))
+}
 
 export const getJournal = async (opts?: {
-	depth?: number;
-	withRelatedPubs?: boolean;
-	fieldSlugs?: string[];
+	depth?: number
+	withRelatedPubs?: boolean
+	fieldSlugs?: string[]
 }) => {
-	const journalPubType = await getPubType("Journal");
+	const journalPubType = await getPubType("Journal")
 
 	const journal = await getClient().pubs.getMany({
 		params: {
@@ -38,14 +37,14 @@ export const getJournal = async (opts?: {
 			depth: opts?.depth ?? 3,
 			withRelatedPubs: opts?.withRelatedPubs ?? true,
 		},
-	});
+	})
 
 	if (journal.status !== 200) {
-		throw new Error("Failed to fetch journal");
+		throw new Error("Failed to fetch journal")
 	}
 
-	return expect(journal.body?.[0]);
-};
+	return expect(journal.body?.[0])
+}
 
 export const getPages = async ({ slugs }: { slugs?: string[] } = {}) => {
 	const pagePubType = await getPubType([
@@ -54,7 +53,7 @@ export const getPages = async ({ slugs }: { slugs?: string[] } = {}) => {
 		"Issue",
 		"Conference Proceedings",
 		"Book",
-	]);
+	])
 
 	const pages = await getClient().pubs.getMany({
 		params: {
@@ -72,17 +71,17 @@ export const getPages = async ({ slugs }: { slugs?: string[] } = {}) => {
 				},
 			}),
 		},
-	});
+	})
 
 	if (pages.status !== 200) {
-		throw new Error("Failed to fetch pages");
+		throw new Error("Failed to fetch pages")
 	}
 
-	return expect(pages.body);
-};
+	return expect(pages.body)
+}
 
 export const getHeader = async () => {
-	const headerPubType = await getPubType("Header");
+	const headerPubType = await getPubType("Header")
 
 	const header = await getClient().pubs.getMany({
 		params: {
@@ -95,17 +94,17 @@ export const getHeader = async () => {
 			withRelatedPubs: true,
 			withPubType: true,
 		},
-	});
+	})
 
 	if (header.status !== 200) {
-		throw new Error("Failed to fetch header");
+		throw new Error("Failed to fetch header")
 	}
 
-	return expect(header.body?.[0]);
-};
+	return expect(header.body?.[0])
+}
 
 export const getJournalArticles = async (opts?: { limit?: number }) => {
-	const journalArticlePubType = await getPubType("Journal Article");
+	const journalArticlePubType = await getPubType("Journal Article")
 
 	const journalArticles = await getClient().pubs.getMany({
 		params: {
@@ -115,11 +114,11 @@ export const getJournalArticles = async (opts?: { limit?: number }) => {
 			pubTypeId: [expect(journalArticlePubType[0].id)],
 			limit: opts?.limit ?? 500,
 		},
-	});
+	})
 
 	if (journalArticles.status !== 200) {
-		throw new Error("Failed to fetch journal articles");
+		throw new Error("Failed to fetch journal articles")
 	}
 
-	return expect(journalArticles.body);
-};
+	return expect(journalArticles.body)
+}

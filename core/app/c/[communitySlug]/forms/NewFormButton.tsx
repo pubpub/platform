@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { PubTypesId } from "db/public"
 
-import type { PubTypesId } from "db/public";
-import { Button } from "ui/button";
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -15,7 +15,7 @@ import {
 	DialogOverlay,
 	DialogTitle,
 	DialogTrigger,
-} from "ui/dialog";
+} from "ui/dialog"
 import {
 	Form,
 	FormControl,
@@ -24,56 +24,56 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Plus } from "ui/icon";
-import { Input } from "ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { toast } from "ui/use-toast";
+} from "ui/form"
+import { Plus } from "ui/icon"
+import { Input } from "ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { toast } from "ui/use-toast"
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { createForm } from "./actions";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { createForm } from "./actions"
 
 const schema = z.object({
 	pubTypeName: z.string(),
 	name: z.string(),
 	slug: z.string().regex(/^[a-zA-Z0-9-]+$/, "Only letters, numbers, and hyphens (-) are allowed"),
-});
+})
 
 type Props = {
-	pubTypes: { id: PubTypesId; name: string }[];
-};
+	pubTypes: { id: PubTypesId; name: string }[]
+}
 
 export const NewFormButton = ({ pubTypes }: Props) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState(false)
 
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
-	});
+	})
 
-	const runCreateForm = useServerAction(createForm);
-	const community = useCommunity();
+	const runCreateForm = useServerAction(createForm)
+	const community = useCommunity()
 
 	const onSubmit = async ({ pubTypeName, name, slug }: z.infer<typeof schema>) => {
-		const pubTypeId = pubTypes.find((type) => type.name === pubTypeName)?.id;
+		const pubTypeId = pubTypes.find((type) => type.name === pubTypeName)?.id
 		if (!pubTypeId) {
 			toast({
 				title: "Error",
 				description: `Unable to find pub type ${pubTypeName}`,
 				variant: "destructive",
-			});
-			return;
+			})
+			return
 		}
-		const result = await runCreateForm(pubTypeId, name, slug, community.id);
+		const result = await runCreateForm(pubTypeId, name, slug, community.id)
 		if (didSucceed(result)) {
 			toast({
 				title: "Success",
 				description: "Form created",
-			});
-			form.reset();
-			setIsOpen(false);
+			})
+			form.reset()
+			setIsOpen(false)
 		}
-	};
+	}
 
 	return (
 		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen} modal={true}>
@@ -157,8 +157,8 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 						<DialogFooter className="mt-8 gap-y-1">
 							<Button
 								onClick={() => {
-									form.reset();
-									setIsOpen(false);
+									form.reset()
+									setIsOpen(false)
 								}}
 								variant="outline"
 								type="button"
@@ -173,5 +173,5 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 				</Form>
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

@@ -1,4 +1,4 @@
-import { cn } from "utils";
+import { cn } from "utils"
 
 export const DotBackground = ({ className }: { className?: string }) => (
 	<svg
@@ -23,4 +23,4 @@ export const DotBackground = ({ className }: { className?: string }) => (
 		</defs>
 		<rect width="100%" height="100%" strokeWidth="0" fill="url(#:r2R0:)"></rect>
 	</svg>
-);
+)

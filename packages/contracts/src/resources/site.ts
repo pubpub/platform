@@ -1,5 +1,5 @@
-import { initContract } from "@ts-rest/core";
-import { z } from "zod";
+import { initContract } from "@ts-rest/core"
+import { z } from "zod"
 
 import {
 	communitiesIdSchema,
@@ -9,8 +9,8 @@ import {
 	pubTypesSchema,
 	stagesIdSchema,
 	stagesSchema,
-} from "db/public";
-import { stageConstraintSchema } from "db/types";
+} from "db/public"
+import { stageConstraintSchema } from "db/types"
 
 import {
 	CreatePubRequestBodyWithNullsNew,
@@ -23,9 +23,9 @@ import {
 	safeUserSchema,
 	upsertPubRelationsSchema,
 	zodErrorSchema,
-} from "./types";
+} from "./types"
 
-const contract = initContract();
+const contract = initContract()
 
 const finalGetManyQuerySchema = getPubQuerySchema.extend({
 	pubIds: z
@@ -100,12 +100,12 @@ const finalGetManyQuerySchema = getPubQuerySchema.extend({
 				"- JSON array filter: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'`",
 			].join("\n")
 		),
-});
+})
 const siteBuilderCheckResponseCodeSchema = z.enum([
 	"NON_SITE_BUILDER_TOKEN",
 	"HAS_WRITE_PERMISSIONS",
 	"HAS_NO_READ_PERMISSIONS",
-]);
+])
 
 export const siteApi = contract.router(
 	{
@@ -417,4 +417,4 @@ export const siteApi = contract.router(
 			404: z.string(),
 		},
 	}
-);
+)

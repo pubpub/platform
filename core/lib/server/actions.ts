@@ -1,35 +1,33 @@
-import { jsonObjectFrom } from "kysely/helpers/postgres";
-
 import type {
 	Action,
 	ActionInstancesId,
 	ActionInstancesUpdate,
 	CommunitiesId,
 	NewActionInstances,
-} from "db/public";
+} from "db/public"
+import type { ActionRun } from "~/app/c/[communitySlug]/activity/actions/getActionRunsTableColumns"
 
-import type { ActionRun } from "~/app/c/[communitySlug]/activity/actions/getActionRunsTableColumns";
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { pubType } from "./pub";
+import { jsonObjectFrom } from "kysely/helpers/postgres"
+
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { pubType } from "./pub"
 
 export const getActionInstance = (actionInstanceId: ActionInstancesId) =>
-	autoCache(db.selectFrom("action_instances").selectAll().where("id", "=", actionInstanceId));
+	autoCache(db.selectFrom("action_instances").selectAll().where("id", "=", actionInstanceId))
 
 export const createActionInstance = (props: NewActionInstances) =>
-	autoRevalidate(db.insertInto("action_instances").values(props));
+	autoRevalidate(db.insertInto("action_instances").values(props))
 
 export const updateActionInstance = (
 	actionInstanceId: ActionInstancesId,
 	props: ActionInstancesUpdate
 ) =>
-	autoRevalidate(
-		db.updateTable("action_instances").set(props).where("id", "=", actionInstanceId)
-	);
+	autoRevalidate(db.updateTable("action_instances").set(props).where("id", "=", actionInstanceId))
 
 export const removeActionInstance = (actionInstanceId: ActionInstancesId) =>
-	autoRevalidate(db.deleteFrom("action_instances").where("id", "=", actionInstanceId));
+	autoRevalidate(db.deleteFrom("action_instances").where("id", "=", actionInstanceId))
 
 export const getActionConfigDefaults = (communityId: CommunitiesId, action: Action) => {
 	return autoCache(
@@ -38,8 +36,8 @@ export const getActionConfigDefaults = (communityId: CommunitiesId, action: Acti
 			.selectAll()
 			.where("communityId", "=", communityId)
 			.where("action", "=", action)
-	);
-};
+	)
+}
 
 export const setActionConfigDefaults = (
 	communityId: CommunitiesId,
@@ -55,8 +53,8 @@ export const setActionConfigDefaults = (
 					.constraint("action_config_defaults_communityId_action_key")
 					.doUpdateSet({ config })
 			)
-	);
-};
+	)
+}
 
 export const getActionRuns = (communityId: CommunitiesId) => {
 	const actionRuns = autoCache(
@@ -113,7 +111,7 @@ export const getActionRuns = (communityId: CommunitiesId) => {
 			])
 			.orderBy("action_runs.createdAt", "desc")
 			.$castTo<ActionRun>()
-	);
+	)
 
-	return actionRuns;
-};
+	return actionRuns
+}

@@ -1,42 +1,43 @@
-import { notFound, redirect } from "next/navigation";
+import type { CommunitiesId } from "db/public"
 
-import type { CommunitiesId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
-import { ClipboardPenLine, Info } from "ui/icon";
-import { PubFieldProvider } from "ui/pubFields";
-import { PubTypeProvider } from "ui/pubTypes";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { notFound, redirect } from "next/navigation"
 
-import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
-import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
-import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { getPubTypesForCommunity } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm } from "~/lib/server/form";
-import { getPubFields } from "~/lib/server/pubFields";
-import { ContentLayout } from "../../../ContentLayout";
-import { EditFormTitleButton } from "./EditFormTitleButton";
-import { FormCopyButton } from "./FormCopyButton";
+import { Capabilities, MembershipType } from "db/public"
+import { ClipboardPenLine, Info } from "ui/icon"
+import { PubFieldProvider } from "ui/pubFields"
+import { PubTypeProvider } from "ui/pubTypes"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+
+import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder"
+import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton"
+import { db } from "~/kysely/database"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { getPubTypesForCommunity } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getForm } from "~/lib/server/form"
+import { getPubFields } from "~/lib/server/pubFields"
+import { ContentLayout } from "../../../ContentLayout"
+import { EditFormTitleButton } from "./EditFormTitleButton"
+import { FormCopyButton } from "./FormCopyButton"
 
 const getCommunityStages = (communityId: CommunitiesId) =>
-	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
+	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll()
 
 export default async function Page(props: {
 	params: Promise<{
-		formSlug: string;
-		communitySlug: string;
-	}>;
+		formSlug: string
+		communitySlug: string
+	}>
 }) {
-	const params = await props.params;
+	const params = await props.params
 
-	const { formSlug } = params;
+	const { formSlug } = params
 
-	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	if (
@@ -46,11 +47,11 @@ export default async function Page(props: {
 			user.id
 		))
 	) {
-		redirect(`/c/${community.slug}/unauthorized`);
+		redirect(`/c/${community.slug}/unauthorized`)
 	}
 
-	const communityId = community.id as CommunitiesId;
-	const communityStages = await getCommunityStages(communityId).execute();
+	const communityId = community.id as CommunitiesId
+	const communityStages = await getCommunityStages(communityId).execute()
 
 	const [form, { fields }, pubTypes] = await Promise.all([
 		getForm({
@@ -59,9 +60,9 @@ export default async function Page(props: {
 		}).executeTakeFirstOrThrow(),
 		getPubFields({ communityId }).executeTakeFirstOrThrow(),
 		getPubTypesForCommunity(community.id, { limit: 0 }),
-	]);
+	])
 
-	const formBuilderId = "formbuilderform";
+	const formBuilderId = "formbuilderform"
 
 	return (
 		<ContentLayout
@@ -77,7 +78,7 @@ export default async function Page(props: {
 						<EditFormTitleButton formId={form.id} name={form.name} />
 					</div>
 					{form.isDefault && (
-						<div className="flex gap-1 text-sm font-normal">
+						<div className="flex gap-1 font-normal text-sm">
 							Default editor for this type
 							<Tooltip>
 								<TooltipTrigger>
@@ -106,5 +107,5 @@ export default async function Page(props: {
 				</PubTypeProvider>
 			</PubFieldProvider>
 		</ContentLayout>
-	);
+	)
 }

@@ -1,31 +1,32 @@
-import type { NonGenericProcessedPub } from "contracts";
+import type { NonGenericProcessedPub } from "contracts"
+
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { ChevronDown } from "ui/icon";
+} from "ui/dropdown-menu"
+import { ChevronDown } from "ui/icon"
 
-import { getFieldValue, getRelatedPubs } from "../lib/getValue";
+import { getFieldValue, getRelatedPubs } from "../lib/getValue"
 
 export interface Props {
-	navPub: NonGenericProcessedPub;
+	navPub: NonGenericProcessedPub
 }
 
 export default function NavMenu({ navPub }: Props) {
 	// Extract the title from the pub
-	const title = navPub.title || "Navigation";
+	const title = navPub.title || "Navigation"
 
 	// Get navigation targets using the getRelatedPubs helper function
-	const navTargets = getRelatedPubs(navPub, "Navigation Targets") || [];
+	const navTargets = getRelatedPubs(navPub, "Navigation Targets") || []
 
-	const getStringFieldValue = getFieldValue<string>;
+	const getStringFieldValue = getFieldValue<string>
 
 	// Generate a unique ID for this specific dropdown to avoid conflicts when multiple dropdowns exist
-	const uniqueId = `nav-menu-${navPub.id}`;
-	const buttonId = `${uniqueId}-button`;
-	const dropdownId = `${uniqueId}-dropdown`;
+	const uniqueId = `nav-menu-${navPub.id}`
+	const _buttonId = `${uniqueId}-button`
+	const _dropdownId = `${uniqueId}-dropdown`
 
 	return (
 		<div className="relative inline-block text-left">
@@ -37,21 +38,21 @@ export default function NavMenu({ navPub }: Props) {
 
 				<DropdownMenuContent>
 					{navTargets.map((target) => {
-						if (!target) return null;
+						if (!target) return null
 
 						const url =
 							getStringFieldValue(target, "URL") ||
-							`/${getStringFieldValue(target, "Slug") || ""}`;
+							`/${getStringFieldValue(target, "Slug") || ""}`
 						return (
 							<DropdownMenuItem key={target.id}>
 								<a className="w-full" href={url}>
 									{target.title}
 								</a>
 							</DropdownMenuItem>
-						);
+						)
 					})}
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</div>
-	);
+	)
 }

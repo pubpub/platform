@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form"
 
-import { Button } from "ui/button";
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -10,11 +10,11 @@ import {
 	DialogHeader,
 	DialogOverlay,
 	DialogTitle,
-} from "ui/dialog";
-import { FormSubmitButton } from "ui/submit-button";
+} from "ui/dialog"
+import { FormSubmitButton } from "ui/submit-button"
 
 export const Footer = ({ onCancel, submitText }: { onCancel: () => void; submitText: string }) => {
-	const form = useFormContext();
+	const form = useFormContext()
 	return (
 		<DialogFooter className="gap-y-1">
 			<Button onClick={onCancel} type="button" variant="outline">
@@ -32,8 +32,8 @@ export const Footer = ({ onCancel, submitText }: { onCancel: () => void; submitT
 				</Button>
 			)}
 		</DialogFooter>
-	);
-};
+	)
+}
 
 export const CreateEditDialog = ({
 	title,
@@ -42,11 +42,11 @@ export const CreateEditDialog = ({
 	children,
 	trigger,
 }: {
-	title: string;
-	children: React.ReactNode;
-	onOpenChange: (open: boolean) => void;
-	open: boolean;
-	trigger?: React.ReactNode;
+	title: string
+	children: React.ReactNode
+	onOpenChange: (open: boolean) => void
+	open: boolean
+	trigger?: React.ReactNode
 }) => {
 	return (
 		<Dialog onOpenChange={onOpenChange} defaultOpen={false} open={open} modal={true}>
@@ -59,5 +59,5 @@ export const CreateEditDialog = ({
 				{children}
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

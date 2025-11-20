@@ -1,12 +1,11 @@
-import type { ExpressionBuilder, ExpressionWrapper } from "kysely";
+import type { Database } from "db/Database"
+import type { CommunitiesId, PubsId, StagesId } from "db/public"
+import type { ExpressionBuilder, ExpressionWrapper } from "kysely"
 
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
-import type { Database } from "db/Database";
-import type { CommunitiesId, PubsId, StagesId } from "db/public";
-
-import { db } from "~/kysely/database";
-import { autoCache } from "~/lib/server/cache/autoCache";
+import { db } from "~/kysely/database"
+import { autoCache } from "~/lib/server/cache/autoCache"
 
 export const getCommunityById = <EB extends ExpressionBuilder<Database, keyof Database>>(
 	eb: EB,
@@ -66,10 +65,10 @@ export const getCommunityById = <EB extends ExpressionBuilder<Database, keyof Da
 					.whereRef("stages.communityId", "=", eb.ref("communities.id"))
 			).as("stages"),
 		])
-		.where("communities.id", "=", communityId);
+		.where("communities.id", "=", communityId)
 
-	return autoCache(query);
-};
+	return autoCache(query)
+}
 
 export const getStage = (stageId: StagesId) =>
 	autoCache(
@@ -85,14 +84,14 @@ export const getStage = (stageId: StagesId) =>
 					.as("community"),
 			])
 			.where("stages.id", "=", stageId)
-	);
+	)
 
 export const availableStagesAndCurrentStage = ({
 	pubId,
 	communityId,
 }: {
-	pubId: PubsId;
-	communityId: CommunitiesId;
+	pubId: PubsId
+	communityId: CommunitiesId
 }) =>
 	autoCache(
 		db
@@ -122,4 +121,4 @@ export const availableStagesAndCurrentStage = ({
 						.where("stages.communityId", "=", communityId as CommunitiesId)
 				).as("availableStagesOfCurrentPub"),
 			])
-	);
+	)

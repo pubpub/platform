@@ -1,4 +1,4 @@
-import type { DOMOutputSpec, MarkSpec } from "prosemirror-model";
+import type { DOMOutputSpec, MarkSpec } from "prosemirror-model"
 
 const sub = {
 	attrs: {
@@ -12,7 +12,7 @@ const sub = {
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
-				};
+				}
 			},
 		},
 	],
@@ -23,9 +23,9 @@ const sub = {
 				class: mark.attrs.class,
 				...(mark.attrs.id && { id: mark.attrs.id }),
 			},
-		] as DOMOutputSpec;
+		] as DOMOutputSpec
 	},
-} satisfies MarkSpec;
+} satisfies MarkSpec
 
 const sup = {
 	parseDOM: [
@@ -35,7 +35,7 @@ const sup = {
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
-				};
+				}
 			},
 		},
 	],
@@ -46,8 +46,8 @@ const sup = {
 				class: mark.attrs.class,
 				...(mark.attrs.id && { id: mark.attrs.id }),
 			},
-		] as DOMOutputSpec;
+		] as DOMOutputSpec
 	},
-} satisfies MarkSpec;
+} satisfies MarkSpec
 
-export default { sub, sup };
+export default { sub, sup }

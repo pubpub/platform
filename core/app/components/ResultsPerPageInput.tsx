@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { useQueryStates } from "nuqs";
+import { useQueryStates } from "nuqs"
 
-import { Label } from "ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { Label } from "ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
-import { dataTableParsers } from "./DataTable/PubsDataTable/validations";
+import { dataTableParsers } from "./DataTable/PubsDataTable/validations"
 
-const PAGE_OPTIONS = [10, 25, 50, 100];
+const PAGE_OPTIONS = [10, 25, 50, 100]
 
 export const ResultsPerPageInput = () => {
-	const [{ perPage }, setPaging] = useQueryStates(dataTableParsers);
+	const [{ perPage }, setPaging] = useQueryStates(dataTableParsers)
 
 	return (
 		<div className="flex items-center gap-2 whitespace-nowrap">
@@ -20,7 +20,7 @@ export const ResultsPerPageInput = () => {
 			<Select
 				value={`${perPage}`}
 				onValueChange={(value) => {
-					setPaging({ perPage: parseInt(value) }, { shallow: false });
+					setPaging({ perPage: parseInt(value, 10) }, { shallow: false })
 				}}
 			>
 				<SelectTrigger className="h-8 w-[4.5rem]">
@@ -35,5 +35,5 @@ export const ResultsPerPageInput = () => {
 				</SelectContent>
 			</Select>
 		</div>
-	);
-};
+	)
+}

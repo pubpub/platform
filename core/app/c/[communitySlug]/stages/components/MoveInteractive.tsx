@@ -1,35 +1,35 @@
-"use client";
+"use client"
 
-import type { ReactNode } from "react";
+import type { PubsId, StagesId } from "db/public"
+import type { ReactNode } from "react"
 
-import { useState, useTransition } from "react";
-import Link from "next/link";
+import { useState, useTransition } from "react"
+import Link from "next/link"
 
-import type { PubsId, StagesId } from "db/public";
-import { Button } from "ui/button";
-import { ArrowLeft, ArrowRight, FlagTriangleRightIcon } from "ui/icon";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { useToast } from "ui/use-toast";
+import { Button } from "ui/button"
+import { ArrowLeft, ArrowRight, FlagTriangleRightIcon } from "ui/icon"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { useToast } from "ui/use-toast"
 
-import { move } from "~/app/c/[communitySlug]/stages/components/lib/actions";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { isClientException, useServerAction } from "~/lib/serverActions";
+import { move } from "~/app/c/[communitySlug]/stages/components/lib/actions"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { isClientException, useServerAction } from "~/lib/serverActions"
 
 type SimplifiedStage = {
-	id: StagesId;
-	name: string;
-};
+	id: StagesId
+	name: string
+}
 
 type Props = {
-	pubId: PubsId;
-	stageId: StagesId;
-	sources: SimplifiedStage[];
-	destinations: SimplifiedStage[];
-	canMovePub: boolean;
-	canViewStage: boolean;
-	button: ReactNode;
-	hideIfNowhereToMove: boolean;
-};
+	pubId: PubsId
+	stageId: StagesId
+	sources: SimplifiedStage[]
+	destinations: SimplifiedStage[]
+	canMovePub: boolean
+	canViewStage: boolean
+	button: ReactNode
+	hideIfNowhereToMove: boolean
+}
 
 export function MoveInteractive({
 	pubId,
@@ -41,19 +41,19 @@ export function MoveInteractive({
 	button,
 	hideIfNowhereToMove,
 }: Props) {
-	const [popoverIsOpen, setPopoverIsOpen] = useState(false);
-	const { toast } = useToast();
-	const community = useCommunity();
+	const [popoverIsOpen, setPopoverIsOpen] = useState(false)
+	const { toast } = useToast()
+	const community = useCommunity()
 
-	const [isMoving, startTransition] = useTransition();
-	const runMove = useServerAction(move);
+	const [isMoving, startTransition] = useTransition()
+	const runMove = useServerAction(move)
 
 	const onMove = async (pubId: PubsId, sourceStageId: StagesId, destStageId: StagesId) => {
-		const err = await runMove(pubId, sourceStageId, destStageId);
+		const err = await runMove(pubId, sourceStageId, destStageId)
 
 		if (isClientException(err)) {
-			setPopoverIsOpen(false);
-			return;
+			setPopoverIsOpen(false)
+			return
 		}
 
 		toast({
@@ -63,31 +63,31 @@ export function MoveInteractive({
 			action: (
 				<Button
 					onClick={async () => {
-						const result = await runMove(pubId, destStageId, sourceStageId);
+						const result = await runMove(pubId, destStageId, sourceStageId)
 
 						if (isClientException(result)) {
-							return;
+							return
 						}
 						toast({
 							variant: "default",
 							title: "Success",
 							description: "Pub was successfully moved back",
-						});
+						})
 					}}
 				>
 					Undo
 				</Button>
 			),
-		});
-		setPopoverIsOpen(false);
-	};
+		})
+		setPopoverIsOpen(false)
+	}
 
 	if (!canMovePub || !canViewStage) {
-		return button;
+		return button
 	}
 
 	if (destinations.length === 0 && sources.length === 0 && hideIfNowhereToMove) {
-		return button;
+		return button
 	}
 
 	return (
@@ -105,7 +105,7 @@ export function MoveInteractive({
 										key={stage.id}
 										onClick={() =>
 											startTransition(async () => {
-												await onMove(pubId, stageId, stage.id);
+												await onMove(pubId, stageId, stage.id)
 											})
 										}
 										className="flex w-full justify-start gap-x-2 px-2 py-0"
@@ -115,7 +115,7 @@ export function MoveInteractive({
 											Move to {stage.name}
 										</span>
 									</Button>
-								);
+								)
 							})}
 						</div>
 					)}
@@ -130,7 +130,7 @@ export function MoveInteractive({
 										key={stage.id}
 										onClick={() =>
 											startTransition(async () => {
-												await onMove(pubId, stageId, stage.id);
+												await onMove(pubId, stageId, stage.id)
 											})
 										}
 										className="flex w-full justify-start gap-x-2 px-2 py-0"
@@ -140,7 +140,7 @@ export function MoveInteractive({
 											Move to {stage.name}
 										</span>
 									</Button>
-								);
+								)
 							})}
 						</div>
 					)}
@@ -166,5 +166,5 @@ export function MoveInteractive({
 				</div>
 			</PopoverContent>
 		</Popover>
-	);
+	)
 }

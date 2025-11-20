@@ -1,38 +1,39 @@
-import { notFound } from "next/navigation";
+import type { Action } from "db/public"
 
-import type { Action } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
-import { PubFieldProvider } from "ui/pubFields";
-import { TokenProvider } from "ui/tokens";
+import { notFound } from "next/navigation"
 
-import { getActionByName } from "~/actions/api";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { getActionConfigDefaults } from "~/lib/server/actions";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
-import { getPubFields } from "~/lib/server/pubFields";
-import { ContentLayout } from "../../../ContentLayout";
-import { ActionConfigDefaultForm } from "./ActionConfigDefaultForm";
+import { Capabilities, MembershipType } from "db/public"
+import { PubFieldProvider } from "ui/pubFields"
+import { TokenProvider } from "ui/tokens"
+
+import { getActionByName } from "~/actions/api"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { getActionConfigDefaults } from "~/lib/server/actions"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
+import { getPubFields } from "~/lib/server/pubFields"
+import { ContentLayout } from "../../../ContentLayout"
+import { ActionConfigDefaultForm } from "./ActionConfigDefaultForm"
 
 type Props = {
 	params: {
-		action: Action;
-		communitySlug: string;
-	};
-};
+		action: Action
+		communitySlug: string
+	}
+}
 
 export default async function Page(props: Props) {
-	const params = await props.params;
+	const params = await props.params
 
-	const [loginData, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+	const [loginData, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	if (!loginData || !loginData.user) {
-		redirectToLogin();
+		redirectToLogin()
 	}
 
 	const [userCanEditCommunity, pubFields, actionConfigDefaults] = await Promise.all([
@@ -44,18 +45,18 @@ export default async function Page(props: Props) {
 		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
 
 		getActionConfigDefaults(community.id, params.action).executeTakeFirst(),
-	]);
+	])
 
 	if (!userCanEditCommunity) {
-		return await redirectToUnauthorized();
+		return await redirectToUnauthorized()
 	}
 
-	const actionTitle = params.action[0].toUpperCase() + params.action.slice(1);
+	const actionTitle = params.action[0].toUpperCase() + params.action.slice(1)
 
-	const action = getActionByName(params.action);
+	const action = getActionByName(params.action)
 
 	if (!action) {
-		notFound();
+		notFound()
 	}
 
 	return (
@@ -87,5 +88,5 @@ export default async function Page(props: Props) {
 				</PubFieldProvider>
 			</div>
 		</ContentLayout>
-	);
+	)
 }

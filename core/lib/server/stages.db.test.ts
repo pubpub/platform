@@ -1,17 +1,17 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest"
 
-import { CoreSchemaType, MemberRole } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public"
 
-import { mockServerCode } from "~/lib/__tests__/utils";
+import { mockServerCode } from "~/lib/__tests__/utils"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode()
 
-const { getTrx } = createForEachMockedTransaction();
+const { getTrx } = createForEachMockedTransaction()
 
 describe("getStages", () => {
 	test("permissions", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const _trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { community, stages, users } = await seedCommunity({
 			community: {
 				name: "test",
@@ -57,30 +57,30 @@ describe("getStages", () => {
 					role: MemberRole.contributor,
 				},
 			},
-		});
+		})
 
-		const { getStages } = await import("./stages");
+		const { getStages } = await import("./stages")
 
 		// Check we can get all stages as admin
 		const adminStages = await getStages({
 			communityId: community.id,
 			userId: users.admin.id,
-		}).execute();
-		expect(adminStages.map((r) => r.name)).toEqual(Object.keys(stages));
+		}).execute()
+		expect(adminStages.map((r) => r.name)).toEqual(Object.keys(stages))
 
 		// Contributor
 		const contributorStages = await getStages({
 			communityId: community.id,
 			userId: users.contributor.id,
-		}).execute();
-		expect(contributorStages).toEqual([]);
+		}).execute()
+		expect(contributorStages).toEqual([])
 
 		// Stage 1 admin
 		const stage1AdminStages = await getStages({
 			communityId: community.id,
 			userId: users.stage1admin.id,
-		}).execute();
-		const stage1 = stages["Stage 1"];
-		expect(stage1AdminStages).toMatchObject([{ id: stage1.id, name: stage1.name }]);
-	});
-});
+		}).execute()
+		const stage1 = stages["Stage 1"]
+		expect(stage1AdminStages).toMatchObject([{ id: stage1.id, name: stage1.name }])
+	})
+})

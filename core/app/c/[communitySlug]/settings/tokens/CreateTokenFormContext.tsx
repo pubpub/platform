@@ -1,9 +1,10 @@
-"use client";
+"use client"
 
-import { createContext } from "react";
+import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types"
 
-import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types";
-import { NO_STAGE_OPTION } from "db/types";
+import { createContext } from "react"
+
+import { NO_STAGE_OPTION } from "db/types"
 
 export const CreateTokenFormContext = createContext<CreateTokenFormContextType>({
 	stages: {
@@ -16,4 +17,4 @@ export const CreateTokenFormContext = createContext<CreateTokenFormContextType>(
 		allOptions: [],
 		allValues: [],
 	},
-});
+})

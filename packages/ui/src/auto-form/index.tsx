@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import type { DefaultValues, UseFormReturn } from "react-hook-form";
-import type { z } from "zod";
+import type { DefaultValues, UseFormReturn } from "react-hook-form"
+import type { z } from "zod"
+import type { Dependency, FieldConfig } from "./types"
+import type { ZodObjectOrWrapped } from "./utils"
 
-import * as React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFormState } from "react-hook-form";
+import * as React from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm, useFormState } from "react-hook-form"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import type { Dependency, FieldConfig } from "./types";
-import type { ZodObjectOrWrapped } from "./utils";
-import { Form } from "../form";
-import { FormSubmitButton } from "../submit-button";
-import AutoFormObject from "./fields/object";
-import { getDefaultValues, getObjectFormSchema } from "./utils";
+import { Form } from "../form"
+import { FormSubmitButton } from "../submit-button"
+import AutoFormObject from "./fields/object"
+import { getDefaultValues, getObjectFormSchema } from "./utils"
 
 export function AutoFormSubmit({
 	children,
@@ -22,7 +22,7 @@ export function AutoFormSubmit({
 	"data-testid": testId,
 	...props
 }: Omit<Parameters<typeof FormSubmitButton>[0], "formState">) {
-	const form = useFormState();
+	const form = useFormState()
 
 	return (
 		<FormSubmitButton
@@ -31,7 +31,7 @@ export function AutoFormSubmit({
 			formState={form}
 			idleText={children}
 		/>
-	);
+	)
 }
 
 function AutoForm<SchemaType extends ZodObjectOrWrapped>({
@@ -45,25 +45,25 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	className,
 	dependencies,
 }: {
-	formSchema: SchemaType;
-	values?: Partial<z.infer<SchemaType>>;
-	onValuesChange?: (values: Partial<z.infer<SchemaType>>) => void;
+	formSchema: SchemaType
+	values?: Partial<z.infer<SchemaType>>
+	onValuesChange?: (values: Partial<z.infer<SchemaType>>) => void
 	onParsedValuesChange?: (
 		values: Partial<z.infer<SchemaType>> & { pubFields: Record<string, string[]> }
-	) => void;
+	) => void
 	onSubmit?: (
 		values: z.infer<SchemaType> & { pubFields: Record<string, string[]> },
 		form: UseFormReturn<any>
-	) => void | Promise<void>;
-	fieldConfig?: FieldConfig<NonNullable<z.infer<SchemaType>>>;
-	children?: React.ReactNode;
-	className?: string;
-	dependencies?: Dependency<NonNullable<z.infer<SchemaType>>>[];
-	stopPropagation?: boolean;
+	) => void | Promise<void>
+	fieldConfig?: FieldConfig<NonNullable<z.infer<SchemaType>>>
+	children?: React.ReactNode
+	className?: string
+	dependencies?: Dependency<NonNullable<z.infer<SchemaType>>>[]
+	stopPropagation?: boolean
 }) {
-	const objectFormSchema = getObjectFormSchema(formSchema);
+	const objectFormSchema = getObjectFormSchema(formSchema)
 	const defaultValues: DefaultValues<z.infer<typeof objectFormSchema>> | null =
-		getDefaultValues(objectFormSchema);
+		getDefaultValues(objectFormSchema)
 
 	const form = useForm<z.infer<typeof objectFormSchema>>({
 		resolver: zodResolver(formSchema),
@@ -72,14 +72,14 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 		reValidateMode: "onBlur",
 		mode: "onBlur",
 		shouldFocusError: true,
-	});
+	})
 
-	const values = form.watch();
+	const values = form.watch()
 	// valuesString is needed because form.watch() returns a new object every time
-	const valuesString = JSON.stringify(values);
+	const _valuesString = JSON.stringify(values)
 
 	async function onSubmit(submittedValues: z.infer<typeof formSchema>) {
-		const parsedValues = formSchema.safeParse(submittedValues);
+		const parsedValues = formSchema.safeParse(submittedValues)
 		if (parsedValues.success) {
 			await onSubmitProp?.(
 				{
@@ -89,27 +89,27 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 					pubFields: values?.pubFields ?? {},
 				},
 				form
-			);
-			return;
+			)
+			return
 		}
 
-		const { issues } = parsedValues.error;
+		const { issues } = parsedValues.error
 		issues.forEach((issue) => {
 			form.setError(issue.path.join("."), {
 				message: issue.message,
-			});
-		});
+			})
+		})
 	}
 
 	React.useEffect(() => {
-		onValuesChangeProp?.(values);
-		const parsedValues = formSchema.safeParse(values);
+		onValuesChangeProp?.(values)
+		const parsedValues = formSchema.safeParse(values)
 		if (parsedValues.success === false) {
 		}
 		if (parsedValues.success && parsedValues.data !== undefined) {
-			onParsedValuesChange?.({ ...parsedValues.data, pubFields: values?.pubFields ?? {} });
+			onParsedValuesChange?.({ ...parsedValues.data, pubFields: values?.pubFields ?? {} })
 		}
-	}, [valuesString]);
+	}, [formSchema.safeParse, onParsedValuesChange, onValuesChangeProp, values])
 
 	return (
 		<div className="w-full">
@@ -126,21 +126,21 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 				</form>
 			</Form>
 		</div>
-	);
+	)
 }
 
 export type {
 	AutoFormInputComponentProps,
+	Dependency,
+	EnumValues,
 	FieldConfig,
 	FieldConfigItem,
-	Dependency,
-	ValueDependency,
-	EnumValues,
 	OptionsDependency,
-} from "./types";
+	ValueDependency,
+} from "./types"
 
-export { zodToHtmlInputProps } from "./utils";
+export { zodToHtmlInputProps } from "./utils"
 
-export { AutoFormObject };
+export { AutoFormObject }
 
-export default AutoForm;
+export default AutoForm

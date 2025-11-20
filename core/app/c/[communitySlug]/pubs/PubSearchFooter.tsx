@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { Label } from "ui/label";
+import { Label } from "ui/label"
 import {
 	Pagination,
 	PaginationContent,
@@ -8,42 +8,42 @@ import {
 	PaginationLast,
 	PaginationNext,
 	PaginationPrevious,
-} from "ui/pagination";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { cn } from "utils";
+} from "ui/pagination"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { cn } from "utils"
 
-import { usePubSearch } from "./PubSearchProvider";
+import { usePubSearch } from "./PubSearchProvider"
 
 export const PubSearchFooter = (
 	props: {
-		basePath: string;
-		searchParams: Record<string, unknown>;
-		page: number;
-		children?: React.ReactNode;
-		className?: string;
+		basePath: string
+		searchParams: Record<string, unknown>
+		page: number
+		children?: React.ReactNode
+		className?: string
 	} & (
 		| {
-				mode: "total";
-				totalPages: number;
+				mode: "total"
+				totalPages: number
 		  }
 		| {
-				mode: "cursor";
-				hasNextPage: boolean;
+				mode: "cursor"
+				hasNextPage: boolean
 		  }
 	)
 ) => {
-	const { setInputValues } = usePubSearch();
+	const { setInputValues } = usePubSearch()
 
-	const { basePath, searchParams, page, children, className } = props;
+	const { basePath, searchParams, page, children, className } = props
 
-	const prevDisabled = page <= 1;
-	const nextDisabled = props.mode === "total" ? page >= props.totalPages : !props.hasNextPage;
-	const showLastButton = props.mode === "total";
+	const prevDisabled = page <= 1
+	const nextDisabled = props.mode === "total" ? page >= props.totalPages : !props.hasNextPage
+	const showLastButton = props.mode === "total"
 
 	return (
 		<div
 			className={cn(
-				"absolute bottom-0 left-0 flex w-full flex-col items-center justify-between gap-2 border-t border-gray-300 bg-white px-4 py-2 text-sm leading-[19px] shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)] md:flex-row",
+				"absolute bottom-0 left-0 flex w-full flex-col items-center justify-between gap-2 border-gray-300 border-t bg-white px-4 py-2 text-sm leading-[19px] shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)] md:flex-row",
 				className
 			)}
 		>
@@ -72,7 +72,7 @@ export const PubSearchFooter = (
 							query: { ...searchParams, page: 1 },
 						}}
 						onClick={() => {
-							setInputValues((old) => ({ ...old, page: 1 }));
+							setInputValues((old) => ({ ...old, page: 1 }))
 						}}
 					/>
 					<PaginationPrevious
@@ -87,7 +87,7 @@ export const PubSearchFooter = (
 							query: { ...searchParams, page: page - 1 },
 						}}
 						onClick={() => {
-							setInputValues((old) => ({ ...old, page: page - 1 }));
+							setInputValues((old) => ({ ...old, page: page - 1 }))
 						}}
 					/>
 					<PaginationNext
@@ -102,7 +102,7 @@ export const PubSearchFooter = (
 							query: { ...searchParams, page: page + 1 },
 						}}
 						onClick={() => {
-							setInputValues((old) => ({ ...old, page: page + 1 }));
+							setInputValues((old) => ({ ...old, page: page + 1 }))
 						}}
 					/>
 					{showLastButton && (
@@ -118,7 +118,7 @@ export const PubSearchFooter = (
 								query: { ...searchParams, page: props.totalPages },
 							}}
 							onClick={() => {
-								setInputValues((old) => ({ ...old, page: props.totalPages }));
+								setInputValues((old) => ({ ...old, page: props.totalPages }))
 							}}
 						/>
 					)}
@@ -126,13 +126,13 @@ export const PubSearchFooter = (
 			</Pagination>
 			{children}
 		</div>
-	);
-};
+	)
+}
 
-const PAGE_OPTIONS = [10, 25, 50, 100];
+const PAGE_OPTIONS = [10, 25, 50, 100]
 
 export const PubSearchResultsPerPageInput = () => {
-	const { queryParams, setFilters } = usePubSearch();
+	const { queryParams, setFilters } = usePubSearch()
 
 	return (
 		<div className="flex items-center gap-2 whitespace-nowrap">
@@ -144,11 +144,11 @@ export const PubSearchResultsPerPageInput = () => {
 				onValueChange={(value) => {
 					setFilters((old) => ({
 						...old,
-						perPage: parseInt(value),
+						perPage: parseInt(value, 10),
 						// go back to first page, bc results are messed up
 						// could theoreticallly do some more complex calculation, but i dont wanna
 						page: 1,
-					}));
+					}))
 				}}
 			>
 				<SelectTrigger className="h-8 w-[4.5rem]">
@@ -163,5 +163,5 @@ export const PubSearchResultsPerPageInput = () => {
 				</SelectContent>
 			</Select>
 		</div>
-	);
-};
+	)
+}

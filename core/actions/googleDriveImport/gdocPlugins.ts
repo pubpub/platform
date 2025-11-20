@@ -1,80 +1,80 @@
-import path from "path";
+/** biome-ignore-all lint/suspicious/noImplicitAnyLet: I dont' want to fix all of this and risk breaking things */
+import type { Element, Root } from "hast"
 
-import type { Element, Node, Root } from "hast";
+import path from "node:path"
+import katex from "katex"
+import { rehype } from "rehype"
+import rehypeParse from "rehype-parse"
+import rehypeStringify from "rehype-stringify"
+import { unified } from "unified"
+import { filter } from "unist-util-filter"
+import { visit } from "unist-util-visit"
 
-import katex from "katex";
-import { rehype } from "rehype";
-import rehypeParse from "rehype-parse";
-import rehypeStringify from "rehype-stringify";
-import { unified } from "unified";
-import { filter } from "unist-util-filter";
-import { visit } from "unist-util-visit";
-
-const removeProperties = () => (tree: Root) => {
+const _removeProperties = () => (tree: Root) => {
 	visit(tree, "element", (node: any) => {
-		node.properties = {};
-	});
-};
+		node.properties = {}
+	})
+}
 
 export const mathStringToRehypeElement = (htmlString: string): Element[] => {
-	const parser = String(rehype().processSync(htmlString));
-	const file = unified().use(rehypeParse, { fragment: true }).parse(parser);
-	return file.children as Element[];
-};
+	const parser = String(rehype().processSync(htmlString))
+	const file = unified().use(rehypeParse, { fragment: true }).parse(parser)
+	return file.children as Element[]
+}
 
 export const rehypeFragmentToHtmlString = (fragment: Element): string => {
-	const processor = unified().use(rehypeStringify);
-	const file = processor.stringify({ type: "root", children: [fragment] });
-	return String(file);
-};
+	const processor = unified().use(rehypeStringify)
+	const file = processor.stringify({ type: "root", children: [fragment] })
+	return String(file)
+}
 
 export const latexToRehypeNode = (latexString: string, isBlock: boolean): Element => {
 	const html = katex.renderToString(latexString, {
 		throwOnError: false,
 		displayMode: isBlock,
-	});
+	})
 
 	return {
 		type: "element",
 		tagName: isBlock ? "div" : "span",
 		properties: { className: "math-block" },
 		children: mathStringToRehypeElement(html),
-	};
-};
+	}
+}
 
 export const getTextContent = (node: any): string => {
 	if (!node) {
-		return "";
+		return ""
 	}
 	if (node.type === "text") {
-		return node.value;
+		return node.value
 	}
 	if (node.children) {
-		return node.children.map(getTextContent).join("");
+		return node.children.map(getTextContent).join("")
 	}
-	return "";
-};
+	return ""
+}
 
 export const findAnchor = (node: any): any => {
 	if (node.tagName === "a") {
-		return node;
+		return node
 	}
 	if (node.children) {
 		for (const child of node.children) {
-			const found = findAnchor(child);
+			const found = findAnchor(child)
 			if (found) {
-				return found;
+				return found
 			}
 		}
 	}
-	return null;
-};
+	return null
+}
 
 export const tableToObjectArray = (node: any) => {
-	if (!node) return [{ type: "empty" }];
+	if (!node) return [{ type: "empty" }]
 
-	const tbody = node.children.find((child: any) => child.tagName === "tbody");
-	if (!tbody) return [{ type: "empty" }];
+	const tbody = node.children.find((child: any) => child.tagName === "tbody")
+	if (!tbody) return [{ type: "empty" }]
 
 	const rows: Element[] = tbody.children
 		.filter((child: any) => child.tagName === "tr")
@@ -82,23 +82,23 @@ export const tableToObjectArray = (node: any) => {
 			return {
 				...row,
 				children: row.children.filter((child: any) => {
-					return child.tagName === "td";
+					return child.tagName === "td"
 				}),
-			};
-		});
-	if (rows.length === 0) return [{ type: "empty" }];
+			}
+		})
+	if (rows.length === 0) return [{ type: "empty" }]
 
 	const headersHoriz: string[] = rows[0].children
 		.filter((child: any) => child.tagName === "td")
-		.map((header: any) => getTextContent(header).toLowerCase().replace(/\s+/g, ""));
+		.map((header: any) => getTextContent(header).toLowerCase().replace(/\s+/g, ""))
 
 	const headersVert: string[] = rows.map((row: any) =>
 		getTextContent(row.children[0]).toLowerCase().replace(/\s+/g, "")
-	);
+	)
 
-	const hasTypeAtZero = headersHoriz[0]?.toLowerCase() === "type";
+	const hasTypeAtZero = headersHoriz[0]?.toLowerCase() === "type"
 	if (!hasTypeAtZero) {
-		return [{ type: "empty" }];
+		return [{ type: "empty" }]
 	}
 
 	const validTypes = [
@@ -115,75 +115,75 @@ export const tableToObjectArray = (node: any) => {
 		"footnote",
 		"description",
 		"table",
-	];
+	]
 
-	const isHoriz = validTypes.includes(headersVert[1]?.toLowerCase());
-	const isVert = validTypes.includes(headersHoriz[1]?.toLowerCase());
+	const isHoriz = validTypes.includes(headersVert[1]?.toLowerCase())
+	const isVert = validTypes.includes(headersHoriz[1]?.toLowerCase())
 
 	const getCellContent = (tableType: string, headerVal: string, cell: any): any => {
 		const isTypeWithHtmlValue =
-			!["math", "reference"].includes(tableType) && headerVal === "value";
-		const isRefUnstructured = tableType === "reference" && headerVal === "unstructuredvalue";
-		const isCaption = headerVal === "caption";
+			!["math", "reference"].includes(tableType) && headerVal === "value"
+		const isRefUnstructured = tableType === "reference" && headerVal === "unstructuredvalue"
+		const isCaption = headerVal === "caption"
 		if (isTypeWithHtmlValue || isCaption || isRefUnstructured) {
-			return cell.children;
+			return cell.children
 		}
 
 		const isAssetSource =
 			["image", "video", "audio", "file", "iframe"].includes(tableType) &&
-			headerVal === "source";
-		const isStaticSource = headerVal === "staticimage";
+			headerVal === "source"
+		const isStaticSource = headerVal === "staticimage"
 		if (isAssetSource || isStaticSource) {
-			const anchor = findAnchor(cell);
-			if (anchor && anchor.properties.href) {
-				return anchor.properties.href;
+			const anchor = findAnchor(cell)
+			if (anchor?.properties.href) {
+				return anchor.properties.href
 			}
 		}
 
-		return getTextContent(cell).trim();
-	};
+		return getTextContent(cell).trim()
+	}
 
-	let data;
+	let data
 	if (isHoriz) {
 		data = rows.slice(1).map((row: any) => {
-			const cells = row.children.filter((child: any) => child.tagName === "td");
-			const typeIndex = headersHoriz.findIndex((header) => header === "type");
+			const cells = row.children.filter((child: any) => child.tagName === "td")
+			const typeIndex = headersHoriz.indexOf("type")
 			const tableType = getTextContent(cells[typeIndex])
 				.trim()
 				.toLowerCase()
-				.replace(/\s+/g, "");
-			const obj: { [key: string]: any } = {};
+				.replace(/\s+/g, "")
+			const obj: { [key: string]: any } = {}
 			cells.forEach((cell: any, index: number) => {
-				const headerVal = headersHoriz[index];
-				obj[headersHoriz[index]] = getCellContent(tableType, headerVal, cell);
-			});
+				const headerVal = headersHoriz[index]
+				obj[headersHoriz[index]] = getCellContent(tableType, headerVal, cell)
+			})
 
-			return { ...obj, type: tableType };
-		});
+			return { ...obj, type: tableType }
+		})
 	} else if (isVert) {
 		data = headersHoriz.slice(1).map((_header, colIndex) => {
-			const obj: { [key: string]: any } = {};
-			const typeIndex = headersVert.findIndex((header) => header === "type");
+			const obj: { [key: string]: any } = {}
+			const typeIndex = headersVert.indexOf("type")
 			const tableType = getTextContent(rows[typeIndex].children[colIndex + 1])
 				.trim()
 				.toLowerCase()
-				.replace(/\s+/g, "");
+				.replace(/\s+/g, "")
 
 			rows.forEach((row: any, rowIndex: number) => {
-				const cell = row.children[colIndex + 1];
-				const headerVal = headersVert[rowIndex];
-				obj[headersVert[rowIndex]] = getCellContent(tableType, headerVal, cell);
-			});
-			return { ...obj, type: tableType };
-		});
+				const cell = row.children[colIndex + 1]
+				const headerVal = headersVert[rowIndex]
+				obj[headersVert[rowIndex]] = getCellContent(tableType, headerVal, cell)
+			})
+			return { ...obj, type: tableType }
+		})
 	} else {
-		return [{ type: "empty" }];
+		return [{ type: "empty" }]
 	}
-	return data;
-};
+	return data
+}
 
 export const getDescription = (htmlString: string): string => {
-	let description = "";
+	let description = ""
 	rehype()
 		.use(structureFormatting)
 		.use(removeVerboseFormatting)
@@ -191,116 +191,117 @@ export const getDescription = (htmlString: string): string => {
 		.use(() => (tree: Root) => {
 			visit(tree, "element", (node: any) => {
 				if (node.tagName === "table") {
-					const tableData: any = tableToObjectArray(node);
-					const tableType = tableData[0].type;
+					const tableData: any = tableToObjectArray(node)
+					const tableType = tableData[0].type
 					if (tableType === "description") {
 						const valueFragment: Element = {
 							type: "element",
 							tagName: "span",
 							properties: {},
 							children: tableData[0].value,
-						};
+						}
 						description = rehypeFragmentToHtmlString(valueFragment).replace(
 							/<\/?(span|p)>/g,
 							""
-						);
-						return false;
+						)
+						return false
 					}
 				}
-			});
+			})
 		})
-		.processSync(htmlString);
+		.processSync(htmlString)
 
-	return description;
-};
+	return description
+}
 
 export const insertVariables = (tree: Root, varName: string, node: any) => {
 	visit(tree, "text", (textNode: any, index: any, parent: any) => {
 		if (typeof textNode.value === "string") {
-			const regex = new RegExp(`\\{${varName}\\}`, "g");
-			let match;
-			const elements: any[] = [];
-			let lastIndex = 0;
+			const regex = new RegExp(`\\{${varName}\\}`, "g")
+			let match
+			const elements: any[] = []
+			let lastIndex = 0
 
+			// biome-ignore lint/suspicious/noAssignInExpressions: I dont' want to fix all of this and risk breaking things
 			while ((match = regex.exec(textNode.value)) !== null) {
-				const startIndex = match.index;
-				const endIndex = regex.lastIndex;
+				const startIndex = match.index
+				const endIndex = regex.lastIndex
 
 				if (startIndex > lastIndex) {
 					elements.push({
 						type: "text",
 						value: textNode.value.slice(lastIndex, startIndex),
-					});
+					})
 				}
 
-				elements.push(node);
-				lastIndex = endIndex;
+				elements.push(node)
+				lastIndex = endIndex
 			}
 
 			if (lastIndex < textNode.value.length) {
 				elements.push({
 					type: "text",
 					value: textNode.value.slice(lastIndex),
-				});
+				})
 			}
 
 			if (elements.length > 0 && parent && typeof index === "number") {
-				parent.children.splice(index, 1, ...elements);
+				parent.children.splice(index, 1, ...elements)
 			}
 		}
-	});
-};
+	})
+}
 
 export const basic = () => (tree: Root) => {
-	return tree;
-};
+	return tree
+}
 
 export const removeVerboseFormatting = () => (tree: Root) => {
 	/* Remove unneededTags */
 	const nextTree = filter(tree, (node: any) => {
 		if (node.type === "element") {
-			const isBlockedElement = ["script", "style"].includes(node.tagName);
-			return !isBlockedElement;
+			const isBlockedElement = ["script", "style"].includes(node.tagName)
+			return !isBlockedElement
 		}
-		return true;
-	});
+		return true
+	})
 
 	/* Remove unneeded attributes */
 	visit(nextTree, "element", (node: any) => {
 		if (node.properties) {
-			delete node.properties.className;
-			delete node.properties.style;
+			delete node.properties.className
+			delete node.properties.style
 		}
-	});
+	})
 
-	return nextTree;
-};
+	return nextTree
+}
 
 export const structureFormatting = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
-		if (node.properties && node.properties.style) {
-			const style = node.properties.style as string;
+		if (node.properties?.style) {
+			const style = node.properties.style as string
 			if (node.tagName === "span") {
-				const styles = style.split(";").map((s) => s.trim().replace(/\s+/g, ""));
-				const tags = [];
+				const styles = style.split(";").map((s) => s.trim().replace(/\s+/g, ""))
+				const tags = []
 
 				if (styles.includes("font-weight:700")) {
-					tags.push("b");
+					tags.push("b")
 				}
 				if (styles.includes("font-style:italic")) {
-					tags.push("i");
+					tags.push("i")
 				}
 				if (styles.includes("text-decoration:line-through")) {
-					tags.push("s");
+					tags.push("s")
 				}
 				if (styles.includes("text-decoration:underline")) {
-					tags.push("u");
+					tags.push("u")
 				}
 				if (styles.includes("vertical-align:sub")) {
-					tags.push("sub");
+					tags.push("sub")
 				}
 				if (styles.includes("vertical-align:super")) {
-					tags.push("sup");
+					tags.push("sup")
 				}
 
 				if (tags.length > 0) {
@@ -309,7 +310,7 @@ export const structureFormatting = () => (tree: Root) => {
 						tagName: tags[0],
 						properties: {},
 						children: node.children,
-					};
+					}
 
 					for (let i = 1; i < tags.length; i++) {
 						newNode = {
@@ -317,23 +318,23 @@ export const structureFormatting = () => (tree: Root) => {
 							tagName: tags[i],
 							properties: {},
 							children: [newNode],
-						};
+						}
 					}
 
 					if (parent && typeof index === "number") {
-						parent.children[index] = newNode;
+						parent.children[index] = newNode
 					}
 				}
 			}
 		}
-	});
-};
+	})
+}
 
 export const structureImages = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "image") {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
@@ -359,25 +360,25 @@ export const structureImages = () => (tree: Root) => {
 							children: data.caption || [],
 						},
 					],
-				}));
+				}))
 
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1, ...elements);
+					parent.children.splice(index, 1, ...elements)
 				}
 			}
 		}
-	});
-};
+	})
+}
 
 export const structureVideos = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "video") {
 				const elements: Element[] = tableData.map((data: any) => {
-					const extension = path.extname(data.source).replace(".", "");
-					const type = extension ? `video/${extension}` : undefined;
+					const extension = path.extname(data.source).replace(".", "")
+					const type = extension ? `video/${extension}` : undefined
 					return {
 						type: "element",
 						tagName: "figure",
@@ -419,26 +420,26 @@ export const structureVideos = () => (tree: Root) => {
 								children: data.caption || [],
 							},
 						],
-					};
-				});
+					}
+				})
 
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1, ...elements);
+					parent.children.splice(index, 1, ...elements)
 				}
 			}
 		}
-	});
-};
+	})
+}
 
 export const structureAudio = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "audio") {
 				const elements: Element[] = tableData.map((data: any) => {
-					const extension = path.extname(data.source).replace(".", "");
-					const type = extension ? `audio/${extension}` : undefined;
+					const extension = path.extname(data.source).replace(".", "")
+					const type = extension ? `audio/${extension}` : undefined
 					return {
 						type: "element",
 						tagName: "figure",
@@ -472,21 +473,21 @@ export const structureAudio = () => (tree: Root) => {
 								children: data.caption || [],
 							},
 						],
-					};
-				});
+					}
+				})
 
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1, ...elements);
+					parent.children.splice(index, 1, ...elements)
 				}
 			}
 		}
-	});
-};
+	})
+}
 export const structureFiles = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "file") {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
@@ -525,20 +526,20 @@ export const structureFiles = () => (tree: Root) => {
 							children: data.caption || [],
 						},
 					],
-				}));
+				}))
 
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1, ...elements);
+					parent.children.splice(index, 1, ...elements)
 				}
 			}
 		}
-	});
-};
+	})
+}
 export const structureIframes = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "iframe") {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
@@ -568,20 +569,20 @@ export const structureIframes = () => (tree: Root) => {
 							children: data.caption || [],
 						},
 					],
-				}));
+				}))
 
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1, ...elements);
+					parent.children.splice(index, 1, ...elements)
 				}
 			}
 		}
-	});
-};
+	})
+}
 export const structureBlockMath = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "math") {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
@@ -596,77 +597,78 @@ export const structureBlockMath = () => (tree: Root) => {
 							children: data.caption || [],
 						},
 					],
-				}));
+				}))
 
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1, ...elements);
+					parent.children.splice(index, 1, ...elements)
 				}
 			}
 		}
-	});
-};
+	})
+}
 export const structureInlineMath = () => (tree: Root) => {
 	visit(tree, "text", (node: any, index: any, parent: any) => {
 		if (typeof node.value === "string") {
-			const regex = /\$(\S(?:[^$]*\S)?)\$/g;
-			let match;
-			const elements: any[] = [];
-			let lastIndex = 0;
+			const regex = /\$(\S(?:[^$]*\S)?)\$/g
+			let match
+			const elements: any[] = []
+			let lastIndex = 0
 
+			// biome-ignore lint/suspicious/noAssignInExpressions: I dont' want to fix all of this and risk breaking things
 			while ((match = regex.exec(node.value)) !== null) {
-				const [_fullMatch, mathContent] = match;
-				const startIndex = match.index;
-				const endIndex = regex.lastIndex;
+				const [_fullMatch, mathContent] = match
+				const startIndex = match.index
+				const endIndex = regex.lastIndex
 
 				if (startIndex > lastIndex) {
 					elements.push({
 						type: "text",
 						value: node.value.slice(lastIndex, startIndex),
-					});
+					})
 				}
 
-				elements.push(latexToRehypeNode(mathContent, false));
-				lastIndex = endIndex;
+				elements.push(latexToRehypeNode(mathContent, false))
+				lastIndex = endIndex
 			}
 
 			if (lastIndex < node.value.length) {
 				elements.push({
 					type: "text",
 					value: node.value.slice(lastIndex),
-				});
+				})
 			}
 
 			if (elements.length > 0 && parent && typeof index === "number") {
-				parent.children.splice(index, 1, ...elements);
+				parent.children.splice(index, 1, ...elements)
 			}
 		}
-	});
-};
+	})
+}
 export const structureBlockquote = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "blockquote") {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "blockquote",
 					properties: { id: data.id },
 					children: data.value || [],
-				}));
+				}))
 
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1, ...elements);
+					parent.children.splice(index, 1, ...elements)
 				}
 			}
 		}
-	});
-};
+	})
+}
 export const structureCodeBlock = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "code") {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
@@ -679,33 +681,34 @@ export const structureCodeBlock = () => (tree: Root) => {
 							children: data.value || [],
 						},
 					],
-				}));
+				}))
 
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1, ...elements);
+					parent.children.splice(index, 1, ...elements)
 				}
 			}
 		}
-	});
-};
+	})
+}
 export const structureInlineCode = () => (tree: Root) => {
 	visit(tree, "text", (node: any, index: any, parent: any) => {
 		if (typeof node.value === "string") {
-			const regex = /\`(\S[^\`]*\S)\`/g;
-			let match;
-			const elements: any[] = [];
-			let lastIndex = 0;
+			const regex = /`(\S[^`]*\S)`/g
+			let match
+			const elements: any[] = []
+			let lastIndex = 0
 
+			// biome-ignore lint/suspicious/noAssignInExpressions: I dont' want to fix all of this and risk breaking things
 			while ((match = regex.exec(node.value)) !== null) {
-				const [_fullMatch, codeContent] = match;
-				const startIndex = match.index;
-				const endIndex = regex.lastIndex;
+				const [_fullMatch, codeContent] = match
+				const startIndex = match.index
+				const endIndex = regex.lastIndex
 
 				if (startIndex > lastIndex) {
 					elements.push({
 						type: "text",
 						value: node.value.slice(lastIndex, startIndex),
-					});
+					})
 				}
 
 				elements.push({
@@ -713,42 +716,42 @@ export const structureInlineCode = () => (tree: Root) => {
 					tagName: "code",
 					properties: {},
 					children: [{ type: "text", value: codeContent }],
-				});
-				lastIndex = endIndex;
+				})
+				lastIndex = endIndex
 			}
 
 			if (lastIndex < node.value.length) {
 				elements.push({
 					type: "text",
 					value: node.value.slice(lastIndex),
-				});
+				})
 			}
 
 			if (elements.length > 0 && parent && typeof index === "number") {
-				parent.children.splice(index, 1, ...elements);
+				parent.children.splice(index, 1, ...elements)
 			}
 		}
-	});
-};
+	})
+}
 export const structureAnchors = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "anchor") {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "a",
 					properties: { id: data.id },
-				}));
+				}))
 
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1, ...elements);
+					parent.children.splice(index, 1, ...elements)
 				}
 			}
 		}
-	});
-};
+	})
+}
 export const cleanUnusedSpans = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (
@@ -756,23 +759,23 @@ export const cleanUnusedSpans = () => (tree: Root) => {
 			(!node.properties || Object.keys(node.properties).length === 0)
 		) {
 			if (parent && typeof index === "number") {
-				parent.children.splice(index, 1, ...node.children);
+				parent.children.splice(index, 1, ...node.children)
 			}
 		}
-	});
+	})
 
 	visit(tree, "element", (node: any) => {
 		if (node.children) {
 			for (let i = 0; i < node.children.length - 1; i++) {
 				if (node.children[i].type === "text" && node.children[i + 1].type === "text") {
-					node.children[i].value += node.children[i + 1].value;
-					node.children.splice(i + 1, 1);
-					i--;
+					node.children[i].value += node.children[i + 1].value
+					node.children.splice(i + 1, 1)
+					i--
 				}
 			}
 		}
-	});
-};
+	})
+}
 
 // export const structureReferences = () => (tree: Root) => {
 // 	const allReference: any[] = [];
@@ -917,26 +920,26 @@ export const cleanUnusedSpans = () => (tree: Root) => {
 // };
 
 export const structureFootnotes = () => (tree: Root) => {
-	const allFootnotes: any[] = [];
+	const allFootnotes: any[] = []
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "footnote") {
-				allFootnotes.push(...tableData);
+				allFootnotes.push(...tableData)
 				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1);
+					parent.children.splice(index, 1)
 				}
 			}
 		}
-	});
+	})
 	allFootnotes.forEach((footnoteData, index) => {
 		const valueHtml = rehypeFragmentToHtmlString({
 			type: "element",
 			properties: {},
 			tagName: "div",
 			children: footnoteData.value,
-		});
+		})
 		const newNode: Element = {
 			type: "element",
 			tagName: "a",
@@ -946,10 +949,10 @@ export const structureFootnotes = () => (tree: Root) => {
 				"data-structured-value": footnoteData.structuredvalue,
 			},
 			children: [{ type: "text", value: `[${index + 1}]` }],
-		};
-		insertVariables(tree, footnoteData.id, newNode);
-	});
-};
+		}
+		insertVariables(tree, footnoteData.id, newNode)
+	})
+}
 
 export const removeGoogleLinkForwards = () => (tree: Root) => {
 	visit(tree, "element", (node: any) => {
@@ -957,58 +960,58 @@ export const removeGoogleLinkForwards = () => (tree: Root) => {
 			node.tagName === "a" &&
 			node.properties.href?.startsWith("https://www.google.com/url")
 		) {
-			const url = new URL(node.properties.href);
-			const q = url.searchParams.get("q");
-			node.properties.href = q;
+			const url = new URL(node.properties.href)
+			const q = url.searchParams.get("q")
+			node.properties.href = q
 		}
-	});
-};
+	})
+}
 
 export const processLocalLinks = () => (tree: Root) => {
 	visit(tree, "element", (node: any) => {
 		if (node.tagName === "a" && node.properties.href?.startsWith("https://local.pubpub/")) {
-			const href = decodeURIComponent(node.properties.href);
-			node.properties.href = href.split("local.pubpub/")[1].split("&")[0];
+			const href = decodeURIComponent(node.properties.href)
+			node.properties.href = href.split("local.pubpub/")[1].split("&")[0]
 		}
-	});
-};
+	})
+}
 
 export const removeEmptyFigCaption = () => (tree: Root) => {
 	const nextTree = filter(tree, (node: any) => {
 		if (node.type === "element" && node.tagName === "figcaption") {
-			const textContent = getTextContent(node);
-			return textContent.trim().length > 0;
+			const textContent = getTextContent(node)
+			return textContent.trim().length > 0
 		}
-		return true;
-	});
-	return nextTree;
-};
+		return true
+	})
+	return nextTree
+}
 
 export const formatLists = () => (tree: Root) => {
 	const groupItems = (items: any[]): any[] => {
-		const result: any[] = [];
-		const stack: any[] = [];
+		const result: any[] = []
+		const stack: any[] = []
 
 		items.forEach((item) => {
 			while (stack.length && stack[stack.length - 1].level >= item.level) {
-				stack.pop();
+				stack.pop()
 			}
 
 			if (stack.length) {
-				const parent = stack[stack.length - 1];
+				const parent = stack[stack.length - 1]
 				if (!parent.childItems) {
-					parent.childItems = [];
+					parent.childItems = []
 				}
-				parent.childItems.push(item);
+				parent.childItems.push(item)
 			} else {
-				result.push(item);
+				result.push(item)
 			}
 
-			stack.push(item);
-		});
+			stack.push(item)
+		})
 
-		return result;
-	};
+		return result
+	}
 
 	const createNestedList = (items: any[], listType: string) => {
 		const nestedList: Element = {
@@ -1021,36 +1024,36 @@ export const formatLists = () => (tree: Root) => {
 					tagName: "li",
 					properties: item.properties,
 					children: item.children,
-				};
-
-				if (item.childItems) {
-					listItem.children.push(createNestedList(item.childItems, listType));
 				}
 
-				return listItem;
-			}),
-		};
+				if (item.childItems) {
+					listItem.children.push(createNestedList(item.childItems, listType))
+				}
 
-		return nestedList;
-	};
+				return listItem
+			}),
+		}
+
+		return nestedList
+	}
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "ul" || node.tagName === "ol") {
-			const listType = node.tagName;
-			const siblings = [];
-			let currentIndex = index;
+			const listType = node.tagName
+			const siblings = []
+			let currentIndex = index
 			while (
 				parent.children[currentIndex] &&
 				["ol", "ul"].includes(parent.children[currentIndex].tagName)
 			) {
-				siblings.push(parent.children[currentIndex]);
-				currentIndex++;
+				siblings.push(parent.children[currentIndex])
+				currentIndex++
 			}
 			const items = siblings
 				.flatMap((sibling: any) =>
 					sibling.children.map((x: any) => ({ ...x, parentListType: sibling.tagName }))
 				)
 				.filter((child) => {
-					return child.tagName === "li";
+					return child.tagName === "li"
 				})
 				.map((item) => {
 					return {
@@ -1059,29 +1062,29 @@ export const formatLists = () => (tree: Root) => {
 							item.properties?.style?.match(/margin-left:\s*(\d+)p(t|x)/)?.[1] || "0",
 							10
 						),
-					};
-				});
-			const groupedItems = groupItems(items);
-			const nestedList = createNestedList(groupedItems, listType);
+					}
+				})
+			const groupedItems = groupItems(items)
+			const nestedList = createNestedList(groupedItems, listType)
 
-			parent.children.splice(index, siblings.length, nestedList);
+			parent.children.splice(index, siblings.length, nestedList)
 		}
-	});
-};
+	})
+}
 
 export const removeDescription = () => (tree: Root) => {
 	const nextTree = filter(tree, (node: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "description") {
-				return false;
+				return false
 			}
 		}
-		return true;
-	});
-	return nextTree;
-};
+		return true
+	})
+	return nextTree
+}
 
 export const formatFigureReferences = () => (tree: Root) => {
 	/*
@@ -1090,23 +1093,23 @@ export const formatFigureReferences = () => (tree: Root) => {
 		- Go through and get each @mention and replace @mention with that value and a link to it
 
 	*/
-	const figureCount: { [key: string]: number } = {};
-	const figuresById: any = {};
-	visit(tree, "element", (node: any, index: any, parent: any) => {
+	const figureCount: { [key: string]: number } = {}
+	const figuresById: any = {}
+	visit(tree, "element", (node: any, _index: any, _parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
-			const aggregateFigureTypes = ["image", "audio", "iframe"]; // Don't count 'file' figure types
-			const independentFigureTypes = ["video", "table", "math"];
-			const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
+			const aggregateFigureTypes = ["image", "audio", "iframe"] // Don't count 'file' figure types
+			const independentFigureTypes = ["video", "table", "math"]
+			const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes]
 			if (validFigureTypes.includes(tableType)) {
 				tableData.forEach((data: any) => {
 					if (data.hidelabel?.toLowerCase() !== "true") {
-						const isAggregateType = aggregateFigureTypes.includes(tableType);
+						const isAggregateType = aggregateFigureTypes.includes(tableType)
 						if (isAggregateType) {
-							figureCount.total = (figureCount.total || 0) + 1;
+							figureCount.total = (figureCount.total || 0) + 1
 						} else {
-							figureCount[tableType] = (figureCount[tableType] || 0) + 1;
+							figureCount[tableType] = (figureCount[tableType] || 0) + 1
 						}
 						figuresById[data.id] = {
 							type: tableType,
@@ -1115,30 +1118,31 @@ export const formatFigureReferences = () => (tree: Root) => {
 								: figureCount[tableType],
 							// typeCount: figureCount[tableType],
 							// totalCount: figureCount.total,
-						};
+						}
 					}
-				});
+				})
 			}
 		}
-	});
+	})
 
 	visit(tree, "text", (textNode: any, index: any, parent: any) => {
 		if (typeof textNode.value === "string") {
-			const regex = new RegExp(/(?:^|\s|[\(\[\{])@(\S+?)(?=[\s.;,\)\]\}]|$)/g);
-			let match;
-			const elements: any[] = [];
-			let lastIndex = 0;
+			const regex = new RegExp(/(?:^|\s|[([{])@(\S+?)(?=[\s.;,)\]}]|$)/g)
+			let match
+			const elements: any[] = []
+			let lastIndex = 0
 
+			// biome-ignore lint/suspicious/noAssignInExpressions: I dont' want to fix all of this and risk breaking things
 			while ((match = regex.exec(textNode.value)) !== null) {
-				const [fullMatch, figureId] = match;
-				const startIndex = match.index;
-				const endIndex = regex.lastIndex;
+				const [fullMatch, figureId] = match
+				const startIndex = match.index
+				const endIndex = regex.lastIndex
 
 				if (startIndex > lastIndex) {
 					elements.push({
 						type: "text",
 						value: textNode.value.slice(lastIndex, startIndex),
-					});
+					})
 				}
 				if (fullMatch.indexOf(figureId) === 2) {
 					/* If there is an opening delimiter (e.g. it's not on a newline), */
@@ -1146,7 +1150,7 @@ export const formatFigureReferences = () => (tree: Root) => {
 					elements.push({
 						type: "text",
 						value: fullMatch[0],
-					});
+					})
 				}
 				if (figuresById[figureId]) {
 					elements.push({
@@ -1160,82 +1164,82 @@ export const formatFigureReferences = () => (tree: Root) => {
 							// 	figuresById[figureId].totalCountMinusTableVideo,
 						},
 						children: [],
-					});
+					})
 				} else {
 					elements.push({
 						type: "text",
 						value: fullMatch,
-					});
+					})
 				}
-				lastIndex = endIndex;
+				lastIndex = endIndex
 			}
 
 			if (lastIndex < textNode.value.length) {
 				elements.push({
 					type: "text",
 					value: textNode.value.slice(lastIndex),
-				});
+				})
 			}
 
 			if (elements.length > 0 && parent && typeof index === "number") {
-				parent.children.splice(index, 1, ...elements);
+				parent.children.splice(index, 1, ...elements)
 			}
 		}
-	});
-};
+	})
+}
 
 export const appendFigureAttributes = () => (tree: Root) => {
 	/*
 	 */
-	const figureCount: { [key: string]: number } = {};
-	const aggregateFigureTypes = ["img", "audio", "iframe"]; // Don't count 'file' figure types
-	const independentFigureTypes = ["video", "table", "math"];
-	const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
-	visit(tree, "element", (node: any, index: any, parent: any) => {
+	const figureCount: { [key: string]: number } = {}
+	const aggregateFigureTypes = ["img", "audio", "iframe"] // Don't count 'file' figure types
+	const independentFigureTypes = ["video", "table", "math"]
+	const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes]
+	visit(tree, "element", (node: any, _index: any, _parent: any) => {
 		if (node.tagName === "figure") {
-			const tableType = node.properties.dataFigureType;
+			const tableType = node.properties.dataFigureType
 			if (
 				validFigureTypes.includes(tableType) &&
 				node.properties.dataHideLabel?.toLowerCase() !== "true"
 			) {
-				const isAggregateType = aggregateFigureTypes.includes(tableType);
+				const isAggregateType = aggregateFigureTypes.includes(tableType)
 				if (isAggregateType) {
-					figureCount.total = (figureCount.total || 0) + 1;
+					figureCount.total = (figureCount.total || 0) + 1
 				} else {
-					figureCount[tableType] = (figureCount[tableType] || 0) + 1;
+					figureCount[tableType] = (figureCount[tableType] || 0) + 1
 				}
 
 				node.properties = {
 					...node.properties,
 					dataFigureCount: isAggregateType ? figureCount.total : figureCount[tableType],
-				};
+				}
 			}
 		}
-	});
-};
+	})
+}
 
 export const structureTables = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
 			if (tableType === "empty") {
-				let foundNonEmpty = false;
+				let foundNonEmpty = false
 				const nextSibling = parent.children.slice(index + 1).find((sibling: any) => {
-					const isEmpty = getTextContent(sibling).trim() === "";
-					const isTable = sibling.type === "element" && sibling.tagName === "table";
+					const isEmpty = getTextContent(sibling).trim() === ""
+					const isTable = sibling.type === "element" && sibling.tagName === "table"
 					if (!isEmpty && !isTable) {
-						foundNonEmpty = true;
-						return false;
+						foundNonEmpty = true
+						return false
 					}
 					if (isEmpty || foundNonEmpty) {
-						return false;
+						return false
 					}
-					return true;
-				});
+					return true
+				})
 				if (nextSibling) {
-					const nextTableData: any = tableToObjectArray(nextSibling);
-					const nextTableType = nextTableData[0].type;
+					const nextTableData: any = tableToObjectArray(nextSibling)
+					const nextTableType = nextTableData[0].type
 					if (nextTableType === "table") {
 						const figureNode: Element = {
 							type: "element",
@@ -1253,21 +1257,21 @@ export const structureTables = () => (tree: Root) => {
 									children: nextTableData[0].caption || [],
 								},
 							],
-						};
-						parent.children.splice(index, 1, figureNode);
+						}
+						parent.children.splice(index, 1, figureNode)
 					}
 				}
 			}
 		}
-	});
+	})
 
 	const nextTree = filter(tree, (node: any) => {
 		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
-			return tableType !== "table";
+			const tableData: any = tableToObjectArray(node)
+			const tableType = tableData[0].type
+			return tableType !== "table"
 		}
-		return true;
-	});
-	return nextTree;
-};
+		return true
+	})
+	return nextTree
+}

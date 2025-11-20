@@ -1,6 +1,6 @@
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType } from "db/public"
 
-import { BadRequestError } from "../server/errors";
+import { BadRequestError } from "../server/errors"
 
 /**
  * Merges an array of slugs and values with an array of fields by matching on slug.
@@ -18,53 +18,53 @@ export const mergeSlugsWithFields = <
 	slugs: T[],
 	fields: P[]
 ) => {
-	const fieldMap = new Map<string, P>(fields.map((field) => [field.slug, field]));
+	const fieldMap = new Map<string, P>(fields.map((field) => [field.slug, field]))
 
 	return slugs
 		.map((s) => {
-			const field = fieldMap.get(s.slug);
+			const field = fieldMap.get(s.slug)
 
 			if (!field) {
-				return null;
+				return null
 			}
 
 			return {
 				...field,
 				...s,
-			};
+			}
 		})
-		.filter((s) => s !== null);
-};
+		.filter((s) => s !== null)
+}
 
 /**
  * This should maybe go somewhere else
  */
 export const hydratePubValues = <
 	T extends {
-		value: unknown;
-		schemaName: CoreSchemaType;
-		relatedPub?: { values: T[] } | null;
+		value: unknown
+		schemaName: CoreSchemaType
+		relatedPub?: { values: T[] } | null
 	} & (
 		| {
-				fieldSlug: string;
-				slug?: never;
+				fieldSlug: string
+				slug?: never
 		  }
 		| {
-				slug: string;
-				fieldSlug?: never;
+				slug: string
+				fieldSlug?: never
 		  }
 	),
 >(
 	pubValues: T[]
 ): T[] => {
 	return pubValues.map(({ value, schemaName, relatedPub, ...rest }) => {
-		const slug = rest.slug ?? rest.fieldSlug;
+		const slug = rest.slug ?? rest.fieldSlug
 
 		if (schemaName === CoreSchemaType.DateTime) {
 			try {
-				value = new Date(value as string);
+				value = new Date(value as string)
 			} catch {
-				throw new BadRequestError(`Invalid date value for field ${slug}`);
+				throw new BadRequestError(`Invalid date value for field ${slug}`)
 			}
 		}
 
@@ -73,7 +73,7 @@ export const hydratePubValues = <
 					...relatedPub,
 					values: hydratePubValues(relatedPub.values),
 				}
-			: null;
+			: null
 
 		return {
 			slug,
@@ -81,6 +81,6 @@ export const hydratePubValues = <
 			value,
 			relatedPub: hydratedRelatedPub,
 			...rest,
-		};
-	}) as T[];
-};
+		}
+	}) as T[]
+}

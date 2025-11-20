@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import React from "react";
+import React from "react"
 
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
-import { ListPlus } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog"
+import { ListPlus } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
-import { AddCommunityForm } from "./AddCommunityForm";
+import { AddCommunityForm } from "./AddCommunityForm"
 
 export const AddCommunity = () => {
-	const [open, setOpen] = React.useState(false);
+	const [open, setOpen] = React.useState(false)
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<Tooltip>
@@ -29,5 +29,5 @@ export const AddCommunity = () => {
 				<AddCommunityForm setOpen={setOpen} />
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

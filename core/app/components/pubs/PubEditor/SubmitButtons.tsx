@@ -1,19 +1,19 @@
-import { ElementType } from "db/public";
-import { Button } from "ui/button";
-import { cn } from "utils";
+import type { FormElements } from "../../forms/types"
 
-import type { FormElements } from "../../forms/types";
+import { ElementType } from "db/public"
+import { Button } from "ui/button"
+import { cn } from "utils"
 
 export const SubmitButtons = ({
 	buttons,
 	isDisabled,
 	className,
 }: {
-	buttons: FormElements[];
-	isDisabled?: boolean;
-	className?: string;
+	buttons: FormElements[]
+	isDisabled?: boolean
+	className?: string
 }) => {
-	const filteredButtons = buttons.filter((button) => button.type === ElementType.button);
+	const filteredButtons = buttons.filter((button) => button.type === ElementType.button)
 	// Use a default button if the user does not have buttons configured
 	if (filteredButtons.length === 0) {
 		return (
@@ -22,7 +22,7 @@ export const SubmitButtons = ({
 					Submit
 				</Button>
 			</div>
-		);
+		)
 	}
 
 	return (
@@ -32,8 +32,8 @@ export const SubmitButtons = ({
 					<Button id={button.id} key={button.id} type="submit" disabled={isDisabled}>
 						{button.label}
 					</Button>
-				);
+				)
 			})}
 		</div>
-	);
-};
+	)
+}

@@ -1,18 +1,14 @@
-"use client";
+"use client"
 
-import { useCallback, useEffect, useState } from "react";
-import { skipToken } from "@tanstack/react-query";
+import type { Communities, CommunityMembershipsId } from "db/public"
+import type { MemberSelectUserWithMembership } from "./types"
 
-import type { Communities, CommunityMembershipsId } from "db/public";
-import { FormItem, FormLabel } from "ui/form";
-import { PubFieldSelectorToggleButton } from "ui/pubFields";
-import { Skeleton } from "ui/skeleton";
-import { cn } from "utils";
+import { useEffect, useState } from "react"
+import { skipToken } from "@tanstack/react-query"
 
-import type { MemberSelectUserWithMembership } from "./types";
-import { client } from "~/lib/api";
-import { useCommunity } from "../providers/CommunityProvider";
-import { MemberSelectClient } from "./MemberSelectClient";
+import { client } from "~/lib/api"
+import { useCommunity } from "../providers/CommunityProvider"
+import { MemberSelectClient } from "./MemberSelectClient"
 
 /** Hook to wrap all API calls/status for user search */
 const useMemberSelectData = ({
@@ -20,12 +16,12 @@ const useMemberSelectData = ({
 	memberId,
 	email,
 }: {
-	community: Communities;
-	memberId?: CommunityMembershipsId;
-	email?: string;
+	community: Communities
+	memberId?: CommunityMembershipsId
+	email?: string
 }) => {
 	// Individual member query
-	const shouldQueryForIndividualUser = !!memberId && memberId !== "";
+	const shouldQueryForIndividualUser = !!memberId && memberId !== ""
 	const { data: userResult, isPending: userPending } = client.members.get.useQuery({
 		queryKey: ["getMember", memberId, community.slug],
 		queryData: shouldQueryForIndividualUser
@@ -33,12 +29,12 @@ const useMemberSelectData = ({
 					params: { communitySlug: community.slug, memberId },
 				}
 			: skipToken,
-	});
-	const user = userResult?.body;
+	})
+	const user = userResult?.body
 
 	// User suggestions query
-	const shouldQueryForUsers = !!email && email !== "";
-	const usersQuery = { limit: 1, communityId: community.id, email: email ?? "" };
+	const shouldQueryForUsers = !!email && email !== ""
+	const usersQuery = { limit: 1, communityId: community.id, email: email ?? "" }
 	const {
 		data: userSuggestionsResult,
 		isPending: userSuggestionsPending,
@@ -51,9 +47,9 @@ const useMemberSelectData = ({
 					params: { communitySlug: community.slug },
 				}
 			: skipToken,
-	});
+	})
 
-	const [initialized, setInitialized] = useState(false);
+	const [initialized, setInitialized] = useState(false)
 
 	// Use effect so that we do not load the component until all data is ready
 	// MemberSelectClient and Autocomplete both set state based on initial data,
@@ -61,29 +57,29 @@ const useMemberSelectData = ({
 	useEffect(() => {
 		const isLoading =
 			(shouldQueryForIndividualUser ? userPending : false) ||
-			(shouldQueryForUsers ? userSuggestionsPending : false);
+			(shouldQueryForUsers ? userSuggestionsPending : false)
 		if (!isLoading) {
-			setInitialized(true);
+			setInitialized(true)
 		}
-	}, [userPending, userSuggestionsPending]);
+	}, [userPending, userSuggestionsPending, shouldQueryForIndividualUser, shouldQueryForUsers])
 
-	return { initialized, user, users: userSuggestionsResult?.body ?? [], refetchUsers: refetch };
-};
+	return { initialized, user, users: userSuggestionsResult?.body ?? [], refetchUsers: refetch }
+}
 
 type Props = {
-	name: string;
-	value?: CommunityMembershipsId;
-	onChange: (value: CommunityMembershipsId | undefined) => void;
-};
+	name: string
+	value?: CommunityMembershipsId
+	onChange: (value: CommunityMembershipsId | undefined) => void
+}
 
 export function MemberSelectClientFetch({ name, value, onChange: onChangeProp }: Props) {
-	const community = useCommunity();
-	const [search, setSearch] = useState("");
+	const community = useCommunity()
+	const [search, setSearch] = useState("")
 	const { user, users, refetchUsers } = useMemberSelectData({
 		community,
 		memberId: value,
 		email: search,
-	});
+	})
 
 	return (
 		<MemberSelectClient
@@ -95,5 +91,5 @@ export function MemberSelectClientFetch({ name, value, onChange: onChangeProp }:
 			onChangeValue={onChangeProp}
 			onUserAdded={refetchUsers}
 		/>
-	);
+	)
 }

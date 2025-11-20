@@ -1,42 +1,42 @@
-import { useCallback, useEffect, useMemo } from "react";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useLexicalTextEntity } from "@lexical/react/useLexicalTextEntity";
+import { useCallback, useEffect } from "react"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { useLexicalTextEntity } from "@lexical/react/useLexicalTextEntity"
 import {
 	$getSelection,
 	$isRangeSelection,
 	COMMAND_PRIORITY_NORMAL,
 	KEY_DOWN_COMMAND,
 	TextNode,
-} from "lexical";
+} from "lexical"
 
-import { $createJsonataNode, JsonataNode } from "./JsonataNode";
+import { $createJsonataNode, JsonataNode } from "./JsonataNode"
 
 const $createJsonataNode_ = (textNode: TextNode): JsonataNode => {
-	return $createJsonataNode(textNode.getTextContent());
-};
+	return $createJsonataNode(textNode.getTextContent())
+}
 
-const REGEX = new RegExp(`(\{\{.*?\}\})`, "i");
+const REGEX = /({{.*?}})/i
 
 export function JsonataPlugin() {
-	const [editor] = useLexicalComposerContext();
+	const [editor] = useLexicalComposerContext()
 
 	useEffect(() => {
 		if (!editor.hasNodes([JsonataNode])) {
-			throw new Error("JsonataPlugin: JsonataNode not registered on editor");
+			throw new Error("JsonataPlugin: JsonataNode not registered on editor")
 		}
-	}, [editor]);
+	}, [editor])
 
 	const getTokenMatch = useCallback((text: string) => {
-		const match = REGEX.exec(text);
+		const match = REGEX.exec(text)
 		if (match === null) {
-			return null;
+			return null
 		}
-		const start = match.index;
-		const end = start + match[1].length;
-		return { start, end };
-	}, []);
+		const start = match.index
+		const end = start + match[1].length
+		return { start, end }
+	}, [])
 
-	useLexicalTextEntity<JsonataNode>(getTokenMatch, JsonataNode, $createJsonataNode_);
+	useLexicalTextEntity<JsonataNode>(getTokenMatch, JsonataNode, $createJsonataNode_)
 
 	// register {{ autocomplete
 	useEffect(() => {
@@ -44,57 +44,57 @@ export function JsonataPlugin() {
 			KEY_DOWN_COMMAND,
 			(event: KeyboardEvent) => {
 				if (event.key !== "{") {
-					return false;
+					return false
 				}
 
-				const selection = $getSelection();
+				const selection = $getSelection()
 				if (!$isRangeSelection(selection)) {
-					return false;
+					return false
 				}
 
-				const anchorNode = selection.anchor.getNode();
+				const anchorNode = selection.anchor.getNode()
 				if (!(anchorNode instanceof TextNode)) {
-					return false;
+					return false
 				}
 
-				const textContent = anchorNode.getTextContent();
-				const offset = selection.anchor.offset;
+				const textContent = anchorNode.getTextContent()
+				const offset = selection.anchor.offset
 
 				if (offset === 0) {
-					return false;
+					return false
 				}
 
 				if (textContent[offset - 1] !== "{") {
-					return false;
+					return false
 				}
 
-				event.preventDefault();
+				event.preventDefault()
 
 				editor.update(() => {
-					const sel = $getSelection();
+					const sel = $getSelection()
 					if (!$isRangeSelection(sel)) {
-						return;
+						return
 					}
 
 					// insert '{  }}' (one opening brace, two spaces, two closing braces)
-					sel.insertText("{  }}");
+					sel.insertText("{  }}")
 
 					// move cursor back 3 positions to be between two spaces and }}
-					const newSel = $getSelection();
+					const newSel = $getSelection()
 					if ($isRangeSelection(newSel)) {
-						const node = newSel.anchor.getNode();
+						const node = newSel.anchor.getNode()
 						if (node instanceof TextNode) {
-							const newOffset = newSel.anchor.offset;
-							newSel.setTextNodeRange(node, newOffset - 3, node, newOffset - 3);
+							const newOffset = newSel.anchor.offset
+							newSel.setTextNodeRange(node, newOffset - 3, node, newOffset - 3)
 						}
 					}
-				});
+				})
 
-				return true;
+				return true
 			},
 			COMMAND_PRIORITY_NORMAL
-		);
-	}, [editor]);
+		)
+	}, [editor])
 
-	return null;
+	return null
 }

@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 
-import { fn } from "storybook/test";
+import { fn } from "storybook/test"
 
-import { MultiSelect } from "ui/multi-select";
+import { MultiSelect } from "ui/multi-select"
 
 const meta: Meta<typeof MultiSelect> = {
 	title: "MultiSelect",
@@ -10,10 +10,10 @@ const meta: Meta<typeof MultiSelect> = {
 	tags: ["autodocs"],
 	argTypes: {},
 	args: { onValueChange: fn() },
-};
-export default meta;
+}
+export default meta
 
-type Story = StoryObj<typeof MultiSelect>;
+type Story = StoryObj<typeof MultiSelect>
 
 export const NoneSelected: Story = {
 	args: {
@@ -24,7 +24,7 @@ export const NoneSelected: Story = {
 			{ label: "Squirrel", value: "squirrel" },
 		],
 	},
-};
+}
 
 export const Selected: Story = {
 	args: {
@@ -35,4 +35,4 @@ export const Selected: Story = {
 			{ label: "Squirrel", value: "squirrel" },
 		],
 	},
-};
+}

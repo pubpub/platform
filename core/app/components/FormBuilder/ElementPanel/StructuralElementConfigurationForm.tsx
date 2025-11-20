@@ -1,57 +1,57 @@
-"use client";
+"use client"
 
-import type { z } from "zod";
+import type { z } from "zod"
+import type { StructuralElement } from "../types"
 
-import { useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useMemo } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 
-import { Button } from "ui/button";
-import { MarkdownEditor } from "ui/editors";
-import { Form, FormField } from "ui/form";
-import { useUnsavedChangesWarning } from "ui/hooks";
+import { Button } from "ui/button"
+import { MarkdownEditor } from "ui/editors"
+import { Form, FormField } from "ui/form"
+import { useUnsavedChangesWarning } from "ui/hooks"
 
-import { useBuilder } from "../BuilderContext";
-import { structuralElements } from "../StructuralElements";
-import { type StructuralElement } from "../types";
+import { useBuilder } from "../BuilderContext"
+import { structuralElements } from "../StructuralElements"
 
 type Props = {
-	index: number;
-	structuralElement: StructuralElement;
-};
+	index: number
+	structuralElement: StructuralElement
+}
 
 export const StructuralElementConfigurationForm = ({ index, structuralElement }: Props) => {
-	const { update, dispatch, removeIfUnconfigured } = useBuilder();
+	const { update, dispatch, removeIfUnconfigured } = useBuilder()
 
-	const schema = structuralElements[structuralElement.element].schema;
+	const schema = structuralElements[structuralElement.element].schema
 
 	if (!schema) {
 		throw new Error(
 			`No schema found for structural element ${structuralElement.element}. This should never happen.`
-		);
+		)
 	}
 
-	const resolver = useMemo(() => zodResolver(schema), [schema]);
+	const resolver = useMemo(() => zodResolver(schema), [schema])
 
 	const form = useForm<z.infer<typeof schema>>({
 		resolver,
 		defaultValues: schema.parse(structuralElement),
-	});
+	})
 
-	useUnsavedChangesWarning(form.formState.isDirty);
+	useUnsavedChangesWarning(form.formState.isDirty)
 
 	const onSubmit = (values: z.infer<typeof schema>) => {
-		update(index, { ...structuralElement, ...values, updated: true, configured: true });
-		dispatch({ eventName: "save" });
-	};
+		update(index, { ...structuralElement, ...values, updated: true, configured: true })
+		dispatch({ eventName: "save" })
+	}
 
 	return (
 		<Form {...form}>
 			<form
 				className="flex flex-grow flex-col"
 				onSubmit={(e) => {
-					e.stopPropagation(); //prevent submission from propagating to parent form
-					form.handleSubmit(onSubmit)(e);
+					e.stopPropagation() //prevent submission from propagating to parent form
+					form.handleSubmit(onSubmit)(e)
 				}}
 			>
 				<div className="flex-grow">
@@ -74,8 +74,8 @@ export const StructuralElementConfigurationForm = ({ index, structuralElement }:
 						className="border-gray-950"
 						variant="outline"
 						onClick={() => {
-							removeIfUnconfigured();
-							dispatch({ eventName: "cancel" });
+							removeIfUnconfigured()
+							dispatch({ eventName: "cancel" })
 						}}
 					>
 						Cancel
@@ -90,5 +90,5 @@ export const StructuralElementConfigurationForm = ({ index, structuralElement }:
 				</div>
 			</form>
 		</Form>
-	);
-};
+	)
+}

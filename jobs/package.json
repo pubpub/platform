@@ -6,13 +6,9 @@
 	"scripts": {
 		"start": "tsx --import ./src/tracing.ts ./src/index.ts",
 		"dev": "tsx --env-file .env.local --env-file .env.development --watch ./src/index.ts | pino-pretty",
-		"format": "prettier --check . --ignore-path ../.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../.gitignore",
 		"type-check": "tsc --noEmit"
 	},
-	"files": [
-		"src"
-	],
+	"files": ["src"],
 	"dependencies": {
 		"@honeycombio/opentelemetry-node": "catalog:",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
@@ -26,11 +22,9 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "catalog:",
 		"dotenv-cli": "^7.4.4",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:"
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

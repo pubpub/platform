@@ -1,15 +1,15 @@
-import type { JSONSchemaType } from "ajv";
+import type { JSONSchemaType } from "ajv"
 
 export type FileUploadFile = {
-	fileName: string;
-	fileSource: string;
-	fileType: string;
-	fileSize: number;
-	fileMeta: object;
-	fileUploadUrl: string;
-	filePreview: string;
-};
-export type FileUpload = FileUploadFile[];
+	fileName: string
+	fileSource: string
+	fileType: string
+	fileSize: number
+	fileMeta: object
+	fileUploadUrl: string
+	filePreview: string
+}
+export type FileUpload = FileUploadFile[]
 
 export const FileUpload = {
 	$id: "unjournal:fileUpload",
@@ -43,4 +43,4 @@ export const FileUpload = {
 			},
 		},
 	},
-} as unknown as JSONSchemaType<FileUpload>;
+} as unknown as JSONSchemaType<FileUpload>

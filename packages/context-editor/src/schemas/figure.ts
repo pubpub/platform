@@ -1,4 +1,4 @@
-import type { NodeSpec } from "prosemirror-model";
+import type { NodeSpec } from "prosemirror-model"
 
 export const figure = {
 	attrs: {
@@ -14,7 +14,7 @@ export const figure = {
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
-				};
+				}
 			},
 		},
 	],
@@ -26,9 +26,9 @@ export const figure = {
 				...(node.attrs.id && { id: node.attrs.id }),
 			},
 			0,
-		];
+		]
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec
 
 export const figcaption = {
 	attrs: {
@@ -44,7 +44,7 @@ export const figcaption = {
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
-				};
+				}
 			},
 		},
 	],
@@ -56,9 +56,9 @@ export const figcaption = {
 				...(node.attrs.id && { id: node.attrs.id }),
 			},
 			0,
-		];
+		]
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec
 
 export const credit = {
 	attrs: {
@@ -75,7 +75,7 @@ export const credit = {
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
-				};
+				}
 			},
 		},
 	],
@@ -87,9 +87,9 @@ export const credit = {
 				...(node.attrs.id && { id: node.attrs.id }),
 			},
 			0,
-		];
+		]
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec
 
 export const license = {
 	attrs: {
@@ -106,7 +106,7 @@ export const license = {
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
-				};
+				}
 			},
 		},
 	],
@@ -118,9 +118,9 @@ export const license = {
 				...(node.attrs.id && { id: node.attrs.id }),
 			},
 			0,
-		];
+		]
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec
 
 export const title = {
 	content: "text*",
@@ -137,6 +137,6 @@ export const title = {
 				...(node.attrs.id && { id: node.attrs.id }),
 			},
 			0,
-		];
+		]
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec

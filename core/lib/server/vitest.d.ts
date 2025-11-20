@@ -1,11 +1,11 @@
-import "vitest";
+import "vitest"
 
-import type { ProcessedPub } from "./pub";
-import type { db } from "~/kysely/database";
+import type { ProcessedPub } from "./pub"
+import type { db } from "~/kysely/database"
 
 interface CustomMatchers<R = unknown> {
-	toHaveValues(expected: Partial<ProcessedPub["values"][number]>[]): R;
-	toExist(expected?: typeof db): Promise<R>;
+	toHaveValues(expected: Partial<ProcessedPub["values"][number]>[]): R
+	toExist(expected?: typeof db): Promise<R>
 }
 
 declare module "vitest" {

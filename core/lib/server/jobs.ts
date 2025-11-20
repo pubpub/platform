@@ -1,21 +1,20 @@
-import type { Job } from "graphile-worker";
+import type { Job } from "graphile-worker"
+import type { ClientException, ClientExceptionOptions } from "../serverActions"
 
-import { makeWorkerUtils } from "graphile-worker";
+import { makeWorkerUtils } from "graphile-worker"
 
-import { logger } from "logger";
+import { logger } from "logger"
 
-import type { ClientException, ClientExceptionOptions } from "../serverActions";
-import { env } from "../env/env";
+import { env } from "../env/env"
 
-import "date-fns";
+import "date-fns"
 
-import type { Json } from "contracts";
-import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
-import type { XOR } from "utils/types";
-import { Event } from "db/public";
+import type { Json } from "contracts"
+import type { ActionInstancesId, ActionRunsId, Event, PubsId, StagesId } from "db/public"
+import type { XOR } from "utils/types"
+import type { Interval } from "~/actions/_lib/automations"
 
-import type { Interval } from "~/actions/_lib/automations";
-import { addDuration } from "../dates";
+import { addDuration } from "../dates"
 
 export const getScheduledActionJobKey = ({
 	stageId,
@@ -23,47 +22,47 @@ export const getScheduledActionJobKey = ({
 	pubId,
 	event,
 }: {
-	stageId: StagesId;
-	actionInstanceId: ActionInstancesId;
-	event: Event;
-	pubId?: PubsId;
-}) => `scheduled-action-${stageId}-${actionInstanceId}${pubId ? `-${pubId}` : ""}-${event}`;
+	stageId: StagesId
+	actionInstanceId: ActionInstancesId
+	event: Event
+	pubId?: PubsId
+}) => `scheduled-action-${stageId}-${actionInstanceId}${pubId ? `-${pubId}` : ""}-${event}`
 
 export type JobsClient = {
-	unscheduleJob(jobKey: string): Promise<void>;
+	unscheduleJob(jobKey: string): Promise<void>
 	scheduleAction(
 		options: {
-			actionInstanceId: ActionInstancesId;
-			stageId: StagesId;
-			duration: number;
-			interval: Interval;
+			actionInstanceId: ActionInstancesId
+			stageId: StagesId
+			duration: number
+			interval: Interval
 			community: {
-				slug: string;
-			};
-			event: Event;
-			stack: ActionRunsId[];
-			scheduledActionRunId: ActionRunsId;
-			config: Record<string, unknown> | null;
+				slug: string
+			}
+			event: Event
+			stack: ActionRunsId[]
+			scheduledActionRunId: ActionRunsId
+			config: Record<string, unknown> | null
 		} & XOR<{ pubId: PubsId }, { json: Json }>
-	): Promise<Job | ClientExceptionOptions>;
-};
+	): Promise<Job | ClientExceptionOptions>
+}
 
 export const makeJobsClient = async (): Promise<JobsClient> => {
 	const workerUtils = await makeWorkerUtils({
 		connectionString: env.DATABASE_URL,
-	});
-	await workerUtils.migrate();
+	})
+	await workerUtils.migrate()
 	return {
 		async unscheduleJob(jobKey: string) {
-			logger.info({ msg: `Unscheduling job with key: ${jobKey}`, job: { key: jobKey } });
+			logger.info({ msg: `Unscheduling job with key: ${jobKey}`, job: { key: jobKey } })
 			await workerUtils.withPgClient(async (pg) => {
-				await pg.query(`SELECT graphile_worker.remove_job($1);`, [jobKey]);
-			});
+				await pg.query(`SELECT graphile_worker.remove_job($1);`, [jobKey])
+			})
 
 			logger.info({
 				msg: `Successfully unscheduled job with key: ${jobKey}`,
 				job: { key: jobKey },
-			});
+			})
 		},
 		async scheduleAction({
 			actionInstanceId,
@@ -77,13 +76,13 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 			config,
 			...jsonOrPubId
 		}) {
-			const runAt = addDuration({ duration, interval });
+			const runAt = addDuration({ duration, interval })
 			const jobKey = getScheduledActionJobKey({
 				stageId,
 				actionInstanceId,
 				pubId: jsonOrPubId.pubId,
 				event,
-			});
+			})
 
 			logger.info({
 				msg: `Scheduling action with key: ${actionInstanceId} to run at ${runAt}. Cause: ${event}${stack?.length ? `, triggered by: ${stack.join(" -> ")}` : ""}`,
@@ -97,7 +96,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				event,
 				scheduledActionRunId,
 				...jsonOrPubId,
-			});
+			})
 			try {
 				const job = await workerUtils.addJob(
 					"emitEvent",
@@ -119,7 +118,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 						jobKey,
 						jobKeyMode: "replace",
 					}
-				);
+				)
 
 				logger.info({
 					msg: `Successfully scheduled action with key: ${actionInstanceId} to run at ${runAt}`,
@@ -129,8 +128,8 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 					interval,
 					config,
 					...jsonOrPubId,
-				});
-				return job;
+				})
+				return job
 			} catch (err) {
 				logger.error({
 					msg: `Error scheduling action with key: ${actionInstanceId} to run at ${runAt}`,
@@ -142,20 +141,20 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 					err: err.message,
 					stack,
 					event,
-				});
+				})
 				return {
 					error: err,
-				} as ClientException;
+				} as ClientException
 			}
 		},
-	};
-};
+	}
+}
 
-let jobsClient: JobsClient;
+let jobsClient: JobsClient
 
 export const getJobsClient = async () => {
 	if (!jobsClient) {
-		jobsClient = await makeJobsClient();
+		jobsClient = await makeJobsClient()
 	}
-	return jobsClient;
-};
+	return jobsClient
+}

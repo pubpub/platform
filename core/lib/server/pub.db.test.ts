@@ -1,17 +1,18 @@
-import { describe, expect, expectTypeOf, it } from "vitest";
+import type { PubTypePubField } from "contracts"
+import type { PubsId, PubTypes, Stages } from "db/public"
+import type { UnprocessedPub } from "./pub"
 
-import type { PubTypePubField } from "contracts";
-import type { PubsId, PubTypes, Stages } from "db/public";
-import { CoreSchemaType, MemberRole } from "db/public";
+import { describe, expect, expectTypeOf, it } from "vitest"
 
-import type { UnprocessedPub } from "./pub";
-import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { createLastModifiedBy } from "../lastModifiedBy";
+import { CoreSchemaType, MemberRole } from "db/public"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+import { mockServerCode } from "~/lib/__tests__/utils"
+import { createSeed } from "~/prisma/seed/createSeed"
+import { createLastModifiedBy } from "../lastModifiedBy"
 
-const { getTrx } = createForEachMockedTransaction();
+const { createForEachMockedTransaction } = await mockServerCode()
+
+const { getTrx } = createForEachMockedTransaction()
 
 const seed = createSeed({
 	community: {
@@ -83,13 +84,13 @@ const seed = createSeed({
 			},
 		},
 	],
-});
+})
 
 describe("createPubRecursive", () => {
 	it("should be able to create a simple pub", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubTypes } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -100,7 +101,7 @@ describe("createPubRecursive", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		expect(pub).toMatchObject({
 			values: [
@@ -108,14 +109,14 @@ describe("createPubRecursive", () => {
 					value: "test title",
 				},
 			],
-		});
-	});
+		})
+	})
 
 	it("should be able to create a pub in a stage", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, stages } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, stages } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -128,19 +129,19 @@ describe("createPubRecursive", () => {
 			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		expect(pub).toMatchObject({
 			stageId: stages["Stage 1"].id,
 			values: [{ value: "test title" }],
-		});
-	});
+		})
+	})
 
 	it("should be able to create a relation pub value with direct linking", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -158,21 +159,21 @@ describe("createPubRecursive", () => {
 			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		expect(pub).toMatchObject({
 			values: [
 				{ value: "test title" },
 				{ value: "test relation value", relatedPubId: pubs[0].id },
 			],
-		});
-	});
+		})
+	})
 
 	it("should be able to create relation pubs inline", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -197,7 +198,7 @@ describe("createPubRecursive", () => {
 			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		expect(pub).toMatchObject({
 			values: [
@@ -207,13 +208,13 @@ describe("createPubRecursive", () => {
 					relatedPub: { values: [{ value: "test relation title" }] },
 				},
 			],
-		});
-	});
+		})
+	})
 
 	it("should be able to create a pub with multiple relations in one go", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -234,7 +235,7 @@ describe("createPubRecursive", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		expect(pub).toMatchObject({
 			values: [
@@ -242,14 +243,14 @@ describe("createPubRecursive", () => {
 				{ value: "relation 1", relatedPubId: pubs[0].id },
 				{ value: "relation 2", relatedPubId: pubs[1].id },
 			],
-		});
-	});
+		})
+	})
 
 	it("should return the titles of the created pub, and the related pubs", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -274,25 +275,25 @@ describe("createPubRecursive", () => {
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
 		expect(pub).toMatchObject({
 			title: "test title",
-		});
+		})
 		const relatedPubValue = pub.values.find(
 			(v) => v.fieldSlug === pubFields["Some relation"].slug
-		);
-		expect(relatedPubValue, "No related pub value found").toBeDefined();
-		expect(relatedPubValue?.relatedPub?.title).toEqual("test relation title");
-	});
-});
+		)
+		expect(relatedPubValue, "No related pub value found").toBeDefined()
+		expect(relatedPubValue?.relatedPub?.title).toEqual("test relation title")
+	})
+})
 
 describe("updatePub", () => {
 	it("should be able to update pub values", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew, updatePub } = await import("./pub");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { createPubRecursiveNew, updatePub } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -303,7 +304,7 @@ describe("updatePub", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		await updatePub({
 			pubId: pub.id,
@@ -313,22 +314,22 @@ describe("updatePub", () => {
 			communityId: community.id,
 			continueOnValidationError: false,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		const updatedPub = await trx
 			.selectFrom("pub_values")
 			.select(["value"])
 			.where("pubId", "=", pub.id)
-			.execute();
+			.execute()
 
-		expect(updatedPub[0].value as string).toBe("Updated title");
-	});
+		expect(updatedPub[0].value as string).toBe("Updated title")
+	})
 
 	it("should be able to update multiple relationship values", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed);
-		const { createPubRecursiveNew, updatePub } = await import("./pub");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed)
+		const { createPubRecursiveNew, updatePub } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -340,7 +341,7 @@ describe("updatePub", () => {
 			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		await updatePub({
 			pubId: pub.id,
@@ -353,28 +354,28 @@ describe("updatePub", () => {
 			communityId: community.id,
 			continueOnValidationError: false,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		const updatedPub = await trx
 			.selectFrom("pub_values")
 			.select(["value", "relatedPubId"])
 			.where("pubId", "=", pub.id)
-			.execute();
+			.execute()
 
-		expect(updatedPub[1].value as string).toBe("new value");
-		expect(updatedPub[1].relatedPubId).toBe(pubs[0].id);
+		expect(updatedPub[1].value as string).toBe("new value")
+		expect(updatedPub[1].relatedPubId).toBe(pubs[0].id)
 
-		expect(updatedPub[2].value as string).toBe("another new value");
-		expect(updatedPub[2].relatedPubId).toBe(pubs[1].id);
-	});
-});
+		expect(updatedPub[2].value as string).toBe("another new value")
+		expect(updatedPub[2].relatedPubId).toBe(pubs[1].id)
+	})
+})
 
 describe("getPubsWithRelatedValues", () => {
 	it("should be able to recursively fetch pubvalues", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, users } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, users } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -399,16 +400,16 @@ describe("getPubsWithRelatedValues", () => {
 			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
-		const rootPubId = pub.id;
+		const { getPubsWithRelatedValues } = await import("./pub")
+		const rootPubId = pub.id
 		const pubValues = await getPubsWithRelatedValues(
 			{ pubId: rootPubId, communityId: community.id, userId: users.admin.id },
 			{ depth: 10 }
-		);
+		)
 
-		pubValues.values.sort((a, b) => a.fieldSlug.localeCompare(b.fieldSlug));
+		pubValues.values.sort((a, b) => a.fieldSlug.localeCompare(b.fieldSlug))
 		expect(pubValues.values).toMatchObject([
 			{
 				value: "test relation value",
@@ -417,17 +418,17 @@ describe("getPubsWithRelatedValues", () => {
 				},
 			},
 			{ value: "Some title" },
-		]);
+		])
 
 		// check that relatedPub is defined because `withRelatedPubs` is not `false`
-		expectTypeOf(pubValues.values[0].relatedPub).not.toEqualTypeOf<undefined>();
-	});
+		expectTypeOf(pubValues.values[0].relatedPub).not.toEqualTypeOf<undefined>()
+	})
 
 	// to make sure we aren't accidentally returning temporary columns used for the query as the final result
 	it("should return all the correct columns", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, stages } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, stages } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const createdPub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -439,9 +440,9 @@ describe("getPubsWithRelatedValues", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 		const pub = await getPubsWithRelatedValues(
 			{ pubId: createdPub.id, communityId: community.id },
 			{
@@ -450,11 +451,11 @@ describe("getPubsWithRelatedValues", () => {
 				withStage: true,
 				withMembers: true,
 			}
-		);
+		)
 
 		expect(pub).toMatchObject({
 			id: createdPub.id,
-		});
+		})
 
 		expect(pub.pubType).toMatchObject({
 			id: pubTypes["Basic Pub"].id,
@@ -462,13 +463,13 @@ describe("getPubsWithRelatedValues", () => {
 				id: f.id,
 				slug: f.slug,
 			})),
-		});
+		})
 		expect(pub.stage).toMatchObject({
 			id: stages["Stage 1"].id,
 			name: "Stage 1",
 			order: stages["Stage 1"].order,
-		});
-		expect(pub.members).toEqual([]);
+		})
+		expect(pub.members).toEqual([])
 		expect(Object.keys(pub).sort()).toEqual(
 			[
 				"id",
@@ -485,14 +486,14 @@ describe("getPubsWithRelatedValues", () => {
 				"depth",
 				"isCycle",
 			].sort()
-		);
-	});
+		)
+	})
 
 	it("should be able to fetch pubvalues", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -517,20 +518,20 @@ describe("getPubsWithRelatedValues", () => {
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
-		const rootPubId = pub.id;
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const rootPubId = pub.id
+		const { getPubsWithRelatedValues } = await import("./pub")
 		const pubWithRelatedValues = await getPubsWithRelatedValues(
 			{ pubId: rootPubId, communityId: community.id },
 			{ depth: 10, withPubType: true }
-		);
+		)
 
 		expectTypeOf(pubWithRelatedValues.pubType).toEqualTypeOf<
 			PubTypes & { fields: PubTypePubField[] }
-		>();
+		>()
 
-		pubWithRelatedValues.values.sort((a, b) => a.fieldSlug.localeCompare(b.fieldSlug));
+		pubWithRelatedValues.values.sort((a, b) => a.fieldSlug.localeCompare(b.fieldSlug))
 		expect(pubWithRelatedValues).toHaveValues([
 			{ value: "Some title" },
 			{
@@ -539,20 +540,17 @@ describe("getPubsWithRelatedValues", () => {
 					values: [{ value: "Nested Related Pub" }],
 				},
 			},
-		]);
-	});
+		])
+	})
 
 	it("should be able to filter by pubtype or stage and pubtype and stage", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubTypes, stages } = await seedCommunity(seed);
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubTypes, stages } = await seedCommunity(seed)
+		const { getPubsWithRelatedValues } = await import("./pub")
 
-		const allPubs = await getPubsWithRelatedValues(
-			{ communityId: community.id },
-			{ depth: 10 }
-		);
+		const allPubs = await getPubsWithRelatedValues({ communityId: community.id }, { depth: 10 })
 
-		expect(allPubs.length).toBe(4);
+		expect(allPubs.length).toBe(4)
 
 		const [minimalPubs, pubsInStage1, basicPubsInStage1, pubsInNoStage] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -577,26 +575,26 @@ describe("getPubsWithRelatedValues", () => {
 				{ communityId: community.id, stageId: ["no-stage"] },
 				{ withPubType: true, withStage: true, depth: 10 }
 			),
-		]);
+		])
 
-		expect(minimalPubs.length).toBe(1);
-		expect(minimalPubs[0].pubType?.id).toBe(pubTypes["Minimal Pub"].id);
+		expect(minimalPubs.length).toBe(1)
+		expect(minimalPubs[0].pubType?.id).toBe(pubTypes["Minimal Pub"].id)
 
-		expect(pubsInStage1.length).toBe(2);
+		expect(pubsInStage1.length).toBe(2)
 
-		expect(basicPubsInStage1.length).toBe(1);
-		expect(basicPubsInStage1[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
-		expect(basicPubsInStage1[0].stage?.id).toBe(stages["Stage 1"].id);
+		expect(basicPubsInStage1.length).toBe(1)
+		expect(basicPubsInStage1[0].pubType?.id).toBe(pubTypes["Basic Pub"].id)
+		expect(basicPubsInStage1[0].stage?.id).toBe(stages["Stage 1"].id)
 
-		const allPubsWithoutStage = allPubs.filter((p) => p.stageId === null);
-		expect(pubsInNoStage.length).toBe(allPubsWithoutStage.length);
+		const allPubsWithoutStage = allPubs.filter((p) => p.stageId === null)
+		expect(pubsInNoStage.length).toBe(allPubsWithoutStage.length)
 		pubsInNoStage.forEach((p) => {
-			expect(p.stageId).toBeNull();
-		});
-	});
+			expect(p.stageId).toBeNull()
+		})
+	})
 
 	it("should be able to limit the amount of top-level pubs retrieved while still fetching related pubs", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 
 		const newCommunity = await seedCommunity({
 			community: {
@@ -639,9 +637,9 @@ describe("getPubsWithRelatedValues", () => {
 					},
 				},
 			],
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 		const pubs = await getPubsWithRelatedValues(
 			{ communityId: newCommunity.community.id },
 			{
@@ -651,20 +649,20 @@ describe("getPubsWithRelatedValues", () => {
 				orderBy: "createdAt",
 				orderDirection: "desc",
 			}
-		);
+		)
 
 		// 1 root pub with two nested descendants
-		expect(pubs.length).toBe(3);
-	});
+		expect(pubs.length).toBe(3)
+	})
 
 	it("should be able to detect cycles, i.e. not go max-depth deep if a loop is detected", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
 
-		const newPubId = crypto.randomUUID() as PubsId;
+		const newPubId = crypto.randomUUID() as PubsId
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -695,10 +693,10 @@ describe("getPubsWithRelatedValues", () => {
 			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
-		expect(pub).toBeDefined();
+		})
+		expect(pub).toBeDefined()
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const [withCycleIncluded, withCycleExcluded] = (await Promise.all([
 			getPubsWithRelatedValues(
@@ -709,27 +707,27 @@ describe("getPubsWithRelatedValues", () => {
 				{ pubId: newPubId, communityId: community.id },
 				{ depth: 10, cycle: "exclude", _debugDontNest: true }
 			),
-		])) as unknown as [UnprocessedPub[], UnprocessedPub[]];
+		])) as unknown as [UnprocessedPub[], UnprocessedPub[]]
 
-		expect(withCycleIncluded.length).toBe(3);
+		expect(withCycleIncluded.length).toBe(3)
 
-		expect(withCycleIncluded.find((p) => p.isCycle)).toBeDefined();
+		expect(withCycleIncluded.find((p) => p.isCycle)).toBeDefined()
 
-		expect(withCycleExcluded.length).toBe(2);
+		expect(withCycleExcluded.length).toBe(2)
 
-		expect(withCycleExcluded.find((p) => p.isCycle)).toBeUndefined();
-	});
+		expect(withCycleExcluded.find((p) => p.isCycle)).toBeUndefined()
+	})
 
 	it("should be able to only fetch fields for certain slugs", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
 
-		const newPubId = crypto.randomUUID() as PubsId;
+		const newPubId = crypto.randomUUID() as PubsId
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 
-		const pub = await createPubRecursiveNew({
+		const _pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
 				id: newPubId,
@@ -754,13 +752,13 @@ describe("getPubsWithRelatedValues", () => {
 			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 		const pubWithRelatedValues = (await getPubsWithRelatedValues(
 			{ pubId: newPubId, communityId: community.id },
 			{ depth: 10, fieldSlugs: [pubFields.Title.slug, pubFields["Some relation"].slug] }
-		)) as unknown as UnprocessedPub[];
+		)) as unknown as UnprocessedPub[]
 
 		expect(pubWithRelatedValues).toHaveValues([
 			{
@@ -774,14 +772,14 @@ describe("getPubsWithRelatedValues", () => {
 				},
 			},
 			{ value: "test title" },
-		]);
-	});
+		])
+	})
 
 	it("is able to exclude related pubs from being fetched", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
@@ -805,50 +803,50 @@ describe("getPubsWithRelatedValues", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 		const pubWithRelatedValues = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10, withRelatedPubs: false }
-		);
+		)
 
 		expect(pubWithRelatedValues).toHaveValues([
 			{
 				value: "test relation value",
 			},
 			{ value: "test title" },
-		]);
+		])
 
-		expect(pubWithRelatedValues.values[1].relatedPub).toBeUndefined();
+		expect(pubWithRelatedValues.values[1].relatedPub).toBeUndefined()
 		// check that the relatedPub is `undefined` in type as well as value due to `{withRelatedPubs: false}`
 		expectTypeOf(pubWithRelatedValues.values[1]).toMatchTypeOf<{
-			relatedPub?: undefined;
-		}>();
-	});
+			relatedPub?: undefined
+		}>()
+	})
 
 	it("should be able to retrieve the stage a pub is in", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubs } = await seedCommunity(seed);
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubs } = await seedCommunity(seed)
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const pub = await getPubsWithRelatedValues(
 			{ pubId: pubs[0].id, communityId: community.id },
 			{ withStage: true }
-		);
+		)
 
-		expectTypeOf(pub).toMatchTypeOf<{ stage: Stages | null }>();
+		expectTypeOf(pub).toMatchTypeOf<{ stage: Stages | null }>()
 
-		expect(pub.stage?.name).toBe("Stage 1");
-	});
+		expect(pub.stage?.name).toBe("Stage 1")
+	})
 
 	it("should be able to fetch members", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubs, users } = await seedCommunity(seed);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubs, users } = await seedCommunity(seed)
 
-		const pubId = pubs[0].id as PubsId;
+		const pubId = pubs[0].id as PubsId
 
 		// Add a user and make it a member of this pub
 		const newUsers = [
@@ -864,32 +862,32 @@ describe("getPubsWithRelatedValues", () => {
 				firstName: "test2",
 				lastName: "user2",
 			},
-		];
-		const userIds = await trx.insertInto("users").values(newUsers).returning(["id"]).execute();
+		]
+		const userIds = await trx.insertInto("users").values(newUsers).returning(["id"]).execute()
 		await trx
 			.insertInto("pub_memberships")
 			.values(userIds.map(({ id }) => ({ userId: id, pubId, role: MemberRole.admin })))
-			.execute();
+			.execute()
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const pub = await getPubsWithRelatedValues(
 			{ pubId, communityId: community.id, userId: users.admin.id },
 			{ withMembers: true }
-		);
+		)
 
-		pub.members.sort((a, b) => a.slug.localeCompare(b.slug));
+		pub.members.sort((a, b) => a.slug.localeCompare(b.slug))
 		expect(pub).toMatchObject({
 			members: newUsers.map((u) => ({ ...u, role: MemberRole.admin })),
-		});
-	});
+		})
+	})
 
 	it("should fetch a pub that has no pub values", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubTypes } = await seedCommunity(seed);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubTypes } = await seedCommunity(seed)
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const emptyPub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -899,25 +897,25 @@ describe("getPubsWithRelatedValues", () => {
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const pub = await getPubsWithRelatedValues({
 			pubId: emptyPub.id,
 			communityId: community.id,
-		});
+		})
 
 		expect(pub).toMatchObject({
 			id: emptyPub.id,
 			values: [],
-		});
-	});
+		})
+	})
 
 	it("should not fetch values if withValues is false", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const createdPub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -928,23 +926,23 @@ describe("getPubsWithRelatedValues", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const pub = await getPubsWithRelatedValues(
 			{ pubId: createdPub.id, communityId: community.id },
 			{ withValues: false }
-		);
+		)
 
-		expect(pub.values.length).toBe(0);
-	});
+		expect(pub.values.length).toBe(0)
+	})
 
 	it("should be able to filter related pubs by pub type", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -977,14 +975,14 @@ describe("getPubsWithRelatedValues", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const testGet = await getPubsWithRelatedValues({
 			pubId: pub.id,
 			communityId: community.id,
-		});
+		})
 		expect(testGet).toHaveValues([
 			{
 				value: "test title",
@@ -1001,7 +999,7 @@ describe("getPubsWithRelatedValues", () => {
 					pubTypeId: pubTypes["Minimal Pub"].id,
 				},
 			},
-		]);
+		])
 
 		const pubWithRelatedValues = await getPubsWithRelatedValues(
 			{
@@ -1011,7 +1009,7 @@ describe("getPubsWithRelatedValues", () => {
 			{
 				allowedPubTypes: [pubTypes["Basic Pub"].id],
 			}
-		);
+		)
 
 		expect(pubWithRelatedValues).toHaveValues([
 			{
@@ -1023,14 +1021,14 @@ describe("getPubsWithRelatedValues", () => {
 					pubTypeId: pubTypes["Basic Pub"].id,
 				},
 			},
-		]);
-	});
+		])
+	})
 
 	it("should be able to filter related pubs by stage", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, stages } = await seedCommunity(seed);
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, stages } = await seedCommunity(seed)
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1075,9 +1073,9 @@ describe("getPubsWithRelatedValues", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const pubWithRelatedValuesNoStage = await getPubsWithRelatedValues(
 			{
@@ -1087,7 +1085,7 @@ describe("getPubsWithRelatedValues", () => {
 			{
 				allowedStages: ["no-stage"],
 			}
-		);
+		)
 
 		expect(pubWithRelatedValuesNoStage).toHaveValues([
 			{
@@ -1099,7 +1097,7 @@ describe("getPubsWithRelatedValues", () => {
 					stageId: null,
 				},
 			},
-		]);
+		])
 
 		const pubWithRelatedValuesStage1 = await getPubsWithRelatedValues(
 			{
@@ -1109,7 +1107,7 @@ describe("getPubsWithRelatedValues", () => {
 			{
 				allowedStages: ["no-stage", stages["Stage 1"].id],
 			}
-		);
+		)
 
 		expect(pubWithRelatedValuesStage1).toHaveValues([
 			{
@@ -1127,7 +1125,7 @@ describe("getPubsWithRelatedValues", () => {
 					stageId: null,
 				},
 			},
-		]);
+		])
 
 		// should not return anything if no-stage is not allowed, as the top-level pub in not in a stage
 		await expect(
@@ -1140,22 +1138,22 @@ describe("getPubsWithRelatedValues", () => {
 					allowedStages: [stages["Stage 2"].id],
 				}
 			)
-		).rejects.toThrow("Pub not found");
-	});
+		).rejects.toThrow("Pub not found")
+	})
 
 	it("should get pubs with stage null if only no-stage pubs are allowed", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { pubs, community, pubFields, pubTypes, stages } = await seedCommunity(
 			seed,
 			undefined,
 			trx
-		);
+		)
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 
 		// dummy pub with a stage, all the other have no stage
-		const pub = await createPubRecursiveNew({
+		const _pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
 				pubTypeId: pubTypes["Basic Pub"].id,
@@ -1166,9 +1164,9 @@ describe("getPubsWithRelatedValues", () => {
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const pubsWithNoStage = await getPubsWithRelatedValues(
 			{
@@ -1178,10 +1176,10 @@ describe("getPubsWithRelatedValues", () => {
 				allowedStages: ["no-stage"],
 				trx,
 			}
-		);
+		)
 
-		expect(pubsWithNoStage).toHaveLength(2);
-		expect(pubsWithNoStage.every((pub) => pub.stageId === null)).toBe(true);
+		expect(pubsWithNoStage).toHaveLength(2)
+		expect(pubsWithNoStage.every((pub) => pub.stageId === null)).toBe(true)
 
 		// also works with singular pub
 
@@ -1194,22 +1192,20 @@ describe("getPubsWithRelatedValues", () => {
 				trx,
 				allowedStages: ["no-stage"],
 			}
-		);
+		)
 
-		expect(pubWithNoStage).toBeDefined();
-		expect(pubWithNoStage[0].stageId).toBe(null);
-	});
-});
+		expect(pubWithNoStage).toBeDefined()
+		expect(pubWithNoStage[0].stageId).toBe(null)
+	})
+})
 
 describe("upsertPubRelations", () => {
 	it("should be able to add relations to existing pubs", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed)
 
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1221,7 +1217,7 @@ describe("upsertPubRelations", () => {
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
 		await addPubRelations({
 			pubId: pub.id,
@@ -1235,14 +1231,14 @@ describe("upsertPubRelations", () => {
 			],
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 
 		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
+		)
 
 		expect(updatedPub).toHaveValues([
 			{ value: "test title" },
@@ -1250,16 +1246,14 @@ describe("upsertPubRelations", () => {
 				value: "test relation value",
 				relatedPub: { values: [{ value: "Some title" }] },
 			},
-		]);
-	});
+		])
+	})
 
 	it("should be able to create new pubs as relations", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1271,7 +1265,7 @@ describe("upsertPubRelations", () => {
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
 		await addPubRelations({
 			pubId: pub.id,
@@ -1290,31 +1284,29 @@ describe("upsertPubRelations", () => {
 			],
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
+		)
 
 		expect(updatedPub).toHaveValues([
-			{ fieldSlug: pubFields["Title"].slug, value: "test title" },
+			{ fieldSlug: pubFields.Title.slug, value: "test title" },
 			{
 				fieldSlug: pubFields["Some relation"].slug,
 				value: "test relation value",
 				relatedPub: { values: [{ value: "new related pub" }] },
 			},
-		]);
-	});
+		])
+	})
 
 	it("should validate relation values against schema", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed);
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed)
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1326,7 +1318,7 @@ describe("upsertPubRelations", () => {
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
 		// Should throw error for invalid value type
 		await expect(
@@ -1343,16 +1335,14 @@ describe("upsertPubRelations", () => {
 				trx,
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
-		).rejects.toThrow(pubFields["Some relation"].slug);
-	});
+		).rejects.toThrow(pubFields["Some relation"].slug)
+	})
 
 	it("should throw error for fields that do not exist in the community", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed);
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed)
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1364,7 +1354,7 @@ describe("upsertPubRelations", () => {
 			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		await expect(
 			addPubRelations({
@@ -1382,16 +1372,14 @@ describe("upsertPubRelations", () => {
 			})
 		).rejects.toThrow(
 			`Pub values contain fields that do not exist in the community: non-existent-field`
-		);
-	});
+		)
+	})
 
 	it("should throw error for non-existent related pub id", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1403,9 +1391,9 @@ describe("upsertPubRelations", () => {
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
-		const nonExistentPubId = crypto.randomUUID() as PubsId;
+		const nonExistentPubId = crypto.randomUUID() as PubsId
 
 		await expect(
 			addPubRelations({
@@ -1421,16 +1409,14 @@ describe("upsertPubRelations", () => {
 				trx,
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
-		).rejects.toThrow();
-	});
+		).rejects.toThrow()
+	})
 
 	it("should be able to add multiple relations at once", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed);
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed)
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1442,7 +1428,7 @@ describe("upsertPubRelations", () => {
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
 		await addPubRelations({
 			pubId: pub.id,
@@ -1466,25 +1452,23 @@ describe("upsertPubRelations", () => {
 			],
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
+		)
 
-		expect(updatedPub.values).toHaveLength(3); // title + 2 relations
-		expect(updatedPub.values.filter((v) => v.relatedPub)).toHaveLength(2);
-	});
+		expect(updatedPub.values).toHaveLength(3) // title + 2 relations
+		expect(updatedPub.values.filter((v) => v.relatedPub)).toHaveLength(2)
+	})
 
 	it("should be able to upsert relations - overwriting existing and creating new ones", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed);
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed)
+		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import("./pub")
 
 		// Create initial pub with a relation
 		const pub = await createPubRecursiveNew({
@@ -1497,7 +1481,7 @@ describe("upsertPubRelations", () => {
 			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		// Add initial relation
 		await addPubRelations({
@@ -1512,7 +1496,7 @@ describe("upsertPubRelations", () => {
 			],
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
 		// Upsert relations - overwrite existing and add new
 		await addPubRelations({
@@ -1539,33 +1523,33 @@ describe("upsertPubRelations", () => {
 			],
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
-		const { getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub")
 		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
+		)
 
-		expect(updatedPub.values).toHaveLength(3); // title + 2 relations
+		expect(updatedPub.values).toHaveLength(3) // title + 2 relations
 
-		const relationValues = updatedPub.values.filter((v) => v.relatedPub).map((v) => v.value);
-		expect(relationValues).toContain("updated value");
-		expect(relationValues).toContain("new relation");
+		const relationValues = updatedPub.values.filter((v) => v.relatedPub).map((v) => v.value)
+		expect(relationValues).toContain("updated value")
+		expect(relationValues).toContain("new relation")
 
 		// Verify the first relation was updated
-		const updatedRelation = updatedPub.values.find((v) => v.relatedPub?.id === pubs[0].id);
-		expect(updatedRelation?.value).toBe("updated value");
-	});
-});
+		const updatedRelation = updatedPub.values.find((v) => v.relatedPub?.id === pubs[0].id)
+		expect(updatedRelation?.value).toBe("updated value")
+	})
+})
 
 describe("removePubRelations", () => {
 	it("should remove pub relations", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pubs = await Promise.all([
 			createPubRecursiveNew({
@@ -1588,7 +1572,7 @@ describe("removePubRelations", () => {
 				},
 				lastModifiedBy: createLastModifiedBy("system"),
 			}),
-		]);
+		])
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1609,17 +1593,17 @@ describe("removePubRelations", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { removePubRelations, getPubsWithRelatedValues } = await import("./pub");
+		const { removePubRelations, getPubsWithRelatedValues } = await import("./pub")
 
 		// check that the pub has 2 relations
 		const pubWithRelations = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
+		)
 
-		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2);
+		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2)
 
 		// Remove one of the relations
 		const removedRelatedPubIds = await removePubRelations({
@@ -1633,36 +1617,36 @@ describe("removePubRelations", () => {
 			],
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
-		});
+		})
 
-		expect(removedRelatedPubIds).toEqual([pubs[0].id]);
+		expect(removedRelatedPubIds).toEqual([pubs[0].id])
 
 		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
+		)
 
 		// Should still have title + 1 remaining relation
-		expect(updatedPub.values).toHaveLength(2);
+		expect(updatedPub.values).toHaveLength(2)
 
 		// First relation should be removed
-		const remainingRelation = updatedPub.values.find((v) => v.relatedPub);
-		expect(remainingRelation?.relatedPub?.id).toBe(pubs[1].id);
-		expect(remainingRelation?.value).toBe("relation 2");
-	});
+		const remainingRelation = updatedPub.values.find((v) => v.relatedPub)
+		expect(remainingRelation?.relatedPub?.id).toBe(pubs[1].id)
+		expect(remainingRelation?.value).toBe("relation 2")
+	})
 
 	it("should remove all relations for a given field slug", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed);
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes, pubs } = await seedCommunity(seed)
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
 			body: {
 				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
-					[pubFields["Title"].slug]: "Test pub",
+					[pubFields.Title.slug]: "Test pub",
 					[pubFields["Some relation"].slug]: [
 						{
 							value: "relation 1",
@@ -1676,16 +1660,16 @@ describe("removePubRelations", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { removeAllPubRelationsBySlugs, getPubsWithRelatedValues } = await import("./pub");
+		const { removeAllPubRelationsBySlugs, getPubsWithRelatedValues } = await import("./pub")
 
 		// Verify initial state has 2 relations
 		const pubWithRelations = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
-		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2);
+		)
+		expect(pubWithRelations.values.filter((v) => v.relatedPub)).toHaveLength(2)
 
 		// Remove all relations for the field
 		const removedRelatedPubIds = await removeAllPubRelationsBySlugs({
@@ -1693,25 +1677,25 @@ describe("removePubRelations", () => {
 			slugs: [pubFields["Some relation"].slug],
 			communityId: community.id,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		expect(removedRelatedPubIds.sort()).toEqual([pubs[0].id, pubs[1].id].sort());
+		expect(removedRelatedPubIds.sort()).toEqual([pubs[0].id, pubs[1].id].sort())
 
 		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
+		)
 
 		// Should only have title value left
-		expect(updatedPub.values).toHaveLength(1);
-		expect(updatedPub.values.find((v) => v.relatedPub)).toBeUndefined();
-	});
+		expect(updatedPub.values).toHaveLength(1)
+		expect(updatedPub.values.find((v) => v.relatedPub)).toBeUndefined()
+	})
 
 	it("should throw error when field slug does not exist", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
 
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1722,9 +1706,9 @@ describe("removePubRelations", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { removeAllPubRelationsBySlugs } = await import("./pub");
+		const { removeAllPubRelationsBySlugs } = await import("./pub")
 
 		await expect(
 			removeAllPubRelationsBySlugs({
@@ -1735,14 +1719,14 @@ describe("removePubRelations", () => {
 			})
 		).rejects.toThrow(
 			"Pub values contain fields that do not exist in the community: non-existent-field"
-		);
-	});
+		)
+	})
 
 	it("should not throw an error when there are no relations to remove", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
 
-		const { removeAllPubRelationsBySlugs, createPubRecursiveNew } = await import("./pub");
+		const { removeAllPubRelationsBySlugs, createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1751,9 +1735,9 @@ describe("removePubRelations", () => {
 				values: {},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		expect(pub.values).toHaveLength(0);
+		expect(pub.values).toHaveLength(0)
 
 		await expect(
 			removeAllPubRelationsBySlugs({
@@ -1762,15 +1746,15 @@ describe("removePubRelations", () => {
 				slugs: [pubFields["Some relation"].slug],
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
-		).resolves.toEqual([]);
-	});
-});
+		).resolves.toEqual([])
+	})
+})
 
 describe("replacePubRelationsBySlug", () => {
 	it("should replace all relations for given field slugs with new relations", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		// Create initial pub with relations
 		const pub = await createPubRecursiveNew({
@@ -1804,7 +1788,7 @@ describe("replacePubRelationsBySlug", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		// Create new pubs to relate
 		const newRelatedPub1 = await createPubRecursiveNew({
@@ -1829,7 +1813,7 @@ describe("replacePubRelationsBySlug", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		const newRelatedPub2 = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1840,9 +1824,9 @@ describe("replacePubRelationsBySlug", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { replacePubRelationsBySlug, getPubsWithRelatedValues } = await import("./pub");
+		const { replacePubRelationsBySlug, getPubsWithRelatedValues } = await import("./pub")
 
 		// Replace relations
 		await replacePubRelationsBySlug({
@@ -1861,28 +1845,28 @@ describe("replacePubRelationsBySlug", () => {
 			],
 			communityId: community.id,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
+		)
 
-		const relationValues = updatedPub.values.filter((v) => v.relatedPub);
+		const relationValues = updatedPub.values.filter((v) => v.relatedPub)
 
-		expect(relationValues).toHaveLength(2);
+		expect(relationValues).toHaveLength(2)
 		expect(relationValues.map((v) => v.relatedPub?.id).sort()).toEqual(
 			[newRelatedPub1.id, newRelatedPub2.id].sort()
-		);
+		)
 		expect(relationValues.map((v) => v.value).sort()).toEqual(
 			["new relation value 1", "new relation value 2"].sort()
-		);
-	});
+		)
+	})
 
 	it("should handle empty relations object", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1893,29 +1877,29 @@ describe("replacePubRelationsBySlug", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { replacePubRelationsBySlug, getPubsWithRelatedValues } = await import("./pub");
+		const { replacePubRelationsBySlug, getPubsWithRelatedValues } = await import("./pub")
 
 		await replacePubRelationsBySlug({
 			pubId: pub.id,
 			relations: [],
 			communityId: community.id,
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
 		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
-		);
+		)
 
-		expect(updatedPub.values.filter((v) => v.relatedPub)).toHaveLength(0);
-	});
+		expect(updatedPub.values.filter((v) => v.relatedPub)).toHaveLength(0)
+	})
 
 	it("should throw error when field slug does not exist", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { community, pubFields, pubTypes } = await seedCommunity(seed)
+		const { createPubRecursiveNew } = await import("./pub")
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1926,9 +1910,9 @@ describe("replacePubRelationsBySlug", () => {
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
-		});
+		})
 
-		const { replacePubRelationsBySlug } = await import("./pub");
+		const { replacePubRelationsBySlug } = await import("./pub")
 
 		await expect(
 			replacePubRelationsBySlug({
@@ -1945,6 +1929,6 @@ describe("replacePubRelationsBySlug", () => {
 			})
 		).rejects.toThrow(
 			"Pub values contain fields that do not exist in the community: non-existent-field"
-		);
-	});
-});
+		)
+	})
+})

@@ -1,30 +1,31 @@
-"use server";
+"use server"
 
-import { JSONPath } from "jsonpath-plus";
+import type { PubsId } from "db/public"
+import type { PubValues } from "~/lib/server"
+import type { action } from "./action"
 
-import type { PubsId } from "db/public";
-import { logger } from "logger";
+import { JSONPath } from "jsonpath-plus"
 
-import type { action } from "./action";
-import type { PubValues } from "~/lib/server";
-import { updatePub } from "~/lib/server/pub";
-import { defineRun } from "../types";
+import { logger } from "logger"
+
+import { updatePub } from "~/lib/server/pub"
+import { defineRun } from "../types"
 
 const findNestedStructure = (json: unknown, path: string) => {
 	if (typeof json !== "object") {
 		// TODO: handle this
-		return;
+		return
 	}
-	const result = JSONPath({ path, json, wrap: false });
-	return result;
-};
+	const result = JSONPath({ path, json, wrap: false })
+	return result
+}
 
 export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy }) => {
-	const { url, method, authToken } = config;
+	const { url, method, authToken } = config
 
-	const finalOutputMap = config?.outputMap ?? [];
+	const finalOutputMap = config?.outputMap ?? []
 
-	const body = typeof config.body === "string" ? config.body : JSON.stringify(config.body);
+	const body = typeof config.body === "string" ? config.body : JSON.stringify(config.body)
 
 	const res = await fetch(url, {
 		method: method,
@@ -34,13 +35,13 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 		},
 		body,
 		cache: "no-store",
-	});
+	})
 
 	if (res.status !== 200) {
 		return {
 			title: "Error",
 			error: `Error ${res.status} ${res.statusText}`,
-		};
+		}
 	}
 
 	if (
@@ -50,10 +51,10 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 		return {
 			title: "Error",
 			error: `Expected application/json response, got ${res.headers.get("content-type")}`,
-		};
+		}
 	}
 
-	const result = await res.json();
+	const result = await res.json()
 
 	if (!finalOutputMap || finalOutputMap.length === 0 || !pub) {
 		return {
@@ -65,26 +66,26 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 				</div>
 			),
 			data: {},
-		};
+		}
 	}
 
 	const mappedOutputs = finalOutputMap.map(({ pubField, responseField }) => {
 		if (responseField === undefined) {
-			throw new Error(`Field ${pubField} was not provided in the output map`);
+			throw new Error(`Field ${pubField} was not provided in the output map`)
 		}
-		const resValue = findNestedStructure(result, responseField);
+		const resValue = findNestedStructure(result, responseField)
 		if (resValue === undefined || (Array.isArray(resValue) && resValue.length === 0)) {
 			throw new Error(
 				`Field "${responseField}" not found in response. Response was ${JSON.stringify(result)}`
-			);
+			)
 		}
-		return { pubField, resValue };
-	});
+		return { pubField, resValue }
+	})
 
 	const pubValues = mappedOutputs.reduce((acc, { pubField, resValue }) => {
-		acc[pubField] = resValue;
-		return acc;
-	}, {} as PubValues);
+		acc[pubField] = resValue
+		return acc
+	}, {} as PubValues)
 
 	try {
 		await updatePub({
@@ -93,14 +94,14 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 			pubValues,
 			continueOnValidationError: false,
 			lastModifiedBy,
-		});
+		})
 	} catch (error) {
-		logger.debug(error);
+		logger.debug(error)
 		return {
 			title: "Error",
 			error: `Failed to update fields: ${error}`,
 			cause: error,
-		};
+		}
 	}
 
 	return {
@@ -120,5 +121,5 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 			</div>
 		),
 		data: { result },
-	};
-});
+	}
+})

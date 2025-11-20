@@ -1,8 +1,3 @@
-import type { ZodError } from "zod";
-
-import { sql } from "kysely";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
-
 import type {
 	ActionInstances,
 	ActionInstancesId,
@@ -10,23 +5,28 @@ import type {
 	AutomationsUpdate,
 	CommunitiesId,
 	NewAutomations,
-} from "db/public";
-import type { AutomationConfig } from "db/types";
-import { Event } from "db/public";
-import { expect } from "utils";
+} from "db/public"
+import type { AutomationConfig } from "db/types"
+import type { ZodError } from "zod"
+import type { SequentialAutomationEvent } from "~/actions/types"
 
-import type { SequentialAutomationEvent } from "~/actions/types";
-import { automations } from "~/actions/api";
-import { isSequentialAutomationEvent } from "~/actions/types";
-import { db } from "~/kysely/database";
-import { isUniqueConstraintError } from "~/kysely/errors";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
+import { sql } from "kysely"
+import { jsonObjectFrom } from "kysely/helpers/postgres"
+
+import { Event } from "db/public"
+import { expect } from "utils"
+
+import { automations } from "~/actions/api"
+import { isSequentialAutomationEvent } from "~/actions/types"
+import { db } from "~/kysely/database"
+import { isUniqueConstraintError } from "~/kysely/errors"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
 
 export class AutomationError extends Error {
 	constructor(message: string) {
-		super(message);
-		this.name = "AutomationError";
+		super(message)
+		this.name = "AutomationError"
 	}
 }
 
@@ -36,8 +36,8 @@ export class AutomationConfigError extends AutomationError {
 		public config: Record<string, unknown>,
 		public error: ZodError
 	) {
-		super(`Invalid config for ${event}: ${JSON.stringify(config)}. ${error.message}`);
-		this.name = "AutomationConfigError";
+		super(`Invalid config for ${event}: ${JSON.stringify(config)}. ${error.message}`)
+		this.name = "AutomationConfigError"
 	}
 }
 
@@ -45,8 +45,8 @@ export class AutomationCycleError extends AutomationError {
 	constructor(public path: ActionInstances[]) {
 		super(
 			`Creating this automation would create a cycle: ${path.map((p) => p.name).join(" -> ")}`
-		);
-		this.name = "AutomationCycleError";
+		)
+		this.name = "AutomationCycleError"
 	}
 }
 
@@ -54,8 +54,8 @@ export class AutomationMaxDepthError extends AutomationError {
 	constructor(public path: ActionInstances[]) {
 		super(
 			`Creating this automation would exceed the maximum stack depth (${MAX_STACK_DEPTH}): ${path.map((p) => p.name).join(" -> ")}`
-		);
-		this.name = "AutomationMaxDepthError";
+		)
+		this.name = "AutomationMaxDepthError"
 	}
 }
 
@@ -66,8 +66,8 @@ export class AutomationAlreadyExistsError extends AutomationError {
 		public actionInstanceId: ActionInstancesId,
 		public sourceActionInstanceId?: ActionInstancesId
 	) {
-		super(message);
-		this.name = "AutomationAlreadyExistsError";
+		super(message)
+		this.name = "AutomationAlreadyExistsError"
 	}
 }
 
@@ -82,7 +82,7 @@ export class SequentialAutomationAlreadyExistsError extends AutomationAlreadyExi
 			event,
 			actionInstanceId,
 			sourceActionInstanceId
-		);
+		)
 	}
 }
 
@@ -95,20 +95,20 @@ export class RegularAutomationAlreadyExistsError extends AutomationAlreadyExists
 			` ${event} automation for ${actionInstanceId} already exists`,
 			event,
 			actionInstanceId
-		);
+		)
 	}
 }
 
 export const createAutomation = (props: NewAutomations) =>
-	autoRevalidate(db.insertInto("automations").values(props).returningAll());
+	autoRevalidate(db.insertInto("automations").values(props).returningAll())
 
 export const updateAutomation = (automationId: AutomationsId, props: AutomationsUpdate) =>
 	autoRevalidate(
 		db.updateTable("automations").set(props).where("id", "=", automationId).returningAll()
-	);
+	)
 
 export const removeAutomation = (automationId: AutomationsId) =>
-	autoRevalidate(db.deleteFrom("automations").where("id", "=", automationId));
+	autoRevalidate(db.deleteFrom("automations").where("id", "=", automationId))
 
 const getFullPath = (
 	pathResult: { isCycle: boolean; id: ActionInstancesId; path: ActionInstancesId[] },
@@ -117,29 +117,29 @@ const getFullPath = (
 ): ActionInstancesId[] => {
 	// for MAX_STACK_DEPTH issues, or for direct cycles, show the full path
 	if (!pathResult.isCycle || pathResult.id === sourceActionInstanceId) {
-		return [sourceActionInstanceId, toBeRunActionId, ...pathResult.path];
+		return [sourceActionInstanceId, toBeRunActionId, ...pathResult.path]
 	}
 
 	// indirect cycle (sourceActionInstanceId -> toBeRunActionId -> path -> (some node in path))
-	const cycleIndex = pathResult.path.findIndex((id) => id === pathResult.id);
+	const cycleIndex = pathResult.path.indexOf(pathResult.id)
 
 	if (cycleIndex !== -1) {
 		return [
 			sourceActionInstanceId,
 			toBeRunActionId,
 			...pathResult.path.slice(0, cycleIndex + 1),
-		];
+		]
 	}
 
 	// fallback - shouldn't happen but just in case
-	return [sourceActionInstanceId, toBeRunActionId, ...pathResult.path];
-};
+	return [sourceActionInstanceId, toBeRunActionId, ...pathResult.path]
+}
 
 /**
  * The maximum number of action instances that can be in a sequence in a single stage.
  * TODO: make this trackable across stages
  */
-export const MAX_STACK_DEPTH = 10;
+export const MAX_STACK_DEPTH = 10
 
 /**
  * checks if adding a automation would create a cycle, or else adding it would create
@@ -211,33 +211,33 @@ async function wouldCreateCycle(
 		)
 		.orderBy(["isCycle desc", "depth desc"])
 		.limit(1)
-		.execute();
+		.execute()
 
 	if (result.length === 0) {
 		return {
 			hasCycle: false,
 			exceedsMaxDepth: false,
-		};
+		}
 	}
 
-	const pathResult = result[0];
+	const pathResult = result[0]
 
-	const fullPath = getFullPath(pathResult, sourceActionInstanceId, toBeRunActionId);
+	const fullPath = getFullPath(pathResult, sourceActionInstanceId, toBeRunActionId)
 
 	// Get the action instances for the path
 	const actionInstances = await db
 		.selectFrom("action_instances")
 		.selectAll()
 		.where("id", "in", fullPath)
-		.execute();
+		.execute()
 
 	const filledInPath = fullPath.map((id) => {
 		const actionInstance = expect(
 			actionInstances.find((ai) => ai.id === id),
 			`Action instance ${id} not found`
-		);
-		return actionInstance;
-	});
+		)
+		return actionInstance
+	})
 
 	return {
 		hasCycle: pathResult.isCycle,
@@ -245,35 +245,35 @@ async function wouldCreateCycle(
 		path: filledInPath,
 	} as
 		| {
-				hasCycle: true;
-				exceedsMaxDepth: false;
-				path: ActionInstances[];
+				hasCycle: true
+				exceedsMaxDepth: false
+				path: ActionInstances[]
 		  }
 		| {
-				hasCycle: false;
-				exceedsMaxDepth: true;
-				path: ActionInstances[];
-		  };
+				hasCycle: false
+				exceedsMaxDepth: true
+				path: ActionInstances[]
+		  }
 }
 
 export async function createOrUpdateAutomationWithCycleCheck(
 	data: {
-		automationId?: AutomationsId;
-		event: Event;
-		actionInstanceId: ActionInstancesId;
-		sourceActionInstanceId?: ActionInstancesId;
-		config?: AutomationConfig | null;
+		automationId?: AutomationsId
+		event: Event
+		actionInstanceId: ActionInstancesId
+		sourceActionInstanceId?: ActionInstancesId
+		config?: AutomationConfig | null
 	},
 	maxStackDepth = MAX_STACK_DEPTH
 ) {
 	// check the config
-	const config = automations[data.event].additionalConfig;
+	const config = automations[data.event].additionalConfig
 
 	if (config) {
 		try {
-			config.parse(data.config);
+			config.parse(data.config)
 		} catch (e) {
-			throw new AutomationConfigError(data.event, data.config ?? {}, e);
+			throw new AutomationConfigError(data.event, data.config ?? {}, e)
 		}
 	}
 
@@ -286,14 +286,14 @@ export async function createOrUpdateAutomationWithCycleCheck(
 			data.actionInstanceId,
 			data.sourceActionInstanceId,
 			maxStackDepth
-		);
+		)
 
 		if (result.hasCycle) {
-			throw new AutomationCycleError(result.path);
+			throw new AutomationCycleError(result.path)
 		}
 
 		if ("exceedsMaxDepth" in result && result.exceedsMaxDepth) {
-			throw new AutomationMaxDepthError(result.path);
+			throw new AutomationMaxDepthError(result.path)
 		}
 	}
 
@@ -304,16 +304,16 @@ export async function createOrUpdateAutomationWithCycleCheck(
 				actionInstanceId: data.actionInstanceId,
 				sourceActionInstanceId: data.sourceActionInstanceId,
 				config: data.config,
-			}).executeTakeFirstOrThrow();
-			return updatedAutomation;
+			}).executeTakeFirstOrThrow()
+			return updatedAutomation
 		}
 		const createdAutomation = await createAutomation({
 			event: data.event,
 			actionInstanceId: data.actionInstanceId,
 			sourceActionInstanceId: data.sourceActionInstanceId,
 			config: data.config,
-		}).executeTakeFirstOrThrow();
-		return createdAutomation;
+		}).executeTakeFirstOrThrow()
+		return createdAutomation
 	} catch (e) {
 		if (isUniqueConstraintError(e)) {
 			if (isSequentialAutomationEvent(data.event)) {
@@ -322,13 +322,13 @@ export async function createOrUpdateAutomationWithCycleCheck(
 						data.event,
 						data.actionInstanceId,
 						data.sourceActionInstanceId
-					);
+					)
 				}
 			} else {
-				throw new RegularAutomationAlreadyExistsError(data.event, data.actionInstanceId);
+				throw new RegularAutomationAlreadyExistsError(data.event, data.actionInstanceId)
 			}
 		}
-		throw e;
+		throw e
 	}
 }
 
@@ -359,4 +359,4 @@ export const getAutomation = (automationId: AutomationsId, communityId: Communit
 					.as("actionInstance"),
 			])
 			.where("id", "=", automationId)
-	);
+	)

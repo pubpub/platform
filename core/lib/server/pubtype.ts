@@ -1,18 +1,17 @@
-import type { ExpressionBuilder } from "kysely";
+import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public"
+import type { ExpressionBuilder } from "kysely"
+import type { Prettify, XOR } from "utils/types"
+import type { GetManyParams } from "./pub"
 
-import { sql } from "kysely";
-import { jsonArrayFrom, jsonBuildObject, jsonObjectFrom } from "kysely/helpers/postgres";
+import { sql } from "kysely"
+import { jsonArrayFrom, jsonBuildObject, jsonObjectFrom } from "kysely/helpers/postgres"
 
-import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public";
-import type { Prettify, XOR } from "utils/types";
-
-import type { GetManyParams } from "./pub";
-import { db } from "~/kysely/database";
-import { findRanksBetween } from "../rank";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { createDefaultForm } from "./form";
-import { GET_MANY_DEFAULT } from "./pub";
+import { db } from "~/kysely/database"
+import { findRanksBetween } from "../rank"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { createDefaultForm } from "./form"
+import { GET_MANY_DEFAULT } from "./pub"
 
 export const getPubTypeBase = <DB extends Record<string, any>>(
 	trx: typeof db | ExpressionBuilder<DB, keyof DB> = db
@@ -55,18 +54,18 @@ export const getPubTypeBase = <DB extends Record<string, any>>(
 				.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
 				.orderBy("_PubFieldToPubType.rank")
 		).as("fields"),
-	]);
+	])
 
 export const getPubType = (pubTypeId: PubTypesId, trx = db) =>
-	autoCache(getPubTypeBase(trx).where("pub_types.id", "=", pubTypeId));
+	autoCache(getPubTypeBase(trx).where("pub_types.id", "=", pubTypeId))
 
 export const getPubTypeForPubId = async (pubId: PubsId) => {
 	return autoCache(
 		getPubTypeBase()
 			.innerJoin("pubs", "pubs.pubTypeId", "pub_types.id")
 			.where("pubs.id", "=", pubId)
-	);
-};
+	)
+}
 
 export const getPubTypesForCommunity = async (
 	communityId: CommunitiesId,
@@ -84,9 +83,9 @@ export const getPubTypesForCommunity = async (
 			.$if(Boolean(name), (eb) => eb.where("pub_types.name", "in", name!))
 			.orderBy(orderBy, orderDirection)
 			.$if(limit !== 0, (qb) => qb.limit(limit).offset(offset))
-	).execute();
+	).execute()
 
-export type GetPubTypesResult = Prettify<Awaited<ReturnType<typeof getPubTypesForCommunity>>>;
+export type GetPubTypesResult = Prettify<Awaited<ReturnType<typeof getPubTypesForCommunity>>>
 
 export const getAllPubTypesForCommunity = (communitySlug: string, trx = db) => {
 	return autoCache(
@@ -123,10 +122,10 @@ export const getAllPubTypesForCommunity = (communitySlug: string, trx = db) => {
 			])
 			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
 			.$narrowType<{
-				fields: { id: PubFieldsId; isTitle: boolean; slug: string; rank: string }[];
+				fields: { id: PubFieldsId; isTitle: boolean; slug: string; rank: string }[]
 			}>()
-	);
-};
+	)
+}
 
 export const getPubTypeForForm = (props: XOR<{ slug: string }, { id: FormsId }>) =>
 	autoCache(
@@ -149,21 +148,21 @@ export const getPubTypeForForm = (props: XOR<{ slug: string }, { id: FormsId }>)
 						.orderBy("rank", "desc")
 						.as("fields"),
 			])
-	);
+	)
 
 export const createPubTypeWithDefaultForm = async (
 	props: {
-		communityId: CommunitiesId;
-		name: string;
-		description?: string;
-		fields: PubFieldsId[];
-		titleField?: PubFieldsId;
+		communityId: CommunitiesId
+		name: string
+		description?: string
+		fields: PubFieldsId[]
+		titleField?: PubFieldsId
 	},
 	trx = db
 ) => {
 	const ranks = findRanksBetween({
 		numberOfRanks: props.fields.length,
-	});
+	})
 
 	const { id: pubTypeId } = await autoRevalidate(
 		trx
@@ -187,9 +186,9 @@ export const createPubTypeWithDefaultForm = async (
 				}))
 			)
 			.returning("B as id")
-	).executeTakeFirstOrThrow();
+	).executeTakeFirstOrThrow()
 
-	const pubType = await getPubType(pubTypeId, trx).executeTakeFirstOrThrow();
+	const pubType = await getPubType(pubTypeId, trx).executeTakeFirstOrThrow()
 
 	await createDefaultForm(
 		{
@@ -197,7 +196,7 @@ export const createPubTypeWithDefaultForm = async (
 			pubType,
 		},
 		trx
-	).executeTakeFirstOrThrow();
+	).executeTakeFirstOrThrow()
 
-	return pubType;
-};
+	return pubType
+}

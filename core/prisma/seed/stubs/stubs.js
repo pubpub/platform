@@ -1,4 +1,4 @@
-const stubFn = (fn) => fn;
+const stubFn = (fn) => fn
 
 export {
 	stubFn as cache,
@@ -22,4 +22,4 @@ export {
 	stubFn as reactErrorHandler,
 	stubFn as withSentryConfig,
 	stubFn as revalidateTag,
-};
+}

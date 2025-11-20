@@ -1,10 +1,10 @@
 // import type { InitClientArgs } from "@ts-rest/core";
 
-import { initClient } from "@ts-rest/core";
+import { initClient } from "@ts-rest/core"
 
-import { siteApi } from "contracts";
+import { siteApi } from "contracts"
 
-let client: ReturnType<typeof initClient<typeof siteApi, any>>;
+let client: ReturnType<typeof initClient<typeof siteApi, any>>
 
 export const getClient = () => {
 	if (!client) {
@@ -13,8 +13,8 @@ export const getClient = () => {
 			baseHeaders: {
 				Authorization: `Bearer ${import.meta.env.AUTH_TOKEN}`,
 			},
-		});
+		})
 	}
 
-	return client;
-};
+	return client
+}

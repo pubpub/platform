@@ -1,33 +1,30 @@
-import { redirect } from "next/navigation";
+import { redirect } from "next/navigation"
 
-import { InviteStatus } from "db/public";
-import { logger } from "logger";
-import { tryCatch } from "utils/try-catch";
+import { InviteStatus } from "db/public"
+import { logger } from "logger"
+import { tryCatch } from "utils/try-catch"
 
-import { InviteService } from "~/lib/server/invites/InviteService";
-import {
-	constructCommunitySignupLink,
-	constructLoginLink,
-} from "~/lib/server/navigation/redirects";
-import { AcceptRejectInvite } from "./AcceptRejectInvite";
-import { InvalidInviteError, InviteStatusCard, NoInviteFound } from "./InviteStatuses";
+import { InviteService } from "~/lib/server/invites/InviteService"
+import { constructCommunitySignupLink, constructLoginLink } from "~/lib/server/navigation/redirects"
+import { AcceptRejectInvite } from "./AcceptRejectInvite"
+import { InvalidInviteError, InviteStatusCard, NoInviteFound } from "./InviteStatuses"
 
 export default async function InvitePage(props: {
-	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<{ invite?: string; redirectTo?: string }>;
+	params: Promise<{ communitySlug: string }>
+	searchParams: Promise<{ invite?: string; redirectTo?: string }>
 }) {
-	const searchParams = await props.searchParams;
+	const searchParams = await props.searchParams
 	// If no invite token provided, show error page
 	if (!searchParams.invite) {
-		return <NoInviteFound />;
+		return <NoInviteFound />
 	}
 
-	const inviteToken = searchParams.invite;
-	const redirectTo = searchParams.redirectTo || "/";
+	const inviteToken = searchParams.invite
+	const redirectTo = searchParams.redirectTo || "/"
 
 	const [err, inviteResult] = await tryCatch(
 		InviteService.getValidInviteForLoggedInUser(inviteToken)
-	);
+	)
 
 	if (err && !(err instanceof InviteService.InviteError)) {
 		// Log unexpected errors
@@ -35,16 +32,16 @@ export default async function InvitePage(props: {
 			msg: "Unexpected error processing invite",
 			err,
 			inviteToken,
-		});
+		})
 
-		return <InviteStatusCard message="There was a problem processing this invite." />;
+		return <InviteStatusCard message="There was a problem processing this invite." />
 	}
 
 	if (err) {
-		return <InvalidInviteError error={err} redirectTo={redirectTo} />;
+		return <InvalidInviteError error={err} redirectTo={redirectTo} />
 	}
 
-	const { user, invite } = inviteResult;
+	const { user, invite } = inviteResult
 
 	// user has accepted the invite, but did not complete signup
 	if (invite.status === InviteStatus.accepted) {
@@ -61,7 +58,7 @@ export default async function InvitePage(props: {
 					redirectTo={redirectTo}
 					mode="complete"
 				/>
-			);
+			)
 		}
 
 		const signupLink = await constructCommunitySignupLink({
@@ -71,7 +68,7 @@ export default async function InvitePage(props: {
 				title: "Finish sign up to accept invite.",
 				type: "notice",
 			},
-		});
+		})
 
 		return (
 			<InviteStatusCard
@@ -83,13 +80,13 @@ export default async function InvitePage(props: {
 					href: signupLink,
 				}}
 			/>
-		);
+		)
 	}
 
 	if (invite.status === InviteStatus.completed) {
 		if (user) {
 			// just redirect them to the redirectTo url
-			return redirect(redirectTo);
+			return redirect(redirectTo)
 		}
 
 		const loginLink = constructLoginLink({
@@ -98,7 +95,7 @@ export default async function InvitePage(props: {
 				title: "Login to continue to destination",
 				type: "notice",
 			},
-		});
+		})
 
 		return (
 			<InviteStatusCard
@@ -113,10 +110,10 @@ export default async function InvitePage(props: {
 						: undefined
 				}
 			/>
-		);
+		)
 	}
 
-	const mode = user ? "accept" : invite.user?.isProvisional ? "needsSignup" : "needsLogin";
+	const mode = user ? "accept" : invite.user?.isProvisional ? "needsSignup" : "needsLogin"
 
 	// server will handle the redirect
 	return (
@@ -126,5 +123,5 @@ export default async function InvitePage(props: {
 			redirectTo={redirectTo}
 			mode={mode}
 		/>
-	);
+	)
 }

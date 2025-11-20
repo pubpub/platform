@@ -1,37 +1,37 @@
-import type { Page } from "@playwright/test";
+import type { Page } from "@playwright/test"
+import type { PubTypesId, StagesId } from "db/public"
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test"
 
-import type { PubTypesId, StagesId } from "db/public";
-import { MemberRole } from "db/public";
+import { MemberRole } from "db/public"
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { ApiTokenPage } from "../fixtures/api-token-page";
-import { LoginPage } from "../fixtures/login-page";
-import { createBaseSeed } from "../helpers";
+import { createSeed } from "~/prisma/seed/createSeed"
+import { seedCommunity } from "~/prisma/seed/seedCommunity"
+import { ApiTokenPage } from "../fixtures/api-token-page"
+import { LoginPage } from "../fixtures/login-page"
+import { createBaseSeed } from "../helpers"
 
-const now = new Date().getTime();
-const COMMUNITY_SLUG = `playwright-test-community-${now}`;
+const now = Date.now()
+const _COMMUNITY_SLUG = `playwright-test-community-${now}`
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial" })
 
-let page: Page;
+let page: Page
 
-const TEST_STAGE_1 = "test stage" as const;
-const TEST_STAGE_2 = "test stage 2" as const;
+const TEST_STAGE_1 = "test stage" as const
+const TEST_STAGE_2 = "test stage 2" as const
 
-let testStage1Id: StagesId;
-let testStage2Id: StagesId;
+let _testStage1Id: StagesId
+let _testStage2Id: StagesId
 
-let testPubTypeId: PubTypesId;
-const baseSeed = createBaseSeed();
+let _testPubTypeId: PubTypesId
+const baseSeed = createBaseSeed()
 const seed = createSeed({
 	...baseSeed,
 	users: {
 		admin: {
-			...baseSeed.users!.admin,
+			...baseSeed.users?.admin,
 			password: "password",
 			isSuperAdmin: true,
 			role: MemberRole.admin,
@@ -51,21 +51,21 @@ const seed = createSeed({
 		[TEST_STAGE_2]: {},
 	},
 	pubs: [],
-});
-let community: CommunitySeedOutput<typeof seed>;
+})
+let community: CommunitySeedOutput<typeof seed>
 
 test.beforeAll(async ({ browser }) => {
-	community = await seedCommunity(seed);
+	community = await seedCommunity(seed)
 
-	page = await browser.newPage();
-	const loginPage = new LoginPage(page);
-	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
-});
+	page = await browser.newPage()
+	const loginPage = new LoginPage(page)
+	await loginPage.goto()
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password")
+})
 
 test("should be able to create token with all permissions", async () => {
-	const tokenPage = new ApiTokenPage(page, community.community.slug);
-	await tokenPage.goto();
+	const tokenPage = new ApiTokenPage(page, community.community.slug)
+	await tokenPage.goto()
 	const token = await tokenPage.createToken({
 		name: "test token",
 		permissions: {
@@ -75,24 +75,24 @@ test("should be able to create token with all permissions", async () => {
 			pubType: { read: true, write: true, archive: true },
 			member: { read: true, write: true, archive: true },
 		},
-	});
+	})
 
-	expect(token).not.toBeNull();
+	expect(token).not.toBeNull()
 
 	await test.step("should be able to revoke token", async () => {
-		const tokenPage = new ApiTokenPage(page, community.community.slug);
-		await tokenPage.goto();
-		await page.getByRole("button", { name: "Revoke token" }).first().click({ timeout: 1_000 });
+		const tokenPage = new ApiTokenPage(page, community.community.slug)
+		await tokenPage.goto()
+		await page.getByRole("button", { name: "Revoke token" }).first().click({ timeout: 1_000 })
 
-		await page.getByRole("button", { name: "Remove" }).click();
+		await page.getByRole("button", { name: "Remove" }).click()
 
-		await expect(page.getByRole("button", { name: "Revoke token" })).toHaveCount(0);
-	});
-});
+		await expect(page.getByRole("button", { name: "Revoke token" })).toHaveCount(0)
+	})
+})
 
 test("should be able to create token with special permissions", async () => {
-	const tokenPage = new ApiTokenPage(page, community.community.slug);
-	await tokenPage.goto();
+	const tokenPage = new ApiTokenPage(page, community.community.slug)
+	await tokenPage.goto()
 	const token = await tokenPage.createToken({
 		// expiration: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
 		name: "test token with special permissions",
@@ -104,25 +104,25 @@ test("should be able to create token with special permissions", async () => {
 				},
 			},
 		},
-	});
+	})
 
-	test.expect(token).not.toBeNull();
+	test.expect(token).not.toBeNull()
 
-	await tokenPage.goto();
+	await tokenPage.goto()
 
 	// nth(1) bc the first is the site builder token
-	await page.getByRole("button", { name: "Permissions" }).nth(1).click();
+	await page.getByRole("button", { name: "Permissions" }).nth(1).click()
 
-	const permissionsText = await page.getByText("pub: read").textContent();
+	const permissionsText = await page.getByText("pub: read").textContent()
 
-	const permissionContraints = permissionsText?.match(/\{.*\}/)?.[0];
+	const permissionContraints = permissionsText?.match(/\{.*\}/)?.[0]
 
-	test.expect(permissionContraints).not.toBeNull();
+	test.expect(permissionContraints).not.toBeNull()
 
-	const permissionContraintsJson = JSON.parse(permissionContraints!);
+	const permissionContraintsJson = JSON.parse(permissionContraints!)
 	test.expect(permissionContraintsJson).toMatchObject({
 		stages: [community.stages[TEST_STAGE_1].id],
 		pubTypes: [community.pubTypes["test pub type"].id],
-	});
-	await expect(page.getByText("test token")).toBeVisible();
-});
+	})
+	await expect(page.getByText("test token")).toBeVisible()
+})

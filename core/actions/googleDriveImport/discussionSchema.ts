@@ -1,6 +1,6 @@
-import type { DOMOutputSpec, Mark, Node, NodeSpec } from "prosemirror-model";
+import type { DOMOutputSpec, Mark, Node, NodeSpec } from "prosemirror-model"
 
-import { Schema } from "prosemirror-model";
+import { Schema } from "prosemirror-model"
 
 export const baseNodes: { [key: string]: NodeSpec } = {
 	doc: {
@@ -29,13 +29,13 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 						class: (node as Element).getAttribute("class"),
 						textAlign: (node as Element).getAttribute("data-text-align"),
 						rtl: (node as Element).getAttribute("data-rtl"),
-					};
+					}
 				},
 			},
 		],
 		toDOM: (node) => {
-			const isEmpty = !node.content || (Array.isArray(node.content) && !node.content.length);
-			const children = isEmpty ? ["br"] : 0;
+			const isEmpty = !node.content || (Array.isArray(node.content) && !node.content.length)
+			const children = isEmpty ? ["br"] : 0
 			return [
 				"p",
 				{
@@ -45,7 +45,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 					...(node.attrs.rtl && { "data-rtl": node.attrs.rtl.toString() }),
 				},
 				children,
-			] as DOMOutputSpec;
+			] as DOMOutputSpec
 		},
 	},
 	blockquote: {
@@ -61,7 +61,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 				getAttrs: (node) => {
 					return {
 						id: (node as Element).getAttribute("id"),
-					};
+					}
 				},
 			},
 		],
@@ -70,7 +70,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 				"blockquote",
 				{ ...(node.attrs.id && { id: node.attrs.id }) },
 				0,
-			] as DOMOutputSpec;
+			] as DOMOutputSpec
 		},
 	},
 	horizontal_rule: {
@@ -78,7 +78,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 		parseDOM: [{ tag: "hr" }],
 		selectable: true,
 		toDOM: () => {
-			return ["div", ["hr"]] as DOMOutputSpec;
+			return ["div", ["hr"]] as DOMOutputSpec
 		},
 	},
 	heading: {
@@ -102,9 +102,9 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 						textAlign: (node as Element).getAttribute("data-text-align"),
 						rtl: (node as Element).getAttribute("data-rtl"),
 						level,
-					};
+					}
 				},
-			};
+			}
 		}),
 		toDOM: (node) => {
 			return [
@@ -115,7 +115,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 					...(node.attrs.rtl && { "data-rtl": node.attrs.rtl.toString() }),
 				},
 				0,
-			] as DOMOutputSpec;
+			] as DOMOutputSpec
 		},
 	},
 	ordered_list: {
@@ -137,7 +137,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 							? +(node as Element).getAttribute("start")!
 							: 1,
 						rtl: (node as Element).getAttribute("data-rtl"),
-					};
+					}
 				},
 			},
 		],
@@ -151,7 +151,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 					start: node.attrs.order === 1 ? null : node.attrs.order,
 				},
 				0,
-			] as DOMOutputSpec;
+			] as DOMOutputSpec
 		},
 	},
 	bullet_list: {
@@ -169,7 +169,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 					return {
 						id: (node as Element).getAttribute("id"),
 						rtl: (node as Element).getAttribute("data-rtl"),
-					};
+					}
 				},
 			},
 		],
@@ -182,7 +182,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 					...(node.attrs.rtl && { "data-rtl": node.attrs.rtl.toString() }),
 				},
 				0,
-			] as DOMOutputSpec;
+			] as DOMOutputSpec
 		},
 	},
 	list_item: {
@@ -191,14 +191,14 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 		selectable: false,
 		parseDOM: [{ tag: "li" }],
 		toDOM: () => {
-			return ["li", 0] as DOMOutputSpec;
+			return ["li", 0] as DOMOutputSpec
 		},
 	},
 	text: {
 		inline: true,
 		group: "inline",
 		toDOM: (node) => {
-			return node.text!;
+			return node.text!
 		},
 	},
 	hard_break: {
@@ -207,7 +207,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 		selectable: false,
 		parseDOM: [{ tag: "br" }],
 		toDOM: () => {
-			return ["br"] as DOMOutputSpec;
+			return ["br"] as DOMOutputSpec
 		},
 	},
 	image: {
@@ -230,7 +230,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 				tag: "figure",
 				getAttrs: (node) => {
 					if (node.getAttribute("data-node-type") !== "image") {
-						return false;
+						return false
 					}
 					return {
 						id: node.getAttribute("id") || null,
@@ -241,12 +241,12 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 						altText: node.getAttribute("data-alt-text") || "",
 						hideLabel: node.getAttribute("data-hide-label") || "",
 						href: node.getAttribute("data-href") || null,
-					};
+					}
 				},
 			},
 		],
 		toDOM: (node) => {
-			const { url, align, id, altText, caption, size, hideLabel, href } = node.attrs;
+			const { url, align, id, altText, caption, size, hideLabel, href } = node.attrs
 			return [
 				"figure",
 				{
@@ -267,7 +267,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 						alt: altText || "",
 					},
 				],
-			] as unknown as DOMOutputSpec;
+			] as unknown as DOMOutputSpec
 		},
 		inline: false,
 		group: "block",
@@ -286,7 +286,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 				tag: "figure",
 				getAttrs: (node) => {
 					if (node.getAttribute("data-node-type") !== "file") {
-						return false;
+						return false
 					}
 					return {
 						id: node.getAttribute("id") || null,
@@ -294,12 +294,12 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 						fileName: node.getAttribute("data-file-name") || null,
 						fileSize: node.getAttribute("data-file-size") || null,
 						caption: node.getAttribute("data-caption") || "",
-					};
+					}
 				},
 			},
 		],
 		toDOM: (node: Node) => {
-			const attrs = node.attrs;
+			const attrs = node.attrs
 			return [
 				"p",
 				[
@@ -313,7 +313,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 					},
 					attrs.fileName,
 				],
-			];
+			]
 		},
 		inline: false,
 		group: "block",
@@ -333,7 +333,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 				getAttrs: (node) => {
 					return {
 						id: (node as Element).getAttribute("id"),
-					};
+					}
 				},
 				preserveWhitespace: "full" as const,
 			},
@@ -341,7 +341,7 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 		toDOM: (node: Node) =>
 			["pre", { ...(node.attrs.id && { id: node.attrs.id }) }, ["code", 0]] as DOMOutputSpec,
 	},
-};
+}
 
 export const baseMarks = {
 	em: {
@@ -354,7 +354,7 @@ export const baseMarks = {
 			},
 		],
 		toDOM: () => {
-			return ["em"] as DOMOutputSpec;
+			return ["em"] as DOMOutputSpec
 		},
 	},
 
@@ -376,7 +376,7 @@ export const baseMarks = {
 			},
 		],
 		toDOM: () => {
-			return ["strong"] as DOMOutputSpec;
+			return ["strong"] as DOMOutputSpec
 		},
 	},
 	link: {
@@ -392,55 +392,55 @@ export const baseMarks = {
 				tag: "a[href]",
 				getAttrs: (dom: HTMLElement) => {
 					if (dom.getAttribute("data-node-type") === "reference") {
-						return false;
+						return false
 					}
 					return {
 						href: dom.getAttribute("href"),
 						title: dom.getAttribute("title"),
 						target: dom.getAttribute("target"),
 						pubEdgeId: dom.getAttribute("data-pub-edge-id"),
-					};
+					}
 				},
 			},
 		],
-		toDOM: (mark: Mark, inline: boolean) => {
-			let attrs = mark.attrs;
+		toDOM: (mark: Mark, _inline: boolean) => {
+			let attrs = mark.attrs
 			if (attrs.target && typeof attrs.target !== "string") {
-				attrs = { ...attrs, target: null };
+				attrs = { ...attrs, target: null }
 			}
-			const { pubEdgeId, ...restAttrs } = attrs;
-			return ["a", { "data-pub-edge-id": pubEdgeId, ...restAttrs }] as DOMOutputSpec;
+			const { pubEdgeId, ...restAttrs } = attrs
+			return ["a", { "data-pub-edge-id": pubEdgeId, ...restAttrs }] as DOMOutputSpec
 		},
 	},
 	sub: {
 		parseDOM: [{ tag: "sub" }],
 		toDOM: () => {
-			return ["sub"] as DOMOutputSpec;
+			return ["sub"] as DOMOutputSpec
 		},
 	},
 	sup: {
 		parseDOM: [{ tag: "sup" }],
 		toDOM: () => {
-			return ["sup"] as DOMOutputSpec;
+			return ["sup"] as DOMOutputSpec
 		},
 	},
 	strike: {
 		parseDOM: [{ tag: "s" }, { tag: "strike" }, { tag: "del" }],
 		toDOM: () => {
-			return ["s"] as DOMOutputSpec;
+			return ["s"] as DOMOutputSpec
 		},
 	},
 	code: {
 		parseDOM: [{ tag: "code" }],
 		toDOM: () => {
-			return ["code"] as DOMOutputSpec;
+			return ["code"] as DOMOutputSpec
 		},
 	},
-};
+}
 
 const mySchema = new Schema({
 	nodes: baseNodes,
 	marks: baseMarks,
-});
+})
 
-export default mySchema;
+export default mySchema

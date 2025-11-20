@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import type { PropsWithChildren } from "react";
+import type { CreateTokenFormContext } from "db/types"
+import type { PropsWithChildren } from "react"
 
-import { useCallback, useState } from "react";
-import Link from "next/link";
-import { Plus } from "lucide-react";
+import { useCallback, useState } from "react"
+import Link from "next/link"
+import { Plus } from "lucide-react"
 
-import type { CreateTokenFormContext } from "db/types";
-import { Button } from "ui/button";
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -16,26 +16,26 @@ import {
 	DialogOverlay,
 	DialogTitle,
 	DialogTrigger,
-} from "ui/dialog";
-import { cn } from "utils";
+} from "ui/dialog"
+import { cn } from "utils"
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { CreateTokenFormWithContext } from "./CreateTokenForm";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { CreateTokenFormWithContext } from "./CreateTokenForm"
 
 export type CreateTokenButtonProps = {
-	className?: string;
-} & CreateTokenFormContext;
+	className?: string
+} & CreateTokenFormContext
 export const CreateTokenButton = ({
 	className,
 	children,
 	...context
 }: PropsWithChildren<CreateTokenButtonProps>) => {
-	const community = useCommunity();
+	const community = useCommunity()
 
-	const [success, setSuccess] = useState(false);
+	const [success, setSuccess] = useState(false)
 	const onSuccess = useCallback(() => {
-		setSuccess(true);
-	}, []);
+		setSuccess(true)
+	}, [])
 
 	return (
 		<Dialog defaultOpen={false} modal={true}>
@@ -69,5 +69,5 @@ export const CreateTokenButton = ({
 				<CreateTokenFormWithContext {...context} onSuccess={onSuccess} />
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

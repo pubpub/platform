@@ -1,30 +1,30 @@
-import type { FormsId } from "db/public";
+import type { FormsId } from "db/public"
 
 type FormWithSlugAndDefault = {
-	id: FormsId;
-	name: string;
-	slug: string;
-	isDefault: boolean;
-};
+	id: FormsId
+	name: string
+	slug: string
+	isDefault: boolean
+}
 
 export function resolveFormAccess(config: {
-	availableForms: FormWithSlugAndDefault[];
-	requestedFormSlug: string | undefined;
-	communitySlug: string;
+	availableForms: FormWithSlugAndDefault[]
+	requestedFormSlug: string | undefined
+	communitySlug: string
 }):
 	| {
-			hasAccessToAnyForm: false;
-			hasAccessToCurrentForm?: never;
-			defaultForm?: never;
-			canonicalForm?: never;
+			hasAccessToAnyForm: false
+			hasAccessToCurrentForm?: never
+			defaultForm?: never
+			canonicalForm?: never
 	  }
 	| {
-			hasAccessToAnyForm: true;
-			hasAccessToCurrentForm: boolean;
-			defaultForm: FormWithSlugAndDefault | undefined;
-			canonicalForm: FormWithSlugAndDefault;
+			hasAccessToAnyForm: true
+			hasAccessToCurrentForm: boolean
+			defaultForm: FormWithSlugAndDefault | undefined
+			canonicalForm: FormWithSlugAndDefault
 	  } {
-	const hasAccessToAnyForm = config.availableForms.length > 0;
+	const hasAccessToAnyForm = config.availableForms.length > 0
 
 	if (!hasAccessToAnyForm) {
 		return {
@@ -32,24 +32,24 @@ export function resolveFormAccess(config: {
 			hasAccessToCurrentForm: undefined,
 			defaultForm: undefined,
 			canonicalForm: undefined,
-		};
+		}
 	}
 
 	const currentAvailableForm = config.availableForms.find(
 		(form) =>
 			form.slug === config.requestedFormSlug || (form.isDefault && !config.requestedFormSlug)
-	);
+	)
 
-	const defaultForm = config.availableForms.find((form) => form.isDefault);
+	const defaultForm = config.availableForms.find((form) => form.isDefault)
 
 	if (!currentAvailableForm) {
-		const firstAvailableForm = defaultForm || config.availableForms[0];
+		const firstAvailableForm = defaultForm || config.availableForms[0]
 		return {
 			hasAccessToAnyForm: true,
 			hasAccessToCurrentForm: false,
 			defaultForm,
 			canonicalForm: firstAvailableForm,
-		};
+		}
 	}
 
 	return {
@@ -57,5 +57,5 @@ export function resolveFormAccess(config: {
 		hasAccessToCurrentForm: true,
 		defaultForm,
 		canonicalForm: currentAvailableForm,
-	};
+	}
 }

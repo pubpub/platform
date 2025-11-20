@@ -1,14 +1,14 @@
-import type * as z from "zod";
+import type * as z from "zod"
+import type { AutoFormInputComponentProps } from "../types"
 
-import * as React from "react";
+import React from "react"
 
-import type { AutoFormInputComponentProps } from "../types";
-import { FormControl, FormItem, FormMessage } from "../../form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../select";
-import AutoFormDescription from "../common/description";
-import AutoFormLabel from "../common/label";
-import AutoFormTooltip from "../common/tooltip";
-import { getBaseSchema } from "../utils";
+import { FormControl, FormItem, FormMessage } from "../../form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../select"
+import AutoFormDescription from "../common/description"
+import AutoFormLabel from "../common/label"
+import AutoFormTooltip from "../common/tooltip"
+import { getBaseSchema } from "../utils"
 
 export default function AutoFormEnum({
 	label,
@@ -19,17 +19,17 @@ export default function AutoFormEnum({
 	zodItem,
 	fieldProps,
 }: AutoFormInputComponentProps) {
-	const baseValues = (getBaseSchema(zodItem) as unknown as z.ZodEnum<any>)._def.values;
+	const baseValues = (getBaseSchema(zodItem) as unknown as z.ZodEnum<any>)._def.values
 
-	let values: [string, string][] = [];
+	let values: [string, string][] = []
 	if (!Array.isArray(baseValues)) {
-		values = Object.entries(baseValues);
+		values = Object.entries(baseValues)
 	} else {
-		values = baseValues.map((value) => [value, value]);
+		values = baseValues.map((value) => [value, value])
 	}
 
 	function findItem(value: any) {
-		return values.find((item) => item[0] === value);
+		return values.find((item) => item[0] === value)
 	}
 
 	return (
@@ -55,5 +55,5 @@ export default function AutoFormEnum({
 			<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 			<FormMessage />
 		</FormItem>
-	);
+	)
 }

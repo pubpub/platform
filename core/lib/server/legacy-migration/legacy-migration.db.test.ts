@@ -1,15 +1,16 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import { CoreSchemaType, MemberRole } from "db/public";
+import { beforeAll, describe, expect, it } from "vitest"
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { maybeWithTrx } from "../maybeWithTrx";
+import { CoreSchemaType, MemberRole } from "db/public"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+import { mockServerCode } from "~/lib/__tests__/utils"
+import { createSeed } from "~/prisma/seed/createSeed"
+import { maybeWithTrx } from "../maybeWithTrx"
 
-const { getTrx } = createForEachMockedTransaction();
+const { createForEachMockedTransaction } = await mockServerCode()
+
+const { getTrx } = createForEachMockedTransaction()
 
 const seed = createSeed({
 	community: {
@@ -48,46 +49,42 @@ const seed = createSeed({
 			members: { admin: MemberRole.admin },
 		},
 	],
-});
+})
 
-let community: CommunitySeedOutput<typeof seed>;
+let community: CommunitySeedOutput<typeof seed>
 
 beforeAll(async () => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-	community = await seedCommunity(seed);
-});
+	const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+	community = await seedCommunity(seed)
+})
 
 describe("legacy migration", () => {
 	it("should be able to create everything", async () => {
 		const { createLegacyStructure } = await import(
 			"~/lib/server/legacy-migration/legacy-migration"
-		);
+		)
 		const { REQUIRED_LEGACY_PUB_FIELDS } = await import(
 			"~/lib/server/legacy-migration/legacy-structure"
-		);
-		const { getPubFields } = await import("~/lib/server/pubFields");
+		)
+		const { getPubFields } = await import("~/lib/server/pubFields")
 
-		const trx = getTrx();
-		try {
-			maybeWithTrx(trx, async () => {
-				const result = await createLegacyStructure({
-					community: community.community,
-				});
+		const trx = getTrx()
+		maybeWithTrx(trx, async () => {
+			const _result = await createLegacyStructure({
+				community: community.community,
+			})
 
-				const { fields } = await getPubFields(
-					{
-						communityId: community.community.id,
-					},
-					trx
-				).executeTakeFirstOrThrow();
-				// console.log(fields);
-				expect(Object.keys(fields)).toHaveLength(
-					// bc Title and Description already exist, but "some relation" does not
-					Object.keys(REQUIRED_LEGACY_PUB_FIELDS).length + 1
-				);
-			});
-		} catch (error) {
-			throw error;
-		}
-	});
-});
+			const { fields } = await getPubFields(
+				{
+					communityId: community.community.id,
+				},
+				trx
+			).executeTakeFirstOrThrow()
+			// console.log(fields);
+			expect(Object.keys(fields)).toHaveLength(
+				// bc Title and Description already exist, but "some relation" does not
+				Object.keys(REQUIRED_LEGACY_PUB_FIELDS).length + 1
+			)
+		})
+	})
+})

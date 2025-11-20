@@ -1,17 +1,18 @@
-"use server";
+"use server"
 
-import { redirect } from "next/navigation";
+import type { CommunitiesId, PubTypesId } from "db/public"
 
-import type { CommunitiesId, PubTypesId } from "db/public";
-import { assert } from "utils";
+import { redirect } from "next/navigation"
 
-import { isUniqueConstraintError } from "~/kysely/errors";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { getPubType } from "~/lib/server";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { defineServerAction } from "~/lib/server/defineServerAction";
-import { FORM_SLUG_UNIQUE_CONSTRAINT, insertForm } from "~/lib/server/form";
+import { assert } from "utils"
+
+import { isUniqueConstraintError } from "~/kysely/errors"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { getPubType } from "~/lib/server"
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { defineServerAction } from "~/lib/server/defineServerAction"
+import { FORM_SLUG_UNIQUE_CONSTRAINT, insertForm } from "~/lib/server/form"
 
 export const createForm = defineServerAction(async function createForm(
 	pubTypeId: PubTypesId,
@@ -19,28 +20,28 @@ export const createForm = defineServerAction(async function createForm(
 	slug: string,
 	communityId: CommunitiesId
 ) {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 
 	if (!user) {
 		return {
 			error: "Not logged in",
-		};
+		}
 	}
 
 	try {
-		const pubType = await getPubType(pubTypeId).executeTakeFirstOrThrow();
+		const pubType = await getPubType(pubTypeId).executeTakeFirstOrThrow()
 		await autoRevalidate(
 			insertForm(pubType, name, slug, communityId, false)
-		).executeTakeFirstOrThrow();
+		).executeTakeFirstOrThrow()
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
-			const column = error.constraint === FORM_SLUG_UNIQUE_CONSTRAINT ? "slug" : "name";
-			return { error: `A form with this ${column} already exists. Choose a new ${column}` };
+			const column = error.constraint === FORM_SLUG_UNIQUE_CONSTRAINT ? "slug" : "name"
+			return { error: `A form with this ${column} already exists. Choose a new ${column}` }
 		}
-		return { error: "Form creation failed", cause: error };
+		return { error: "Form creation failed", cause: error }
 	}
 
-	const community = await findCommunityBySlug();
-	assert(community);
-	redirect(`/c/${community.slug}/forms/${slug}/edit`);
-});
+	const community = await findCommunityBySlug()
+	assert(community)
+	redirect(`/c/${community.slug}/forms/${slug}/edit`)
+})

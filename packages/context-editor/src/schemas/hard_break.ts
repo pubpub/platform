@@ -1,4 +1,4 @@
-import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
+import type { DOMOutputSpec, NodeSpec } from "prosemirror-model"
 
 export default {
 	inline: true,
@@ -6,6 +6,6 @@ export default {
 	selectable: false,
 	parseDOM: [{ tag: "br" }],
 	toDOM: () => {
-		return ["br"] as DOMOutputSpec;
+		return ["br"] as DOMOutputSpec
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec

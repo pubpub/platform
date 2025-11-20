@@ -1,18 +1,21 @@
-"use client";
+"use client"
 
-import type { ControllerRenderProps, FieldValues, UseFormReturn } from "react-hook-form";
+import type { ActionInstances, AutomationsId, CommunitiesId, StagesId } from "db/public"
+import type { ControllerRenderProps, FieldValues, UseFormReturn } from "react-hook-form"
+import type { Automation, AutomationConfig, AutomationForEvent } from "~/actions/_lib/automations"
+import type { getStageActions } from "~/lib/db/queries"
+import type { AutoReturnType } from "~/lib/types"
 
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash } from "lucide-react";
-import { useQueryState } from "nuqs";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useCallback, useEffect, useId, useMemo, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Trash } from "lucide-react"
+import { useQueryState } from "nuqs"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import type { ActionInstances, AutomationsId, CommunitiesId, StagesId } from "db/public";
-import { actionInstancesIdSchema, Event } from "db/public";
-import { logger } from "logger";
-import { Button } from "ui/button";
+import { actionInstancesIdSchema, Event } from "db/public"
+import { logger } from "logger"
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -21,35 +24,32 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { FormSubmitButton } from "ui/submit-button";
-import { cn } from "utils";
+} from "ui/dialog"
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { FormSubmitButton } from "ui/submit-button"
+import { cn } from "utils"
 
-import type { Automation, AutomationConfig, AutomationForEvent } from "~/actions/_lib/automations";
-import type { getStageActions } from "~/lib/db/queries";
-import type { AutoReturnType } from "~/lib/types";
-import { ActionFormContext } from "~/actions/_lib/ActionForm";
-import { actions, automations, getAutomationByName, humanReadableEventBase } from "~/actions/api";
-import { getActionFormComponent } from "~/actions/forms";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { isClientException, useServerAction } from "~/lib/serverActions";
-import { addOrUpdateAutomation, deleteAutomation } from "../../../actions";
+import { ActionFormContext } from "~/actions/_lib/ActionForm"
+import { actions, automations, getAutomationByName, humanReadableEventBase } from "~/actions/api"
+import { getActionFormComponent } from "~/actions/forms"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { isClientException, useServerAction } from "~/lib/serverActions"
+import { addOrUpdateAutomation, deleteAutomation } from "../../../actions"
 
 type Props = {
-	stageId: StagesId;
-	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
-	communityId: CommunitiesId;
+	stageId: StagesId
+	actionInstances: AutoReturnType<typeof getStageActions>["execute"]
+	communityId: CommunitiesId
 	automations: {
-		id: AutomationsId;
-		event: Event;
-		actionInstance: ActionInstances;
-		sourceAction?: ActionInstances;
+		id: AutomationsId
+		event: Event
+		actionInstance: ActionInstances
+		sourceAction?: ActionInstances
 
-		config?: AutomationConfig<AutomationForEvent<Event>> | null;
-	}[];
-};
+		config?: AutomationConfig<AutomationForEvent<Event>> | null
+	}[]
+}
 
 const ActionSelector = ({
 	fieldProps,
@@ -62,12 +62,12 @@ const ActionSelector = ({
 	fieldProps: Omit<
 		ControllerRenderProps<CreateAutomationsSchema, "sourceActionInstanceId">,
 		"name"
-	>;
-	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
-	label: string;
-	placeholder: string;
-	disabledActionId?: string;
-	dataTestIdPrefix?: string;
+	>
+	actionInstances: AutoReturnType<typeof getStageActions>["execute"]
+	label: string
+	placeholder: string
+	disabledActionId?: string
+	dataTestIdPrefix?: string
 }) => {
 	return (
 		<FormItem>
@@ -82,8 +82,8 @@ const ActionSelector = ({
 				</SelectTrigger>
 				<SelectContent>
 					{actionInstances.map((instance) => {
-						const action = actions[instance.action];
-						const isDisabled = instance.id === disabledActionId;
+						const action = actions[instance.action]
+						const isDisabled = instance.id === disabledActionId
 
 						return (
 							<SelectItem
@@ -97,20 +97,20 @@ const ActionSelector = ({
 									<action.icon size="12" />
 									<span>{instance.name}</span>
 									{isDisabled && (
-										<span className="text-xs text-gray-400">
+										<span className="text-gray-400 text-xs">
 											(self-reference not allowed)
 										</span>
 									)}
 								</div>
 							</SelectItem>
-						);
+						)
 					})}
 				</SelectContent>
 			</Select>
 			<FormMessage />
 		</FormItem>
-	);
-};
+	)
+}
 
 const baseSchema = z.discriminatedUnion("event", [
 	z.object({
@@ -148,7 +148,7 @@ const baseSchema = z.discriminatedUnion("event", [
 						| Event.pubLeftStage
 						| Event.actionSucceeded
 						| Event.actionFailed
-						| Event.webhook;
+						| Event.webhook
 				}
 			> =>
 				![
@@ -168,12 +168,12 @@ const baseSchema = z.discriminatedUnion("event", [
 					: z.null().optional(),
 			})
 		),
-]);
+])
 
 const refineSchema = <T extends z.ZodTypeAny>(schema: T) => {
 	return schema.superRefine((data, ctx) => {
 		if (data.event !== Event.actionSucceeded && data.event !== Event.actionFailed) {
-			return;
+			return
 		}
 
 		if (data.sourceActionInstanceId === data.actionInstanceId) {
@@ -181,107 +181,87 @@ const refineSchema = <T extends z.ZodTypeAny>(schema: T) => {
 				path: ["sourceActionInstanceId"],
 				code: z.ZodIssueCode.custom,
 				message: "Automations may not trigger actions in a loop",
-			});
+			})
 		}
-	});
-};
+	})
+}
 
 export type CreateAutomationsSchema = z.infer<typeof baseSchema> & {
-	actionConfig: Record<string, unknown> | null;
-};
+	actionConfig: Record<string, unknown> | null
+}
 
 export const StagePanelAutomationForm = (props: Props) => {
 	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] =
-		useQueryState("automation-id");
-	const runUpsertAutomation = useServerAction(addOrUpdateAutomation);
-	const [isOpen, setIsOpen] = useState(false);
-
-	const onSubmit = useCallback(
-		async (data: CreateAutomationsSchema) => {
-			const result = await runUpsertAutomation({
-				stageId: props.stageId,
-				data,
-				automationId: currentlyEditingAutomationId as AutomationsId | undefined,
-			});
-			if (!isClientException(result)) {
-				setIsOpen(false);
-				setCurrentlyEditingAutomationId(null);
-				setSelectedActionInstance(null);
-				form.reset();
-				return;
-			}
-
-			form.setError("root", { message: result.error });
-		},
-		[props.stageId, runUpsertAutomation]
-	);
+		useQueryState("automation-id")
+	const runUpsertAutomation = useServerAction(addOrUpdateAutomation)
+	const [isOpen, setIsOpen] = useState(false)
 
 	const [selectedActionInstance, setSelectedActionInstance] = useState<
 		(typeof props.actionInstances)[number] | null
-	>(null);
+	>(null)
 
 	const actionInstance = useMemo(() => {
 		if (!selectedActionInstance) {
-			return null;
+			return null
 		}
 		const actionInstance = props.actionInstances.find(
 			(action) => action.id === selectedActionInstance.id
-		);
+		)
 
 		if (!actionInstance) {
-			return null;
+			return null
 		}
 
 		return {
 			...actionInstance,
 			action: actions[actionInstance.action],
-		};
-	}, [selectedActionInstance, props.actionInstances]);
+		}
+	}, [selectedActionInstance, props.actionInstances])
 
 	const actionSchema = useMemo(() => {
 		if (!selectedActionInstance) {
-			return z.object({});
+			return z.object({})
 		}
 
 		if (!actionInstance) {
-			return z.object({});
+			return z.object({})
 		}
 
-		const actionSchema = actionInstance.action.config.schema;
+		const actionSchema = actionInstance.action.config.schema
 
 		const schemaWithPartialDefaults = (actionSchema as z.ZodObject<any>).partial(
 			(actionInstance.defaultedActionConfigKeys ?? []).reduce(
 				(acc, key) => {
-					acc[key] = true;
-					return acc;
+					acc[key] = true
+					return acc
 				},
 				{} as Record<string, true>
 			)
-		);
+		)
 
-		return schemaWithPartialDefaults;
-	}, [selectedActionInstance, actionInstance]);
+		return schemaWithPartialDefaults
+	}, [selectedActionInstance, actionInstance])
 
 	const schema = useMemo(() => {
 		if (!selectedActionInstance) {
-			return refineSchema(baseSchema);
+			return refineSchema(baseSchema)
 		}
 		const actionInstance = props.actionInstances.find(
 			(action) => action.id === selectedActionInstance.id
-		);
+		)
 		if (!actionInstance) {
-			logger.error({ msg: "Action not found", selectedActionInstance });
-			return refineSchema(baseSchema);
+			logger.error({ msg: "Action not found", selectedActionInstance })
+			return refineSchema(baseSchema)
 		}
 
 		const schemaWithAction = baseSchema.and(
 			z.object({
 				actionConfig: actionSchema,
 			})
-		);
+		)
 
-		return refineSchema(schemaWithAction);
-	}, [selectedActionInstance, props.actionInstances, actionSchema]);
+		return refineSchema(schemaWithAction)
+	}, [selectedActionInstance, props.actionInstances, actionSchema])
 
 	const form = useForm<CreateAutomationsSchema>({
 		resolver: zodResolver(schema),
@@ -290,21 +270,48 @@ export const StagePanelAutomationForm = (props: Props) => {
 			event: undefined,
 			actionConfig: null,
 		},
-	});
+	})
 
-	const community = useCommunity();
+	const onSubmit = useCallback(
+		async (data: CreateAutomationsSchema) => {
+			const result = await runUpsertAutomation({
+				stageId: props.stageId,
+				data,
+				automationId: currentlyEditingAutomationId as AutomationsId | undefined,
+			})
+			if (!isClientException(result)) {
+				setIsOpen(false)
+				setCurrentlyEditingAutomationId(null)
+				setSelectedActionInstance(null)
+				form.reset()
+				return
+			}
 
-	const event = form.watch("event");
-	const selectedActionInstanceId = form.watch("actionInstanceId");
+			form.setError("root", { message: result.error })
+		},
+		[
+			props.stageId,
+			runUpsertAutomation,
+			currentlyEditingAutomationId,
+			form.reset,
+			form.setError,
+			setCurrentlyEditingAutomationId,
+		]
+	)
 
-	const sourceActionInstanceId = form.watch("sourceActionInstanceId");
+	const community = useCommunity()
+
+	const event = form.watch("event")
+	const selectedActionInstanceId = form.watch("actionInstanceId")
+
+	const sourceActionInstanceId = form.watch("sourceActionInstanceId")
 
 	// for action chaining events, filter out self-references
-	const isActionChainingEvent = event === Event.actionSucceeded || event === Event.actionFailed;
+	const isActionChainingEvent = event === Event.actionSucceeded || event === Event.actionFailed
 
 	const { allowedEvents } = useMemo(() => {
 		if (!selectedActionInstanceId && !event)
-			return { disallowedEvents: [], allowedEvents: Object.values(Event) };
+			return { disallowedEvents: [], allowedEvents: Object.values(Event) }
 
 		const disallowedEvents = props.automations
 			.filter((automation) => {
@@ -313,7 +320,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 					automation.event !== Event.actionSucceeded &&
 					automation.event !== Event.actionFailed
 				) {
-					return automation.actionInstance.id === selectedActionInstanceId;
+					return automation.actionInstance.id === selectedActionInstanceId
 				}
 
 				// for action chaining events, allow multiple automations with different watched actions
@@ -321,45 +328,45 @@ export const StagePanelAutomationForm = (props: Props) => {
 					automation.actionInstance.id === selectedActionInstanceId &&
 					automation.event === event &&
 					automation.sourceAction?.id === sourceActionInstanceId
-				);
+				)
 			})
-			.map((automation) => automation.event);
+			.map((automation) => automation.event)
 
 		const allowedEvents = Object.values(Event).filter(
 			(event) => !disallowedEvents.includes(event)
-		);
+		)
 
-		return { disallowedEvents, allowedEvents };
-	}, [selectedActionInstanceId, event, props.automations, sourceActionInstanceId]);
+		return { disallowedEvents, allowedEvents }
+	}, [selectedActionInstanceId, event, props.automations, sourceActionInstanceId])
 
 	useEffect(() => {
 		const actionInstance =
-			props.actionInstances.find((action) => action.id === selectedActionInstanceId) ?? null;
-		setSelectedActionInstance(actionInstance);
+			props.actionInstances.find((action) => action.id === selectedActionInstanceId) ?? null
+		setSelectedActionInstance(actionInstance)
 
 		if (actionInstance?.config) {
 			form.reset({
 				...form.getValues(),
 				actionConfig: actionInstance.config,
-			});
+			})
 		}
-	}, [form, props.actionInstances, selectedActionInstanceId]);
+	}, [form, props.actionInstances, selectedActionInstanceId])
 
 	useEffect(() => {
 		const currentAutomation = props.automations.find(
 			(automation) => automation.id === currentlyEditingAutomationId
-		);
+		)
 
 		if (!currentAutomation) {
-			return;
+			return
 		}
 
-		setIsOpen(true);
+		setIsOpen(true)
 		const actionInstance =
 			props.actionInstances.find(
 				(action) => action.id === currentAutomation.actionInstance.id
-			) ?? null;
-		setSelectedActionInstance(actionInstance);
+			) ?? null
+		setSelectedActionInstance(actionInstance)
 
 		form.reset({
 			actionInstanceId: currentAutomation.actionInstance.id,
@@ -367,43 +374,43 @@ export const StagePanelAutomationForm = (props: Props) => {
 			actionConfig: currentAutomation.config?.actionConfig,
 			sourceActionInstanceId: currentAutomation.sourceAction?.id,
 			automationConfig: currentAutomation.config?.automationConfig,
-		} as CreateAutomationsSchema);
-	}, [currentlyEditingAutomationId, props.actionInstances, props.automations]);
+		} as CreateAutomationsSchema)
+	}, [currentlyEditingAutomationId, props.actionInstances, props.automations, form.reset])
 
 	const onOpenChange = useCallback(
 		(open: boolean) => {
 			if (!open) {
-				form.reset();
-				setSelectedActionInstance(null);
-				setCurrentlyEditingAutomationId(null);
+				form.reset()
+				setSelectedActionInstance(null)
+				setCurrentlyEditingAutomationId(null)
 			}
-			setIsOpen(open);
+			setIsOpen(open)
 		},
-		[setSelectedActionInstance, setIsOpen]
-	);
+		[form.reset, setCurrentlyEditingAutomationId]
+	)
 
-	const automation = getAutomationByName(event);
+	const automation = getAutomationByName(event)
 
-	const runDeleteAutomation = useServerAction(deleteAutomation);
+	const runDeleteAutomation = useServerAction(deleteAutomation)
 	const onDeleteClick = useCallback(async () => {
 		if (!currentlyEditingAutomationId) {
-			return;
+			return
 		}
 
-		runDeleteAutomation(currentlyEditingAutomationId as AutomationsId, props.stageId);
-	}, [currentlyEditingAutomationId, props.stageId, runDeleteAutomation]);
+		runDeleteAutomation(currentlyEditingAutomationId as AutomationsId, props.stageId)
+	}, [currentlyEditingAutomationId, props.stageId, runDeleteAutomation])
 
-	const formId = useId();
+	const formId = useId()
 
 	const ActionFormComponent = useMemo(() => {
 		if (!selectedActionInstance) {
-			return null;
+			return null
 		}
 
-		return getActionFormComponent(selectedActionInstance.action);
-	}, [selectedActionInstance]);
+		return getActionFormComponent(selectedActionInstance.action)
+	}, [selectedActionInstance])
 
-	const isExistingAutomation = !!currentlyEditingAutomationId;
+	const isExistingAutomation = !!currentlyEditingAutomationId
 
 	return (
 		<div className="space-y-2 py-2">
@@ -439,7 +446,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 											<>
 												<Select
 													onValueChange={(value) => {
-														field.onChange(value);
+														field.onChange(value)
 													}}
 													defaultValue={field.value}
 													key={field.value}
@@ -464,7 +471,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 													<SelectContent>
 														{allowedEvents.map((event) => {
 															const automation =
-																getAutomationByName(event);
+																getAutomationByName(event)
 
 															return (
 																<SelectItem
@@ -479,14 +486,14 @@ export const StagePanelAutomationForm = (props: Props) => {
 																		community
 																	)}
 																</SelectItem>
-															);
+															)
 														})}
 													</SelectContent>
 												</Select>
 												<FormMessage />
 											</>
 										) : (
-											<p className="text-xs text-red-500">
+											<p className="text-red-500 text-xs">
 												All events for this action have already been added.
 											</p>
 										)}
@@ -528,7 +535,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 
 							{selectedActionInstance && event === Event.webhook && (
 								<div className="mt-4 space-y-2">
-									<h4 className="text-sm font-medium">
+									<h4 className="font-medium text-sm">
 										With the following config:
 									</h4>
 									<div className="rounded-md border bg-gray-50 p-2">
@@ -556,7 +563,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 						{form.formState.errors.root && (
 							<p
 								className={
-									"text-[0.8rem] font-medium text-red-500 dark:text-red-900"
+									"font-medium text-[0.8rem] text-red-500 dark:text-red-900"
 								}
 							>
 								{form.formState.errors.root.message}
@@ -565,7 +572,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 					</Form>
 					<DialogFooter
 						className={cn(
-							"sticky -bottom-4 flex w-full items-center",
+							"-bottom-4 sticky flex w-full items-center",
 							currentlyEditingAutomationId && "!justify-between"
 						)}
 					>
@@ -592,5 +599,5 @@ export const StagePanelAutomationForm = (props: Props) => {
 				</DialogContent>
 			</Dialog>
 		</div>
-	);
-};
+	)
+}

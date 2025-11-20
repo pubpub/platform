@@ -1,10 +1,9 @@
 // shared actions between server and client
 
-import type * as z from "zod";
+import type { ActionInstances, Automations, Communities, Event } from "db/public"
+import type * as z from "zod"
+import type { SequentialAutomationEvent } from "../types"
 
-import type { ActionInstances, Automations, Communities, Event } from "db/public";
-
-import type { SequentialAutomationEvent } from "../types";
 import {
 	actionFailed,
 	actionSucceeded,
@@ -12,15 +11,15 @@ import {
 	pubInStageForDuration,
 	pubLeftStage,
 	webhook,
-} from "../_lib/automations";
-import * as buildJournalSite from "../buildJournalSite/action";
-import * as datacite from "../datacite/action";
-import * as email from "../email/action";
-import * as googleDriveImport from "../googleDriveImport/action";
-import * as http from "../http/action";
-import * as log from "../log/action";
-import * as move from "../move/action";
-import { sequentialAutomationEvents } from "../types";
+} from "../_lib/automations"
+import * as buildJournalSite from "../buildJournalSite/action"
+import * as datacite from "../datacite/action"
+import * as email from "../email/action"
+import * as googleDriveImport from "../googleDriveImport/action"
+import * as http from "../http/action"
+import * as log from "../log/action"
+import * as move from "../move/action"
+import { sequentialAutomationEvents } from "../types"
 
 export const actions = {
 	[log.action.name]: log.action,
@@ -30,19 +29,19 @@ export const actions = {
 	[googleDriveImport.action.name]: googleDriveImport.action,
 	[datacite.action.name]: datacite.action,
 	[buildJournalSite.action.name]: buildJournalSite.action,
-} as const;
+} as const
 
 export const getActionByName = <N extends keyof typeof actions>(name: N) => {
 	if (!(name in actions)) {
-		throw new Error(`Action ${name} not found`);
+		throw new Error(`Action ${name} not found`)
 	}
 
-	return actions[name];
-};
+	return actions[name]
+}
 
 export const getActionNames = () => {
-	return Object.keys(actions) as (keyof typeof actions)[];
-};
+	return Object.keys(actions) as (keyof typeof actions)[]
+}
 
 export const automations = {
 	[pubInStageForDuration.event]: pubInStageForDuration,
@@ -51,45 +50,45 @@ export const automations = {
 	[actionSucceeded.event]: actionSucceeded,
 	[actionFailed.event]: actionFailed,
 	[webhook.event]: webhook,
-} as const satisfies Record<Event, any>;
+} as const satisfies Record<Event, any>
 
 export const getAutomationByName = <T extends Event>(name: T) => {
-	return automations[name];
-};
+	return automations[name]
+}
 
 export const isReferentialAutomation = (
 	automation: (typeof automations)[keyof typeof automations]
 ): automation is Extract<typeof automation, { event: SequentialAutomationEvent }> =>
-	sequentialAutomationEvents.includes(automation.event as any);
+	sequentialAutomationEvents.includes(automation.event as any)
 
 export const humanReadableEventBase = <T extends Event>(event: T, community: Communities) => {
-	const automation = getAutomationByName(event);
+	const automation = getAutomationByName(event)
 
 	if (typeof automation.display.base === "function") {
-		return automation.display.base({ community });
+		return automation.display.base({ community })
 	}
 
-	return automation.display.base;
-};
+	return automation.display.base
+}
 
 export const humanReadableEventHydrated = <T extends Event>(
 	event: T,
 	community: Communities,
 	options: {
-		automation: Automations;
+		automation: Automations
 		config?: (typeof automations)[T]["additionalConfig"] extends undefined
 			? never
-			: z.infer<NonNullable<(typeof automations)[T]["additionalConfig"]>>;
-		sourceAction?: ActionInstances | null;
+			: z.infer<NonNullable<(typeof automations)[T]["additionalConfig"]>>
+		sourceAction?: ActionInstances | null
 	}
 ) => {
-	const automationConf = getAutomationByName(event);
+	const automationConf = getAutomationByName(event)
 	if (options.config && automationConf.additionalConfig && automationConf.display.hydrated) {
 		return automationConf.display.hydrated({
 			automation: options.automation,
 			community,
 			config: options.config,
-		});
+		})
 	}
 	if (
 		options.sourceAction &&
@@ -100,7 +99,7 @@ export const humanReadableEventHydrated = <T extends Event>(
 			automation: options.automation,
 			community,
 			config: options.sourceAction,
-		});
+		})
 	}
 
 	if (automationConf.display.hydrated && !automationConf.additionalConfig) {
@@ -108,15 +107,15 @@ export const humanReadableEventHydrated = <T extends Event>(
 			automation: options.automation,
 			community,
 			config: {} as any,
-		});
+		})
 	}
 
 	if (typeof automationConf.display.base === "function") {
-		return automationConf.display.base({ community });
+		return automationConf.display.base({ community })
 	}
 
-	return automationConf.display.base;
-};
+	return automationConf.display.base
+}
 
 export const humanReadableAutomation = <A extends Automations>(
 	automation: A,
@@ -127,4 +126,4 @@ export const humanReadableAutomation = <A extends Automations>(
 		: z.infer<NonNullable<(typeof automations)[A["event"]]["additionalConfig"]>>,
 	sourceAction?: ActionInstances | null
 ) =>
-	`${instanceName} will run when ${humanReadableEventHydrated(automation.event, community, { automation: automation, config, sourceAction })}`;
+	`${instanceName} will run when ${humanReadableEventHydrated(automation.event, community, { automation: automation, config, sourceAction })}`

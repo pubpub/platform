@@ -1,30 +1,32 @@
-"use client";
+"use client"
 
-import type { TSchema } from "@sinclair/typebox";
+import type { TSchema } from "@sinclair/typebox"
+import type { PubsId, PubTypesId } from "db/public"
+import type { InputElement } from "../types"
+import type { ConfigFormData } from "./ComponentConfig/types"
 
-import { useMemo, useState } from "react";
-import dynamic from "next/dynamic";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
-import { Value } from "@sinclair/typebox/value";
-import { useForm } from "react-hook-form";
-import { componentConfigSchemas, componentsBySchema, relationBlockConfigSchema } from "schemas";
+import { useMemo, useState } from "react"
+import dynamic from "next/dynamic"
+import { typeboxResolver } from "@hookform/resolvers/typebox"
+import { Type } from "@sinclair/typebox"
+import { Value } from "@sinclair/typebox/value"
+import { useForm } from "react-hook-form"
+import { componentConfigSchemas, componentsBySchema, relationBlockConfigSchema } from "schemas"
 
-import type { PubsId, PubTypesId } from "db/public";
-import { CoreSchemaType, InputComponent } from "db/public";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
-import { ColorCircle, ColorPicker, ColorValue } from "ui/color";
-import { Confidence } from "ui/customRenderers/confidence/confidence";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { useUnsavedChangesWarning } from "ui/hooks";
-import { ImagePlus } from "ui/icon";
-import { Input } from "ui/input";
-import { Label } from "ui/label";
-import { MultiBlock } from "ui/multiblock";
-import { MultiValueInput } from "ui/multivalue-input";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { RadioGroup, RadioGroupItem } from "ui/radio-group";
+import { CoreSchemaType, InputComponent } from "db/public"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { ColorCircle, ColorPicker, ColorValue } from "ui/color"
+import { Confidence } from "ui/customRenderers/confidence/confidence"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { useUnsavedChangesWarning } from "ui/hooks"
+import { ImagePlus } from "ui/icon"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
+import { MultiBlock } from "ui/multiblock"
+import { MultiValueInput } from "ui/multivalue-input"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { RadioGroup, RadioGroupItem } from "ui/radio-group"
 import {
 	Select,
 	SelectContent,
@@ -32,27 +34,25 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "ui/select";
-import { Skeleton } from "ui/skeleton";
-import { Switch } from "ui/switch";
-import { Textarea } from "ui/textarea";
+} from "ui/select"
+import { Skeleton } from "ui/skeleton"
+import { Switch } from "ui/switch"
+import { Textarea } from "ui/textarea"
 
-import type { InputElement } from "../types";
-import type { ConfigFormData } from "./ComponentConfig/types";
-import { useBuilder } from "../BuilderContext";
-import { FieldInputElement } from "../FormElement";
-import { ComponentConfig } from "./ComponentConfig";
+import { useBuilder } from "../BuilderContext"
+import { FieldInputElement } from "../FormElement"
+import { ComponentConfig } from "./ComponentConfig"
 
 type SchemaComponentData = {
-	name?: string;
-	placeholder?: string;
-	demoComponent?: (props: { element: InputElement }) => React.ReactNode;
-};
+	name?: string
+	placeholder?: string
+	demoComponent?: (props: { element: InputElement }) => React.ReactNode
+}
 
 const DatePicker = dynamic(() => import("ui/date-picker").then((mod) => mod.DatePicker), {
 	ssr: false,
 	loading: () => <Skeleton className="h-9 w-full" />,
-});
+})
 
 const ContextEditorClient = dynamic(
 	() =>
@@ -63,7 +63,7 @@ const ContextEditorClient = dynamic(
 		ssr: false,
 		loading: () => <Skeleton className="h-9 w-full" />,
 	}
-);
+)
 
 const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.textArea]: {
@@ -74,13 +74,13 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		name: "Input",
 		placeholder: "For short text",
 		demoComponent: ({ element }) => {
-			const isNumber = element.schemaName === CoreSchemaType.Number;
+			const isNumber = element.schemaName === CoreSchemaType.Number
 			return (
 				<Input
 					placeholder={isNumber ? "For numbers" : "For short text"}
 					type={isNumber ? "number" : "text"}
 				/>
-			);
+			)
 		},
 	},
 	[InputComponent.checkbox]: { name: "Checkbox", demoComponent: () => <Checkbox checked /> },
@@ -100,7 +100,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.checkboxGroup]: {
 		name: "Checkbox Group",
 		demoComponent: () => (
-			<div className="flex h-full w-full flex-col items-start justify-between gap-1 text-left text-sm text-gray-500">
+			<div className="flex h-full w-full flex-col items-start justify-between gap-1 text-left text-gray-500 text-sm">
 				<div>Label</div>
 				<div className="flex items-center gap-1">
 					<Checkbox id="c1" />
@@ -120,7 +120,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.radioGroup]: {
 		name: "Radio Group",
 		demoComponent: () => (
-			<RadioGroup className="w-full text-left text-sm text-gray-500">
+			<RadioGroup className="w-full text-left text-gray-500 text-sm">
 				<div>Label</div>
 				<div className="flex items-center gap-1">
 					<RadioGroupItem value="1" id="r1" />
@@ -140,7 +140,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.selectDropdown]: {
 		name: "Select Dropdown",
 		demoComponent: () => (
-			<div className="flex flex-col gap-1 text-left text-sm text-gray-500">
+			<div className="flex flex-col gap-1 text-left text-gray-500 text-sm">
 				<div>Label</div>
 				<Select>
 					<SelectTrigger className="text-left">
@@ -188,7 +188,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 						hideMenu
 					/>
 				</div>
-			);
+			)
 		},
 	},
 	[InputComponent.relationBlock]: {
@@ -199,13 +199,13 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 					<div className="text-gray-500">Label</div>
 					<MultiBlock title="Pub Relation" disabled compact onAdd={() => {}} />
 				</div>
-			);
+			)
 		},
 	},
 	[InputComponent.colorPicker]: {
 		name: "Color Picker",
 		demoComponent: function ColorPickerDemoComponent() {
-			const [color, setColor] = useState("#000000");
+			const [color, setColor] = useState("#000000")
 			return (
 				<Popover>
 					<PopoverTrigger asChild>
@@ -234,15 +234,15 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 								{ label: "blue", value: "#0000ff" },
 							]}
 							onChange={(value) => {
-								setColor(value);
+								setColor(value)
 							}}
 						/>
 					</PopoverContent>
 				</Popover>
-			);
+			)
 		},
 	},
-} as const;
+} as const
 
 const ComponentSelect = ({
 	components,
@@ -251,17 +251,17 @@ const ComponentSelect = ({
 	element,
 	radioName = "component",
 }: {
-	components: InputComponent[];
-	value: InputComponent;
-	onChange: (component: InputComponent) => void;
-	element: InputElement;
-	radioName?: string;
+	components: InputComponent[]
+	value: InputComponent
+	onChange: (component: InputComponent) => void
+	element: InputElement
+	radioName?: string
 }) => {
 	return (
 		<div className="grid grid-cols-2 gap-3">
 			{components.map((c) => {
-				const { name, demoComponent: Component } = componentInfo[c];
-				const selected = value === c;
+				const { name, demoComponent: Component } = componentInfo[c]
+				const selected = value === c
 				return (
 					<div key={c}>
 						{/* We use regular input instead of a RadioGroup here because the RadioGroup
@@ -274,7 +274,7 @@ const ComponentSelect = ({
 							className="peer sr-only"
 							defaultChecked={selected}
 							onChange={() => {
-								onChange(c);
+								onChange(c)
 							}}
 						/>
 						<div className="flex h-32 w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm peer-checked:border-2 peer-checked:border-ring peer-checked:outline-none">
@@ -291,34 +291,34 @@ const ComponentSelect = ({
 									{Component && <Component element={element} />}
 								</div>
 								<hr className="w-full" />
-								<div className="my-1 w-full text-center text-sm text-foreground">
+								<div className="my-1 w-full text-center text-foreground text-sm">
 									{name}
 								</div>
 							</label>
 						</div>
 					</div>
-				);
+				)
 			})}
 		</div>
-	);
-};
+	)
+}
 
-const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()]);
+const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()])
 
 type Props = {
-	index: number;
-	fieldInputElement: InputElement;
-};
+	index: number
+	fieldInputElement: InputElement
+}
 
 export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Props) => {
-	const { update, dispatch, removeIfUnconfigured } = useBuilder();
+	const { update, dispatch, removeIfUnconfigured } = useBuilder()
 
-	const { schemaName, isRelation } = fieldInputElement;
-	const allowedComponents = componentsBySchema[schemaName];
+	const { schemaName, isRelation } = fieldInputElement
+	const allowedComponents = componentsBySchema[schemaName]
 
 	const defaultConfig = isRelation
 		? { relationshipConfig: { component: InputComponent.relationBlock } }
-		: {};
+		: {}
 
 	const form = useForm<ConfigFormData<InputComponent>>({
 		// Dynamically set the resolver so that the schema can update based on the selected component
@@ -335,58 +335,58 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 					minItems: fieldInputElement.isRelation ? 1 : 0,
 					error: "At least one Pub Type must be selected",
 				}),
-			});
-			const createResolver = typeboxResolver(schema);
-			return createResolver(values, context, options);
+			})
+			const createResolver = typeboxResolver(schema)
+			return createResolver(values, context, options)
 		},
 		defaultValues: {
 			...fieldInputElement,
 			config: fieldInputElement.config ?? defaultConfig,
 			relatedPubTypes: fieldInputElement.relatedPubTypes ?? [],
 		},
-	});
+	})
 
-	useUnsavedChangesWarning(form.formState.isDirty);
+	useUnsavedChangesWarning(form.formState.isDirty)
 
-	const component = form.watch("component");
+	const component = form.watch("component")
 
 	const onSubmit = (values: ConfigFormData<typeof component>) => {
 		const schema = isRelation
 			? Type.Composite([relationBlockConfigSchema, componentConfigSchemas[values.component]])
-			: componentConfigSchemas[values.component];
+			: componentConfigSchemas[values.component]
 		// Some `config` schemas have extra values which persist if we don't Clean first
-		const cleanedConfig = Value.Clean(schema, values.config);
+		const cleanedConfig = Value.Clean(schema, values.config)
 		update(index, {
 			...fieldInputElement,
 			...values,
 			config: cleanedConfig,
 			updated: true,
 			configured: true,
-		});
-		dispatch({ eventName: "save" });
-	};
+		})
+		dispatch({ eventName: "save" })
+	}
 	const configForm = useMemo(
 		() => <ComponentConfig schemaName={schemaName} form={form} component={component} />,
-		[component, schemaName]
-	);
+		[component, schemaName, form]
+	)
 
 	// If this is a relationship field, the first component selector on the page will be for the relationship,
 	// not the value itself.
-	const componentSelector = isRelation ? "config.relationshipConfig.component" : "component";
+	const componentSelector = isRelation ? "config.relationshipConfig.component" : "component"
 
 	return (
 		<Form {...form}>
 			<form
 				onSubmit={(e) => {
-					e.stopPropagation(); //prevent submission from propagating to parent form
-					form.handleSubmit(onSubmit)(e);
+					e.stopPropagation() //prevent submission from propagating to parent form
+					form.handleSubmit(onSubmit)(e)
 				}}
 				className="flex h-full flex-col gap-2"
 			>
-				<div className="flex flex-nowrap rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4">
+				<div className="flex flex-nowrap rounded border border-gray-200 border-l-[12px] border-l-emerald-100 border-solid bg-white p-3 pr-4">
 					<FieldInputElement element={fieldInputElement} isEditing={false} />
 				</div>
-				<div className="text-sm uppercase text-muted-foreground">Appearance</div>
+				<div className="text-muted-foreground text-sm uppercase">Appearance</div>
 				<hr />
 				<FormField
 					control={form.control}
@@ -413,11 +413,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 						/>
 						{schemaName !== CoreSchemaType.Null && (
 							<>
-								<div className="text-sm uppercase text-muted-foreground">
+								<div className="text-muted-foreground text-sm uppercase">
 									Relation value
 								</div>
 								<hr />
-								<div className="text-sm uppercase text-muted-foreground">
+								<div className="text-muted-foreground text-sm uppercase">
 									Appearance
 								</div>
 								<hr />
@@ -446,7 +446,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 						control={form.control}
 						name="required"
 						render={({ field }) => (
-							<FormItem className="mb-auto mt-1 flex items-center">
+							<FormItem className="mt-1 mb-auto flex items-center">
 								<FormControl>
 									<Switch
 										className="mr-2 data-[state=checked]:bg-emerald-400"
@@ -466,8 +466,8 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 						className="border-gray-950"
 						variant="outline"
 						onClick={() => {
-							removeIfUnconfigured();
-							dispatch({ eventName: "cancel" });
+							removeIfUnconfigured()
+							dispatch({ eventName: "cancel" })
 						}}
 					>
 						Cancel
@@ -483,5 +483,5 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				</div>
 			</form>
 		</Form>
-	);
-};
+	)
+}

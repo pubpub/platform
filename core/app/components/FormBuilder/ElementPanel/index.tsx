@@ -1,23 +1,24 @@
-"use client";
+"use client"
 
-import { Button } from "ui/button";
-import { FormLabel } from "ui/form";
-import { PlusCircle, X } from "ui/icon";
-import { Input } from "ui/input";
+import type { FormElementData, PanelState } from "../types"
 
-import type { FormElementData, PanelState } from "../types";
-import { useBuilder } from "../BuilderContext";
-import { SubmissionSettings } from "../SubmissionSettings";
-import { isFieldInput, isStructuralElement } from "../types";
-import { ButtonConfigurationForm } from "./ButtonConfigurationForm";
-import { InputComponentConfigurationForm } from "./InputComponentConfigurationForm";
-import { SelectAccess } from "./SelectAccess";
-import { SelectElement } from "./SelectElement";
-import { StructuralElementConfigurationForm } from "./StructuralElementConfigurationForm";
+import { Button } from "ui/button"
+import { FormLabel } from "ui/form"
+import { PlusCircle } from "ui/icon"
+import { Input } from "ui/input"
+
+import { useBuilder } from "../BuilderContext"
+import { SubmissionSettings } from "../SubmissionSettings"
+import { isFieldInput, isStructuralElement } from "../types"
+import { ButtonConfigurationForm } from "./ButtonConfigurationForm"
+import { InputComponentConfigurationForm } from "./InputComponentConfigurationForm"
+import { SelectAccess } from "./SelectAccess"
+import { SelectElement } from "./SelectElement"
+import { StructuralElementConfigurationForm } from "./StructuralElementConfigurationForm"
 
 type ElementPanelProps = {
-	panelState: PanelState;
-};
+	panelState: PanelState
+}
 
 export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 	const {
@@ -26,7 +27,7 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 		dispatch,
 		identity: slug,
 		selectedElement,
-	} = useBuilder<FormElementData>();
+	} = useBuilder<FormElementData>()
 
 	switch (panelState.state) {
 		case "initial":
@@ -49,16 +50,16 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 					<SelectAccess />
 					<SubmissionSettings />
 				</div>
-			);
+			)
 		case "selecting":
-			return <SelectElement panelState={panelState} />;
+			return <SelectElement panelState={panelState} />
 		case "editing": {
 			if (panelState.selectedElementIndex === null) {
-				return <div>No selected element</div>;
+				return <div>No selected element</div>
 			}
 
 			if (!selectedElement) {
-				return <div>No selected element</div>;
+				return <div>No selected element</div>
 			}
 
 			if (isStructuralElement(selectedElement)) {
@@ -67,7 +68,7 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 						index={panelState.selectedElementIndex}
 						structuralElement={selectedElement}
 					/>
-				);
+				)
 			}
 
 			if (isFieldInput(selectedElement)) {
@@ -76,19 +77,15 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 						fieldInputElement={selectedElement}
 						index={panelState.selectedElementIndex}
 					/>
-				);
+				)
 			}
 
 			// should never happen
 			throw new Error(
 				`Non-field and non-configuration input element selected in configuration form. This should never happen.`
-			);
+			)
 		}
 		case "editingButton":
-			return (
-				<>
-					<ButtonConfigurationForm buttonIdentifier={panelState.buttonId} />
-				</>
-			);
+			return <ButtonConfigurationForm buttonIdentifier={panelState.buttonId} />
 	}
-};
+}
