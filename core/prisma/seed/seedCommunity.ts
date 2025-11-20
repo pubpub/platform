@@ -17,11 +17,13 @@ import type {
 	ApiAccessScope,
 	ApiAccessTokensId,
 	ApiAccessType,
+	AutomationEvent,
 	Automations,
+	AutomationsId,
 	Communities,
 	CommunitiesId,
 	CommunityMemberships,
-	Event,
+	ConditionEvaluationTiming,
 	FormAccessType,
 	FormElements,
 	Forms,
@@ -39,7 +41,6 @@ import type {
 } from "db/public";
 import type {
 	ApiAccessPermissionConstraints,
-	AutomationConfig,
 	Invite,
 	NewInviteInput,
 	permissionsSchema,
@@ -47,6 +48,7 @@ import type {
 import type { MaybeHas } from "utils/types";
 import {
 	Action as ActionName,
+	AutomationConditionBlockType,
 	CoreSchemaType,
 	ElementType,
 	InputComponent,
@@ -58,6 +60,7 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
+import type { ConditionBlockFormValue } from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
@@ -124,27 +127,52 @@ export type UsersInitializer = Record<
 	  }
 >;
 
-export type ActionInstanceInitializer = Record<
-	string,
-	{
-		[K in ActionName]: {
-			/**
-			 * @default randomUUID
-			 */
-			id?: ActionInstancesId;
-			action: K;
-			name?: string;
-			config: (typeof actions)[K]["config"]["schema"]["_input"];
+export type AutomationInitializer = {
+	[AutomationName in string]: {
+		id?: AutomationsId;
+		sourceAutomation?: AutomationName;
+		timing?: ConditionEvaluationTiming;
+		condition?: {
+			type: AutomationConditionBlockType;
+			items: ConditionItemInput[];
 		};
-	}[keyof typeof actions]
->;
+		triggers: {
+			event: AutomationEvent;
+			config: unknown;
+			sourceAutomation?: AutomationName;
+		}[];
+		actions: {
+			[A in ActionName]: {
+				/**
+				 * @default randomUUID
+				 */
+				id?: ActionInstancesId;
+				action: A;
+				name?: string;
+				config: (typeof actions)[A]["config"]["schema"]["_input"];
+			};
+		}[keyof typeof actions][];
+	};
+};
+
+type ConditionItemInput =
+	| {
+			kind: "condition";
+			type: "jsonata";
+			expression: string;
+	  }
+	| {
+			kind: "block";
+			type: AutomationConditionBlockType;
+			items: ConditionItemInput[];
+	  };
 
 /**
  * Map of stagename to list of permissions
  */
 export type StagesInitializer<
 	U extends UsersInitializer,
-	A extends ActionInstanceInitializer = ActionInstanceInitializer,
+	A extends AutomationInitializer = AutomationInitializer,
 > = Record<
 	string,
 	{
@@ -152,13 +180,9 @@ export type StagesInitializer<
 		members?: {
 			[M in keyof U]?: MemberRole;
 		};
-		actions?: A;
-		automations?: {
-			event: Event;
-			actionInstance: keyof A;
-			sourceAction?: keyof A;
-			config?: AutomationConfig | null;
-		}[];
+		automations?: A;
+		// automations?: {
+		// }[];
 	}
 >;
 
@@ -544,7 +568,13 @@ type StagesWithPermissionsAndActionsAndAutomationsByName<
 					? {
 							automations: {
 								[KK in keyof S[K]["automations"]]: S[K]["automations"][KK] &
-									Automations;
+									Automations & {
+										conditionBlocks?: Array<{
+											id: string;
+											type: AutomationConditionBlockType;
+											items: any[];
+										}>;
+									};
 							};
 						}
 					: {})
@@ -1287,54 +1317,72 @@ export async function seedCommunity<
 		createdForms.map((form) => [form.name, form])
 	) as unknown as FormsByName<F>;
 
-	// actions last because they can reference form and pub id's
-	const possibleActions = consolidatedStages.flatMap((stage) =>
-		stage.actions
-			? Object.entries(stage.actions).map(([actionName, action]) => ({
+	const { upsertAutomation } = await import("~/lib/server/automations");
+
+	const createdAutomations: Automations[] = [];
+	for (const stage of consolidatedStages) {
+		if (!stage.automations) {
+			continue;
+		}
+
+		for (const [automationName, automation] of Object.entries(stage.automations)) {
+			const createdAutomation = await upsertAutomation(
+				{
+					name: automationName,
+					communityId: communityId,
+					// description: automation.description,
+					actionInstances: automation.actions.map((action) => ({
+						id: action.id,
+						config: action.config,
+						action: action.action,
+					})),
+					conditionEvaluationTiming: automation.timing,
+
+					// TODO: do this differetly
+					// sourceAutomationId:
 					stageId: stage.id,
-					action: action.action,
-					name: actionName,
-					config: action.config,
-				}))
-			: []
+					// sourceActionInstanceId: createdActions.find(
+					// 	(action) => action.name === automation.sourceAction
+					// )?.id,
+					triggers: automation.triggers.map((trigger) => ({
+						event: trigger.event,
+						config: trigger.config,
+						sourceAutomationId: trigger.sourceAutomation
+							? createdAutomations.find(
+									(automation) => automation.name === trigger.sourceAutomation
+								)?.id
+							: undefined,
+					})),
+					condition: automation.condition
+						? {
+								// this cast is just to set the rank type, it's annoying to have to specify the rank manually in the seed
+								...(automation.condition as ConditionBlockFormValue),
+								kind: "block" as const,
+								rank: "a", // get's auto gend
+							}
+						: undefined,
+				},
+				trx
+			);
+			createdAutomations.push(createdAutomation);
+		}
+	}
+
+	logger.info(
+		`${createdCommunity.name}: Successfully created ${createdAutomations.length} automations`
 	);
-
-	const createdActions = possibleActions.length
-		? await trx.insertInto("action_instances").values(possibleActions).returningAll().execute()
-		: [];
-
-	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
-
-	const possibleAutomations = consolidatedStages.flatMap(
-		(stage) =>
-			stage.automations?.map((automation) => ({
-				event: automation.event,
-				actionInstanceId: expect(
-					createdActions.find((action) => action.name === automation.actionInstance)?.id
-				),
-				sourceActionInstanceId: createdActions.find(
-					(action) => action.name === automation.sourceAction
-				)?.id,
-				config: automation.config,
-			})) ?? []
-	);
-
-	const createdAutomations = possibleAutomations.length
-		? await trx.insertInto("automations").values(possibleAutomations).returningAll().execute()
-		: [];
 
 	const fullStages = Object.fromEntries(
 		consolidatedStages.map((stage) => {
-			const actionsForStage = createdActions.filter((action) => action.stageId === stage.id);
+			const automationsForStage = createdAutomations.filter(
+				(automation) => automation.stageId === stage.id
+			);
 			return [
 				stage.name,
 				{
 					...stage,
-					actions: Object.fromEntries(
-						actionsForStage.map((action) => [action.name, action])
-					),
-					automations: createdAutomations.filter((automation) =>
-						actionsForStage.some((action) => action.id === automation.actionInstanceId)
+					automations: Object.fromEntries(
+						automationsForStage.map((automation) => [automation.name, automation])
 					),
 				},
 			];
@@ -1344,10 +1392,6 @@ export async function seedCommunity<
 		S,
 		typeof stageMemberships
 	>;
-
-	logger.info(
-		`${createdCommunity.name}: Successfully created ${createdAutomations.length} automations`
-	);
 
 	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const createdApiTokens = Object.fromEntries(
@@ -1500,7 +1544,7 @@ export async function seedCommunity<
 		stages: fullStages,
 		stageConnections: stageConnectionsList,
 		pubs: createdPubs,
-		actions: createdActions,
+		automations: createdAutomations,
 		forms: formsByName,
 		apiTokens: createdApiTokens,
 		invites: createdInvites,

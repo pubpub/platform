@@ -4,15 +4,24 @@ import type { ControllerRenderProps, FieldValues, UseFormReturn } from "react-ho
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash } from "lucide-react";
-import { useQueryState } from "nuqs";
-import { useForm } from "react-hook-form";
+import { Trash, X } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
-import type { ActionInstances, AutomationsId, CommunitiesId, StagesId } from "db/public";
-import { actionInstancesIdSchema, Event } from "db/public";
-import { logger } from "logger";
+import type { AutomationsId, Communities, CommunitiesId, StagesId } from "db/public";
+import type { IconConfig } from "ui/icon";
+import {
+	Action,
+	AutomationConditionBlockType,
+	AutomationConditionType,
+	AutomationEvent,
+	automationsIdSchema,
+	ConditionEvaluationTiming,
+	conditionEvaluationTimingSchema,
+} from "db/public";
 import { Button } from "ui/button";
+import { ColorPicker } from "ui/color";
 import {
 	Dialog,
 	DialogContent,
@@ -22,56 +31,65 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { DynamicIcon, Plus } from "ui/icon";
+import { Input } from "ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { FormSubmitButton } from "ui/submit-button";
+import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
-import type { Automation, AutomationConfig, AutomationForEvent } from "~/actions/_lib/automations";
-import type { getStageActions } from "~/lib/db/queries";
+import type { ConditionBlockFormValue } from "./ConditionBlock";
+import type { Trigger } from "~/actions/_lib/triggers";
+import type { getAutomation, getStageAutomations } from "~/lib/db/queries";
 import type { AutoReturnType } from "~/lib/types";
+import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
 import { ActionFormContext } from "~/actions/_lib/ActionForm";
-import { actions, automations, getAutomationByName, humanReadableEventBase } from "~/actions/api";
+import {
+	getTriggerByName,
+	humanReadableEventBase,
+	isTriggerWithConfig,
+	triggers,
+} from "~/actions/_lib/triggers";
+import { getTriggerConfigForm } from "~/actions/_lib/triggers/forms";
+import { actions } from "~/actions/api";
 import { getActionFormComponent } from "~/actions/forms";
+import { isSequentialAutomationEvent } from "~/actions/types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { isClientException, useServerAction } from "~/lib/serverActions";
+import { entries } from "~/lib/mapping";
+import { findRanksBetween } from "~/lib/rank";
+import { didSucceed, isClientException, useServerAction } from "~/lib/serverActions";
 import { addOrUpdateAutomation, deleteAutomation } from "../../../actions";
+import { ConditionsBuilder } from "./ConditionsBuilder";
+import { IconPicker } from "./IconPicker";
 
 type Props = {
 	stageId: StagesId;
-	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
 	communityId: CommunitiesId;
-	automations: {
-		id: AutomationsId;
-		event: Event;
-		actionInstance: ActionInstances;
-		sourceAction?: ActionInstances;
-
-		config?: AutomationConfig<AutomationForEvent<Event>> | null;
-	}[];
+	automations: AutoReturnType<typeof getAutomation>["execute"];
 };
 
-const ActionSelector = ({
+const AutomationSelector = ({
 	fieldProps,
-	actionInstances,
 	label,
 	placeholder,
-	disabledActionId,
+	disabledAutomationId,
 	dataTestIdPrefix,
+	automations,
 }: {
-	fieldProps: Omit<
-		ControllerRenderProps<CreateAutomationsSchema, "sourceActionInstanceId">,
-		"name"
+	fieldProps: ControllerRenderProps<
+		CreateAutomationsSchema,
+		`triggers.${number}.sourceAutomationId`
 	>;
-	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
 	label: string;
 	placeholder: string;
-	disabledActionId?: string;
+	disabledAutomationId?: AutomationsId;
 	dataTestIdPrefix?: string;
+	automations: Props["automations"];
 }) => {
 	return (
 		<FormItem>
-			<FormLabel>{label}</FormLabel>
 			<Select
 				onValueChange={fieldProps.onChange}
 				defaultValue={fieldProps.value}
@@ -81,21 +99,18 @@ const ActionSelector = ({
 					<SelectValue placeholder={placeholder} />
 				</SelectTrigger>
 				<SelectContent>
-					{actionInstances.map((instance) => {
-						const action = actions[instance.action];
-						const isDisabled = instance.id === disabledActionId;
-
+					{automations.map((automation) => {
+						const isDisabled = disabledAutomationId === automation.id;
 						return (
 							<SelectItem
-								key={instance.id}
-								value={instance.id}
+								key={automation.id}
+								value={automation.id}
 								className="hover:bg-gray-100"
 								disabled={isDisabled}
-								data-testid={`${dataTestIdPrefix}-select-item-${instance.name}`}
+								data-testid={`${dataTestIdPrefix}-select-item-${automation.id}`}
 							>
 								<div className="flex flex-row items-center gap-x-2">
-									<action.icon size="12" />
-									<span>{instance.name}</span>
+									<span>{automation.name}</span>
 									{isDisabled && (
 										<span className="text-xs text-gray-400">
 											(self-reference not allowed)
@@ -112,89 +127,154 @@ const ActionSelector = ({
 	);
 };
 
-const baseSchema = z.discriminatedUnion("event", [
+const conditionBlockSchema: z.ZodType<ConditionBlockFormValue> = z.lazy(() =>
 	z.object({
-		event: z.literal(Event.pubEnteredStage),
-		actionInstanceId: actionInstancesIdSchema,
-	}),
-	z.object({
-		event: z.literal(Event.pubLeftStage),
-		actionInstanceId: actionInstancesIdSchema,
-	}),
-	z.object({
-		event: z.literal(Event.actionSucceeded),
-		actionInstanceId: actionInstancesIdSchema,
-		sourceActionInstanceId: actionInstancesIdSchema,
-	}),
-	z.object({
-		event: z.literal(Event.actionFailed),
-		actionInstanceId: actionInstancesIdSchema,
-		sourceActionInstanceId: actionInstancesIdSchema,
-	}),
-	z.object({
-		event: z.literal(Event.webhook),
-		actionInstanceId: actionInstancesIdSchema,
-		actionConfig: z.object({}),
-	}),
-	...Object.values(automations)
-		.filter(
-			(
-				automation
-			): automation is Exclude<
-				Automation,
-				{
-					event:
-						| Event.pubEnteredStage
-						| Event.pubLeftStage
-						| Event.actionSucceeded
-						| Event.actionFailed
-						| Event.webhook;
-				}
-			> =>
-				![
-					Event.pubEnteredStage,
-					Event.pubLeftStage,
-					Event.actionSucceeded,
-					Event.actionFailed,
-					Event.webhook,
-				].includes(automation.event)
-		)
-		.map((automation) =>
-			z.object({
-				event: z.literal(automation.event),
-				actionInstanceId: actionInstancesIdSchema,
-				automationConfig: automation.additionalConfig
-					? automation.additionalConfig
-					: z.null().optional(),
-			})
-		),
-]);
+		id: z.string().optional(),
+		type: z.nativeEnum(AutomationConditionBlockType),
+		kind: z.literal("block"),
+		rank: z.string(),
+		items: z
+			.array(
+				z.union([
+					z.object({
+						id: z.string().optional(),
+						kind: z.literal("condition"),
+						type: z.nativeEnum(AutomationConditionType),
+						expression: z.string().min(1),
+						rank: z.string(),
+					}),
+					conditionBlockSchema,
+				])
+			)
+			.min(1),
+	})
+);
 
-const refineSchema = <T extends z.ZodTypeAny>(schema: T) => {
-	return schema.superRefine((data, ctx) => {
-		if (data.event !== Event.actionSucceeded && data.event !== Event.actionFailed) {
-			return;
-		}
-
-		if (data.sourceActionInstanceId === data.actionInstanceId) {
-			ctx.addIssue({
-				path: ["sourceActionInstanceId"],
-				code: z.ZodIssueCode.custom,
-				message: "Automations may not trigger actions in a loop",
-			});
-		}
-	});
-};
-
-export type CreateAutomationsSchema = z.infer<typeof baseSchema> & {
-	actionConfig: Record<string, unknown> | null;
+export type CreateAutomationsSchema = {
+	name: string;
+	description?: string;
+	icon?: IconConfig;
+	condition?: ConditionBlockFormValue;
+	triggers: {
+		event: AutomationEvent;
+		config: Record<string, unknown>;
+		sourceAutomationId: AutomationsId | undefined;
+	}[];
+	action: {
+		action: Action;
+		config: Record<string, unknown>;
+	};
+	conditionEvaluationTiming: ConditionEvaluationTiming;
 };
 
 export const StagePanelAutomationForm = (props: Props) => {
-	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] =
-		useQueryState("automation-id");
+	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] = useQueryState<
+		AutomationsId | undefined
+	>("automation-id", parseAsString);
+	const schema = useMemo(
+		() =>
+			z
+				.object({
+					name: z.string().min(1, "Name is required"),
+					description: z.string().optional(),
+					icon: z
+						.object({
+							name: z.string(),
+							variant: z.enum(["solid", "outline"]).optional(),
+							color: z.string().optional(),
+						})
+						.optional(),
+					conditionEvaluationTiming: conditionEvaluationTimingSchema.nullish(),
+					condition: conditionBlockSchema.optional(),
+					triggers: z
+						.array(
+							z.discriminatedUnion(
+								"event",
+								entries(triggers).map(([event, automation]) =>
+									z.object({
+										event: z.literal(event),
+										config:
+											automation.config?.schema ?? z.object({}).optional(),
+										sourceAutomationId: isSequentialAutomationEvent(event)
+											? automationsIdSchema
+											: z.null().optional(),
+									})
+								)
+							)
+						)
+						.min(1, "At least one trigger is required"),
+
+					action: z.discriminatedUnion(
+						"action",
+						entries(actions).map(([actionName, action]) =>
+							z.object({
+								action: z.literal(actionName),
+								config: new ActionConfigBuilder(actionName)
+									.withConfig(action.config.schema)
+									.withDefaults({})
+									.getSchema(),
+							})
+						)
+					),
+				})
+				.superRefine((data, ctx) => {
+					if (!data.triggers?.length) {
+						return;
+					}
+
+					for (const [idx, trigger] of data.triggers.entries()) {
+						if (!isSequentialAutomationEvent(trigger.event)) {
+							continue;
+						}
+						if (!trigger.sourceAutomationId) {
+							ctx.addIssue({
+								path: ["triggers", idx, "sourceAutomationId"],
+								code: z.ZodIssueCode.custom,
+								message:
+									"Source automation is required for automation chaining events",
+							});
+							continue;
+						}
+
+						if (trigger.sourceAutomationId === currentlyEditingAutomationId) {
+							ctx.addIssue({
+								path: ["triggers", idx, "sourceAutomationId"],
+								code: z.ZodIssueCode.custom,
+								message: "Automations may not trigger themselves in a loop",
+							});
+							continue;
+						}
+					}
+				}),
+		[props.stageId, currentlyEditingAutomationId]
+	);
+
 	const runUpsertAutomation = useServerAction(addOrUpdateAutomation);
 	const [isOpen, setIsOpen] = useState(false);
+
+	const currentAutomation = props.automations.find(
+		(automation) => automation.id === currentlyEditingAutomationId
+	);
+
+	const form = useForm<CreateAutomationsSchema>({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			name: "",
+			description: "",
+			icon: undefined,
+			action: {
+				action: undefined,
+				config: {},
+			},
+			triggers: [],
+			condition: undefined,
+			conditionEvaluationTiming: undefined,
+		},
+	});
+
+	const { reset, setError } = form;
+
+	const community = useCommunity();
 
 	const onSubmit = useCallback(
 		async (data: CreateAutomationsSchema) => {
@@ -206,183 +286,65 @@ export const StagePanelAutomationForm = (props: Props) => {
 			if (!isClientException(result)) {
 				setIsOpen(false);
 				setCurrentlyEditingAutomationId(null);
-				setSelectedActionInstance(null);
-				form.reset();
+				reset();
 				return;
 			}
 
-			form.setError("root", { message: result.error });
+			setError("root", { message: result.error });
 		},
-		[props.stageId, runUpsertAutomation]
+		[
+			currentlyEditingAutomationId,
+			props.stageId,
+			runUpsertAutomation,
+			setCurrentlyEditingAutomationId,
+			reset,
+			setError,
+		]
 	);
 
-	const [selectedActionInstance, setSelectedActionInstance] = useState<
-		(typeof props.actionInstances)[number] | null
-	>(null);
-
-	const actionInstance = useMemo(() => {
-		if (!selectedActionInstance) {
-			return null;
-		}
-		const actionInstance = props.actionInstances.find(
-			(action) => action.id === selectedActionInstance.id
-		);
-
-		if (!actionInstance) {
-			return null;
-		}
-
-		return {
-			...actionInstance,
-			action: actions[actionInstance.action],
-		};
-	}, [selectedActionInstance, props.actionInstances]);
-
-	const actionSchema = useMemo(() => {
-		if (!selectedActionInstance) {
-			return z.object({});
-		}
-
-		if (!actionInstance) {
-			return z.object({});
-		}
-
-		const actionSchema = actionInstance.action.config.schema;
-
-		const schemaWithPartialDefaults = (actionSchema as z.ZodObject<any>).partial(
-			(actionInstance.defaultedActionConfigKeys ?? []).reduce(
-				(acc, key) => {
-					acc[key] = true;
-					return acc;
-				},
-				{} as Record<string, true>
-			)
-		);
-
-		return schemaWithPartialDefaults;
-	}, [selectedActionInstance, actionInstance]);
-
-	const schema = useMemo(() => {
-		if (!selectedActionInstance) {
-			return refineSchema(baseSchema);
-		}
-		const actionInstance = props.actionInstances.find(
-			(action) => action.id === selectedActionInstance.id
-		);
-		if (!actionInstance) {
-			logger.error({ msg: "Action not found", selectedActionInstance });
-			return refineSchema(baseSchema);
-		}
-
-		const schemaWithAction = baseSchema.and(
-			z.object({
-				actionConfig: actionSchema,
-			})
-		);
-
-		return refineSchema(schemaWithAction);
-	}, [selectedActionInstance, props.actionInstances, actionSchema]);
-
-	const form = useForm<CreateAutomationsSchema>({
-		resolver: zodResolver(schema),
-		defaultValues: {
-			actionInstanceId: undefined,
-			event: undefined,
-			actionConfig: null,
-		},
-	});
-
-	const community = useCommunity();
-
-	const event = form.watch("event");
-	const selectedActionInstanceId = form.watch("actionInstanceId");
-
-	const sourceActionInstanceId = form.watch("sourceActionInstanceId");
-
-	// for action chaining events, filter out self-references
-	const isActionChainingEvent = event === Event.actionSucceeded || event === Event.actionFailed;
-
-	const { allowedEvents } = useMemo(() => {
-		if (!selectedActionInstanceId && !event)
-			return { disallowedEvents: [], allowedEvents: Object.values(Event) };
-
-		const disallowedEvents = props.automations
-			.filter((automation) => {
-				// for regular events, disallow if same action+event already exists
-				if (
-					automation.event !== Event.actionSucceeded &&
-					automation.event !== Event.actionFailed
-				) {
-					return automation.actionInstance.id === selectedActionInstanceId;
-				}
-
-				// for action chaining events, allow multiple automations with different watched actions
-				return (
-					automation.actionInstance.id === selectedActionInstanceId &&
-					automation.event === event &&
-					automation.sourceAction?.id === sourceActionInstanceId
-				);
-			})
-			.map((automation) => automation.event);
-
-		const allowedEvents = Object.values(Event).filter(
-			(event) => !disallowedEvents.includes(event)
-		);
-
-		return { disallowedEvents, allowedEvents };
-	}, [selectedActionInstanceId, event, props.automations, sourceActionInstanceId]);
-
 	useEffect(() => {
-		const actionInstance =
-			props.actionInstances.find((action) => action.id === selectedActionInstanceId) ?? null;
-		setSelectedActionInstance(actionInstance);
-
-		if (actionInstance?.config) {
-			form.reset({
-				...form.getValues(),
-				actionConfig: actionInstance.config,
-			});
-		}
-	}, [form, props.actionInstances, selectedActionInstanceId]);
-
-	useEffect(() => {
-		const currentAutomation = props.automations.find(
-			(automation) => automation.id === currentlyEditingAutomationId
-		);
-
 		if (!currentAutomation) {
 			return;
 		}
 
 		setIsOpen(true);
-		const actionInstance =
-			props.actionInstances.find(
-				(action) => action.id === currentAutomation.actionInstance.id
-			) ?? null;
-		setSelectedActionInstance(actionInstance);
+		const actionInstance = currentAutomation.actionInstances[0];
 
-		form.reset({
-			actionInstanceId: currentAutomation.actionInstance.id,
-			event: currentAutomation.event,
-			actionConfig: currentAutomation.config?.actionConfig,
-			sourceActionInstanceId: currentAutomation.sourceAction?.id,
-			automationConfig: currentAutomation.config?.automationConfig,
+		reset({
+			name: currentAutomation.name,
+			description: currentAutomation.description ?? "",
+			icon: currentAutomation.icon as IconConfig | undefined,
+			action: {
+				action: actionInstance?.action,
+				config: actionInstance?.config ?? {},
+			},
+			triggers: currentAutomation.triggers,
+			conditionEvaluationTiming: currentAutomation.conditionEvaluationTiming,
+			condition: currentAutomation.condition,
 		} as CreateAutomationsSchema);
-	}, [currentlyEditingAutomationId, props.actionInstances, props.automations]);
+	}, [currentAutomation, reset]);
 
 	const onOpenChange = useCallback(
 		(open: boolean) => {
 			if (!open) {
-				form.reset();
-				setSelectedActionInstance(null);
+				form.reset({
+					name: "",
+					description: "",
+					icon: undefined,
+					action: {
+						action: undefined,
+						config: {},
+					},
+					triggers: [],
+					condition: undefined,
+					conditionEvaluationTiming: undefined,
+				});
 				setCurrentlyEditingAutomationId(null);
 			}
 			setIsOpen(open);
 		},
-		[setSelectedActionInstance, setIsOpen]
+		[form, setCurrentlyEditingAutomationId]
 	);
-
-	const automation = getAutomationByName(event);
 
 	const runDeleteAutomation = useServerAction(deleteAutomation);
 	const onDeleteClick = useCallback(async () => {
@@ -390,20 +352,57 @@ export const StagePanelAutomationForm = (props: Props) => {
 			return;
 		}
 
-		runDeleteAutomation(currentlyEditingAutomationId as AutomationsId, props.stageId);
-	}, [currentlyEditingAutomationId, props.stageId, runDeleteAutomation]);
+		const res = await runDeleteAutomation(
+			currentlyEditingAutomationId as AutomationsId,
+			props.stageId
+		);
+		if (didSucceed(res)) {
+			setCurrentlyEditingAutomationId(null);
+			reset();
+			setIsOpen(false);
+			toast({
+				title: "Automation deleted successfully",
+			});
+		}
+	}, [
+		currentlyEditingAutomationId,
+		props.stageId,
+		reset,
+		runDeleteAutomation,
+		setCurrentlyEditingAutomationId,
+	]);
 
 	const formId = useId();
 
+	const selectedAction = useWatch({ control: form.control, name: "action" });
+
 	const ActionFormComponent = useMemo(() => {
-		if (!selectedActionInstance) {
+		if (!selectedAction?.action) {
 			return null;
 		}
 
-		return getActionFormComponent(selectedActionInstance.action);
-	}, [selectedActionInstance]);
+		return getActionFormComponent(selectedAction.action);
+	}, [selectedAction?.action]);
+
+	useEffect(() => {
+		if (selectedAction?.action) {
+			form.setValue("action.config", {});
+		}
+	}, [selectedAction?.action, form]);
 
 	const isExistingAutomation = !!currentlyEditingAutomationId;
+
+	const condition = form.watch("condition");
+	const iconConfig = form.watch("icon");
+
+	const {
+		fields: selectedTriggers,
+		append: appendTrigger,
+		remove: removeTrigger,
+	} = useFieldArray<CreateAutomationsSchema, "triggers">({
+		control: form.control,
+		name: "triggers",
+	});
 
 	return (
 		<div className="space-y-2 py-2">
@@ -413,8 +412,8 @@ export const StagePanelAutomationForm = (props: Props) => {
 						Add automation
 					</Button>
 				</DialogTrigger>
-				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto">
-					<DialogHeader>
+				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
+					<DialogHeader className="sticky inset-0 top-0 z-10 bg-white p-6 pb-2">
 						<DialogTitle>
 							{isExistingAutomation ? "Edit automation" : "Add automation"}
 						</DialogTitle>
@@ -422,175 +421,405 @@ export const StagePanelAutomationForm = (props: Props) => {
 							Set up an automation to run whenever a certain event is triggered.
 						</DialogDescription>
 					</DialogHeader>
-					<Form {...form}>
-						<form
-							id={formId}
-							onSubmit={form.handleSubmit(onSubmit)}
-							className="flex flex-col gap-y-4"
-						>
-							<FormField
-								control={form.control}
-								name="event"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>When...</FormLabel>
 
-										{allowedEvents.length > 0 ? (
-											<>
-												<Select
-													onValueChange={(value) => {
-														field.onChange(value);
-													}}
-													defaultValue={field.value}
-													key={field.value}
-												>
-													<SelectTrigger
-														data-testid={`event-select-trigger`}
-													>
-														<SelectValue placeholder="Event">
-															{field.value ? (
-																<>
-																	<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
-																	{humanReadableEventBase(
-																		field.value,
-																		community
-																	)}
-																</>
-															) : (
-																"Event"
-															)}
-														</SelectValue>
-													</SelectTrigger>
-													<SelectContent>
-														{allowedEvents.map((event) => {
-															const automation =
-																getAutomationByName(event);
+					<div className="p-6 pt-0">
+						<Form {...form}>
+							<form
+								id={formId}
+								onSubmit={form.handleSubmit(onSubmit)}
+								className="flex flex-col gap-y-4"
+							>
+								<div className="flex items-end gap-x-2">
+									<FormField
+										control={form.control}
+										name="icon"
+										render={({ field }) => {
+											return (
+												<FormItem className="shrink">
+													<FormLabel className="sr-only">
+														Icon (optional)
+													</FormLabel>
+													<div className="flex items-center gap-2">
+														<IconPicker
+															value={field.value}
+															onChange={field.onChange}
+														/>
+														{field.value && (
+															<Button
+																type="button"
+																variant="ghost"
+																size="sm"
+																onClick={() =>
+																	field.onChange(undefined)
+																}
+															>
+																Clear
+															</Button>
+														)}
+													</div>
+													<FormMessage />
+												</FormItem>
+											);
+										}}
+									/>
+									<FormField
+										control={form.control}
+										name="name"
+										render={({ field }) => {
+											return (
+												<FormItem className="grow">
+													<FormLabel>Name</FormLabel>
+													<Input
+														className="w-full"
+														placeholder="Automation name"
+														{...field}
+													/>
+													<FormMessage />
+												</FormItem>
+											);
+										}}
+									/>
+								</div>
 
-															return (
-																<SelectItem
-																	key={event}
-																	value={event}
-																	className="hover:bg-gray-100"
-																	data-testid={`event-select-item-${event}`}
-																>
-																	<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
-																	{humanReadableEventBase(
-																		event,
-																		community
-																	)}
-																</SelectItem>
-															);
-														})}
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</>
-										) : (
-											<p className="text-xs text-red-500">
-												All events for this action have already been added.
-											</p>
-										)}
-									</FormItem>
-								)}
-							/>
-							{/* Additional selector for watched action when using action chaining events */}
-							{isActionChainingEvent && (
 								<FormField
 									control={form.control}
-									name="sourceActionInstanceId"
-									render={({ field }) => (
-										<ActionSelector
-											fieldProps={field}
-											actionInstances={props.actionInstances}
-											label="After"
-											placeholder="Select action to watch"
-											key={field.value}
-											disabledActionId={selectedActionInstanceId} // Prevent self-references
-											dataTestIdPrefix="watched-action"
-										/>
-									)}
+									name="triggers"
+									render={({ field }) => {
+										return (
+											<FormItem>
+												<FormLabel>When</FormLabel>
+												<div className="space-y-2">
+													{field.value && field.value.length > 0 ? (
+														<div className="flex flex-col gap-2">
+															{field.value.map((trigger, idx) => {
+																return (
+																	<TriggerConfigForm
+																		key={`${trigger.event}-${idx}`}
+																		currentlyEditingAutomationId={
+																			currentlyEditingAutomationId
+																		}
+																		stageAutomations={
+																			props.automations
+																		}
+																		trigger={trigger}
+																		form={form}
+																		idx={idx}
+																		community={community}
+																		removeTrigger={() =>
+																			removeTrigger(idx)
+																		}
+																	/>
+																);
+															})}
+														</div>
+													) : null}
+													<Select
+														onValueChange={(value) => {
+															appendTrigger({
+																event: value as AutomationEvent,
+																config: {},
+																sourceAutomationId: undefined,
+															});
+														}}
+													>
+														<SelectTrigger
+															data-testid={`event-select-trigger`}
+															className="h-auto w-full justify-start border-dashed"
+														>
+															<div className="flex items-center gap-2 py-1">
+																<Plus
+																	size={16}
+																	className="text-neutral-500"
+																/>
+																<span className="text-neutral-600">
+																	Add trigger
+																</span>
+															</div>
+														</SelectTrigger>
+														<SelectContent>
+															{Object.values(AutomationEvent)
+																.filter(
+																	(event) =>
+																		!field.value?.some(
+																			(t) => t.event === event
+																		)
+																)
+																.map((event) => {
+																	const automation =
+																		getTriggerByName(event);
+
+																	return (
+																		<SelectItem
+																			key={event}
+																			value={event}
+																			className="hover:bg-gray-100"
+																			data-testid={`trigger-select-item-${event}`}
+																		>
+																			<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
+																			{humanReadableEventBase(
+																				event,
+																				community
+																			)}
+																		</SelectItem>
+																	);
+																})}
+														</SelectContent>
+													</Select>
+												</div>
+												<FormMessage />
+											</FormItem>
+										);
+									}}
 								/>
-							)}
 
-							<FormField
-								control={form.control}
-								name="actionInstanceId"
-								render={({ field }) => (
-									<ActionSelector
-										fieldProps={field}
-										actionInstances={props.actionInstances}
-										label="run..."
-										placeholder="Action"
-										dataTestIdPrefix="action-selector"
-									/>
-								)}
-							/>
-
-							{selectedActionInstance && event === Event.webhook && (
-								<div className="mt-4 space-y-2">
-									<h4 className="text-sm font-medium">
-										With the following config:
-									</h4>
-									<div className="rounded-md border bg-gray-50 p-2">
-										{ActionFormComponent && (
-											<ActionFormContext.Provider
-												value={{
-													action: actions[selectedActionInstance.action],
-													schema: actionSchema,
-													path: "actionConfig",
-													// slightly elobarate cast, slightly more typesafe
-													form: form as UseFormReturn<any> as UseFormReturn<FieldValues>,
-													defaultFields:
-														selectedActionInstance.defaultedActionConfigKeys ??
-														[],
-													context: { type: "automation" },
-												}}
-											>
-												<ActionFormComponent />
-											</ActionFormContext.Provider>
+								{selectedTriggers.length > 0 && (
+									<div className="space-y-2">
+										<div className="flex items-center justify-between">
+											<FormLabel>Conditions (optional)</FormLabel>
+											{!condition && (
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													className="h-7 text-xs"
+													onClick={() => {
+														const ranks = findRanksBetween({
+															numberOfRanks: 1,
+														});
+														form.setValue("condition", {
+															type: AutomationConditionBlockType.OR,
+															kind: "block",
+															rank: ranks[0],
+															items: [],
+														});
+													}}
+												>
+													<Plus size={14} />
+													Add conditions
+												</Button>
+											)}
+										</div>
+										{condition && (
+											<div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+												<ConditionsBuilder slug="condition" />
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													className="h-7 text-xs text-neutral-500"
+													onClick={() => {
+														form.setValue("condition", undefined);
+													}}
+												>
+													Remove all conditions
+												</Button>
+											</div>
 										)}
 									</div>
-								</div>
-							)}
-						</form>
-						{form.formState.errors.root && (
-							<p
-								className={
-									"text-[0.8rem] font-medium text-red-500 dark:text-red-900"
-								}
-							>
-								{form.formState.errors.root.message}
-							</p>
-						)}
-					</Form>
-					<DialogFooter
-						className={cn(
-							"sticky -bottom-4 flex w-full items-center",
-							currentlyEditingAutomationId && "!justify-between"
-						)}
-					>
-						{currentlyEditingAutomationId && (
-							<Button type="button" variant="destructive" onClick={onDeleteClick}>
-								<Trash size="14" />
-								Delete automation
-							</Button>
-						)}
+								)}
 
-						<FormSubmitButton
-							form={formId}
-							formState={form.formState}
-							disabled={
-								allowedEvents.length === 0 ||
-								(isActionChainingEvent && !sourceActionInstanceId)
-							}
-							idleText="Save automation"
-							pendingText="Saving automation..."
-							successText="Automation saved"
-							errorText="Error saving automation"
-						/>
-					</DialogFooter>
+								{selectedTriggers.length > 0 && (
+									<div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+										<FormField
+											control={form.control}
+											name="action.action"
+											render={({ field }) => {
+												const actionDef = field.value
+													? actions[field.value]
+													: null;
+												return (
+													<FormItem>
+														<FormLabel>Run</FormLabel>
+														{field.value && actionDef ? (
+															<div className="flex items-center gap-2 rounded-md border border-neutral-300 bg-white p-3">
+																<actionDef.icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
+																<span className="flex-1 text-sm font-medium text-neutral-900">
+																	{actionDef.name}
+																</span>
+																<Button
+																	type="button"
+																	variant="ghost"
+																	size="sm"
+																	className="h-6 text-xs"
+																	onClick={() => {
+																		field.onChange(undefined);
+																	}}
+																>
+																	Change
+																</Button>
+															</div>
+														) : (
+															<Select
+																onValueChange={field.onChange}
+																defaultValue={field.value}
+																value={field.value}
+															>
+																<SelectTrigger
+																	data-testid="action-selector-select-trigger"
+																	className="h-auto justify-start border-dashed"
+																>
+																	<SelectValue
+																		placeholder={
+																			<div className="flex items-center gap-2 py-1">
+																				<Plus
+																					size={16}
+																					className="text-neutral-500"
+																				/>
+																				<span className="text-neutral-600">
+																					Choose action
+																				</span>
+																			</div>
+																		}
+																	/>
+																</SelectTrigger>
+																<SelectContent>
+																	{Object.entries(actions).map(
+																		([actionName, action]) => {
+																			return (
+																				<SelectItem
+																					key={actionName}
+																					value={
+																						actionName
+																					}
+																					className="hover:bg-gray-100"
+																					data-testid={`action-selector-select-item-${actionName}`}
+																				>
+																					<div className="flex flex-row items-center gap-x-2">
+																						<action.icon size="12" />
+																						<span>
+																							{
+																								action.name
+																							}
+																						</span>
+																					</div>
+																				</SelectItem>
+																			);
+																		}
+																	)}
+																</SelectContent>
+															</Select>
+														)}
+														<FormMessage />
+													</FormItem>
+												);
+											}}
+										/>
+
+										{selectedAction?.action && ActionFormComponent && (
+											<div className="space-y-2">
+												<FormLabel>Action configuration</FormLabel>
+												<div className="rounded-md border border-neutral-200 bg-white p-3">
+													<ActionFormContext.Provider
+														value={{
+															action: actions[selectedAction.action],
+															schema: actions[selectedAction.action]
+																.config.schema,
+															path: "action.config",
+															form: form as UseFormReturn<any> as UseFormReturn<FieldValues>,
+															defaultFields: [],
+															context: { type: "automation" },
+														}}
+													>
+														<ActionFormComponent />
+													</ActionFormContext.Provider>
+												</div>
+											</div>
+										)}
+									</div>
+								)}
+							</form>
+							{form.formState.errors.root && (
+								<p
+									className={
+										"text-[0.8rem] font-medium text-red-500 dark:text-red-900"
+									}
+								>
+									{form.formState.errors.root.message}
+								</p>
+							)}
+						</Form>
+						<DialogFooter
+							className={cn(
+								"sticky -bottom-4 mt-4 flex w-full items-center",
+								currentlyEditingAutomationId && "!justify-between"
+							)}
+						>
+							{currentlyEditingAutomationId && (
+								<Button type="button" variant="destructive" onClick={onDeleteClick}>
+									<Trash size="14" />
+									Delete automation
+								</Button>
+							)}
+
+							<FormSubmitButton
+								form={formId}
+								formState={form.formState}
+								idleText="Save automation"
+								pendingText="Saving automation..."
+								successText="Automation saved"
+								errorText="Error saving automation"
+							/>
+						</DialogFooter>
+					</div>
 				</DialogContent>
 			</Dialog>
 		</div>
 	);
 };
+
+function TriggerConfigForm(props: {
+	trigger: Trigger;
+	form: UseFormReturn<CreateAutomationsSchema>;
+	idx: number;
+	community: Communities;
+	removeTrigger: () => void;
+	currentlyEditingAutomationId: AutomationsId | undefined;
+	stageAutomations: AutoReturnType<typeof getStageAutomations>["execute"];
+}) {
+	const trigger = getTriggerByName(props.trigger.event);
+	const TriggerForm = useMemo(() => {
+		if (!isTriggerWithConfig(props.trigger.event)) {
+			return null;
+		}
+
+		return getTriggerConfigForm(props.trigger.event);
+	}, [props.trigger.event]);
+	return (
+		<div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+			<div className="flex items-center gap-2">
+				<trigger.display.icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
+				<span className="flex-1 text-sm font-medium text-neutral-900">
+					{humanReadableEventBase(props.trigger.event, props.community)}
+				</span>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="h-6 w-6 p-0"
+					onClick={props.removeTrigger}
+				>
+					<X size={14} />
+				</Button>
+			</div>
+
+			{isSequentialAutomationEvent(props.trigger.event) && (
+				<FormField
+					control={props.form.control}
+					name={`triggers.${props.idx}.sourceAutomationId`}
+					render={({ field }) => (
+						<AutomationSelector
+							fieldProps={field}
+							label="After"
+							placeholder="Select automation to watch"
+							disabledAutomationId={props.currentlyEditingAutomationId}
+							dataTestIdPrefix="watched-automation"
+							automations={props.stageAutomations}
+						/>
+					)}
+				/>
+			)}
+
+			{trigger.config && TriggerForm && <TriggerForm form={props.form} idx={props.idx} />}
+		</div>
+	);
+}

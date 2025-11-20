@@ -1,5 +1,7 @@
 import type { User } from "lucia";
 
+import { BookOpen, List, Users, Wand2 } from "lucide-react";
+
 import type { StagesId } from "db/public";
 import { Tabs, TabsContent, TabsList } from "ui/tabs";
 
@@ -39,10 +41,18 @@ export const StagePanel = async (props: Props) => {
 		<StagePanelSheet open={open}>
 			<Tabs defaultValue={defaultTab}>
 				<TabsList className="grid grid-cols-4">
-					<TabLink tab="overview" />
-					<TabLink tab="pubs" />
-					<TabLink tab="actions" />
-					<TabLink tab="members" />
+					<TabLink tab="overview">
+						<List size={16} />
+					</TabLink>
+					<TabLink tab="pubs">
+						<BookOpen size={16} />
+					</TabLink>
+					<TabLink tab="automations">
+						<Wand2 size={16} />
+					</TabLink>
+					<TabLink tab="members">
+						<Users size={16} />
+					</TabLink>
 				</TabsList>
 				<TabsContent value="overview">
 					<StagePanelOverview stageId={props.stageId} userId={props.user.id} />
@@ -54,8 +64,8 @@ export const StagePanel = async (props: Props) => {
 						userId={props.user.id}
 					/>
 				</TabsContent>
-				<TabsContent value="actions" className="space-y-2">
-					<StagePanelActions stageId={props.stageId} userId={props.user.id} />
+				<TabsContent value="automations" className="space-y-2">
+					{/* <StagePanelActions stageId={props.stageId} userId={props.user.id} /> */}
 					<StagePanelAutomations stageId={props.stageId} userId={props.user.id} />
 				</TabsContent>
 				<TabsContent value="members">

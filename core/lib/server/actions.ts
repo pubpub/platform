@@ -1,18 +1,17 @@
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	Action,
 	ActionInstancesId,
 	ActionInstancesUpdate,
+	AutomationRunsId,
 	CommunitiesId,
 	NewActionInstances,
 } from "db/public";
 
-import type { ActionRun } from "~/app/c/[communitySlug]/activity/actions/getActionRunsTableColumns";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
-import { pubType } from "./pub";
 
 export const getActionInstance = (actionInstanceId: ActionInstancesId) =>
 	autoCache(db.selectFrom("action_instances").selectAll().where("id", "=", actionInstanceId));
@@ -58,62 +57,94 @@ export const setActionConfigDefaults = (
 	);
 };
 
-export const getActionRuns = (communityId: CommunitiesId) => {
+export const getAutomationRuns = (communityId: CommunitiesId) => {
 	const actionRuns = autoCache(
 		db
-			.selectFrom("stages")
-			.where("stages.communityId", "=", communityId)
-			.innerJoin("action_instances", "stages.id", "action_instances.stageId")
-			.innerJoin("action_runs", "action_instances.id", "action_runs.actionInstanceId")
-			.leftJoin("users", "action_runs.userId", "users.id")
+			.selectFrom("automation_runs")
+			.innerJoin("automations", "automation_runs.automationId", "automations.id")
+			.where("automations.communityId", "=", communityId)
 			.select((eb) => [
-				"action_runs.id",
-				"action_runs.config",
-				"action_runs.event",
-				"action_runs.params",
-				"action_runs.status",
-				"action_runs.result",
-				"action_runs.createdAt",
-				"action_runs.json",
+				"automation_runs.id",
+				"automation_runs.config",
+				"automation_runs.createdAt",
+				"automation_runs.updatedAt",
 				jsonObjectFrom(
 					eb
-						.selectFrom("action_instances")
-						.whereRef("action_instances.id", "=", "action_runs.actionInstanceId")
-						.select(["action_instances.name", "action_instances.action"])
-				).as("actionInstance"),
-				"action_runs.sourceActionRunId",
+						.selectFrom("automations")
+						.whereRef("automations.id", "=", "automation_runs.automationId")
+						.select(["automations.id", "automations.name", "automations.icon"])
+				).as("automation"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("action_runs")
+						.whereRef("action_runs.automationRunId", "=", "automation_runs.id")
+						.leftJoin(
+							"action_instances",
+							"action_runs.actionInstanceId",
+							"action_instances.id"
+						)
+						.leftJoin("pubs", "action_runs.pubId", "pubs.id")
+						.select([
+							"action_runs.id",
+							"action_runs.actionInstanceId",
+							"action_runs.config",
+							"action_instances.action",
+							"pubs.id as pubId",
+							"pubs.title as pubTitle",
+							"action_runs.status",
+							"action_runs.result",
+							"action_runs.createdAt",
+							"action_runs.updatedAt",
+							"action_runs.config",
+							"action_runs.event",
+							"action_runs.params",
+						])
+				).as("actionRuns"),
+				"automation_runs.sourceAutomationRunId",
 				jsonObjectFrom(
 					eb
-						.selectFrom("action_runs as ar")
-						.innerJoin("action_instances", "ar.actionInstanceId", "action_instances.id")
-						.whereRef("ar.id", "=", "action_runs.sourceActionRunId")
-						.select(["action_instances.name", "action_instances.action"])
-				).as("sourceActionInstance"),
+						.selectFrom("automation_runs as ar")
+						.innerJoin(
+							"automation_runs",
+							"ar.id",
+							"automation_runs.sourceAutomationRunId"
+						)
+						.whereRef("ar.id", "=", "automation_runs.sourceAutomationRunId")
+						.select(["ar.id", "ar.config"])
+				).as("sourceAutomationRun"),
 				jsonObjectFrom(
 					eb
 						.selectFrom("stages")
-						.whereRef("stages.id", "=", "action_instances.stageId")
+						.whereRef("stages.id", "=", "automations.stageId")
 						.select(["stages.id", "stages.name"])
 				).as("stage"),
-				jsonObjectFrom(
-					eb
-						.selectFrom("pubs")
-						.select(["pubs.id", "pubs.createdAt", "pubs.title"])
-						.whereRef("pubs.id", "=", "action_runs.pubId")
-						.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
-				)
-					.$notNull()
-					.as("pub"),
+				// jsonObjectFrom(
+				// 	eb
+				// 		.selectFrom("pubs")
+				// 		.select(["pubs.id", "pubs.createdAt", "pubs.title"])
+				// 		.whereRef("pubs.id", "=", "automation_runs.pubId")
+				// 		.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
+				// )
+				// 	.$notNull()
+				// 	.as("pub"),
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
-						.whereRef("users.id", "=", "action_runs.userId")
-						.select(["id", "firstName", "lastName"])
+						.whereRef("users.id", "=", "automation_runs.userId")
+						.select(["users.id", "users.firstName", "users.lastName"])
 				).as("user"),
 			])
-			.orderBy("action_runs.createdAt", "desc")
-			.$castTo<ActionRun>()
+			.orderBy("automation_runs.createdAt", "desc")
 	);
 
 	return actionRuns;
+};
+
+export const getAutomationRunById = (
+	communityId: CommunitiesId,
+	automationRunId: AutomationRunsId
+) => {
+	return autoCache(
+		getAutomationRuns(communityId).qb.where("automation_runs.id", "=", automationRunId)
+	);
 };

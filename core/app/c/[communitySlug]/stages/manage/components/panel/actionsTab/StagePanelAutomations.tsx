@@ -4,7 +4,7 @@ import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage, getStageActions, getStageAutomations } from "~/lib/db/queries";
+import { getStage, getStageAutomations } from "~/lib/db/queries";
 import { StagePanelAutomation } from "./StagePanelAutomation";
 import { StagePanelAutomationForm } from "./StagePanelAutomationForm";
 
@@ -16,7 +16,7 @@ type PropsInner = {
 const StagePanelAutomationsInner = async (props: PropsInner) => {
 	const [stage, actionInstances, automations] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
-		getStageActions({ stageId: props.stageId }).execute(),
+		getStageAutomations(props.stageId).execute(),
 		getStageAutomations(props.stageId).execute(),
 	]);
 
@@ -50,7 +50,6 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 						</div>
 						<StagePanelAutomationForm
 							stageId={stage.id}
-							actionInstances={actionInstances}
 							communityId={stage.communityId}
 							automations={automations}
 						/>

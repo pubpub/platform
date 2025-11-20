@@ -1,11 +1,16 @@
 import { cache } from "react";
+import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
-import { Event } from "db/public";
-import { logger } from "logger";
+import type {
+	AutomationConditionBlocks,
+	AutomationConditions,
+	AutomationsId,
+	StagesId,
+	UsersId,
+} from "db/public";
+import { AutomationEvent } from "db/public";
 
-import type { AutomationConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { pubType, pubValuesByRef } from "../server";
 import { autoCache } from "../server/cache/autoCache";
@@ -46,61 +51,61 @@ export const getStage = cache((stageId: StagesId, userId: UsersId) => {
 	);
 });
 
-export const getStageActions = cache(
-	({
-		stageId,
-		communityId,
-		pubId,
-	}:
-		| {
-				stageId: StagesId;
-				communityId?: never;
-				pubId?: never;
-		  }
-		| {
-				communityId: CommunitiesId;
-				stageId?: never;
-				pubId?: never;
-		  }
-		| {
-				pubId: PubsId;
-				stageId?: never;
-				communityId?: never;
-		  }) => {
-		return autoCache(
-			db
-				.selectFrom("action_instances")
-				.select([
-					"action_instances.id",
-					"action_instances.action",
-					"action_instances.config",
-					"action_instances.name",
-					"action_instances.createdAt",
-					"action_instances.stageId",
-					"action_instances.updatedAt",
-				])
-				.select((eb) =>
-					jsonObjectFrom(
-						eb
-							.selectFrom("action_runs")
-							.selectAll("action_runs")
-							.whereRef("action_runs.actionInstanceId", "=", "action_instances.id")
-							.orderBy("action_runs.createdAt", "desc")
-							.limit(1)
-					).as("lastActionRun")
-				)
-				.innerJoin("stages", "action_instances.stageId", "stages.id")
-				.select((eb) => actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys"))
-				.$if(!!pubId, (eb) =>
-					eb
-						.innerJoin("PubsInStages", "PubsInStages.stageId", "stages.id")
-						.where("PubsInStages.pubId", "=", pubId!)
-				)
-				.$if(!!stageId, (eb) => eb.where("stageId", "=", stageId!))
-				.$if(!!communityId, (eb) => eb.where("stages.communityId", "=", communityId!))
-		);
-	}
-);
+// export const getStageAutomations = cache(
+// 	({
+// 		stageId,
+// 		communityId,
+// 		pubId,
+// 	}:
+// 		| {
+// 				stageId: StagesId;
+// 				communityId?: never;
+// 				pubId?: never;
+// 		  }
+// 		| {
+// 				communityId: CommunitiesId;
+// 				stageId?: never;
+// 				pubId?: never;
+// 		  }
+// 		| {
+// 				pubId: PubsId;
+// 				stageId?: never;
+// 				communityId?: never;
+// 		  }) => {
+// 		return autoCache(
+// 			db
+// 				.selectFrom("automations")
+// 				.select([
+// 					"action_instances.id",
+// 					"action_instances.automationId",
+// 					"action_instances.config",
+// 					"action_instances.name",
+// 					"action_instances.createdAt",
+// 					"action_instances.stageId",
+// 					"action_instances.updatedAt",
+// 				])
+// 				.select((eb) =>
+// 					jsonObjectFrom(
+// 						eb
+// 							.selectFrom("action_runs")
+// 							.selectAll("action_runs")
+// 							.whereRef("action_runs.actionInstanceId", "=", "action_instances.id")
+// 							.orderBy("action_runs.createdAt", "desc")
+// 							.limit(1)
+// 					).as("lastActionRun")
+// 				)
+// 				.innerJoin("stages", "action_instances.stageId", "stages.id")
+// 				.select((eb) => actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys"))
+// 				.$if(!!pubId, (eb) =>
+// 					eb
+// 						.innerJoin("PubsInStages", "PubsInStages.stageId", "stages.id")
+// 						.where("PubsInStages.pubId", "=", pubId!)
+// 				)
+// 				.$if(!!stageId, (eb) => eb.where("stageId", "=", stageId!))
+// 				.$if(!!communityId, (eb) => eb.where("stages.communityId", "=", communityId!))
+// 		);
+// 	}
+// );
 
 export type StagePub = Awaited<
 	ReturnType<ReturnType<typeof getStagePubs>["executeTakeFirstOrThrow"]>
@@ -133,68 +138,109 @@ export const getStageMembers = cache((stageId: StagesId) => {
 
 export type GetEventAutomationOptions =
 	| {
-			event: Event.pubInStageForDuration | Event.webhook;
-			sourceActionInstanceId?: never;
+			event:
+				| AutomationEvent.pubInStageForDuration
+				| AutomationEvent.webhook
+				| AutomationEvent.manual;
+			sourceAutomationId?: never;
 	  }
 	| {
-			event: Event.actionFailed | Event.actionSucceeded;
-			sourceActionInstanceId: ActionInstancesId;
+			event: AutomationEvent.automationFailed | AutomationEvent.automationSucceeded;
+			sourceAutomationId: AutomationsId;
 	  };
+
+export type ConditionBlock = AutomationConditionBlocks & {
+	kind: "block";
+	items: (ConditionBlock | (AutomationConditions & { kind: "condition" }))[];
+};
+
+const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
+	return db
+		.selectFrom("automations")
+		.select([
+			"automations.id",
+			"automations.name",
+			"automations.stageId",
+			"automations.createdAt",
+			"automations.updatedAt",
+			"automations.communityId",
+			"automations.conditionEvaluationTiming",
+			"automations.description",
+			"automations.icon",
+		])
+		.select((eb) => [
+			jsonArrayFrom(
+				eb
+					.selectFrom("automation_triggers")
+					.selectAll("automation_triggers")
+					.whereRef("automation_triggers.automationId", "=", "automations.id")
+					.$if(!!options?.event, (qb) =>
+						qb.where("automation_triggers.event", "=", options!.event)
+					)
+					.$if(!!options?.sourceAutomationId, (qb) =>
+						qb.where(
+							"automation_triggers.sourceAutomationId",
+							"=",
+							options!.sourceAutomationId!
+						)
+					)
+			)
+				.$notNull()
+				.as("triggers"),
+			jsonArrayFrom(
+				eb
+					.selectFrom("action_instances")
+					.selectAll("action_instances")
+					.whereRef("action_instances.automationId", "=", "automations.id")
+					.select((eb) => actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys"))
+			)
+				.$notNull()
+				.as("actionInstances"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("automation_condition_blocks")
+					.whereRef("automation_condition_blocks.automationId", "=", "automations.id")
+					.where("automation_condition_blocks.automationConditionBlockId", "is", null)
+					.selectAll("automation_condition_blocks")
+					.select(sql.lit<"block">("block").as("kind"))
+					.select((eb) =>
+						// this function is what recursively builds the condition blocks and conditions
+						// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
+						eb
+							.fn<
+								ConditionBlock[]
+							>("get_condition_block_items", ["automation_condition_blocks.id"])
+							.as("items")
+					)
+			).as("condition"),
+		])
+		.$if(!!options?.event, (eb) => {
+			return eb.where((eb) =>
+				eb.exists(
+					eb
+						.selectFrom("automation_triggers")
+						.whereRef("automation_triggers.automationId", "=", "automations.id")
+						.where("automation_triggers.event", "=", options!.event)
+						.$if(!!options?.sourceAutomationId, (qb) =>
+							qb.where(
+								"automation_triggers.sourceAutomationId",
+								"=",
+								options!.sourceAutomationId!
+							)
+						)
+				)
+			);
+		});
+});
+
 export const getStageAutomations = cache(
 	(stageId: StagesId, options?: GetEventAutomationOptions) => {
-		return autoCache(
-			db
-				.selectFrom("automations")
-				.innerJoin("action_instances as ai", "ai.id", "automations.actionInstanceId")
-				.where("ai.stageId", "=", stageId)
-				.selectAll("automations")
-				.select((eb) => [
-					jsonObjectFrom(
-						eb
-							.selectFrom("action_instances")
-							.selectAll("action_instances")
-							.whereRef("action_instances.id", "=", "automations.actionInstanceId")
-					)
-						.$notNull()
-						.as("actionInstance"),
-					jsonObjectFrom(
-						eb
-							.selectFrom("action_instances")
-							.selectAll("action_instances")
-							.whereRef(
-								"action_instances.id",
-								"=",
-								"automations.sourceActionInstanceId"
-							)
-						// .where("action_instances.stageId", "=", stageId)
-					).as("sourceActionInstance"),
-				])
-				.$if(!!options?.event, (eb) => {
-					const where = eb.where("automations.event", "=", options!.event);
+		return autoCache(getAutomationBase(options).where("automations.stageId", "=", stageId));
+	}
+);
 
-					if (
-						options!.event === Event.pubInStageForDuration ||
-						options!.event === Event.webhook
-					) {
-						return where;
-					}
-
-					if (!options!.sourceActionInstanceId) {
-						logger.warn({
-							msg: `Source action instance id is not set for automation with event ${options!.event}`,
-							event: options!.event,
-							sourceActionInstanceId: options!.sourceActionInstanceId,
-						});
-						return where;
-					}
-
-					return where.where(
-						"automations.sourceActionInstanceId",
-						"=",
-						options!.sourceActionInstanceId
-					);
-				})
-				.$narrowType<{ config: AutomationConfig | null }>()
-		);
+export const getAutomation = cache(
+	(automationId: AutomationsId, options?: GetEventAutomationOptions) => {
+		return autoCache(getAutomationBase(options).where("automations.id", "=", automationId));
 	}
 );

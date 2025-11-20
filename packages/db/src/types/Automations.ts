@@ -1,7 +1,3 @@
-export type AutomationConfig = {
-	automationConfig: Record<string, unknown> | null;
-	/**
-	 * The config for the action instance that will be trigger by the automation
-	 */
-	actionConfig: Record<string, unknown> | null;
-};
+import type { AutomationEvent } from "../public";
+
+export type AutomationConfig = Partial<Record<AutomationEvent, Record<string, unknown>>>;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { Action, ActionRunStatus, CoreSchemaType, Event } from "db/public";
+import { Action, ActionRunStatus, AutomationEvent, CoreSchemaType } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
@@ -78,16 +78,17 @@ describe("runActionInstance", () => {
 		const { pubs, actions, community } = await seedCommunity(await pubTriggerTestSeed(), {
 			randomSlug: false,
 		});
-		const { runActionInstance } = await import("~/actions/_lib/runActionInstance");
+		const { runAutomation: runActionInstance } = await import("~/actions/_lib/runAutomation");
 
 		const logActionInstance = actions.find((a) => a.action === Action.log)!;
 		const result = await runActionInstance({
 			actionInstanceId: logActionInstance.id,
 			pubId: pubs[0].id,
-			event: Event.pubEnteredStage,
+			event: AutomationEvent.pubEnteredStage,
 			communityId: community.id,
 			stack: [],
-			actionInstanceArgs: null,
+			manualActionInstanceOverrideArgs: null,
+			automationId: null,
 		});
 
 		expect(result).toMatchObject({
@@ -122,7 +123,7 @@ describe("runActionInstance", () => {
 				randomSlug: false,
 			}
 		);
-		const { runActionInstance } = await import("~/actions/_lib/runActionInstance");
+		const { runAutomation: runActionInstance } = await import("~/actions/_lib/runAutomation");
 
 		const googleDriveImportActionInstance = actions.find(
 			(a) => a.action === Action.googleDriveImport
@@ -130,10 +131,11 @@ describe("runActionInstance", () => {
 
 		const fakeDocURL = "https://docs.google.com/document/d/1234567890";
 		const result = await runActionInstance({
+			automationId: null,
 			actionInstanceId: googleDriveImportActionInstance.id,
 			pubId: pubs[0].id,
-			event: Event.pubEnteredStage,
-			actionInstanceArgs: {
+			event: AutomationEvent.pubEnteredStage,
+			manualActionInstanceOverrideArgs: {
 				outputField: `${community.slug}:title`,
 				docUrl: fakeDocURL,
 			},

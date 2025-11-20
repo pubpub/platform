@@ -2,13 +2,14 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
-import type { ActionConfigDefaults, ActionInstances, UsersId } from "db/public";
+import type { ActionConfigDefaults, ActionInstances, Automations, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
 import { Calendar, History, Pencil, Trash2 } from "ui/icon";
 import { cn } from "utils";
 
+import type { Trigger } from "~/actions/_lib/triggers";
 import type { CommunityStage } from "~/lib/server/stages";
 import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
@@ -16,7 +17,7 @@ import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
 import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector";
-import { PubsRunActionDropDownMenu } from "../../ActionUI/PubsRunActionDropDownMenu";
+import { PubsRunAutomationsDropDownMenu } from "../../ActionUI/PubsRunActionDropDownMenu";
 import { SkeletonButton } from "../../skeletons/SkeletonButton";
 import { RelationsDropDown } from "../RelationsDropDown";
 import { RemovePubButton } from "../RemovePubButton";
@@ -46,7 +47,9 @@ export type PubCardProps = {
 	communitySlug: string;
 	moveFrom?: CommunityStage["moveConstraintSources"];
 	moveTo?: CommunityStage["moveConstraints"];
-	actionInstances?: ActionInstanceWithConfigDefaults[];
+	manualAutomations?: (Automations & {
+		actionInstances: [ActionInstanceWithConfigDefaults];
+	})[];
 	withSelection?: boolean;
 	userId: UsersId;
 	/* if true, overrides the view stage capability check */
@@ -67,7 +70,7 @@ export const PubCard = async ({
 	communitySlug,
 	moveFrom,
 	moveTo,
-	actionInstances,
+	manualAutomations,
 	withSelection = true,
 	userId,
 	canEditAllPubs,
@@ -81,7 +84,7 @@ export const PubCard = async ({
 
 	const showMatchingValues = matchingValues && matchingValues.length !== 0;
 	const showDescription = "description" in pub && pub.description !== null && !showMatchingValues;
-	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
+	const hasActions = pub.stage && manualAutomations && manualAutomations.length !== 0;
 	return (
 		<Card
 			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
@@ -217,7 +220,7 @@ export const PubCard = async ({
 						}
 					>
 						<PubCardActions
-							actionInstances={actionInstances}
+							manualAutomations={manualAutomations ?? []}
 							pub={pub}
 							communitySlug={communitySlug}
 							userId={userId}
@@ -242,7 +245,7 @@ export const PubCard = async ({
 };
 
 const PubCardActions = async ({
-	actionInstances,
+	manualAutomations,
 	pub,
 	communitySlug,
 	userId,
@@ -250,7 +253,9 @@ const PubCardActions = async ({
 	canArchiveAllPubs,
 	canRunActionsAllPubs,
 }: {
-	actionInstances?: ActionInstanceWithConfigDefaults[];
+	manualAutomations: (Automations & {
+		actionInstances: [ActionInstanceWithConfigDefaults];
+	})[];
 	pub: ProcessedPub<{
 		withPubType: true;
 		withRelatedPubs: false;
@@ -263,7 +268,7 @@ const PubCardActions = async ({
 	canArchiveAllPubs?: boolean;
 	canRunActionsAllPubs?: boolean;
 }) => {
-	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
+	const hasAutomations = pub.stage && manualAutomations && manualAutomations.length !== 0;
 	const pubTitle = getPubTitle(pub);
 	const [canArchive, canRunActions, canEdit] = await Promise.all([
 		canArchiveAllPubs ||
@@ -293,9 +298,9 @@ const PubCardActions = async ({
 
 	return (
 		<>
-			{hasActions && canRunActions ? (
-				<PubsRunActionDropDownMenu
-					actionInstances={actionInstances}
+			{hasAutomations && canRunActions ? (
+				<PubsRunAutomationsDropDownMenu
+					automations={manualAutomations}
 					pubId={pub.id}
 					buttonText={`Run actions for ${pubTitle}`}
 					iconOnly

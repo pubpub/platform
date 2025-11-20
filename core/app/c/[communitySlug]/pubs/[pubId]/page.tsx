@@ -16,7 +16,7 @@ import { tryCatch } from "utils/try-catch";
 
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { PubsRunAutomationsDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
@@ -28,7 +28,7 @@ import {
 	userCan,
 	userCanRunActionsAllPubs,
 } from "~/lib/authorization/capabilities";
-import { getStageActions } from "~/lib/db/queries";
+import { getStageAutomations } from "~/lib/db/queries";
 import { constructRedirectToPubEditPage } from "~/lib/links";
 import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server";
@@ -125,7 +125,7 @@ export default async function Page(props: {
 	// This is safe because we've already explicitly checked authorization for the root pub
 	const pubPromise = getPubsWithRelatedValuesCached(pubId, community.id);
 
-	const actionsPromise = getStageActions({ pubId: pubId }).execute();
+	const actionsPromise = getStageAutomations({ pubId: pubId }).execute();
 
 	// if a specific form is provided, we use the slug
 	// otherwise, we get the default form for the pub type of the current pub
@@ -305,7 +305,7 @@ export default async function Page(props: {
 									<div className="mb-1 text-lg font-bold">Actions</div>
 									{actions && actions.length > 0 && stage && canRunActions ? (
 										<div className="ml-4">
-											<PubsRunActionDropDownMenu
+											<PubsRunAutomationsDropDownMenu
 												actionInstances={actions}
 												pubId={pubId}
 												testId="run-action-primary"

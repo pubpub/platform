@@ -11,7 +11,13 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import { Capabilities, Event, MemberRole, MembershipType, stagesIdSchema } from "db/public";
+import {
+	AutomationEvent,
+	Capabilities,
+	MemberRole,
+	MembershipType,
+	stagesIdSchema,
+} from "db/public";
 import { logger } from "logger";
 
 import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm";
@@ -29,8 +35,8 @@ import {
 } from "~/lib/server/actions";
 import {
 	AutomationError,
-	createOrUpdateAutomationWithCycleCheck,
 	removeAutomation,
+	upsertAutomationWithCycleCheck,
 } from "~/lib/server/automations";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
@@ -382,7 +388,10 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 	automationId?: AutomationsId;
 	data: CreateAutomationsSchema;
 }) {
-	const loginData = await getLoginData();
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
@@ -398,19 +407,26 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 	}
 
 	try {
-		await createOrUpdateAutomationWithCycleCheck({
-			automationId,
-			actionInstanceId: data.actionInstanceId as ActionInstancesId,
-			event: data.event,
-			config: {
-				actionConfig: data.actionConfig ?? null,
-				automationConfig:
-					"automationConfig" in data && data.automationConfig
-						? data.automationConfig
-						: null,
-			},
-			sourceActionInstanceId:
-				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
+		await upsertAutomationWithCycleCheck({
+			id: automationId,
+			name: data.name,
+			description: data.description ?? null,
+			icon: data.icon ?? null,
+			communityId: community.id,
+			stageId,
+			conditionEvaluationTiming: data.conditionEvaluationTiming ?? null,
+			triggers: data.triggers.map((trigger) => ({
+				event: trigger.event,
+				config: trigger.config ?? null,
+				sourceAutomationId: trigger.sourceAutomationId ?? null,
+			})),
+			actionInstances: [
+				{
+					action: data.action.action,
+					config: data.action.config ?? null,
+				},
+			],
+			condition: data.condition,
 		});
 	} catch (error) {
 		logger.error(error);
@@ -426,7 +442,6 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			error: automationId ? "Failed to update automation" : "Failed to create automation",
 			cause: error,
 		};
-	} finally {
 	}
 });
 
@@ -454,48 +469,53 @@ export const deleteAutomation = defineServerAction(async function deleteAutomati
 			removeAutomation(automationId).qb.returningAll()
 		).executeTakeFirstOrThrow();
 
-		if (!deletedAutomation) {
-			return {
-				error: "Failed to delete automation",
-				cause: `Automation with id ${automationId} not found`,
-			};
-		}
+		return {
+			success: true,
+			report: "Automation deleted",
+		};
 
-		if (deletedAutomation.event !== Event.pubInStageForDuration) {
-			return;
-		}
+		// if (!deletedAutomation) {
+		// 	return {
+		// 		error: "Failed to delete automation",
+		// 		cause: `Automation with id ${automationId} not found`,
+		// 	};
+		// }
 
-		const actionInstance = await getActionInstance(
-			deletedAutomation.actionInstanceId
-		).executeTakeFirst();
+		// if (deletedAutomation.event !== AutomationEvent.pubInStageForDuration) {
+		// 	return;
+		// }
 
-		if (!actionInstance) {
-			// something is wrong here
-			captureException(
-				new Error(
-					`Action instance not found for automation ${automationId} while trying to unschedule jobs`
-				)
-			);
-			return;
-		}
+		// const actionInstance = await getActionInstance(
+		// 	deletedAutomation.actionInstanceId
+		// ).executeTakeFirst();
 
-		const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst();
-		if (!pubsInStage) {
-			// we don't need to unschedule any jobs, as there are no pubs this automation could have been applied to
-			return;
-		}
+		// if (!actionInstance) {
+		// 	// something is wrong here
+		// 	captureException(
+		// 		new Error(
+		// 			`Action instance not found for automation ${automationId} while trying to unschedule jobs`
+		// 		)
+		// 	);
+		// 	return;
+		// }
 
-		logger.debug(`Unscheduling jobs for automation ${automationId}`);
-		await Promise.all(
-			pubsInStage.pubIds.map(async (pubInStageId) =>
-				unscheduleAction({
-					actionInstanceId: actionInstance.id,
-					pubId: pubInStageId,
-					stageId: actionInstance.stageId,
-					event: Event.pubInStageForDuration,
-				})
-			)
-		);
+		// const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst();
+		// if (!pubsInStage) {
+		// 	// we don't need to unschedule any jobs, as there are no pubs this automation could have been applied to
+		// 	return;
+		// }
+
+		// logger.debug(`Unscheduling jobs for automation ${automationId}`);
+		// await Promise.all(
+		// 	pubsInStage.pubIds.map(async (pubInStageId) =>
+		// 		unscheduleAction({
+		// 			actionInstanceId: actionInstance.id,
+		// 			pubId: pubInStageId,
+		// 			stageId: actionInstance.stageId,
+		// 			event: AutomationEvent.pubInStageForDuration,
+		// 		})
+		// 	)
+		// );
 	} catch (error) {
 		logger.error(error);
 		return {

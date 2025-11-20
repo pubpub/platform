@@ -2,7 +2,7 @@ import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import type { FullProcessedPubWithForm } from "~/lib/server";
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { PubsRunAutomationsDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { RelatedPubsTable } from "./RelatedPubsTable";
 
 const NoActions = () => {
@@ -25,7 +25,10 @@ const NoActions = () => {
 
 const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
 	return row.stage && row.stage?.actionInstances.length > 0 ? (
-		<PubsRunActionDropDownMenu actionInstances={row.stage.actionInstances} pubId={row.id} />
+		<PubsRunAutomationsDropDownMenu
+			actionInstances={row.stage.actionInstances}
+			pubId={row.id}
+		/>
 	) : (
 		<NoActions />
 	);

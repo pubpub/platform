@@ -14,13 +14,12 @@ import {
 	ApiAccessType,
 	Capabilities,
 	ElementType,
-	Event,
 	InputComponent,
 	MembershipType,
 } from "db/public";
 import { logger } from "logger";
 
-import { scheduleActionInstances } from "~/actions/api/server";
+import { runAutomationById } from "~/actions/_lib/runAutomation";
 import {
 	checkAuthorization,
 	getAuthorization,
@@ -28,7 +27,7 @@ import {
 	shouldReturnRepresentation,
 } from "~/lib/authentication/api";
 import { userHasAccessToForm } from "~/lib/authorization/capabilities";
-import { getStage } from "~/lib/db/queries";
+import { getAutomation, getStage } from "~/lib/db/queries";
 import {
 	BadRequestError,
 	createPubRecursiveNew,
@@ -46,7 +45,6 @@ import {
 	updatePub,
 	upsertPubRelations,
 } from "~/lib/server";
-import { getAutomation } from "~/lib/server/automations";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
@@ -734,7 +732,7 @@ const handler = createNextHandler(
 
 			const automationId = params.automationId as AutomationsId;
 
-			const automation = await getAutomation(automationId, community.id).executeTakeFirst();
+			const automation = await getAutomation(automationId).executeTakeFirst();
 
 			if (!automation) {
 				throw new NotFoundError(`Automation ${automationId} not found`);
@@ -747,12 +745,13 @@ const handler = createNextHandler(
 			}
 
 			try {
-				await scheduleActionInstances({
-					event: Event.webhook,
-					stack: [],
-					stageId: automation.actionInstance.stageId,
+				await runAutomationById({
+					automationId,
 					json: body,
-					config: automation.config?.actionConfig,
+					event: AutomationEvent.webhook,
+					communityId: community.id as CommunitiesId,
+					stack: [],
+					actionInstanceArgs: automation.config?.actionConfig ?? null,
 				});
 
 				return {

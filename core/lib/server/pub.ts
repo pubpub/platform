@@ -1873,15 +1873,27 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								qb.select(
 									jsonArrayFrom(
 										eb
-											.selectFrom("action_instances")
-											.whereRef("action_instances.stageId", "=", "pt.stageId")
+											.selectFrom("automations")
+											.whereRef("automations.stageId", "=", "pt.stageId")
 											.selectAll()
 											.select((eb) =>
-												actionConfigDefaultsSelect(eb).as(
-													"defaultedActionConfigKeys"
-												)
+												jsonArrayFrom(
+													eb
+														.selectFrom("action_instances")
+														.whereRef(
+															"action_instances.automationId",
+															"=",
+															"automations.id"
+														)
+														.selectAll("action_instances")
+														.select((eb) =>
+															actionConfigDefaultsSelect(eb).as(
+																"defaultedActionConfigKeys"
+															)
+														)
+												).as("actionInstances")
 											)
-									).as("actionInstances")
+									).as("automations")
 								)
 							)
 							.where("pt.stageId", "is not", null)
