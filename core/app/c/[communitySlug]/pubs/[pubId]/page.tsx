@@ -237,7 +237,7 @@ export default async function Page(props: {
 								{getPubTitle(pub)}
 							</TooltipContent>
 						</Tooltip>
-						<div className="flex items-center gap-1 text-sm text-muted-foreground">
+						<div className="flex items-center gap-1 text-muted-foreground text-sm">
 							<span className="font-semibold">{pub.pubType.name}</span>•
 							<FormSwitcher
 								defaultFormSlug={defaultViewForm?.slug}
@@ -287,7 +287,7 @@ export default async function Page(props: {
 							<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
 								{pub.stage ? (
 									<div>
-										<div className="mb-1 text-lg font-bold">Current Stage</div>
+										<div className="mb-1 font-bold text-lg">Current Stage</div>
 										<div
 											className="ml-4 flex items-center gap-2 font-medium"
 											data-testid="current-stage"
@@ -302,7 +302,7 @@ export default async function Page(props: {
 									</div>
 								) : null}
 								<div>
-									<div className="mb-1 text-lg font-bold">Actions</div>
+									<div className="mb-1 font-bold text-lg">Actions</div>
 									{actions && actions.length > 0 && stage && canRunActions ? (
 										<div className="ml-4">
 											<PubsRunActionDropDownMenu
@@ -321,7 +321,7 @@ export default async function Page(props: {
 
 								<div className="flex flex-col gap-y-4">
 									<div className="mb-2 flex justify-between">
-										<span className="text-lg font-bold">Members</span>
+										<span className="font-bold text-lg">Members</span>
 										{canAddMember && (
 											<AddMemberDialog
 												addMember={addPubMember.bind(null, pubId)}
@@ -352,7 +352,7 @@ export default async function Page(props: {
 						</div>
 						{(pubTypeHasRelatedPubs || pubHasRelatedPubs) && (
 							<div className="flex flex-col gap-2" data-testid="related-pubs">
-								<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
+								<h2 className="mb-2 font-bold text-xl">Related Pubs</h2>
 								{canCreateRelatedPub && (
 									<CreatePubButton
 										text="Add Related Pub"

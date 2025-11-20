@@ -617,8 +617,7 @@ describe("pub_values_history trigger", () => {
 				trx
 			)
 
-			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)
-				?.id!
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
 			const _updateResult = await trx
 				.updateTable("pub_values")
@@ -626,13 +625,13 @@ describe("pub_values_history trigger", () => {
 					value: JSON.stringify("new title"),
 					lastModifiedBy: createLastModifiedBy("system"),
 				})
-				.where("id", "=", titlePubValueId)
+				.where("id", "=", titlePubValueId!)
 				.executeTakeFirstOrThrow()
 
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("pubValueId", "=", titlePubValueId)
+				.where("pubValueId", "=", titlePubValueId!)
 				.where("operationType", "=", OperationType.update)
 				.executeTakeFirstOrThrow()
 
@@ -657,12 +656,11 @@ describe("pub_values_history trigger", () => {
 				trx
 			)
 
-			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)
-				?.id!
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 			const insertHistory = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("pubValueId", "=", titlePubValueId)
+				.where("pubValueId", "=", titlePubValueId!)
 				.execute()
 
 			expect(insertHistory.length).toBe(1)
@@ -724,8 +722,7 @@ describe("pub_values_history trigger", () => {
 				trx
 			)
 
-			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)
-				?.id!
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
 			const basicModifiedsPromise = ["unknown", "system"] as const
 
@@ -737,7 +734,7 @@ describe("pub_values_history trigger", () => {
 							value: JSON.stringify(modifiedBy),
 							lastModifiedBy: createLastModifiedBy(modifiedBy),
 						})
-						.where("id", "=", titlePubValueId)
+						.where("id", "=", titlePubValueId!)
 						.returningAll()
 						.executeTakeFirstOrThrow()
 				).resolves.not.toThrow()
@@ -746,7 +743,7 @@ describe("pub_values_history trigger", () => {
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("pubValueId", "=", titlePubValueId)
+				.where("pubValueId", "=", titlePubValueId!) // biome-ignore lint/style/noNonNullAssertion: <explanation>
 				.execute()
 
 			history.sort((a, b) =>
@@ -815,8 +812,7 @@ describe("pub_values_history trigger", () => {
 				trx
 			)
 
-			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)
-				?.id!
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
 			const actionRun = await trx
 				.insertInto("action_runs")
@@ -863,13 +859,13 @@ describe("pub_values_history trigger", () => {
 						value: JSON.stringify(perpetrator.value),
 						lastModifiedBy: createLastModifiedBy(perpetrator.lastModifiedBy),
 					})
-					.where("id", "=", titlePubValueId)
+					.where("id", "=", titlePubValueId!)
 					.executeTakeFirstOrThrow()
 
 				const history = await trx
 					.selectFrom("pub_values_history")
 					.selectAll()
-					.where("pubValueId", "=", titlePubValueId)
+					.where("pubValueId", "=", titlePubValueId!)
 					.where("operationType", "=", OperationType.update)
 					.where(sql`"newRowData"->>'value'`, "=", perpetrator.value)
 					.executeTakeFirstOrThrow()
@@ -906,13 +902,13 @@ describe("pub_values_history trigger", () => {
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("pubValueId", "=", titlePubValueId)
+				.where("pubValueId", "=", titlePubValueId!)
 				.where("id", "in", historyKeys)
 				.orderBy("createdAt", "desc")
 				.execute()
 
 			expect(history.length).toBe(3)
-			history.forEach((h) =>
+			history.forEach((h) => {
 				expect(
 					h,
 					"history perpetrators should be nulled if they are removed"
@@ -923,7 +919,7 @@ describe("pub_values_history trigger", () => {
 					apiAccessTokenId: null,
 					actionRunId: null,
 				})
-			)
+			})
 		})
 
 		const isModifiedByCheckConstraintError = (error: unknown) =>
@@ -939,8 +935,7 @@ describe("pub_values_history trigger", () => {
 				trx
 			)
 
-			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)
-				?.id!
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
 			try {
 				await trx
@@ -950,7 +945,7 @@ describe("pub_values_history trigger", () => {
 							userId: "not-a-user" as UsersId,
 						}),
 					})
-					.where("id", "=", titlePubValueId)
+					.where("id", "=", titlePubValueId!)
 					.executeTakeFirst()
 			} catch (e) {
 				expect(isModifiedByCheckConstraintError(e)).toBe(true)
@@ -967,8 +962,7 @@ describe("pub_values_history trigger", () => {
 				trx
 			)
 
-			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)
-				?.id!
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
 			const randomUserId = crypto.randomUUID()
 			try {
@@ -977,7 +971,7 @@ describe("pub_values_history trigger", () => {
 					.set({
 						lastModifiedBy: createLastModifiedBy({ userId: randomUserId as UsersId }),
 					})
-					.where("id", "=", titlePubValueId)
+					.where("id", "=", titlePubValueId!)
 					.executeTakeFirst()
 			} catch (e) {
 				expect(isPostgresError(e)).toBe(true)
@@ -1001,8 +995,8 @@ describe("pub_values_history trigger", () => {
 				trx
 			)
 
-			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)
-				?.id!
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)!
+				.id!
 
 			try {
 				await trx

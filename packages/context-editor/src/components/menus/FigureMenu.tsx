@@ -1,6 +1,7 @@
 import type { Node } from "prosemirror-model"
 import type { EditorView } from "prosemirror-view"
 
+import * as React from "react"
 import { useMemo } from "react"
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror"
 import { useForm } from "react-hook-form"

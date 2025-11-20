@@ -54,5 +54,12 @@
 			"source.biome": "always",
 			"source.fixAll.biome": "always"
 		}
-	}
+	},
+	"tailwindCSS.files.exclude": [
+		"**/.git/**",
+		"**/node_modules/**",
+		"**/.hg/**",
+		"**/.svn/**",
+		".local_data/**"
+	]
 }

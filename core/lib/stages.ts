@@ -60,9 +60,9 @@ export function getOrderedStages<T extends CommunityStage>(stages: T[]): Array<T
 				continue
 			}
 			orderedStages.add(stage)
-			stage.moveConstraints.forEach((destinationStage) =>
+			stage.moveConstraints.forEach((destinationStage) => {
 				stagesQueue.push(stagesById[destinationStage.id])
-			)
+			})
 		}
 	} catch (err) {
 		Sentry.captureException(err)
@@ -71,13 +71,17 @@ export function getOrderedStages<T extends CommunityStage>(stages: T[]): Array<T
 	}
 
 	// Append all the stages with no sources or destinations to the very end
-	leafRoots?.forEach((stage) => orderedStages.add(stage))
+	leafRoots?.forEach((stage) => {
+		orderedStages.add(stage)
+	})
 
 	// Because the algorithm above starts with "root" stages only, it will totally exclude graphs
 	// where every stage is part of a cycle (biconnected graphs). Since we don't know where those
 	// graphs should begin, we skip sorting them but make sure their stages are included in the
 	// output
-	stages.forEach((stage) => orderedStages.add(stage))
+	stages.forEach((stage) => {
+		orderedStages.add(stage)
+	})
 
 	return [...orderedStages]
 }

@@ -225,7 +225,6 @@
 		"vitest": "catalog:",
 		"yargs": "^17.7.2"
 	},
-	"prettier": "@pubpub/prettier-config",
 	"imports": {
 		"#register-loader": "./prisma/seed/stubs/register-loader.js"
 	}

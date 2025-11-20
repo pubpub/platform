@@ -30,7 +30,7 @@ const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 					<span>
 						{user.firstName} {user.lastName}
 					</span>
-					<address className="text-xs not-italic text-muted-foreground">
+					<address className="text-muted-foreground text-xs not-italic">
 						{user.email}
 					</address>
 				</div>

@@ -25,7 +25,7 @@ export const MemberSelectAddUserButton = (props: Props) => {
 				data-testid="member-select-add-button"
 			>
 				<span>Member not found</span>
-				<p className="text-xs font-normal">Click to add a user to your community</p>
+				<p className="font-normal text-xs">Click to add a user to your community</p>
 			</Button>
 			{open && (
 				<MemberSelectAddUserForm

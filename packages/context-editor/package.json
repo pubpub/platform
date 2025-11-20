@@ -129,6 +129,5 @@
 			}
 		},
 		"entrypoints": ["index.ts", "schemas/index.ts", "utils/index.ts", "utils/serialize.ts"]
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

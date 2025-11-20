@@ -52,7 +52,7 @@ export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) =
 					name="config.userShouldSelect"
 					render={({ field }) => (
 						<FormItem>
-							<div className="grid-rows-auto grid gap-2">
+							<div className="grid grid-rows-auto gap-2">
 								<FormLabel>User Should Select</FormLabel>
 								<FormControl>
 									<Select
@@ -84,7 +84,7 @@ export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) =
 					control={form.control}
 					name="config.numCheckboxes"
 					render={({ field }) => (
-						<div className="grid-rows-auto grid gap-2">
+						<div className="grid grid-rows-auto gap-2">
 							<FormLabel>Checkboxes</FormLabel>
 							<FormControl>
 								<Input

@@ -56,7 +56,7 @@ export default function EditorDash(props: ContextEditorProps) {
 			{activeDash && editorState && (
 				<div
 					id="panel"
-					className="fixed right-12 top-4 z-10 h-[calc(100vh-2rem)] w-[calc(50vw-1rem)] overflow-y-scroll rounded-xl border border-[#dbdbdb] bg-white drop-shadow-md"
+					className="fixed top-4 right-12 z-10 h-[calc(100vh-2rem)] w-[calc(50vw-1rem)] overflow-y-scroll rounded-xl border border-[#dbdbdb] bg-white drop-shadow-md"
 				>
 					{activeDash === "json" && <JsonPanel editorState={editorState} />}
 					{activeDash === "site" && <SitePanel editorState={editorState} />}

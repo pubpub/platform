@@ -29,32 +29,20 @@ const ActionCell = (props: ActionCellProps) => {
 		props.onClick(props.action)
 	}, [props.onClick, props.action])
 
-	const onKeyDown = useCallback(
-		(event: React.KeyboardEvent<HTMLDivElement>) => {
-			if (event.key === "Enter" || event.key === " ") {
-				onClick()
-			}
-		},
-		[onClick]
-	)
-
 	return (
-		<div
-			tabIndex={0}
-			role="button"
+		<Button
 			className="flex cursor-pointer flex-col space-y-1 rounded-md border bg-accent p-3 shadow-md transition-colors hover:bg-background hover:text-accent-foreground hover:shadow-lg focus:bg-background focus:text-accent-foreground focus:shadow-lg"
 			onClick={onClick}
-			onKeyDown={onKeyDown}
 			data-testid={`${props.action.name}-button`}
 		>
 			<div className="flex space-x-4">
 				<props.action.icon />
 				<div className="space-y-1">
 					<div className="flex items-center gap-2">
-						<h4 className="text-sm font-semibold">{props.action.name}</h4>
+						<h4 className="font-semibold text-sm">{props.action.name}</h4>
 						{props.action.experimental && (
 							<Tooltip>
-								<TooltipTrigger>
+								<TooltipTrigger asChild>
 									<Badge variant="outline" className="bg-rose-200 text-xs">
 										α
 									</Badge>
@@ -70,12 +58,12 @@ const ActionCell = (props: ActionCellProps) => {
 						)}
 					</div>
 
-					<p className="text-sm leading-tight text-muted-foreground">
+					<p className="text-muted-foreground text-sm leading-tight">
 						{props.action.description}
 					</p>
 				</div>
 			</div>
-		</div>
+		</Button>
 	)
 }
 

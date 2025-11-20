@@ -24,7 +24,6 @@
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
-	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
 		"entrypoints": ["index.ts"],
 		"exports": true,

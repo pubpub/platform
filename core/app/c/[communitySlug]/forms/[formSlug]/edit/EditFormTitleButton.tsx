@@ -51,14 +51,14 @@ const EditFormTitleButton = ({ formId, name }: { formId: FormsId; name: string }
 			<DialogTrigger asChild>
 				<Button
 					variant="link"
-					className="text-sm text-blue-500 underline hover:text-blue-600"
+					className="text-blue-500 text-sm underline hover:text-blue-600"
 				>
 					Edit
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="flex max-w-[512px] flex-col items-start gap-[24px] p-[24px]">
 				<DialogTitle>Edit Name</DialogTitle>
-				<div className="w-full border-t border-gray-200" />
+				<div className="w-full border-gray-200 border-t" />
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit(onSubmit)}

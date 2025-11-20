@@ -43,7 +43,7 @@ export const getTypesTableColumns = () =>
 					<div className="flex flex-col gap-1">
 						<span className="font-medium">{name}</span>
 						{description && (
-							<span className="text-sm text-muted-foreground">{description}</span>
+							<span className="text-muted-foreground text-sm">{description}</span>
 						)}
 					</div>
 				)

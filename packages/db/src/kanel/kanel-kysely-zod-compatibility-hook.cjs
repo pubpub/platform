@@ -18,7 +18,7 @@ const replaceSchemaCast = (/** @type {string} */ line) => {
 		return line
 	}
 
-	const replacedLine = line.replace(kanelZodCastRegex, (_, typeName, mutatorOrInitializer) => {
+	const replacedLine = line.replace(kanelZodCastRegex, (_, _typeName, _mutatorOrInitializer) => {
 		// TODO: write custom maps for unknown types, that way i don't need to do this
 		return ""
 		// if (!mutatorOrInitializer) {

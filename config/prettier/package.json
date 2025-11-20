@@ -23,6 +23,5 @@
 	"devDependencies": {
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:"
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

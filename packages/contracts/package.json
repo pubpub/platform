@@ -34,7 +34,6 @@
 		"typescript": "catalog:",
 		"zod": "catalog:"
 	},
-	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
 		"exports": true,
 		"entrypoints": ["index.ts", "resources/site.ts", "resources/site-builder.ts"],

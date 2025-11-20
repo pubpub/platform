@@ -128,7 +128,7 @@ export const PubFieldSelectToggleButton = () => {
 			</TooltipTrigger>
 			<TooltipPortal>
 				<TooltipContent>
-					<p className="text-sm text-gray-500 dark:text-white">
+					<p className="text-gray-500 text-sm dark:text-white">
 						{shouldReadFromPubField
 							? "Do not read from pubfields"
 							: "Also specify pubfields this value will be read from"}
@@ -178,7 +178,7 @@ export const PubFieldSelect = () => {
 				value: pubField.slug,
 				label: pubField.slug,
 				node: (
-					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-xs text-blue-400">
+					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-blue-400 text-xs">
 						{pubField.slug}
 					</span>
 				),

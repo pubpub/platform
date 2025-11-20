@@ -28,7 +28,7 @@ const EmptyState = ({ className }: { className?: string }) => {
 	return (
 		<div className={cn("flex h-full items-center justify-center", className)}>
 			<div className="flex max-w-[444px] flex-col items-center justify-center text-foreground">
-				<h2 className="mb-2 text-lg font-semibold">You don’t have any fields yet</h2>
+				<h2 className="mb-2 font-semibold text-lg">You don’t have any fields yet</h2>
 				<p className="mb-6 text-center text-sm">
 					Fields are reusable data formats that are used to define types.
 				</p>

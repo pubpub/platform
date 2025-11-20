@@ -71,7 +71,7 @@ export const NavLinkSubMenu = ({
 									>
 										{icon}
 										<span className="flex-auto text-sm">{text}</span>
-										<ChevronDown className="h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=closed]/collapsible:-rotate-90" />
+										<ChevronDown className="group-data-[state=closed]/collapsible:-rotate-90 h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden" />
 									</SidebarMenuButton>
 								)}
 							</CollapsibleTrigger>

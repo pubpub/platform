@@ -31,7 +31,7 @@ export const PanelHeader = ({
 	return (
 		<>
 			<div className="flex items-center justify-between">
-				<div className="text-sm uppercase text-gray-500">{title}</div>
+				<div className="text-gray-500 text-sm uppercase">{title}</div>
 				{showCancel && (
 					<Button
 						aria-label="Cancel"
@@ -56,7 +56,7 @@ export const SidePanel = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 				{...rest}
 				ref={ref}
 				className={cn(
-					"fixed right-0 top-[72px] z-10 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow",
+					"fixed top-[72px] right-0 z-10 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-gray-200 border-l bg-gray-50 p-4 pr-6 shadow",
 					className
 				)}
 			>

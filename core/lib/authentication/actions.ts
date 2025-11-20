@@ -1,6 +1,13 @@
 "use server"
 
-import type { Communities, CommunitiesId, CommunityMemberships, FormsId, UsersId } from "db/public"
+import type {
+	Communities,
+	CommunitiesId,
+	CommunityMemberships,
+	FormsId,
+	Users,
+	UsersId,
+} from "db/public"
 import type { NoticeParams } from "~/app/components/Notice"
 
 import { cookies } from "next/headers"
@@ -617,7 +624,7 @@ export const initializeSetup = defineServerAction(async function initializeSetup
 	const { email, password, firstName, lastName, communityName, communitySlug, communityAvatar } =
 		parsed.data
 
-	let result
+	let result: { user: Users; community: Communities }
 	try {
 		result = await db.transaction().execute(async (trx) => {
 			const passwordHash = await createPasswordHash(password)
@@ -662,6 +669,7 @@ export const initializeSetup = defineServerAction(async function initializeSetup
 
 		const session = await lucia.createSession(result.user.id, { type: AuthTokenType.generic })
 		const sessionCookie = lucia.createSessionCookie(session.id)
+
 		;(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes)
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {

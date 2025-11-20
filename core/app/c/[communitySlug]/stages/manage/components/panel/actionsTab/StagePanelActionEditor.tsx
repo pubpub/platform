@@ -61,7 +61,7 @@ export const UpdateCircle = (
 					{props.stale && (
 						<span
 							data-testid={`action-instance-${props.actionInstanceId}-update-circle-stale`}
-							className="absolute -top-0.5 right-0 block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-800"
+							className="-top-0.5 absolute right-0 block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-800"
 						></span>
 					)}
 				</div>
@@ -83,7 +83,7 @@ export const UpdateCircle = (
 						<span className="font-medium capitalize">{props.status}</span>
 					</div>
 
-					<div className="text-xs text-gray-600">
+					<div className="text-gray-600 text-xs">
 						{props.createdAt && (
 							<div className="flex items-center justify-between">
 								<span>Timestamp: </span>
@@ -106,7 +106,7 @@ export const UpdateCircle = (
 
 					{Boolean(props.result) && (
 						<div className="pt-1">
-							<div className="text-xs font-medium">Result:</div>
+							<div className="font-medium text-xs">Result:</div>
 							<pre
 								className="mt-1 max-h-40 overflow-auto rounded bg-gray-100 p-2 font-mono text-xs"
 								data-testid={`action-instance-${props.actionInstanceId}-update-circle-result`}
@@ -158,7 +158,7 @@ export const StagePanelActionEditor = (props: Props) => {
 					{isOpen ? (
 						<Input
 							aria-label="Edit action name"
-							className="flex-grow-1 ml-1 h-8 p-0 pl-1"
+							className="ml-1 h-8 flex-grow-1 p-0 pl-1"
 							defaultValue={props.actionInstance.name || action.name}
 							onBlur={async (evt) => {
 								await actions.updateAction(

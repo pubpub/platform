@@ -27,7 +27,7 @@ export const PubTypeLabel = ({
 	return (
 		<Button
 			variant="outline"
-			className="h-[22px] rounded border-gray-300 bg-gray-100 px-[.35rem] text-xs font-semibold shadow-none"
+			className="h-[22px] rounded border-gray-300 bg-gray-100 px-[.35rem] font-semibold text-xs shadow-none"
 		>
 			{pubType.name}
 		</Button>
@@ -54,7 +54,7 @@ export const FilterablePubTypeLabel = ({
 		<Button
 			variant="outline"
 			className={cn(
-				"h-[22px] gap-0 rounded border-gray-300 bg-gray-100 px-[.35rem] text-xs font-semibold shadow-none"
+				"h-[22px] gap-0 rounded border-gray-300 bg-gray-100 px-[.35rem] font-semibold text-xs shadow-none"
 			)}
 			onMouseEnter={() => setExpanded(true)}
 			onMouseLeave={() => setExpanded(false)}

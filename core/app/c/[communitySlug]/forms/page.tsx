@@ -96,7 +96,7 @@ export default async function Page(props: {
 			{forms.length === 0 ? (
 				<div className="flex h-full items-center justify-center">
 					<div className="flex max-w-[444px] flex-col items-center justify-center">
-						<h2 className="mb-2 text-2xl font-semibold text-gray-800">
+						<h2 className="mb-2 font-semibold text-2xl text-gray-800">
 							You don’t have any forms yet
 						</h2>
 						<p className="mb-6 text-center text-gray-600">

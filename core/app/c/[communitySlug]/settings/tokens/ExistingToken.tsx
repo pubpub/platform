@@ -26,11 +26,11 @@ export const ExistingToken = ({
 				<div className="flex items-start gap-3">
 					{token.issuedBy && <UserAvatar user={token.issuedBy} />}
 					<div className="flex-1">
-						<h3 className="text-base font-semibold">{token.name}</h3>
+						<h3 className="font-semibold text-base">{token.name}</h3>
 						{token.description && (
-							<p className="text-sm text-muted-foreground">{token.description}</p>
+							<p className="text-muted-foreground text-sm">{token.description}</p>
 						)}
-						<div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+						<div className="mt-2 flex items-center gap-1 text-muted-foreground text-xs">
 							<div className="flex items-center gap-1">
 								<span className={isExpired ? "text-red-600" : ""}>
 									{isExpired ? "Expired" : "Expires"}
@@ -65,7 +65,7 @@ export const ExistingToken = ({
 			</div>
 			<Accordion type="single" collapsible className="ml-10">
 				<AccordionItem value="permissions" className="border-b-0">
-					<AccordionTrigger className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+					<AccordionTrigger className="flex items-center justify-between gap-2 text-muted-foreground text-sm">
 						Permissions
 					</AccordionTrigger>
 					<AccordionContent>

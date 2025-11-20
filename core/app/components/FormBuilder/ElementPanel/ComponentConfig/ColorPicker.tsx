@@ -67,10 +67,10 @@ export const FormBuilderColorPickerPopover = ({
 						/>
 					) : (
 						<div className="flex max-w-full grow items-center justify-between gap-2">
-							<span className="max-w-40 truncate text-sm font-medium">
+							<span className="max-w-40 truncate font-medium text-sm">
 								{label || color}
 							</span>
-							<span className="font-mono text-xs text-gray-500">{color}</span>
+							<span className="font-mono text-gray-500 text-xs">{color}</span>
 						</div>
 					)}
 				</PopoverTrigger>

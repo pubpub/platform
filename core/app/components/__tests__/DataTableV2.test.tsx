@@ -55,7 +55,11 @@ describe("DataTable", () => {
 					id: "test-button",
 					header: () => "Test",
 					cell: ({ row }) => (
-						<button onClick={buttonClick} data-testid={`test-btn-${row.id}`}>
+						<button
+							onClick={buttonClick}
+							data-testid={`test-btn-${row.id}`}
+							type="button"
+						>
 							test button
 						</button>
 					),

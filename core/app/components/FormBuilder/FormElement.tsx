@@ -83,7 +83,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			ref={setNodeRef}
 			style={style}
 			className={cn(
-				"group flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
+				"group flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-gray-200 border-l-[12px] border-l-emerald-100 border-solid bg-white p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
 				isDragging && "z-10 cursor-grabbing",
@@ -106,7 +106,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 					/>
 				)}
 				{isEditing ? (
-					<div className="my-auto ml-auto text-xs text-blue-500">EDITING</div>
+					<div className="my-auto ml-auto text-blue-500 text-xs">EDITING</div>
 				) : (
 					<div className="my-auto ml-auto flex gap-1">
 						{restoreRemoveButton}
@@ -160,7 +160,7 @@ export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputEle
 			<FieldIcon
 				field={field}
 				className={cn(
-					"mr-4 mt-3 shrink-0",
+					"mt-3 mr-4 shrink-0",
 					isEditing ? "text-blue-500" : "text-emerald-500",
 					{
 						"text-red-300": element.deleted,

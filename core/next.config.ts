@@ -63,7 +63,7 @@ const nextConfig: NextConfig = {
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
-	webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
+	webpack: (config, { dev, isServer }) => {
 		if (config.cache && !dev) {
 			config.cache = Object.freeze({
 				type: "memory",
@@ -123,7 +123,7 @@ const modifiedConfig = withPreconstruct(
 	})
 )
 
-const config: typeof normalizeConfig = async (phase, { defaultConfig }) => {
+const config: typeof normalizeConfig = async (phase, {}) => {
 	if (!env.SENTRY_AUTH_TOKEN) {
 	}
 

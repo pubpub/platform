@@ -58,7 +58,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 								value: pubType.id,
 								label: pubType.name,
 								node: (
-									<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-xs text-blue-400">
+									<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-blue-400 text-xs">
 										{pubType.name}
 									</span>
 								),

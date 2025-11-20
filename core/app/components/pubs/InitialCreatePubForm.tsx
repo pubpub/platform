@@ -37,7 +37,7 @@ const PubTypeSelector = ({ pubTypes }: { pubTypes: PubTypeWithForm }) => {
 			render={({ field }) => (
 				<FormItem className="flex flex-col gap-y-1">
 					<div className="flex items-center justify-between">
-						<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+						<FormLabel className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
 							Pub type
 						</FormLabel>
 					</div>
@@ -86,7 +86,7 @@ const RelatedPubFieldSelector = ({
 			render={({ field }) => (
 				<FormItem className="flex flex-col gap-y-1">
 					<div className="flex items-center justify-between">
-						<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+						<FormLabel className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
 							Relationship
 						</FormLabel>
 					</div>

@@ -17,10 +17,10 @@ export const WrongUserLoggedIn = ({ email }: { email?: string }) => {
 		<div className="flex min-h-screen items-center justify-center bg-background">
 			<Card className="w-full max-w-md">
 				<CardHeader>
-					<div className="bg-warning/10 mx-auto flex h-20 w-20 items-center justify-center rounded-full">
-						<AlertCircle className="text-warning h-10 w-10" />
+					<div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-warning/10">
+						<AlertCircle className="h-10 w-10 text-warning" />
 					</div>
-					<CardTitle className="mt-4 text-center text-2xl font-bold">
+					<CardTitle className="mt-4 text-center font-bold text-2xl">
 						Wrong Account
 					</CardTitle>
 				</CardHeader>

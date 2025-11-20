@@ -61,8 +61,9 @@ export default (schema: Schema) => {
 			if (!node.text) {
 				return [node]
 			}
-			let match
+			let match: RegExpExecArray | null = null
 			let pos = 0
+			// biome-ignore lint/suspicious/noAssignInExpressions: is fine
 			while ((match = rule.regex.exec(node.text))) {
 				const start = match.index
 				const end = start + match[0].length

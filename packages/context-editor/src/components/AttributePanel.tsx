@@ -1,5 +1,4 @@
-import type React from "react"
-
+import * as React from "react"
 import { useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import {
@@ -181,7 +180,7 @@ export function AttributePanel({
 				}}
 				data-testid="attribute-panel"
 			>
-				<h2 className="text-md font-serif font-medium">
+				<h2 className="font-medium font-serif text-md">
 					{node.type.name}
 					{isMark ? <> + {node.marks.map((mark) => mark.type.name).join(", ")}</> : null}
 				</h2>

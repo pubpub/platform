@@ -1,5 +1,8 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.3.6/schema.json",
+	"files": {
+		"includes": ["**", "!!**/*stoplight.styles.css"]
+	},
 	"formatter": {
 		"enabled": true,
 		"formatWithErrors": false,
@@ -16,7 +19,8 @@
 			"**",
 			"!app/c/\\[communitySlug\\]/developers/docs/stoplight.styles.css",
 			"!**/vitest-bench.local.json",
-			"!**/*.html"
+			"!**/*.html",
+			"!node_modules/**"
 		]
 	},
 	"linter": {
@@ -55,7 +59,6 @@
 				"useValidAriaValues": "error",
 				"useValidAutocomplete": "error"
 			},
-
 			"style": {
 				"useImportType": "error",
 				"useNodejsImportProtocol": {
@@ -67,7 +70,7 @@
 				"noUnknownAtRules": {
 					"level": "error",
 					"options": {
-						"ignore": ["tailwind"]
+						"ignore": ["tailwind", "theme"]
 					}
 				}
 			},
@@ -83,9 +86,22 @@
 				"useExhaustiveDependencies": "warn",
 				"useHookAtTopLevel": "error",
 				"useJsxKeyInIterable": "error"
+			},
+			"nursery": {
+				"useSortedClasses": {
+					"fix": "safe",
+					"level": "error",
+					"options": {
+						"functions": ["cn", "cva"]
+					}
+				}
 			}
 		},
-		"includes": ["**"]
+		"includes": [
+			"**",
+			"!node_modules/**",
+			"!app/c/\\[communitySlug\\]/developers/docs/stoplight.styles.css"
+		]
 	},
 	"javascript": {
 		"formatter": {
@@ -113,15 +129,6 @@
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
-	"overrides": [
-		{
-			"includes": ["packages/ui/**/*.tsx", "packages/context-editor/**/*.tsx"],
-			// so that the `import React from "react"` is not removed
-			"javascript": {
-				"jsxRuntime": "reactClassic"
-			}
-		}
-	],
 	"assist": {
 		"actions": {
 			"source": {
@@ -257,5 +264,45 @@
 				"recommended": true
 			}
 		}
-	}
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
+
+	"overrides": [
+		{
+			"includes": ["packages/ui/**/*.tsx", "packages/context-editor/**/*.tsx"],
+			// so that the `import React from "react"` is not removed
+			"javascript": {
+				"jsxRuntime": "reactClassic"
+			}
+		},
+		{
+			// disabled until https://github.com/biomejs/biome/issues/7912 is fixed
+			"includes": ["**/*.astro"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						// it's unable to properly detect unused variables in Astro templates
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off"
+					}
+				}
+			},
+			// "css": {
+			// 	"formatter": {
+			// 		"enabled": false
+			// 	}
+			// },
+			"assist": {
+				"actions": {
+					"source": {
+						"organizeImports": "off"
+					}
+				}
+			}
+		}
+	]
 }

@@ -119,7 +119,7 @@ export const PubCard = async ({
 						<RelationsDropDown pubId={pub.id} numRelations={pub.relatedPubsCount} />
 					) : null}
 				</div>
-				<CardTitle className="text-sm font-bold">
+				<CardTitle className="font-bold text-sm">
 					<h3 className="min-w-0 truncate">
 						<Link
 							href={`/c/${communitySlug}/pubs/${pub.id}`}
@@ -142,7 +142,7 @@ export const PubCard = async ({
 				{showMatchingValues && (
 					<div
 						className={cn(
-							"grid gap-1 text-xs text-gray-500 [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
+							"grid gap-1 text-gray-500 text-xs [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
 							"[&_mark]:bg-yellow-200"
 						)}
 					>
@@ -160,7 +160,7 @@ export const PubCard = async ({
 						))}
 					</div>
 				)}
-				<CardFooter className="flex gap-2 p-0 text-xs text-gray-600">
+				<CardFooter className="flex gap-2 p-0 text-gray-600 text-xs">
 					<div className="flex gap-1" title="Created at">
 						<Calendar size="16px" strokeWidth="1px" className="text-neutral-500" />
 						<span>{formatDateAsMonthDayYear(new Date(pub.createdAt))}</span>

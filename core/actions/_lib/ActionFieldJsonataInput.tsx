@@ -29,8 +29,8 @@ export function ActionFieldJsonataInput(props: {
 
 	return (
 		<div className="relative">
-			<div className="absolute right-0 top-0 z-10">
-				<span className="flex items-center gap-1 rounded-bl-sm rounded-tr-sm border-b border-l border-amber-400 bg-amber-100 px-1.5 py-1.5 text-xs font-medium text-amber-800">
+			<div className="absolute top-0 right-0 z-10">
+				<span className="flex items-center gap-1 rounded-tr-sm rounded-bl-sm border-amber-400 border-b border-l bg-amber-100 px-1.5 py-1.5 font-medium text-amber-800 text-xs">
 					<Tooltip delayDuration={500}>
 						<TooltipTrigger className="underline decoration-dashed">
 							JSONata
@@ -62,7 +62,7 @@ export function ActionFieldJsonataInput(props: {
 			</div>
 			<Textarea
 				aria-labelledby={props["aria-labelledby"]}
-				className="border-amber-400 bg-amber-50/10 font-mono font-medium text-gray-900 focus:border-amber-400 focus-visible:ring-amber-400"
+				className="border-amber-400 bg-amber-50/10 font-medium font-mono text-gray-900 focus:border-amber-400 focus-visible:ring-amber-400"
 				placeholder={isDefaultField ? "(use default)" : undefined}
 				{...field}
 				id={field.name}

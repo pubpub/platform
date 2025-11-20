@@ -72,9 +72,9 @@ export default async function Page(_props: Props) {
 										strokeWidth={1}
 										className="mr-2 text-gray-500"
 									/>
-									<h2 className="text-lg font-medium">{action.name}</h2>
+									<h2 className="font-medium text-lg">{action.name}</h2>
 								</div>
-								<p className="text-sm text-muted-foreground">
+								<p className="text-muted-foreground text-sm">
 									{action.description}
 								</p>
 							</div>

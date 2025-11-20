@@ -316,6 +316,5 @@
 			"customRenderers/confidence/confidence.tsx",
 			"customRenderers/fileUpload/fileUpload.tsx"
 		]
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

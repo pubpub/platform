@@ -84,7 +84,7 @@ const EditorFormElement = function EditorFormElement({
 	])
 
 	if (!pubId || !pubTypeId) {
-		return <></>
+		return null
 	}
 	const disabled = !formElementToggle.isEnabled(f.name)
 

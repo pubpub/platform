@@ -78,7 +78,7 @@ export default async function Page(props: {
 						<EditFormTitleButton formId={form.id} name={form.name} />
 					</div>
 					{form.isDefault && (
-						<div className="flex gap-1 text-sm font-normal">
+						<div className="flex gap-1 font-normal text-sm">
 							Default editor for this type
 							<Tooltip>
 								<TooltipTrigger>

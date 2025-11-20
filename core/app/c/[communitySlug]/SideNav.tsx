@@ -322,7 +322,7 @@ const LinkGroup = async ({
 
 	return (
 		<SidebarGroup className="group-data-[collapsible=icon]:py-0">
-			<SidebarGroupLabel className="font-semibold uppercase text-gray-500 group-data-[collapsible=icon]:hidden">
+			<SidebarGroupLabel className="font-semibold text-gray-500 uppercase group-data-[collapsible=icon]:hidden">
 				{group.name}
 			</SidebarGroupLabel>
 			<SidebarGroupContent className="group-data-[state=expanded]:px-2">

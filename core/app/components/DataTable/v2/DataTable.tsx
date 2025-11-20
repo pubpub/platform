@@ -17,7 +17,7 @@ export function DataTable<TData, TValue>(
 		<DataTableV1
 			{...props}
 			// Render nothing on empty instead of the default
-			emptyState={<></>}
+			emptyState={null}
 			hidePaginationWhenSinglePage
 			className={cn("border-none", props.className)}
 			striped

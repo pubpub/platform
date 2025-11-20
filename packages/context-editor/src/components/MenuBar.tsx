@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import type { CommandSpec } from "../commands/types"
 import type { Upload } from "./ImageUploader"
 
+import * as React from "react"
 import { Fragment, useState } from "react"
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror"
 import {
@@ -182,13 +183,13 @@ const paragraphTypeItems: MenuItem[] = [
 	{
 		key: "h1",
 		name: "Heading 1",
-		icon: <span className="font-serif text-3xl font-bold">Heading 1</span>,
+		icon: <span className="font-bold font-serif text-3xl">Heading 1</span>,
 		command: heading1Toggle,
 	},
 	{
 		key: "h2",
 		name: "Heading 2",
-		icon: <span className="font-serif text-2xl font-bold">Heading 2</span>,
+		icon: <span className="font-bold font-serif text-2xl">Heading 2</span>,
 		command: heading2Toggle,
 	},
 	{
@@ -212,7 +213,7 @@ const paragraphTypeItems: MenuItem[] = [
 	{
 		key: "h6",
 		name: "Heading 6",
-		icon: <span className="font-serif text-sm font-normal">Heading 6</span>,
+		icon: <span className="font-normal font-serif text-sm">Heading 6</span>,
 		command: heading6Toggle,
 	},
 ]

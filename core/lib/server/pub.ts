@@ -994,7 +994,7 @@ const getRankedValues = async ({
 		PubsId,
 		Record<PubFieldsId, DefinitelyHas<(typeof pubValues)[number], "pubId">[]>
 	> = {}
-	let rankedValues
+	let rankedValues: ((typeof pubValues)[number] & { rank?: string })[] = []
 	if (relatedValues?.length) {
 		const firstVal = relatedValues[0]
 
@@ -1721,7 +1721,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					)
 					// pub value filter
 					.$if(Boolean(options?.filters), (qb) =>
-						qb.where((eb) => applyFilters(eb, options?.filters!))
+						qb.where((eb) => applyFilters(eb, options!.filters!))
 					)
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
@@ -2019,7 +2019,7 @@ function nestRelatedPubs<Options extends GetPubsWithRelatedValuesOptions>(
 			} as ProcessedPub<Options>["values"][number]
 		})
 
-		const { values, path, ...usefulProcessedPubColumns } = unprocessedPub
+		const { values: _values, path: _path, ...usefulProcessedPubColumns } = unprocessedPub
 
 		const processedPub = {
 			...usefulProcessedPubColumns,

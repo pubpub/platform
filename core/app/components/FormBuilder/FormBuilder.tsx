@@ -357,7 +357,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 			>
 				<Tabs defaultValue="builder" className="pr-[380px]">
 					<div className="px-6">
-						<TabsList className="mb-2 mt-4">
+						<TabsList className="mt-4 mb-2">
 							<TabsTrigger value="builder">Builder</TabsTrigger>
 							<TabsTrigger value="preview">Preview</TabsTrigger>
 						</TabsList>

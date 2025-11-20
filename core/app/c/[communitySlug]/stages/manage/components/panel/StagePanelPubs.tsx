@@ -65,7 +65,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 		<Card>
 			<CardContent className="space-y-2 p-4">
 				<div className="flex flex-wrap items-center justify-between">
-					<h4 className="mb-2 text-base font-semibold">Pubs</h4>
+					<h4 className="mb-2 font-semibold text-base">Pubs</h4>
 					<Suspense fallback={<SkeletonCard />}>
 						<CreatePubButton stageId={props.stageId} />
 					</Suspense>

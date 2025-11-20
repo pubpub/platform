@@ -1,14 +1,14 @@
 import type { WidgetViewComponentProps } from "@handlewithcare/react-prosemirror"
 import type { Node } from "prosemirror-model"
 
+import * as React from "react"
 import { forwardRef, useMemo } from "react"
 import { useEditorEventCallback, useEditorState } from "@handlewithcare/react-prosemirror"
-import { TextSelection } from "prosemirror-state"
+import { type EditorState, TextSelection } from "prosemirror-state"
 
 import { reactPropsKey } from "../plugins/reactProps"
 
-const getBlockName = (node: Node) => {
-	const state = useEditorState()
+const getBlockName = (state: EditorState, node: Node) => {
 	const { pubTypes, pubId } = reactPropsKey.getState(state)
 
 	const buttonName = `${node.type.name}${node.type.name === "heading" ? ` ${node.attrs.level}` : ""}`
@@ -28,7 +28,7 @@ const getBlockName = (node: Node) => {
 		return field.slug === currentFieldSlug
 	})
 	const currentTypeName = currentPubType.name
-	let label
+	let label: string
 	if (currentPubId === pubId) {
 		label = `~${currentField.name}`
 	} else {
@@ -68,7 +68,7 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 					onClick={onClick}
 					className={node.type.name}
 				>
-					{getBlockName(node)}
+					{getBlockName(state, node)}
 				</button>
 			</div>
 		)

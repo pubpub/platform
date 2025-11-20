@@ -35,7 +35,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
-				<h4 className="mb-2 text-base font-semibold">Actions</h4>
+				<h4 className="mb-2 font-semibold text-base">Actions</h4>
 				{actionInstances.length > 0 ? (
 					<p>
 						<em>{stage.name}</em> has {actionInstances.length} action

@@ -20,12 +20,12 @@ export type ActionConfigError = {
 	cause?: unknown
 }
 
-export type ActionConfigSuccess<T = Record<string, any>> = {
+export type ActionConfigSuccess<T = Record<string, unknown>> = {
 	success: true
 	config: T
 }
 
-export type ActionConfigResult<T = Record<string, any>> =
+export type ActionConfigResult<T = Record<string, unknown>> =
 	| ActionConfigSuccess<T>
 	| { success: false; error: ActionConfigError }
 
@@ -36,7 +36,7 @@ const needsInterpolation = (value: string): boolean => {
 	return value.includes("{{") || value.includes("$.") || value.startsWith("<<<")
 }
 
-const collectActionFieldReferences = (obj: Record<string, any>): Record<string, string[]> => {
+const collectActionFieldReferences = (obj: Record<string, unknown>): Record<string, string[]> => {
 	const refMap = {} as Record<string, string[]>
 	for (const [key, value] of Object.entries(obj)) {
 		const refs: string[] = []
@@ -123,12 +123,14 @@ const reportCycle = (cycle: string[]): string => {
  *   .getResult();
  * ```
  */
-export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<any>> {
+export class ActionConfigBuilder<
+	TConfig extends z.ZodObject<z.ZodRawShape> = z.ZodObject<z.ZodRawShape>,
+> {
 	private readonly actionName: Action
 	private readonly action: ReturnType<typeof getActionByName>
-	private readonly defaults: Record<string, any>
-	private readonly config: Record<string, any>
-	private readonly overrides: Record<string, any>
+	private readonly defaults: Record<string, unknown>
+	private readonly config: Record<string, unknown>
+	private readonly overrides: Record<string, unknown>
 	private readonly state: BuilderState
 	private readonly result: ActionConfigResult | null
 
@@ -136,9 +138,9 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		actionName: Action,
 		options: {
 			action?: ReturnType<typeof getActionByName> | null
-			defaults?: Record<string, any>
-			config?: Record<string, any>
-			overrides?: Record<string, any>
+			defaults?: Record<string, unknown>
+			config?: Record<string, unknown>
+			overrides?: Record<string, unknown>
 			state?: BuilderState
 			result?: ActionConfigResult | null
 		} = {}
@@ -163,7 +165,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * create new instance with default configuration values
 	 * these will be merged with the lowest priority
 	 */
-	withDefaults(defaults: Record<string, any> | string[]): ActionConfigBuilder<TConfig> {
+	withDefaults(defaults: Record<string, unknown> | string[]): ActionConfigBuilder<TConfig> {
 		if (Array.isArray(defaults)) {
 			defaults = defaults.reduce(
 				(acc, key) => {
@@ -187,7 +189,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * create new instance with main configuration
 	 * this typically comes from the action instance
 	 */
-	withConfig(config: Record<string, any>): ActionConfigBuilder<TConfig> {
+	withConfig(config: Record<string, unknown>): ActionConfigBuilder<TConfig> {
 		return new ActionConfigBuilder(this.actionName, {
 			action: this.action,
 			defaults: this.defaults,
@@ -202,7 +204,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * create new instance with override values
 	 * these will be merged with the highest priority
 	 */
-	withOverrides(overrides: Record<string, any>): ActionConfigBuilder<TConfig> {
+	withOverrides(overrides: Record<string, unknown>): ActionConfigBuilder<TConfig> {
 		return new ActionConfigBuilder(this.actionName, {
 			action: this.action,
 			defaults: this.defaults,
@@ -342,7 +344,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 
 		try {
 			// interpolate each field individually
-			const interpolatedConfig: Record<string, any> = {}
+			const interpolatedConfig: Record<string, unknown> = {}
 
 			for (const [key, value] of Object.entries(configToInterpolate)) {
 				if (typeof value !== "string") {
@@ -390,7 +392,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * get the action schema
 	 * returns null if action not found
 	 */
-	getRawSchema(): z.ZodObject<any> {
+	getRawSchema(): z.ZodObject<z.ZodRawShape> {
 		return this.action.config.schema
 	}
 
@@ -398,7 +400,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * get the schema that accepts json template strings
 	 * throws if action not found
 	 */
-	getSchema(): z.ZodObject<any> {
+	getSchema(): z.ZodObject<z.ZodRawShape> {
 		const schema = this.getRawSchema()
 		return schemaWithJsonFields(schema)
 	}
@@ -406,7 +408,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	/**
 	 * get the current merged config (before validation)
 	 */
-	getMergedConfig(): Record<string, any> {
+	getMergedConfig(): Record<string, unknown> {
 		return {
 			...this.defaults,
 			...this.config,
@@ -431,7 +433,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * get the current config if successful, throw if error
 	 * useful for when you know the config should be valid
 	 */
-	unwrap(): Record<string, any> {
+	unwrap(): Record<string, unknown> {
 		const result = this.getResult()
 		if (!result.success) {
 			throw new Error(
@@ -444,7 +446,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	/**
 	 * get the current config if successful, return null if error
 	 */
-	unwrapOr(defaultValue: Record<string, any> | null = null): Record<string, any> | null {
+	unwrapOr(defaultValue: Record<string, unknown> | null = null): Record<string, unknown> | null {
 		const result = this.getResult()
 		return result.success ? result.config : defaultValue
 	}

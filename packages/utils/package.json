@@ -29,7 +29,6 @@
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:"
 	},
-	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
 		"entrypoints": [
 			"index.ts",

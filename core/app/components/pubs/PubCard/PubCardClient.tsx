@@ -20,7 +20,6 @@ export type PubCardClientProps = {
 	disabled?: boolean
 	showCheckbox?: boolean
 	className?: string
-	onClick?: () => void
 }
 
 export const PubCardClient = ({
@@ -30,7 +29,6 @@ export const PubCardClient = ({
 	disabled = false,
 	showCheckbox = true,
 	className,
-	onClick,
 }: PubCardClientProps) => {
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle)
 	const showMatchingValues = matchingValues && matchingValues.length !== 0
@@ -44,24 +42,15 @@ export const PubCardClient = ({
 		[onSelect, disabled, pub]
 	)
 
-	const handleCardClick = useCallback(() => {
-		if (onClick) {
-			onClick()
-		} else if (onSelect && !disabled) {
-			onSelect(pub, !selected)
-		}
-	}, [onClick, onSelect, disabled, selected, pub])
-
 	return (
 		<Card
 			className={cn(
 				"group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 transition-colors",
 				selected && "border-blue-500 bg-blue-50",
 				disabled && "cursor-not-allowed opacity-50",
-				!disabled && (onClick || onSelect) && "cursor-pointer hover:border-gray-300",
+				!disabled && onSelect && "cursor-pointer hover:border-gray-300",
 				className
 			)}
-			onClick={handleCardClick}
 			data-testid={`pub-card-${pub.id}`}
 		>
 			<div className="flex min-w-0 flex-1 flex-col space-y-[6px]">
@@ -75,7 +64,7 @@ export const PubCardClient = ({
 						</Badge>
 					)}
 				</div>
-				<CardTitle className="text-sm font-bold">
+				<CardTitle className="font-bold text-sm">
 					<h3 className="min-w-0 truncate">
 						<div
 							className="[&_mark]:bg-yellow-300"
@@ -86,7 +75,7 @@ export const PubCardClient = ({
 				{showMatchingValues && (
 					<div
 						className={cn(
-							"grid gap-1 text-xs text-gray-500 [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
+							"grid gap-1 text-gray-500 text-xs [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
 							"[&_mark]:bg-yellow-200"
 						)}
 					>
@@ -106,7 +95,7 @@ export const PubCardClient = ({
 						))}
 					</div>
 				)}
-				<CardFooter className="flex gap-2 p-0 text-xs text-gray-600">
+				<CardFooter className="flex gap-2 p-0 text-gray-600 text-xs">
 					<div className="flex gap-1" title="Created at">
 						<Calendar size="16px" strokeWidth="1px" className="text-neutral-500" />
 						<span>{formatDateAsMonthDayYear(new Date(pub.createdAt))}</span>
@@ -118,8 +107,7 @@ export const PubCardClient = ({
 				</CardFooter>
 			</div>
 			{showCheckbox && (
-				// eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-				<div className="z-10 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+				<div className="z-10 flex-shrink-0">
 					<Checkbox
 						aria-label={`Select pub ${getPubTitle(pub)}`}
 						checked={selected}

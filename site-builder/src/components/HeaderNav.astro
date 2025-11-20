@@ -1,6 +1,6 @@
 ---
-import type { NonGenericProcessedPub } from "contracts"
 import NavMenu from "./NavMenu"
+import type { NonGenericProcessedPub } from "contracts"
 
 export interface Props {
 	navMenuPubs: NonGenericProcessedPub[]
@@ -14,7 +14,7 @@ const { navMenuPubs = [] } = Astro.props
 	{navMenuPubs.map((navPub) => <NavMenu navPub={navPub} client:load />)}
 	{
 		navMenuPubs.length === 0 && (
-			<div class="text-white/50 text-sm px-4 py-2">No navigation menus available</div>
+		   <div class="text-white/50 text-sm px-4 py-2">No navigation menus available</div>
 		)
 	}
 </nav>

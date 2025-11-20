@@ -444,7 +444,7 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 
 		const members = Object.fromEntries(
 			Object.entries(pub.members ?? {}).map(
-				([slug, role]) => [findBySlug(users, slug)?.id!, role!] as const
+				([slug, role]) => [findBySlug(users, slug)?.id, role] as const
 			)
 		) as Record<UsersId, MemberRole>
 
@@ -1100,19 +1100,36 @@ export async function seedCommunity<
 						const { to, from } = destinations
 
 						const tos =
-							to?.map((dest) => ({
-								stageId: currentStageId,
-								destinationId: consolidatedStages.find(
+							to?.map((dest) => {
+								const toStage = consolidatedStages.find(
 									(stage) => stage.name === dest
-								)?.id,
-							})) ?? []
+								)
+								if (!toStage) {
+									throw new Error(
+										`Something went wrong during the creation of stage connections. Stage ${String(dest)} not found in the output of the created stages.`
+									)
+								}
+								return {
+									stageId: toStage.id,
+									destinationId: currentStageId,
+								}
+							}) ?? []
 
 						const froms =
-							from?.map((dest) => ({
-								stageId: consolidatedStages.find((stage) => stage.name === dest)
-									?.id,
-								destinationId: currentStageId,
-							})) ?? []
+							from?.map((dest) => {
+								const fromStage = consolidatedStages.find(
+									(stage) => stage.name === dest
+								)
+								if (!fromStage) {
+									throw new Error(
+										`Something went wrong during the creation of stage connections. Stage ${String(dest)} not found in the output of the created stages.`
+									)
+								}
+								return {
+									stageId: fromStage.id,
+									destinationId: currentStageId,
+								}
+							}) ?? []
 
 						return [...tos, ...froms]
 					})
@@ -1175,18 +1192,26 @@ export async function seedCommunity<
 						eb
 							.insertInto("forms")
 							.values(
-								formList.map(([formTitle, formInput]) => ({
-									id: formInput.id,
-									access: formInput.access,
-									isArchived: formInput.isArchived,
-									name: formTitle,
-									slug: formInput.slug ?? slugifyString(formTitle),
-									communityId: communityId,
-									pubTypeId: createdPubTypes.find(
+								formList.map(([formTitle, formInput]) => {
+									const pubType = createdPubTypes.find(
 										(pubType) => pubType.name === formInput.pubType
-									)?.id,
-									isDefault: formInput.isDefault,
-								}))
+									)
+									if (!pubType) {
+										throw new Error(
+											`Something went wrong during the creation of forms. Pub type ${String(formInput.pubType)} not found in the output of the created pub types.`
+										)
+									}
+									return {
+										id: formInput.id,
+										access: formInput.access,
+										isArchived: formInput.isArchived,
+										name: formTitle,
+										slug: formInput.slug ?? slugifyString(formTitle),
+										communityId: communityId,
+										pubTypeId: pubType.id,
+										isDefault: formInput.isDefault,
+									}
+								})
 							)
 							.returningAll()
 					)

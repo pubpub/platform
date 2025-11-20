@@ -37,7 +37,7 @@ export const SaveStatus = ({ autosave }: { autosave?: boolean }) => {
 	const status = useSaveStatus({ defaultMessage })
 
 	return (
-		<div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+		<div className="flex items-center gap-2 font-normal text-muted-foreground text-sm">
 			<span>{status}</span>
 			<Tooltip>
 				<TooltipContent side="bottom" className="w-60 text-sm">

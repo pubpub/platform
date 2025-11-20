@@ -139,7 +139,7 @@ const permissionContraintMap: PermissionContraintMap = {
 			return (
 				<div className="flex flex-col gap-2">
 					<h3 className="font-semibold">Stages</h3>
-					<span className="text-xs text-muted-foreground">
+					<span className="text-muted-foreground text-xs">
 						Select the stages this token can read Pubs from
 					</span>
 					<MultiSelect
@@ -179,7 +179,7 @@ const permissionContraintMap: PermissionContraintMap = {
 					/>
 
 					<h3 className="font-semibold">Types</h3>
-					<span className="text-xs text-muted-foreground">
+					<span className="text-muted-foreground text-xs">
 						Select the types of Pubs this token can read
 					</span>
 					<MultiSelect
@@ -225,8 +225,8 @@ const permissionContraintMap: PermissionContraintMap = {
 			const context = useContext(CreateTokenFormContext)
 			return (
 				<div className="flex flex-col gap-2">
-					<h3 className="text-lg font-semibold">Stages</h3>
-					<span className="text-sm text-muted-foreground">
+					<h3 className="font-semibold text-lg">Stages</h3>
+					<span className="text-muted-foreground text-sm">
 						Select the stages this token can create pubs in/move pubs to
 					</span>
 					<MultiSelect
@@ -259,8 +259,8 @@ const permissionContraintMap: PermissionContraintMap = {
 			const context = useContext(CreateTokenFormContext)
 			return (
 				<div className="flex flex-col gap-2">
-					<h3 className="text-lg font-semibold">Stages</h3>
-					<span className="text-sm text-muted-foreground">
+					<h3 className="font-semibold text-lg">Stages</h3>
+					<span className="text-muted-foreground text-sm">
 						Select the stages this token can read
 					</span>
 					<MultiSelect

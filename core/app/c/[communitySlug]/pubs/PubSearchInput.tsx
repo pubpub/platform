@@ -87,7 +87,7 @@ export const PubSearch = (props: PubSearchProps) => {
 			<div className="sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 border-b bg-white px-4 py-2">
 				<div className="relative flex min-w-96 items-center gap-x-2">
 					<Search
-						className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
+						className="-translate-y-1/2 absolute top-1/2 left-2 text-gray-500"
 						size={16}
 					/>
 					<Input
@@ -102,7 +102,7 @@ export const PubSearch = (props: PubSearchProps) => {
 							inputValues && "pr-8"
 						)}
 					/>
-					<span className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center font-mono text-xs text-gray-500 opacity-50 md:flex">
+					<span className="-translate-y-1/2 absolute top-1/2 right-2 flex items-center font-mono text-gray-500 text-xs opacity-50 md:flex">
 						{inputValues?.query && (
 							<button
 								onClick={handleClearInput}
@@ -146,7 +146,7 @@ export const PubSearch = (props: PubSearchProps) => {
 						<PlusCircle size={16} />
 						Type
 						{queryParams.pubTypes?.length ? (
-							<span className="ml-1 text-xs text-gray-500">
+							<span className="ml-1 text-gray-500 text-xs">
 								{queryParams.pubTypes.length}
 							</span>
 						) : null}
@@ -169,7 +169,7 @@ export const PubSearch = (props: PubSearchProps) => {
 						<PlusCircle size={16} />
 						Stage
 						{queryParams.stages?.length ? (
-							<span className="ml-1 text-xs text-gray-500">
+							<span className="ml-1 text-gray-500 text-xs">
 								{queryParams.stages.length}
 							</span>
 						) : null}

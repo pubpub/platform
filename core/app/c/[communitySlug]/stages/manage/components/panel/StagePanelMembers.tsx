@@ -41,7 +41,7 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 						members.length && "border-b-2 border-b-gray-200 pb-4"
 					)}
 				>
-					<h4 className="mb-2 inline text-base font-semibold">Members</h4>
+					<h4 className="mb-2 inline font-semibold text-base">Members</h4>
 					<AddMemberDialog
 						addMember={addStageMember.bind(null, stageId)}
 						addUserMember={addUserWithStageMembership.bind(null, stageId)}

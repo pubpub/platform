@@ -97,7 +97,7 @@ const ActionSelector = ({
 									<action.icon size="12" />
 									<span>{instance.name}</span>
 									{isDisabled && (
-										<span className="text-xs text-gray-400">
+										<span className="text-gray-400 text-xs">
 											(self-reference not allowed)
 										</span>
 									)}
@@ -493,7 +493,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 												<FormMessage />
 											</>
 										) : (
-											<p className="text-xs text-red-500">
+											<p className="text-red-500 text-xs">
 												All events for this action have already been added.
 											</p>
 										)}
@@ -535,7 +535,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 
 							{selectedActionInstance && event === Event.webhook && (
 								<div className="mt-4 space-y-2">
-									<h4 className="text-sm font-medium">
+									<h4 className="font-medium text-sm">
 										With the following config:
 									</h4>
 									<div className="rounded-md border bg-gray-50 p-2">
@@ -563,7 +563,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 						{form.formState.errors.root && (
 							<p
 								className={
-									"text-[0.8rem] font-medium text-red-500 dark:text-red-900"
+									"font-medium text-[0.8rem] text-red-500 dark:text-red-900"
 								}
 							>
 								{form.formState.errors.root.message}
@@ -572,7 +572,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 					</Form>
 					<DialogFooter
 						className={cn(
-							"sticky -bottom-4 flex w-full items-center",
+							"-bottom-4 sticky flex w-full items-center",
 							currentlyEditingAutomationId && "!justify-between"
 						)}
 					>

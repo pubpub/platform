@@ -42,7 +42,7 @@ export const ColorPickerPopover = ({
 					{label && <span>{label}</span>}
 					<ColorValue
 						color={color}
-						className={cn(label && "text-xs text-muted-foreground")}
+						className={cn(label && "text-muted-foreground text-xs")}
 					/>
 				</Button>
 			</PopoverTrigger>

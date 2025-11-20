@@ -40,7 +40,7 @@ export const ButtonOption = ({
 			<div className="ml-7 flex items-center gap-3">
 				<FormInput width="20px" />
 				<div className="flex h-full flex-col py-3">
-					<span className="text-sm font-medium text-muted-foreground">
+					<span className="font-medium text-muted-foreground text-sm">
 						{buttonType === "primary" ? "Primary Button" : "Secondary Button"}
 					</span>
 					<span className="font-semibold">{label}</span>
@@ -76,7 +76,7 @@ export const SubmissionSettings = () => {
 
 	return (
 		<div>
-			<FormLabel className="text-sm uppercase text-gray-500">Submission Settings</FormLabel>
+			<FormLabel className="text-gray-500 text-sm uppercase">Submission Settings</FormLabel>
 			<hr className="my-2" />
 			<div className="flex flex-col items-start gap-3">
 				{buttons.map((b) => {

@@ -28,7 +28,7 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
-				<h4 className="mb-2 text-base font-semibold">Automations</h4>
+				<h4 className="mb-2 font-semibold text-base">Automations</h4>
 				{actionInstances.length > 0 ? (
 					<>
 						<div className="flex flex-col gap-2">

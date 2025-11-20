@@ -44,7 +44,7 @@ export default async function Page(props: {
 
 	return (
 		<div>
-			<h1 className="mb-12 text-2xl font-bold">Legacy Migration</h1>
+			<h1 className="mb-12 font-bold text-2xl">Legacy Migration</h1>
 
 			<MigrationForm />
 

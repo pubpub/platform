@@ -62,7 +62,7 @@ export const FormSwitcher = ({
 				</SelectTrigger>
 				<SelectContent>
 					<SelectGroup>
-						<SelectLabel className="text-xs font-normal text-muted-foreground">
+						<SelectLabel className="font-normal text-muted-foreground text-xs">
 							Content will change upon selection. You may lose unsaved changes.
 						</SelectLabel>
 						{forms.map((form) => (

@@ -30,7 +30,7 @@ export const SelectAccess = () => {
 			name="access"
 			render={({ field }) => (
 				<FormItem>
-					<FormLabel className="text-sm uppercase text-gray-500">Access</FormLabel>
+					<FormLabel className="text-gray-500 text-sm uppercase">Access</FormLabel>
 					<hr />
 					<Select onValueChange={field.onChange} defaultValue={field.value}>
 						<FormControl>
@@ -51,7 +51,7 @@ export const SelectAccess = () => {
 											<Icon size={16} />
 											<div className="flex flex-col items-start">
 												<div className="font-medium">{name}</div>
-												<div className="text-xs text-gray-500">
+												<div className="text-gray-500 text-xs">
 													{description}
 												</div>
 											</div>

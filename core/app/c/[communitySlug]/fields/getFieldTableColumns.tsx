@@ -75,7 +75,7 @@ export const getFieldTableColumns = () =>
 				return (
 					<div className="flex items-center gap-2">
 						{Icon ? (
-							<span className="absolute -ml-6">
+							<span className="-ml-6 absolute">
 								<Icon className="w-4" />
 							</span>
 						) : null}
@@ -100,7 +100,7 @@ export const getFieldTableColumns = () =>
 			accessorKey: "slug",
 			cell: ({ row }) => (
 				<div className="pr-10">
-					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-xs text-blue-400">
+					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-blue-400 text-xs">
 						{row.original.slug}
 					</span>
 				</div>

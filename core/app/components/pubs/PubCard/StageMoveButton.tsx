@@ -57,7 +57,7 @@ export const FilterableStageMoveButton = ({ stage, withDropdown, className, ...p
 			onBlur={() => setExpanded(false)}
 			className={cn(
 				className,
-				"relative h-[22px] gap-0 rounded-full border-gray-300 px-[.35rem] text-xs font-semibold shadow-none",
+				"relative h-[22px] gap-0 rounded-full border-gray-300 px-[.35rem] font-semibold text-xs shadow-none",
 				withDropdown ? "" : "pr-4"
 			)}
 		>
@@ -75,7 +75,7 @@ export const FilterableStageMoveButton = ({ stage, withDropdown, className, ...p
 				variant="ghost"
 				onClick={toggleStage}
 				size="icon"
-				className={`absolute right-1 top-1/2 z-10 h-4 w-4 -translate-y-1/2 rounded-full text-muted-foreground transition-opacity duration-500 ease-in-out hover:bg-gray-200 hover:text-foreground ${
+				className={`-translate-y-1/2 absolute top-1/2 right-1 z-10 h-4 w-4 rounded-full text-muted-foreground transition-opacity duration-500 ease-in-out hover:bg-gray-200 hover:text-foreground ${
 					expanded ? "opacity-100" : "opacity-0"
 				}`}
 				aria-label={`${stage.name} ${isSelected ? "remove from" : "add to"} filter`}

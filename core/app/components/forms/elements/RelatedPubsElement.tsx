@@ -400,7 +400,7 @@ export const RelatedPubsElement = ({
 						<FormDescription>{config.relationshipConfig.help}</FormDescription>
 						<FormMessage />
 						{showRelationBlockWarning && (
-							<div className="flex items-center gap-2 text-xs text-amber-500">
+							<div className="flex items-center gap-2 text-amber-500 text-xs">
 								<AlertTriangle size={16} /> No related Pub Types have been
 								configured, so users will not be able to link to this pub. <br />
 								Only admins can see this warning.

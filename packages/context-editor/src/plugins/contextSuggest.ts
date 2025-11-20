@@ -9,8 +9,9 @@ import { v4 as uuidv4 } from "uuid"
 import { reactPropsKey } from "./reactProps"
 
 const updateItems = async (view: EditorView, filter: string) => {
-	const { pubTypes, getPubs, getPubsById, pubTypeId, suggestData, setSuggestData } =
-		reactPropsKey.getState(view.state)
+	const { pubTypes, getPubs, pubTypeId, suggestData, setSuggestData } = reactPropsKey.getState(
+		view.state
+	)
 	const newTypeItems = fuzzy
 		.filter(filter || "", pubTypes, {
 			extract: (el: any) => {
@@ -82,13 +83,7 @@ export default (
 			return true
 		},
 		onEnter: ({ view, range }) => {
-			const {
-				pubTypes,
-				getPubs,
-				pubId: rootPubId,
-				suggestData,
-				setSuggestData,
-			} = reactPropsKey.getState(view.state)
+			const { pubTypes, pubId: rootPubId, suggestData } = reactPropsKey.getState(view.state)
 			const selectedItem = suggestData.items[suggestData.selectedIndex]
 			const selectedItemIsPub = selectedItem.pubTypeId
 			const selectedItemIsField = selectedItem.schemaName
@@ -98,9 +93,9 @@ export default (
 				return pubType.id === selectedTypeId
 			})
 
-			let isAtom
-			let pubId
-			let fieldSlug
+			let isAtom: boolean
+			let pubId: string
+			let fieldSlug: string
 			if (selectedItemIsField) {
 				/* Eventually, we will check that selectedItem.schemaName !== JSONContent or whatever we name that structured type */
 				isAtom = selectedItem.schemaName !== "String"
@@ -164,7 +159,7 @@ export default (
 			return true
 		},
 		onClose: ({ view }) => {
-			const { suggestData, setSuggestData } = reactPropsKey.getState(view.state)
+			const { setSuggestData } = reactPropsKey.getState(view.state)
 			setSuggestData({
 				selectedIndex: 0,
 				items: [],

@@ -53,7 +53,7 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 			<DropdownMenuTrigger asChild>
 				<Button
 					variant="outline"
-					className="flex h-[22px] gap-1 px-2 px-[.35rem] text-xs font-semibold shadow-none"
+					className="flex h-[22px] gap-1 px-2 px-[.35rem] font-semibold text-xs shadow-none"
 				>
 					<span className="rounded bg-slate-100 px-1 text-[10px]">{numRelations}</span>
 					Relations
@@ -78,14 +78,14 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 								<DropdownMenuItem key={relatedPub.id}>
 									<Badge
 										variant="secondary"
-										className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 text-[10px] font-semibold leading-4 tracking-[-.1px]"
+										className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 font-semibold text-[10px] leading-4 tracking-[-.1px]"
 									>
 										{relatedPub.pubType.name}
 									</Badge>
 									<div className="truncate">
 										<Link
 											href={`/c/${community.slug}/pubs/${relatedPub.id}`}
-											className="text-xs font-bold"
+											className="font-bold text-xs"
 										>
 											{getPubTitle(relatedPub)}
 										</Link>
@@ -96,7 +96,7 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 						})}
 						{relatedPubs.length !== numRelations && (
 							<DropdownMenuItem>
-								<p className="w-full text-center text-xs font-medium text-muted-foreground">
+								<p className="w-full text-center font-medium text-muted-foreground text-xs">
 									{numRelations - relatedPubs.length} related Pubs are not visible
 									to you
 								</p>
@@ -105,7 +105,7 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 					</>
 				) : (
 					<DropdownMenuItem>
-						<p className="w-full text-center text-xs font-medium text-muted-foreground">
+						<p className="w-full text-center font-medium text-muted-foreground text-xs">
 							No related Pubs are visible to you
 						</p>
 					</DropdownMenuItem>

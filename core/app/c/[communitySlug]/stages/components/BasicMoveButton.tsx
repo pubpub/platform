@@ -14,7 +14,7 @@ export const BasicMoveButton = ({ name, withDropdown, className, ...props }: Pro
 			variant="outline"
 			{...props}
 			className={cn(
-				"h-[22px] gap-0.5 rounded-full px-[.35rem] text-xs font-semibold shadow-none",
+				"h-[22px] gap-0.5 rounded-full px-[.35rem] font-semibold text-xs shadow-none",
 				withDropdown ? "" : "pr-4",
 				className
 			)}

@@ -47,7 +47,7 @@ const Completed = ({ element }: { element: Form["elements"][number] | undefined 
 					dangerouslySetInnerHTML={{ __html: element.content ?? " " }}
 				/>
 			) : (
-				<h2 className="text-lg font-semibold">Form Successfully Submitted</h2>
+				<h2 className="font-semibold text-lg">Form Successfully Submitted</h2>
 			)}
 		</div>
 	)
@@ -76,14 +76,14 @@ const ExpiredTokenPage = ({
 		<div className="isolate min-h-screen">
 			<Header>
 				<div className="flex flex-col items-center">
-					<h1 className="text-xl font-bold">
+					<h1 className="font-bold text-xl">
 						{capitalize(form.name)} for {community?.name}
 					</h1>
 					<SaveStatus />
 				</div>
 			</Header>
 			<div className="mx-auto mt-32 flex max-w-md flex-col items-center justify-center text-center">
-				<h2 className="mb-2 text-lg font-semibold">Link Expired</h2>
+				<h2 className="mb-2 font-semibold text-lg">Link Expired</h2>
 				<p className="mb-6 text-sm">
 					The link for this form has expired. Request a new one via email below to pick up
 					right where you left off.
@@ -288,7 +288,7 @@ export default async function FormPage(props: {
 		<div className="isolate min-h-screen">
 			<Header>
 				<div className="flex flex-col items-center">
-					<h1 className="text-xl font-bold">
+					<h1 className="font-bold text-xl">
 						{capitalize(form.name)} for {community?.name}
 					</h1>
 					<SaveStatus autosave={withAutoSave} />

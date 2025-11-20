@@ -79,12 +79,12 @@ export const MembersList = <T extends TargetId>({
 							<div className="text-xs">
 								{user.firstName} {user.lastName}
 							</div>
-							<div className="text-xs text-gray-400">{user.email}</div>
+							<div className="text-gray-400 text-xs">{user.email}</div>
 						</div>
 					</div>
 					<div className="flex items-center gap-2">
 						{readOnly ? (
-							<span className="rounded-full bg-blue-500 px-3 py-2 text-sm font-medium capitalize text-gray-50">
+							<span className="rounded-full bg-blue-500 px-3 py-2 font-medium text-gray-50 text-sm capitalize">
 								{user.role}
 							</span>
 						) : (

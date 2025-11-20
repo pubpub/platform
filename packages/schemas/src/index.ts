@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noShadowRestrictedNames: i'll shadow what i want */
 import type { Static } from "@sinclair/typebox"
 import type * as Schemas from "./schemas"
 

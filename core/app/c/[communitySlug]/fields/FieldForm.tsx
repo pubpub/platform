@@ -112,7 +112,7 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 											<Icon className="w-4" />
 											<div className="flex flex-col items-start font-medium">
 												<div>{schemaName}</div>
-												<div className="text-xs text-muted-foreground">
+												<div className="text-muted-foreground text-xs">
 													{description}
 												</div>
 											</div>

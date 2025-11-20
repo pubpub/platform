@@ -72,7 +72,7 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 									<Button
 										type="button"
 										variant="ghost"
-										className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 p-0 text-red-500 group-hover:text-red-500"
+										className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 h-full w-full p-0 text-red-500 group-hover:text-red-500"
 										onClick={() => {
 											form.setValue("avatar", "")
 										}}
@@ -87,7 +87,7 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 									<Button
 										type="button"
 										variant="ghost"
-										className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 p-0"
+										className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 h-full w-full p-0"
 										onClick={() => form.setValue("avatar", user.avatar)}
 									>
 										<Undo2 className="hidden group-hover:block" size="20" />

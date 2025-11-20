@@ -81,7 +81,7 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 					<HexColorInput
 						alpha={true}
 						className={cn(
-							"w-[200px] border-none text-center font-mono font-medium uppercase tracking-wider",
+							"w-[200px] border-none text-center font-medium font-mono uppercase tracking-wider",
 							isDark ? "text-white" : "text-black"
 						)}
 						prefixed

@@ -1,5 +1,6 @@
 import type { Node } from "prosemirror-model"
-import type React from "react"
+
+import * as React from "react"
 
 import { AdvancedOptions } from "./AdvancedOptions"
 import { FigureMenu } from "./FigureMenu"

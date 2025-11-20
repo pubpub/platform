@@ -18,7 +18,7 @@ import { allPermissions } from "~/lib/server/apiAccessTokens"
 
 const { createForEachMockedTransaction } = await mockServerCode()
 
-const { getTrx, rollback, commit } = createForEachMockedTransaction()
+const { getTrx, rollback } = createForEachMockedTransaction()
 
 describe("seedCommunity", () => {
 	test("Should be able to create some sort of community", async () => {

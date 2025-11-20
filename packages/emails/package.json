@@ -47,6 +47,5 @@
 	"files": ["dist"],
 	"eslintConfig": {
 		"extends": ["@pubpub/eslint-config/base", "@pubpub/eslint-config/react"]
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

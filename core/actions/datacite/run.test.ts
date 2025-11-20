@@ -276,10 +276,10 @@ describe("DataCite action", () => {
 			},
 		})
 
-		const call = fetch.mock.lastCall?.[1]!
-		const body = JSON.parse(call.body as string)
+		const call = fetch.mock.lastCall?.[1]
+		const body = JSON.parse(call?.body as string)
 		expect(body.data.attributes.doi).toBe(doi)
-		expect(call.method).toBe("POST")
+		expect(call?.method).toBe("POST")
 	})
 
 	it.todo("transforms related contributor pubs into DataCite creators")

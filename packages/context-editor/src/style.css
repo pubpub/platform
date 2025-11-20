@@ -263,6 +263,5 @@ before the actual table. I'm unsure why this happens, but this code hides it:
 }
 
 .ProseMirror.resize-cursor {
-	cursor: ew-resize;
 	cursor: col-resize;
 }

@@ -1,7 +1,7 @@
 import type { Static } from "@sinclair/typebox"
 import type { Node } from "prosemirror-model"
-import type { ReactNode } from "react"
 
+import * as React from "react"
 import { useMemo } from "react"
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror"
 import { typeboxResolver } from "@hookform/resolvers/typebox"
@@ -40,7 +40,7 @@ const compiledSchema = TypeCompiler.Compile(formSchema)
 
 type FormSchema = Static<typeof formSchema>
 
-const ALIGNMENT_INFO: Record<Alignment, { icon: ReactNode; label: string }> = {
+const ALIGNMENT_INFO: Record<Alignment, { icon: React.ReactNode; label: string }> = {
 	[Alignment.left]: { icon: <AlignLeft />, label: "Align left" },
 	[Alignment.center]: { icon: <AlignCenter />, label: "Align center" },
 	[Alignment.right]: { icon: <AlignRight />, label: "Align right" },
@@ -55,7 +55,7 @@ const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
 			<FormControl>
 				<RadioGroupCard
 					value={alignment}
-					className="data-[state=checked]:border-ring-0 rounded border-0 data-[state=checked]:bg-gray-200"
+					className="rounded border-0 data-[state=checked]:border-ring-0 data-[state=checked]:bg-gray-200"
 				>
 					{icon}
 				</RadioGroupCard>
@@ -109,7 +109,7 @@ export const MediaUpload = (props: Props) => {
 	return (
 		<Form {...form}>
 			<form onChange={form.handleSubmit(handleSubmit)}>
-				<h2 className="text-md font-medium">Media Attributes</h2>
+				<h2 className="font-medium text-md">Media Attributes</h2>
 				<Tabs defaultValue="info">
 					<TabsList className="grid w-full grid-cols-2 bg-muted">
 						<TabsTrigger value="info">Info</TabsTrigger>

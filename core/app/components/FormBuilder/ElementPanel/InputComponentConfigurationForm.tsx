@@ -100,7 +100,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.checkboxGroup]: {
 		name: "Checkbox Group",
 		demoComponent: () => (
-			<div className="flex h-full w-full flex-col items-start justify-between gap-1 text-left text-sm text-gray-500">
+			<div className="flex h-full w-full flex-col items-start justify-between gap-1 text-left text-gray-500 text-sm">
 				<div>Label</div>
 				<div className="flex items-center gap-1">
 					<Checkbox id="c1" />
@@ -120,7 +120,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.radioGroup]: {
 		name: "Radio Group",
 		demoComponent: () => (
-			<RadioGroup className="w-full text-left text-sm text-gray-500">
+			<RadioGroup className="w-full text-left text-gray-500 text-sm">
 				<div>Label</div>
 				<div className="flex items-center gap-1">
 					<RadioGroupItem value="1" id="r1" />
@@ -140,7 +140,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.selectDropdown]: {
 		name: "Select Dropdown",
 		demoComponent: () => (
-			<div className="flex flex-col gap-1 text-left text-sm text-gray-500">
+			<div className="flex flex-col gap-1 text-left text-gray-500 text-sm">
 				<div>Label</div>
 				<Select>
 					<SelectTrigger className="text-left">
@@ -291,7 +291,7 @@ const ComponentSelect = ({
 									{Component && <Component element={element} />}
 								</div>
 								<hr className="w-full" />
-								<div className="my-1 w-full text-center text-sm text-foreground">
+								<div className="my-1 w-full text-center text-foreground text-sm">
 									{name}
 								</div>
 							</label>
@@ -383,10 +383,10 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				}}
 				className="flex h-full flex-col gap-2"
 			>
-				<div className="flex flex-nowrap rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4">
+				<div className="flex flex-nowrap rounded border border-gray-200 border-l-[12px] border-l-emerald-100 border-solid bg-white p-3 pr-4">
 					<FieldInputElement element={fieldInputElement} isEditing={false} />
 				</div>
-				<div className="text-sm uppercase text-muted-foreground">Appearance</div>
+				<div className="text-muted-foreground text-sm uppercase">Appearance</div>
 				<hr />
 				<FormField
 					control={form.control}
@@ -413,11 +413,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 						/>
 						{schemaName !== CoreSchemaType.Null && (
 							<>
-								<div className="text-sm uppercase text-muted-foreground">
+								<div className="text-muted-foreground text-sm uppercase">
 									Relation value
 								</div>
 								<hr />
-								<div className="text-sm uppercase text-muted-foreground">
+								<div className="text-muted-foreground text-sm uppercase">
 									Appearance
 								</div>
 								<hr />
@@ -446,7 +446,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 						control={form.control}
 						name="required"
 						render={({ field }) => (
-							<FormItem className="mb-auto mt-1 flex items-center">
+							<FormItem className="mt-1 mb-auto flex items-center">
 								<FormControl>
 									<Switch
 										className="mr-2 data-[state=checked]:bg-emerald-400"

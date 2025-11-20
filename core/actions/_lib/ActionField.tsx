@@ -118,7 +118,7 @@ export function ActionField(props: ActionFieldProps) {
 									</FieldLabel>
 								)}
 
-								<FieldDescription className="text-pretty text-xs text-gray-500">
+								<FieldDescription className="text-pretty text-gray-500 text-xs">
 									{props.description ?? fieldSchema.description}
 								</FieldDescription>
 							</div>

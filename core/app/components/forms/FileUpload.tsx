@@ -75,15 +75,14 @@ export function FileUploadPreview(props: FileUploadPreviewProps) {
 	const fileCount = props.files.length
 
 	return (
-		<div
+		<section
 			className="space-y-2"
-			role="region"
 			aria-label={`Uploaded files (${fileCount} ${fileCount === 1 ? "file" : "files"})`}
 		>
 			{props.files.map((file, index) => {
 				const fileTypeInfo = getFileTypeInfo(file.fileType)
 				const FileIcon = fileTypeInfo.icon
-				const fileTypeDescription = fileTypeInfo.description
+				const _fileTypeDescription = fileTypeInfo.description
 				const fileId = `file-${index}-${file.fileName.replace(/[^a-zA-Z0-9]/g, "-")}`
 
 				return (
@@ -103,19 +102,19 @@ export function FileUploadPreview(props: FileUploadPreviewProps) {
 								<div className="min-w-0 flex-1">
 									<p
 										id={`${fileId}-name`}
-										className="truncate text-sm font-medium"
+										className="truncate font-medium text-sm"
 									>
 										{file.fileName}
 									</p>
 									<p
 										id={`${fileId}-details`}
-										className="text-xs text-muted-foreground"
-										aria-label={`${fileTypeDescription}, ${formatFileSize(file.fileSize)}`}
+										className="text-muted-foreground text-xs"
 									>
 										{formatFileSize(file.fileSize)} • {file.fileType}
 									</p>
 								</div>
 
+								{/** biome-ignore lint/a11y/useSemanticElements: shh */}
 								<div
 									className="flex flex-shrink-0 items-center gap-1"
 									role="group"
@@ -174,6 +173,6 @@ export function FileUploadPreview(props: FileUploadPreviewProps) {
 					</Card>
 				)
 			})}
-		</div>
+		</section>
 	)
 }

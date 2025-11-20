@@ -38,7 +38,7 @@ const OutputMapField = ({
 				name={`${fieldName}.responseField`}
 				render={({ field }) => (
 					<FormItem className="flex w-1/2 flex-col gap-y-1">
-						<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">
+						<FormLabel className="flex items-center gap-x-2 font-normal text-gray-700 text-sm">
 							<span>Response field</span>
 							<Tooltip>
 								<TooltipTrigger>
@@ -74,7 +74,7 @@ const OutputMapField = ({
 				render={({ field }) => {
 					return (
 						<FormItem className="flex w-1/2 flex-col gap-y-1">
-							<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">
+							<FormLabel className="flex items-center gap-x-2 font-normal text-gray-700 text-sm">
 								<span> Pub field</span>
 
 								<Tooltip>
@@ -197,7 +197,7 @@ export const FieldOutputMap = <F extends string>({
 										size="icon"
 										type="button"
 										disabled={disabled}
-										className="hover:bg-zinc-300 hover:text-black focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-white dark:text-black dark:hover:bg-zinc-300 dark:hover:text-black dark:hover:ring-0 dark:hover:ring-offset-0 dark:focus-visible:ring-0 dark:focus-visible:ring-offset-0"
+										className="hover:bg-zinc-300 hover:text-black focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-white dark:text-black dark:focus-visible:ring-0 dark:focus-visible:ring-offset-0 dark:hover:bg-zinc-300 dark:hover:text-black dark:hover:ring-0 dark:hover:ring-offset-0"
 										onClick={() => remove(index)}
 									>
 										<Trash size="12" />

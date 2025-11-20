@@ -25,7 +25,7 @@ import { Separator } from "./separator"
 const ICON_CLASSNAME = "mx-2 h-4 cursor-pointer text-muted-foreground"
 
 const multiSelectVariants = cva(
-	"m-1 transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110",
+	"hover:-translate-y-1 m-1 transition delay-150 duration-300 ease-in-out hover:scale-110",
 	{
 		variants: {
 			variant: {
@@ -262,7 +262,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 								</div>
 							) : (
 								<div className="mx-auto flex w-full items-center justify-between">
-									<span className="mx-3 text-sm text-muted-foreground">
+									<span className="mx-3 text-muted-foreground text-sm">
 										{placeholder}
 									</span>
 									{isPopoverOpen ? (

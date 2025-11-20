@@ -1,5 +1,5 @@
 import type { Schema } from "prosemirror-model"
-import type { ContextEditorProps } from "../ContextEditor"
+import type { ContextEditorProps, SuggestProps } from "../ContextEditor"
 
 import { mathPlugin } from "@benrbray/prosemirror-math"
 import { exampleSetup } from "prosemirror-example-setup"
@@ -16,8 +16,8 @@ import structureDecorations from "./structureDecorations"
 export const basePlugins = (
 	schema: Schema,
 	props: ContextEditorProps,
-	suggestData: any,
-	setSuggestData: any
+	suggestData: SuggestProps,
+	setSuggestData: React.Dispatch<React.SetStateAction<SuggestProps>>
 ) => {
 	return [
 		keymap(schema),

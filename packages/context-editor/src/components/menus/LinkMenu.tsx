@@ -1,7 +1,7 @@
 import type { Static } from "@sinclair/typebox"
 import type { Mark } from "prosemirror-model"
 
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror"
 import { typeboxResolver } from "@hookform/resolvers/typebox"
 import { Type } from "@sinclair/typebox"
@@ -34,10 +34,6 @@ type LinkMenuProps = {
 	onChange: (values: Record<string, string | null>) => void
 }
 export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
-	if (!(mark.type.name === "link")) {
-		return null
-	}
-
 	const removeLink = useEditorEventCallback((view) =>
 		toggleMarkExpandEmpty({
 			state: view.state,
@@ -58,13 +54,18 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 	})
 
 	const handleSubmit = (values: FormSchema) => {
-		const { openInNewTab, ...rest } = values
+		const { openInNewTab: _, ...rest } = values
 		const attrs = { ...rest, target: values.openInNewTab ? "_blank" : null }
 		onChange(attrs)
 	}
 
+	if (!(mark.type.name === "link")) {
+		return null
+	}
+
 	return (
 		<Form {...form}>
+			{/** biome-ignore lint/a11y/noNoninteractiveElementInteractions: this is a form */}
 			<form className="my-2 flex flex-col gap-2" onBlur={form.handleSubmit(handleSubmit)}>
 				<FormField
 					name="href"

@@ -122,11 +122,11 @@ test.describe("Community members", () => {
 				await inbucketClient.getMailbox(firstPartOfEmail)
 			).getLatestMessage(10)
 
-			const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]!
+			const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]
 
 			expect(joinLink).toBeTruthy()
 
-			await page.goto(joinLink)
+			await page.goto(joinLink!)
 			await page.waitForURL(/\/signup.*/)
 
 			await page.locator("input[name='password']").fill("password")
@@ -145,11 +145,11 @@ test.describe("Community members", () => {
 				await inbucketClient.getMailbox(newUserEmail.split("@")[0])
 			).getLatestMessage(20)
 
-			const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]!
+			const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]
 
 			expect(joinLink).toBeTruthy()
 
-			await page.goto(joinLink)
+			await page.goto(joinLink!)
 			await page.waitForURL(/\/signup/)
 
 			expect(page.getByText("You are not allowed to signup for an account")).toBeAttached()

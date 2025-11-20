@@ -20,10 +20,10 @@ export const PubPageTitleWithStatus = ({
 	return (
 		<div className="flex flex-col items-center">
 			{title}
-			<div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+			<div className="flex items-center gap-2 font-normal text-muted-foreground text-sm">
 				<span data-testid="save-status-text">{status}</span>
 
-				<div className="mx-1 h-4 border-r border-gray-300"></div>
+				<div className="mx-1 h-4 border-gray-300 border-r"></div>
 				<FormSwitcher
 					forms={forms}
 					defaultFormSlug={defaultFormSlug}

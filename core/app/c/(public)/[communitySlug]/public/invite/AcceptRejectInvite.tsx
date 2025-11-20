@@ -142,7 +142,7 @@ export function AcceptRejectInvite({
 		<div className="flex min-h-screen items-center justify-center bg-background">
 			<Card className="w-full max-w-md">
 				<CardHeader>
-					<CardTitle className="text-center text-2xl font-bold">
+					<CardTitle className="text-center font-bold text-2xl">
 						You've Been Invited
 					</CardTitle>
 					<CardDescription className="text-center">

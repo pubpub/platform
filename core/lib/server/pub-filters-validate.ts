@@ -131,7 +131,9 @@ function extractFilterOperators(filter: Filter): Record<string, Set<FilterOperat
 	) {
 		// handle arrays (could be array format of logical operators)
 		if (Array.isArray(obj)) {
-			obj.forEach((item) => processObject(item, currentSlug))
+			obj.forEach((item) => {
+				processObject(item, currentSlug)
+			})
 			return
 		}
 

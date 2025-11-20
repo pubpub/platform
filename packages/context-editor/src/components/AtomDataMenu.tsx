@@ -24,7 +24,7 @@ export const AtomDataMenu = (props: Props) => {
 				}
 				return (
 					<div key={key}>
-						<Label className="text-xs font-normal" htmlFor={key}>
+						<Label className="font-normal text-xs" htmlFor={key}>
 							{attrKey}
 						</Label>
 						<Input

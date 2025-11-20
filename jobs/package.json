@@ -29,6 +29,5 @@
 		"dotenv-cli": "^7.4.4",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:"
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

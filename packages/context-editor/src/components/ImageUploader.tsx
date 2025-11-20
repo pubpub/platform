@@ -1,6 +1,7 @@
 import type { FileUploadProps, FormattedFile } from "ui/customRenderers/fileUpload/fileUpload"
 import type { ImageAttrs } from "../schemas/image"
 
+import * as React from "react"
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror"
 
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload"

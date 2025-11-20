@@ -1,6 +1,6 @@
-import type React from "react"
 import type { SuggestProps } from "../ContextEditor"
 
+import * as React from "react"
 import { useEffect, useState } from "react"
 import { useEditorEffect } from "@handlewithcare/react-prosemirror"
 import { RectangleEllipsis, StickyNote, ToyBrick } from "lucide-react"
@@ -9,7 +9,7 @@ import { reactPropsKey } from "../plugins/reactProps"
 
 type Props = {
 	suggestData: SuggestProps
-	setSuggestData: any
+	setSuggestData: React.Dispatch<React.SetStateAction<SuggestProps>>
 	containerRef: React.RefObject<HTMLDivElement | null>
 }
 export default function SuggestPanel({ suggestData, setSuggestData, containerRef }: Props) {

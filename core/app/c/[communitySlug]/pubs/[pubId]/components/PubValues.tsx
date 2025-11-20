@@ -79,7 +79,7 @@ const FieldBlock = ({
 }) => {
 	return (
 		<div className="my-2" key={name}>
-			<PubValueHeading depth={depth} className={"mb-2 text-base font-semibold"}>
+			<PubValueHeading depth={depth} className={"mb-2 font-semibold text-base"}>
 				{name}
 			</PubValueHeading>
 			<div className={"ml-2"} data-testid={`${name}-value`}>
@@ -144,7 +144,7 @@ export const PubValues = ({
 				<div className="flex flex-col gap-2">
 					{valuesInForm.length ? <hr className="mt-2" /> : null}
 					{!isNested ? (
-						<PubValueHeading depth={depth - 1} className="text-lg font-semibold">
+						<PubValueHeading depth={depth - 1} className="font-semibold text-lg">
 							Other Fields
 						</PubValueHeading>
 					) : null}

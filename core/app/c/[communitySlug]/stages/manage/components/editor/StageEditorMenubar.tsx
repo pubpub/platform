@@ -38,7 +38,7 @@ export const StageEditorMenubar = () => {
 	}, [fitView])
 
 	return (
-		<Menubar className="absolute left-3 top-3 z-50">
+		<Menubar className="absolute top-3 left-3 z-50">
 			<SidebarTrigger className="h-6 w-6 hover:bg-muted" />
 			<MenubarMenu>
 				<MenubarTrigger>File</MenubarTrigger>

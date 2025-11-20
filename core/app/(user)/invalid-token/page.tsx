@@ -18,7 +18,7 @@ export default async function InvalidTokenPage(props: {
 					<div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
 						<AlertCircle className="h-10 w-10 text-destructive" />
 					</div>
-					<CardTitle className="mt-4 text-center text-2xl font-bold">
+					<CardTitle className="mt-4 text-center font-bold text-2xl">
 						Invalid Token
 					</CardTitle>
 				</CardHeader>

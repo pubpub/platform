@@ -290,7 +290,7 @@ export function ActionFieldJsonataTestPanel(props: {
 	return (
 		<div className="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2 transition-all duration-200">
 			<div className="flex items-center justify-between">
-				<Label className="text-xs font-medium text-gray-700">Test result</Label>
+				<Label className="font-medium text-gray-700 text-xs">Test result</Label>
 
 				<div className="flex items-center gap-2">
 					{!autoEvaluate && (
@@ -350,87 +350,84 @@ export function ActionFieldJsonataTestPanel(props: {
 
 			<div className="min-h-[60px] transition-all duration-200">
 				{/* to make it easier for screen readers to understand the output */}
-				<output htmlFor={props.configKey}>
-					{testResult.status === "pending" && (
-						<div className="flex items-center justify-center py-4 text-xs text-gray-500">
-							<Loader2 className="mr-2 h-3 w-3 animate-spin" />
-							Evaluating...
-						</div>
-					)}
+				{testResult.status === "pending" && (
+					<div className="flex items-center justify-center py-4 text-gray-500 text-xs">
+						<Loader2 className="mr-2 h-3 w-3 animate-spin" />
+						Evaluating...
+					</div>
+				)}
 
-					{testResult.status === "idle" && (
-						<div className="flex items-center justify-center py-4 text-xs text-gray-400">
-							{isFetching
-								? "Loading Pub data..."
-								: !canTest
-									? props.actionAccepts.includes("pub")
-										? "No Pub selected to test JSONata expression against"
-										: "No test data provided"
-									: "Waiting for input..."}
-						</div>
-					)}
+				{testResult.status === "idle" && (
+					<div className="flex items-center justify-center py-4 text-gray-400 text-xs">
+						{isFetching
+							? "Loading Pub data..."
+							: !canTest
+								? props.actionAccepts.includes("pub")
+									? "No Pub selected to test JSONata expression against"
+									: "No test data provided"
+								: "Waiting for input..."}
+					</div>
+				)}
 
-					{testResult.status === "success" && testResult.interpolated !== undefined && (
-						<Alert className="border-green-200 bg-green-50 duration-200 animate-in fade-in-50">
-							<CheckCircle2 className="h-4 w-4 text-green-600" />
-							<AlertDescription className="ml-2">
-								<div className="text-xs font-medium text-green-900">Success</div>
-								<pre
-									className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-xs text-gray-900"
-									aria-label="Success: JSONata test interpolated value"
-								>
+				{testResult.status === "success" && testResult.interpolated !== undefined && (
+					<Alert className="fade-in-50 animate-in border-green-200 bg-green-50 duration-200">
+						<CheckCircle2 className="h-4 w-4 text-green-600" />
+						<AlertDescription className="ml-2">
+							<div className="font-medium text-green-900 text-xs">Success</div>
+							<output
+								htmlFor={props.configKey}
+								aria-label="Success: JSONata test interpolated value"
+							>
+								<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-gray-900 text-xs">
 									{JSON.stringify(testResult.interpolated, null, 2)}
 								</pre>
-							</AlertDescription>
-						</Alert>
-					)}
+							</output>
+						</AlertDescription>
+					</Alert>
+				)}
 
-					{testResult.status === "error" && testResult.error !== undefined && (
-						<Alert className="border-red-200 bg-red-50 duration-200 animate-in fade-in-50">
-							<AlertCircle className="h-4 w-4 text-red-600" />
-							<AlertDescription className="ml-2">
-								<div className="text-xs font-medium text-red-900">
-									{testResult.error.type === "jsonata_error" && "JSONata Error"}
-									{testResult.error.type === "parse_error" && "Parse Error"}
-									{testResult.error.type === "syntax_error" && "Syntax Error"}
-									{testResult.error.type === "validation_error" &&
-										"Validation Error"}
-									{testResult.error.type === "invalid_key" &&
-										"Configuration Error"}
-									{testResult.error.type === "unknown_error" && "Error"}
-								</div>
-								<div className="mt-1 text-xs text-red-800">
-									{testResult.error.message}
-								</div>
-								{testResult.interpolated ? (
-									<pre
-										className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-xs text-gray-900"
-										aria-label="Error: JSONata test interpolated value"
-									>
+				{testResult.status === "error" && testResult.error !== undefined && (
+					<Alert className="fade-in-50 animate-in border-red-200 bg-red-50 duration-200">
+						<AlertCircle className="h-4 w-4 text-red-600" />
+						<AlertDescription className="ml-2">
+							<div className="font-medium text-red-900 text-xs">
+								{testResult.error.type === "jsonata_error" && "JSONata Error"}
+								{testResult.error.type === "parse_error" && "Parse Error"}
+								{testResult.error.type === "syntax_error" && "Syntax Error"}
+								{testResult.error.type === "validation_error" && "Validation Error"}
+								{testResult.error.type === "invalid_key" && "Configuration Error"}
+								{testResult.error.type === "unknown_error" && "Error"}
+							</div>
+							<div className="mt-1 text-red-800 text-xs">
+								{testResult.error.message}
+							</div>
+							{testResult.interpolated ? (
+								<output
+									htmlFor={props.configKey}
+									aria-label="Error: JSONata test interpolated value"
+								>
+									<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-gray-900 text-xs">
 										{JSON.stringify(testResult.interpolated, null, 2)}
 									</pre>
-								) : null}
-								{testResult.error.issues && testResult.error.issues.length > 0 && (
-									<div
-										className="mt-2 space-y-1"
-										aria-label="JSONata test issues"
-									>
-										{testResult.error.issues.map((issue: any, idx: number) => (
-											<div key={idx} className="text-xs text-red-700">
-												{issue.path?.length > 0 && (
-													<span className="font-medium">
-														{issue.path.join(".")}:{" "}
-													</span>
-												)}
-												{issue.message}
-											</div>
-										))}
-									</div>
-								)}
-							</AlertDescription>
-						</Alert>
-					)}
-				</output>
+								</output>
+							) : null}
+							{testResult.error.issues && testResult.error.issues.length > 0 && (
+								<div className="mt-2 space-y-1">
+									{testResult.error.issues.map((issue, idx) => (
+										<div key={idx} className="text-red-700 text-xs">
+											{issue.path?.length > 0 && (
+												<span className="font-medium">
+													{issue.path.join(".")}:{" "}
+												</span>
+											)}
+											{issue.message}
+										</div>
+									))}
+								</div>
+							)}
+						</AlertDescription>
+					</Alert>
+				)}
 			</div>
 		</div>
 	)
@@ -482,7 +479,7 @@ export const InputSelector = (props: {
 					</TabsList>
 				)}
 				<TabsContent value="current-pub" className="mt-2">
-					<p className="text-xs text-gray-600">Test using the current pub context</p>
+					<p className="text-gray-600 text-xs">Test using the current pub context</p>
 				</TabsContent>
 				<TabsContent value="select-pub" className="mt-2 space-y-2">
 					{/* <Input

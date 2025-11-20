@@ -73,7 +73,7 @@ export default async function MainLayout(props: Props) {
 					<div className="relative flex-auto px-4 py-4 md:px-12">{children}</div>
 					<SidebarTrigger
 						className={cn(
-							"fixed bottom-2 right-2 z-50",
+							"fixed right-2 bottom-2 z-50",
 							COLLAPSIBLE_TYPE === "icon" && "md:hidden"
 						)}
 					/>

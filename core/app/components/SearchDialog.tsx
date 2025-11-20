@@ -96,7 +96,7 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 										}}
 										className="flex flex-col items-start gap-1 py-3"
 									>
-										<div className="flex gap-2 text-xs font-medium text-gray-700">
+										<div className="flex gap-2 font-medium text-gray-700 text-xs">
 											<span>{pub.pubType.name}</span>
 											{pub.stage && (
 												<>
@@ -106,7 +106,7 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 											)}
 										</div>
 										<div
-											className="text-sm font-medium"
+											className="font-medium text-sm"
 											dangerouslySetInnerHTML={{
 												__html: pub.titleHighlights || getPubTitle(pub),
 											}}
@@ -118,7 +118,7 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 											.map((match, idx) => (
 												<div
 													key={idx}
-													className="flex gap-2 text-xs text-gray-500"
+													className="flex gap-2 text-gray-500 text-xs"
 												>
 													<span className="font-medium">
 														{match.name}:

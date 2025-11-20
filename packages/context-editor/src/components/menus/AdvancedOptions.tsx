@@ -1,7 +1,7 @@
 import type { Static } from "@sinclair/typebox"
 import type { Mark, Node } from "prosemirror-model"
 
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { useEditorEffect } from "@handlewithcare/react-prosemirror"
 import { typeboxResolver } from "@hookform/resolvers/typebox"
 import { Type } from "@sinclair/typebox"
@@ -57,10 +57,11 @@ export const AdvancedOptions = (props: Props) => {
 
 	return (
 		<Form {...form}>
+			{/** biome-ignore lint/a11y/noNoninteractiveElementInteractions: this is a form */}
 			<form className="mt-2 flex flex-col gap-4" onBlur={form.handleSubmit(props.onChange)}>
 				<Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-4">
 					<div className="flex items-center justify-between">
-						<h3 className="text-sm font-medium">Advanced Options</h3>
+						<h3 className="font-medium text-sm">Advanced Options</h3>
 						<CollapsibleTrigger asChild>
 							<Button
 								variant="ghost"

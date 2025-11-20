@@ -172,7 +172,7 @@ export const NewTypeForm = ({
 					/>
 					{props.mode === "create" && <FieldSelector pubFields={pubFields} form={form} />}
 					{form.formState.errors.root && (
-						<div className="text-sm text-red-500">
+						<div className="text-red-500 text-sm">
 							{form.formState.errors.root.message}
 						</div>
 					)}

@@ -27,6 +27,5 @@
 			"distInRoot": true,
 			"importsConditions": true
 		}
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

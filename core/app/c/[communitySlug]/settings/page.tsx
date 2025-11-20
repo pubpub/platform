@@ -36,7 +36,7 @@ export default async function Page(props: { params: Promise<{ communitySlug: str
 
 	return (
 		<main className="flex flex-col items-start gap-y-4">
-			<h1 className="text-xl font-bold">Community Settings</h1>
+			<h1 className="font-bold text-xl">Community Settings</h1>
 			<div className="prose">
 				<ul>
 					<li>

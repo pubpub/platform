@@ -62,7 +62,7 @@ export default function SetupForm() {
 					</CardHeader>
 					<CardContent className="grid gap-6">
 						<div className="space-y-4">
-							<h3 className="text-lg font-semibold">Admin Account</h3>
+							<h3 className="font-semibold text-lg">Admin Account</h3>
 							<div className="grid gap-4 md:grid-cols-2">
 								<FormField
 									control={form.control}
@@ -120,7 +120,7 @@ export default function SetupForm() {
 						</div>
 
 						<div className="space-y-4">
-							<h3 className="text-lg font-semibold">First Community</h3>
+							<h3 className="font-semibold text-lg">First Community</h3>
 							<FormField
 								control={form.control}
 								name="communityName"
@@ -166,7 +166,7 @@ export default function SetupForm() {
 						</div>
 
 						{form.formState.errors.root && (
-							<div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+							<div className="rounded-md bg-red-50 p-3 text-red-800 text-sm">
 								{form.formState.errors.root.message}
 							</div>
 						)}

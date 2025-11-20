@@ -366,7 +366,9 @@ export const PubEditorClient = ({
 			const newStageId = stageIdFromButtonConfig ?? stageIdFromForm ?? undefined
 			const stageIdChanged = newStageId !== stageId
 
-			let result
+			let result:
+				| Awaited<ReturnType<typeof runUpdatePub>>
+				| Awaited<ReturnType<typeof runCreatePub>>
 			if (mode === "edit") {
 				result = await runUpdatePub({
 					pubId: pubId,

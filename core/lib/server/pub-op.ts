@@ -495,7 +495,7 @@ abstract class PubOpBase {
 			.selectFrom("pub_fields")
 			.innerJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
 			.innerJoin("pubs", "pubs.id", "pub_values.pubId")
-			.select((_eb) => [
+			.select((eb) => [
 				"pub_fields.slug as slug",
 				"pub_values.value as value",
 				"pubs.id as pubId",
@@ -504,7 +504,7 @@ abstract class PubOpBase {
 			.where("pubs.communityId", "=", communityId)
 			.where((eb) =>
 				eb.or(
-					Array.from(targetsBySlug.entries()).map(([slug, _values]) =>
+					Array.from(targetsBySlug.entries()).map(([slug, values]) =>
 						eb.and([
 							eb("pub_fields.slug", "=", slug),
 							eb(
@@ -598,7 +598,7 @@ abstract class PubOpBase {
 
 		// For strict mode (used in single pub operations), check for create conflicts
 		if (isStrict) {
-			createOrUpsertOperations.forEach(([_key, op], index) => {
+			createOrUpsertOperations.forEach(([key, op], index) => {
 				const createdPub = createdPubs[index]
 				const pubToCreate = pubsToCreate[index]
 
@@ -721,6 +721,10 @@ abstract class PubOpBase {
 							return relationOp.target === relation.relatedPubId
 						case "override":
 							return true
+						default: {
+							const _exhaustive: never = relationOp
+							return false
+						}
 					}
 				})
 			})
@@ -754,6 +758,10 @@ abstract class PubOpBase {
 							return relationOp.target === relation.relatedPubId
 						case "override":
 							return true
+						default: {
+							const _exhaustive: never = relationOp
+							return false
+						}
 					}
 				})
 			})
@@ -1004,7 +1012,7 @@ abstract class PubOpBase {
 			if (!pubsToFieldIds.has(value.pubId)) {
 				pubsToFieldIds.set(value.pubId, new Set())
 			}
-			pubsToFieldIds.get(value.pubId)?.add(value.fieldId)
+			pubsToFieldIds.get(value.pubId)!.add(value.fieldId)
 		}
 
 		// Delete existing values for pubs that need it
@@ -1098,6 +1106,12 @@ abstract class SinglePubOp extends PubOpBase {
 	protected readonly options: PubOpOptions
 	protected readonly commands: PubOpCommand[] = []
 	readonly target: PubsId | { slug: string; value: PubValue }
+	/**
+	 * Map of value targets to pub ids
+	 *
+	 * Used to resolve non-id targets to id targets
+	 */
+	private targetMap: Map<ValueTarget, PubsId>
 
 	constructor(options: PubOpOptions & { id?: PubsId }) {
 		super()
@@ -1540,6 +1554,8 @@ class CreatePubOp extends SinglePubOp {
 }
 
 class UpsertPubOp extends SinglePubOp {
+	private readonly initialTarget?: PubsId | ValueTarget
+
 	constructor(options: PubOpOptionsCreateUpsert, initialTarget: PubsId | ValueTarget) {
 		super({ ...options, target: initialTarget })
 		this.initialTarget = initialTarget
@@ -1551,6 +1567,8 @@ class UpsertPubOp extends SinglePubOp {
 }
 
 class UpdatePubOp extends SinglePubOp implements UpdateOnlyOps {
+	private readonly initialTarget?: PubsId | ValueTarget
+
 	constructor(
 		options: Omit<PubOpOptionsCreateUpsert, "pubTypeId">,
 		initialTarget: PubsId | ValueTarget

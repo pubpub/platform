@@ -36,7 +36,7 @@ export default async function Page() {
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
-				<h1 className="text-xl font-bold">Communities</h1>
+				<h1 className="font-bold text-xl">Communities</h1>
 				<AddCommunity />
 			</div>
 			<div>

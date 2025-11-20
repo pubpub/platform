@@ -142,7 +142,7 @@ export const AutoComplete = ({
 				<Button
 					variant="ghost"
 					size="icon"
-					className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+					className="-translate-y-1/2 absolute top-1/2 right-1 h-7 w-7 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
 					onClick={() => {
 						setInputValue("")
 						onClear()
@@ -155,7 +155,7 @@ export const AutoComplete = ({
 			<div className="relative mt-1 flex">
 				<div
 					className={cn(
-						"absolute top-0 z-10 w-full rounded-xl bg-background shadow-lg outline-none animate-in fade-in-0 zoom-in-95",
+						"fade-in-0 zoom-in-95 absolute top-0 z-10 w-full animate-in rounded-xl bg-background shadow-lg outline-none",
 						isOpen ? "block" : "hidden"
 					)}
 				>

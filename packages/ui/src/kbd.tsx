@@ -20,7 +20,7 @@ const KeyboardShortcut = React.forwardRef<HTMLDivElement, React.HTMLAttributes<H
 	({ className, children, ...props }, ref) => (
 		<kbd
 			className={cn(
-				"flex min-h-8 min-w-8 items-center justify-center font-mono font-thin tracking-[0.5em] text-gray-800",
+				"flex min-h-8 min-w-8 items-center justify-center font-mono font-thin text-gray-800 tracking-[0.5em]",
 				className
 			)}
 			{...props}

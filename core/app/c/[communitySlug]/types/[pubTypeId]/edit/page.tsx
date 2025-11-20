@@ -106,7 +106,7 @@ export default async function Page(props: {
 							<BreadcrumbPage className="font-bold">{pubType.name}</BreadcrumbPage>
 						</BreadcrumbList>
 						{pubType.description && (
-							<div className="text-sm font-normal text-muted-foreground">
+							<div className="font-normal text-muted-foreground text-sm">
 								{pubType.description}
 							</div>
 						)}

@@ -47,7 +47,6 @@
 		"typescript": "catalog:",
 		"zod": "catalog:"
 	},
-	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {

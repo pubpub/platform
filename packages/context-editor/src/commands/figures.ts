@@ -35,7 +35,7 @@ export const toggleFigureNode =
 		let insert = true
 		figureNode.content.forEach((node) => {
 			if (node.type.name !== nodeType) {
-				const slot = nodeSlots.indexOf(node.type.name)
+				const slot = nodeSlots.findIndex((slot) => slot === node.type.name)
 				assert(slot > -1, errNodeContentInvalid)
 				sparseContent[slot] = node
 			} else {

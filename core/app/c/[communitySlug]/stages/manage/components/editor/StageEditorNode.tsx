@@ -33,7 +33,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 			const selection = window.getSelection()!
 			const selectionStart = nameRef.current.childNodes[0]
 			range.setStart(selectionStart, 0)
-			range.setEnd(selectionStart, selectionStart.textContent?.length)
+			range.setEnd(selectionStart, selectionStart.textContent?.length ?? 0)
 			selection.removeAllRanges()
 			selection.addRange(range)
 		}
@@ -59,6 +59,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 	}, [isEditingName, props.data.stage.id, updateStageName])
 
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: it has buttons in it, can't be a button
 		<div
 			className={cn(
 				"flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
@@ -89,15 +90,15 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 			/>
 			<div className="flex flex-col">
 				<div>
+					<span className="sr-only">Edit stage name</span>
 					<p
-						className="nodrag cursor-text text-sm font-medium"
+						className="nodrag cursor-text font-medium text-sm"
 						contentEditable
 						onBeforeInput={() => {
 							setIsEditingName(true)
 						}}
 						suppressContentEditableWarning
 						ref={nameRef}
-						aria-label="Edit stage name"
 					>
 						{props.data.stage.name}
 					</p>
@@ -106,7 +107,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 text-xs font-light"
+							className="m-0 h-auto p-0 font-light text-xs"
 							asChild
 						>
 							<Link
@@ -123,7 +124,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 text-xs font-light"
+							className="m-0 h-auto p-0 font-light text-xs"
 							asChild
 						>
 							<Link
@@ -140,7 +141,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 text-xs font-light"
+							className="m-0 h-auto p-0 font-light text-xs"
 							asChild
 						>
 							<Link
