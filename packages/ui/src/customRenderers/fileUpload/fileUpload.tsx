@@ -2,7 +2,7 @@
 
 import type { Meta } from "@uppy/core"
 
-import { forwardRef, useEffect, useState } from "react"
+import React, { forwardRef, useEffect, useState } from "react"
 import Uppy from "@uppy/core"
 import { Dashboard } from "@uppy/react"
 

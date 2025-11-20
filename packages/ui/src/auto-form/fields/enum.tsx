@@ -1,6 +1,8 @@
 import type * as z from "zod"
 import type { AutoFormInputComponentProps } from "../types"
 
+import React from "react"
+
 import { FormControl, FormItem, FormMessage } from "../../form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../select"
 import AutoFormDescription from "../common/description"

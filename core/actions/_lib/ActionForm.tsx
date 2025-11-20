@@ -66,12 +66,10 @@ export const ActionFormContext = createContext<ActionFormContext | undefined>(un
 
 export function ActionForm(props: ActionFormProps) {
 	const schema = useMemo(() => {
-		const s = new ActionConfigBuilder(props.action.name)
-			.withConfig(props.action.config.schema)
-			.withDefaults(props.defaultFields)
+		const s = new ActionConfigBuilder(props.action.name).withDefaults(props.defaultFields)
 
 		return s.getSchema()
-	}, [props.action.config.schema, props.action.name, props.defaultFields])
+	}, [props.action.name, props.defaultFields])
 
 	const defaultValues = useMemo(() => {
 		const result = schema.partial().safeParse(props.values)

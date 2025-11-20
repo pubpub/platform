@@ -85,8 +85,8 @@ const makeOptimisitcStagesReducer =
 								...stage.moveConstraints,
 								{
 									id: action.destinationStageId,
-									name: state.find((s) => s.id === action.destinationStageId)
-										?.name,
+									name: state.find((s) => s.id === action.destinationStageId)!
+										.name,
 								},
 							],
 						}
@@ -98,7 +98,7 @@ const makeOptimisitcStagesReducer =
 								...stage.moveConstraintSources,
 								{
 									id: action.sourceStageId,
-									name: state.find((s) => s.id === action.sourceStageId)?.name,
+									name: state.find((s) => s.id === action.sourceStageId)!.name,
 								},
 							],
 						}

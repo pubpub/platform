@@ -1,5 +1,4 @@
-import type React from "react"
-
+import * as React from "react"
 import { TooltipPortal } from "@radix-ui/react-tooltip"
 import { cva } from "class-variance-authority"
 import { AlertTriangle } from "lucide-react"

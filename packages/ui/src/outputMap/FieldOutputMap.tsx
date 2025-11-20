@@ -3,6 +3,7 @@
 import type { PubFieldSchemaId, PubFieldsId } from "db/public"
 import type { FieldValues, UseFormReturn } from "react-hook-form"
 
+import React from "react"
 import { Accordion } from "@radix-ui/react-accordion"
 import { useFieldArray } from "react-hook-form"
 

@@ -2,6 +2,8 @@
 
 import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror"
 
+import React from "react"
+
 import "prosemirror-gapcursor/style/gapcursor.css"
 import "prosemirror-view/style/prosemirror.css"
 // For math

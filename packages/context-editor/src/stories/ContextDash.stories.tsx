@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
+import React from "react"
+
 import { baseSchema } from "../schemas"
 import AtomRenderer from "./AtomRenderer"
 import EditorDash from "./EditorDash/EditorDash"

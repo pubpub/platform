@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 
+import * as React from "react"
+
 import { BookDashed, Plus } from "ui/icon"
 import { cn } from "utils"
 

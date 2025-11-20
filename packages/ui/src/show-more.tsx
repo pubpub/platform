@@ -1,8 +1,8 @@
 "use client"
 
 import type { VariantProps } from "class-variance-authority"
-import type React from "react"
 
+import * as React from "react"
 import { useState } from "react"
 import { cva } from "class-variance-authority"
 

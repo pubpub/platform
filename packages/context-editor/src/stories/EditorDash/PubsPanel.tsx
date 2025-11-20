@@ -1,5 +1,6 @@
 import type { EditorState } from "prosemirror-state"
 
+import React from "react"
 import JsonView from "@uiw/react-json-view"
 
 import { getPubValues } from "../../utils/pubValues"

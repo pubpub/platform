@@ -171,7 +171,7 @@ export const getStageAutomations = cache(
 					).as("sourceActionInstance"),
 				])
 				.$if(!!options?.event, (eb) => {
-					const where = eb.where("automations.event", "=", options?.event)
+					const where = eb.where("automations.event", "=", options!.event!)
 
 					if (
 						options?.event === Event.pubInStageForDuration ||

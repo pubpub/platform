@@ -123,7 +123,7 @@ const modifiedConfig = withPreconstruct(
 	})
 )
 
-const config: typeof normalizeConfig = async (phase, {}) => {
+const config: typeof normalizeConfig = async (phase) => {
 	if (!env.SENTRY_AUTH_TOKEN) {
 	}
 

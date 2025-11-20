@@ -1,6 +1,8 @@
 import type * as z from "zod"
 import type { AutoFormInputComponentProps } from "../types"
 
+import React from "react"
+
 import { FormControl, FormItem, FormLabel, FormMessage } from "../../form"
 import { RadioGroup, RadioGroupItem } from "../../radio-group"
 import AutoFormLabel from "../common/label"

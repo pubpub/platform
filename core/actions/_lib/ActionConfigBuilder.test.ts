@@ -232,7 +232,7 @@ describe("ActionConfigBuilder", () => {
 			expect(result.success).toBe(true)
 			if (result.success) {
 				// body should be a JSON string
-				const body = JSON.parse(result.config.body)
+				const body = JSON.parse(result.config.body as string)
 				expect(body.title).toBe("Test Title")
 				expect(body.count).toBe(42)
 			}
@@ -379,7 +379,7 @@ describe("ActionConfigBuilder", () => {
 			const result = builder.getResult()
 			expect(result.success).toBe(true)
 			if (result.success) {
-				const body = result.config.body
+				const body = result.config.body as Record<string, unknown>
 				expect(body.title).toBe("Test")
 				expect(body.count).toBe(42)
 				expect(body.active).toBe(true)
@@ -402,7 +402,7 @@ describe("ActionConfigBuilder", () => {
 			const result = builder.getResult()
 			expect(result.success).toBe(true)
 			if (result.success) {
-				const body = result.config.body
+				const body = result.config.body as Record<string, unknown>
 				expect(body.name).toBe("Alice")
 				expect(body.email).toBe("alice@example.com")
 				expect(body.count).toBe(100)
@@ -427,7 +427,7 @@ describe("ActionConfigBuilder", () => {
 			const result = builder.getResult()
 			expect(result.success).toBe(true)
 			if (result.success) {
-				const body = result.config.body
+				const body = result.config.body as Record<string, unknown>
 				expect(body.id).toBe(1)
 				expect(body.name).toBe("First")
 			}

@@ -1,10 +1,9 @@
 "use client"
 
 import type { Action, ActionInstances } from "db/public"
-import type React from "react"
 import type { JSX } from "react"
 
-import { createContext, useContext } from "react"
+import React, { createContext, useContext } from "react"
 
 type ActionType = {
 	name: Action

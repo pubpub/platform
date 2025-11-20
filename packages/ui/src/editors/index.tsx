@@ -1,5 +1,7 @@
 import type { LexicalEditorProps } from "./LexicalEditor"
 
+import React from "react"
+
 import { LexicalEditor } from "./LexicalEditor"
 
 export const MarkdownEditor = (props: LexicalEditorProps) => {

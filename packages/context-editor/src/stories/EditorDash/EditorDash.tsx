@@ -1,6 +1,6 @@
 import type { ContextEditorProps } from "../../ContextEditor"
 
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Braces, Files, PanelTop } from "lucide-react"
 
 import { Button } from "ui/button"

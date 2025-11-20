@@ -2,6 +2,8 @@
 
 import type { ControllerRenderProps, FieldValues } from "react-hook-form"
 
+import React from "react"
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form"

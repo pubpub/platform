@@ -1,7 +1,7 @@
-import type React from "react"
 import type { FormState } from "react-hook-form"
 import type { ButtonProps } from "ui/button"
 
+import * as React from "react"
 import { useCallback, useEffect, useState } from "react"
 import { CheckCircle, Loader2, XCircle } from "lucide-react"
 

@@ -1,3 +1,5 @@
+import React from "react"
+
 function AutoFormTooltip({ fieldConfigItem }: { fieldConfigItem: any }) {
 	return (
 		<>

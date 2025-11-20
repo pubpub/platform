@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { Node } from "prosemirror-model"
 
+import React from "react"
 import { ProseMirror } from "@handlewithcare/react-prosemirror"
 
 import { MediaUpload } from "../components/menus/MediaUpload"

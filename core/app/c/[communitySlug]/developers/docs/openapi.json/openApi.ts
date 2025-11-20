@@ -10,7 +10,7 @@ type TraverseContractResult = "SKIP" | "CONTINUE" | "STOP"
 
 const traverseContract = (
 	contract: AppRouter | AppRoute,
-	fn: (contract: AppRoute) => undefined | TraverseContractResult
+	fn: (contract: AppRoute) => TraverseContractResult | void
 ) => {
 	for (const route in contract) {
 		if (isAppRoute(contract)) {

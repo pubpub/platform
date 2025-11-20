@@ -1,5 +1,7 @@
 import type { AutoFormInputComponentProps } from "../types"
 
+import React from "react"
+
 import { Checkbox } from "../../checkbox"
 import { FormControl, FormItem } from "../../form"
 import {

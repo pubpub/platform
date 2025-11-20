@@ -1,9 +1,8 @@
 "use client"
 
 import type { PubTypes } from "db/public"
-import type React from "react"
 
-import { createContext, useContext } from "react"
+import React, { createContext, useContext } from "react"
 
 type Props = {
 	children: React.ReactNode

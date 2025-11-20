@@ -1,5 +1,7 @@
 import type { AutoFormInputComponentProps } from "../types"
 
+import React from "react"
+
 import { FormControl, FormItem, FormMessage } from "../../form"
 import { Input } from "../../input"
 import AutoFormDescription from "../common/description"

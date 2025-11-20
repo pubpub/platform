@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { EditorState } from "prosemirror-state"
 
-import { useState } from "react"
+import React, { useState } from "react"
 
 import ContextEditor from "../ContextEditor"
 import { baseSchema } from "../schemas"

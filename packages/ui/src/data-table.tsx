@@ -1,6 +1,6 @@
 import type { Column, Table } from "@tanstack/react-table"
-import type * as React from "react"
 
+import * as React from "react"
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,

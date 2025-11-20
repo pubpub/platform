@@ -1,5 +1,6 @@
 import type { Node } from "prosemirror-model"
-import type React from "react"
+
+import React from "react"
 
 import { Input } from "ui/input"
 import { Label } from "ui/label"
