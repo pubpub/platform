@@ -14,11 +14,12 @@ import type {
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
+import { DynamicIcon } from "ui/icon";
 import { Separator } from "ui/separator";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
-import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
+import type { ActionInstanceWithConfigDefaults, IconConfig } from "~/lib/types";
 import { ActionForm } from "~/actions/_lib/ActionForm";
 import { getActionByName } from "~/actions/api";
 import { runAutomationManual } from "~/actions/api/serverAction";
@@ -103,6 +104,8 @@ export const AutomationRunForm = (props: Props) => {
 		return null;
 	}
 
+	const automationIcon = props.automation.icon as IconConfig | null | undefined;
+
 	return (
 		<TokenProvider tokens={action.tokens ?? {}}>
 			<Dialog open={open} onOpenChange={setOpen}>
@@ -111,16 +114,26 @@ export const AutomationRunForm = (props: Props) => {
 						variant="ghost"
 						className="flex w-full items-center justify-start gap-x-4 px-4 py-2"
 					>
-						<action.icon size="14" className="flex-shrink-0" />
-						<span className="overflow-auto text-ellipsis">{action.name}</span>
+						<DynamicIcon
+							icon={automationIcon}
+							fallback={action.icon}
+							size="14"
+							className="flex-shrink-0"
+						/>
+						<span className="overflow-auto text-ellipsis">{props.automation.name}</span>
 					</Button>
 				</DialogTrigger>
 				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
 					<DialogHeader className="sticky inset-0 top-0 z-10 bg-white p-6 pb-2">
 						<div className="flex items-start gap-x-2">
-							<action.icon size="16" className="mt-0.5 flex-shrink-0" />
+							<DynamicIcon
+								icon={automationIcon}
+								fallback={action.icon}
+								size="16"
+								className="mt-0.5 flex-shrink-0"
+							/>
 							<DialogTitle className="flex items-baseline gap-x-2 pb-2">
-								{action.name}
+								{props.automation.name}
 							</DialogTitle>
 						</div>
 						<Separator />

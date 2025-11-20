@@ -411,6 +411,7 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			id: automationId,
 			name: data.name,
 			description: data.description ?? null,
+			icon: data.icon ?? null,
 			communityId: community.id,
 			stageId,
 			conditionEvaluationTiming: data.conditionEvaluationTiming ?? null,

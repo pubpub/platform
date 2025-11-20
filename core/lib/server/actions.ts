@@ -68,6 +68,12 @@ export const getAutomationRuns = (communityId: CommunitiesId) => {
 				"automation_runs.config",
 				"automation_runs.createdAt",
 				"automation_runs.updatedAt",
+				jsonObjectFrom(
+					eb
+						.selectFrom("automations")
+						.whereRef("automations.id", "=", "automation_runs.automationId")
+						.select(["automations.id", "automations.name", "automations.icon"])
+				).as("automation"),
 				jsonArrayFrom(
 					eb
 						.selectFrom("action_runs")

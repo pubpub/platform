@@ -402,6 +402,8 @@ model Automation {
   id          String  @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   description String?
+  /// @type(IconConfig, '../types', true, false, true)
+  icon        Json?
 
   // as the trigger for "automationSucceeded" or "automationFailed"
   watchedAutomations AutomationTrigger[] @relation("source_automation")

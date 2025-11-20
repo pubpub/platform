@@ -6,3 +6,4 @@ export * from "./Invite";
 export * from "./jobs";
 export * from "./json";
 export * from "./LastModifiedBy";
+export * from "./Icon";

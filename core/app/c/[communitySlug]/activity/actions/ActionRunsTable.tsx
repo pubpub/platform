@@ -15,7 +15,7 @@ export const ActionRunsTable = ({
 	return (
 		<DataTable
 			getRowId={(row) =>
-				`action-run-${row.stage?.name}-${row.event}-${row.actionInstance!.name}-${row.id}`
+				`action-run-${row.stage?.name}-${row.event}-${row.automation?.name}-${row.id}`
 			}
 			columns={actionRunsColumns}
 			data={actionRuns}

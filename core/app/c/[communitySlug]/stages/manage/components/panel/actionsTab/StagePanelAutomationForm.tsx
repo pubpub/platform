@@ -4,12 +4,13 @@ import type { ControllerRenderProps, FieldValues, UseFormReturn } from "react-ho
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash } from "lucide-react";
+import { Trash, X } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import type { AutomationsId, Communities, CommunitiesId, StagesId } from "db/public";
+import type { IconConfig } from "ui/icon";
 import {
 	Action,
 	AutomationConditionBlockType,
@@ -20,6 +21,7 @@ import {
 	conditionEvaluationTimingSchema,
 } from "db/public";
 import { Button } from "ui/button";
+import { ColorPicker } from "ui/color";
 import {
 	Dialog,
 	DialogContent,
@@ -29,9 +31,10 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Plus } from "ui/icon";
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { DynamicIcon, Plus } from "ui/icon";
 import { Input } from "ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { FormSubmitButton } from "ui/submit-button";
 import { toast } from "ui/use-toast";
@@ -59,6 +62,7 @@ import { findRanksBetween } from "~/lib/rank";
 import { didSucceed, isClientException, useServerAction } from "~/lib/serverActions";
 import { addOrUpdateAutomation, deleteAutomation } from "../../../actions";
 import { ConditionsBuilder } from "./ConditionsBuilder";
+import { IconPicker } from "./IconPicker";
 
 type Props = {
 	stageId: StagesId;
@@ -86,7 +90,6 @@ const AutomationSelector = ({
 }) => {
 	return (
 		<FormItem>
-			{/* <FormLabel>{label}</FormLabel> */}
 			<Select
 				onValueChange={fieldProps.onChange}
 				defaultValue={fieldProps.value}
@@ -150,6 +153,7 @@ const conditionBlockSchema: z.ZodType<ConditionBlockFormValue> = z.lazy(() =>
 export type CreateAutomationsSchema = {
 	name: string;
 	description?: string;
+	icon?: IconConfig;
 	condition?: ConditionBlockFormValue;
 	triggers: {
 		event: AutomationEvent;
@@ -173,8 +177,14 @@ export const StagePanelAutomationForm = (props: Props) => {
 				.object({
 					name: z.string().min(1, "Name is required"),
 					description: z.string().optional(),
+					icon: z
+						.object({
+							name: z.string(),
+							variant: z.enum(["solid", "outline"]).optional(),
+							color: z.string().optional(),
+						})
+						.optional(),
 					conditionEvaluationTiming: conditionEvaluationTimingSchema.nullish(),
-					// .default(ConditionEvaluationTiming.onExecution),
 					condition: conditionBlockSchema.optional(),
 					triggers: z
 						.array(
@@ -199,7 +209,6 @@ export const StagePanelAutomationForm = (props: Props) => {
 						entries(actions).map(([actionName, action]) =>
 							z.object({
 								action: z.literal(actionName),
-								// TODO: load defaults
 								config: new ActionConfigBuilder(actionName)
 									.withConfig(action.config.schema)
 									.withDefaults({})
@@ -250,18 +259,19 @@ export const StagePanelAutomationForm = (props: Props) => {
 	const form = useForm<CreateAutomationsSchema>({
 		resolver: zodResolver(schema),
 		defaultValues: {
-			name: currentAutomation?.name ?? "",
+			name: "",
+			description: "",
+			icon: undefined,
 			action: {
-				action: currentAutomation?.actionInstances[0]?.action ?? undefined,
-				config: currentAutomation?.actionInstances[0]?.config ?? {},
+				action: undefined,
+				config: {},
 			},
-			triggers: currentAutomation?.triggers ?? [],
-			condition: currentAutomation?.condition ?? undefined,
-			conditionEvaluationTiming: currentAutomation?.conditionEvaluationTiming ?? undefined,
+			triggers: [],
+			condition: undefined,
+			conditionEvaluationTiming: undefined,
 		},
 	});
 
-	console.log("errors", form.formState.errors);
 	const { reset, setError } = form;
 
 	const community = useCommunity();
@@ -302,6 +312,8 @@ export const StagePanelAutomationForm = (props: Props) => {
 
 		reset({
 			name: currentAutomation.name,
+			description: currentAutomation.description ?? "",
+			icon: currentAutomation.icon as IconConfig | undefined,
 			action: {
 				action: actionInstance?.action,
 				config: actionInstance?.config ?? {},
@@ -310,12 +322,23 @@ export const StagePanelAutomationForm = (props: Props) => {
 			conditionEvaluationTiming: currentAutomation.conditionEvaluationTiming,
 			condition: currentAutomation.condition,
 		} as CreateAutomationsSchema);
-	}, [currentAutomation]);
+	}, [currentAutomation, reset]);
 
 	const onOpenChange = useCallback(
 		(open: boolean) => {
 			if (!open) {
-				form.reset();
+				form.reset({
+					name: "",
+					description: "",
+					icon: undefined,
+					action: {
+						action: undefined,
+						config: {},
+					},
+					triggers: [],
+					condition: undefined,
+					conditionEvaluationTiming: undefined,
+				});
 				setCurrentlyEditingAutomationId(null);
 			}
 			setIsOpen(open);
@@ -359,11 +382,18 @@ export const StagePanelAutomationForm = (props: Props) => {
 		}
 
 		return getActionFormComponent(selectedAction.action);
-	}, [selectedAction]);
+	}, [selectedAction?.action]);
+
+	useEffect(() => {
+		if (selectedAction?.action) {
+			form.setValue("action.config", {});
+		}
+	}, [selectedAction?.action, form]);
 
 	const isExistingAutomation = !!currentlyEditingAutomationId;
 
 	const condition = form.watch("condition");
+	const iconConfig = form.watch("icon");
 
 	const {
 		fields: selectedTriggers,
@@ -399,19 +429,57 @@ export const StagePanelAutomationForm = (props: Props) => {
 								onSubmit={form.handleSubmit(onSubmit)}
 								className="flex flex-col gap-y-4"
 							>
-								<FormField
-									control={form.control}
-									name="name"
-									render={({ field }) => {
-										return (
-											<FormItem>
-												<FormLabel className="sr-only">Name</FormLabel>
-												<Input placeholder="Automaton name" {...field} />
-												<FormMessage />
-											</FormItem>
-										);
-									}}
-								/>
+								<div className="flex items-end gap-x-2">
+									<FormField
+										control={form.control}
+										name="icon"
+										render={({ field }) => {
+											return (
+												<FormItem className="shrink">
+													<FormLabel className="sr-only">
+														Icon (optional)
+													</FormLabel>
+													<div className="flex items-center gap-2">
+														<IconPicker
+															value={field.value}
+															onChange={field.onChange}
+														/>
+														{field.value && (
+															<Button
+																type="button"
+																variant="ghost"
+																size="sm"
+																onClick={() =>
+																	field.onChange(undefined)
+																}
+															>
+																Clear
+															</Button>
+														)}
+													</div>
+													<FormMessage />
+												</FormItem>
+											);
+										}}
+									/>
+									<FormField
+										control={form.control}
+										name="name"
+										render={({ field }) => {
+											return (
+												<FormItem className="grow">
+													<FormLabel>Name</FormLabel>
+													<Input
+														className="w-full"
+														placeholder="Automation name"
+														{...field}
+													/>
+													<FormMessage />
+												</FormItem>
+											);
+										}}
+									/>
+								</div>
 
 								<FormField
 									control={form.control}
@@ -419,10 +487,10 @@ export const StagePanelAutomationForm = (props: Props) => {
 									render={({ field }) => {
 										return (
 											<FormItem>
-												<FormLabel>When (select one or more)</FormLabel>
+												<FormLabel>When</FormLabel>
 												<div className="space-y-2">
 													{field.value && field.value.length > 0 ? (
-														<div className="flex flex-col flex-wrap gap-2">
+														<div className="flex flex-col gap-2">
 															{field.value.map((trigger, idx) => {
 																return (
 																	<TriggerConfigForm
@@ -456,7 +524,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 													>
 														<SelectTrigger
 															data-testid={`event-select-trigger`}
-															className="h-auto w-full flex-1 items-center justify-between gap-2 border-dashed"
+															className="h-auto w-full justify-start border-dashed"
 														>
 															<div className="flex items-center gap-2 py-1">
 																<Plus
@@ -464,7 +532,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 																	className="text-neutral-500"
 																/>
 																<span className="text-neutral-600">
-																	Add event
+																	Add trigger
 																</span>
 															</div>
 														</SelectTrigger>
@@ -504,41 +572,35 @@ export const StagePanelAutomationForm = (props: Props) => {
 									}}
 								/>
 
-								{/* Additional selector for watched automation when using automation chaining events */}
-
-								{selectedTriggers.length > 0 && selectedAction?.action && (
+								{selectedTriggers.length > 0 && (
 									<div className="space-y-2">
 										<div className="flex items-center justify-between">
+											<FormLabel>Conditions (optional)</FormLabel>
 											{!condition && (
-												<>
-													<h4 className="text-sm font-medium">
-														Conditions (optional)
-													</h4>
-													<Button
-														type="button"
-														variant="outline"
-														size="sm"
-														className="h-7 text-xs"
-														onClick={() => {
-															const ranks = findRanksBetween({
-																numberOfRanks: 1,
-															});
-															form.setValue("condition", {
-																type: AutomationConditionBlockType.OR,
-																kind: "block",
-																rank: ranks[0],
-																items: [],
-															});
-														}}
-													>
-														<Plus size={14} />
-														Add conditions
-													</Button>
-												</>
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													className="h-7 text-xs"
+													onClick={() => {
+														const ranks = findRanksBetween({
+															numberOfRanks: 1,
+														});
+														form.setValue("condition", {
+															type: AutomationConditionBlockType.OR,
+															kind: "block",
+															rank: ranks[0],
+															items: [],
+														});
+													}}
+												>
+													<Plus size={14} />
+													Add conditions
+												</Button>
 											)}
 										</div>
 										{condition && (
-											<div className="space-y-2">
+											<div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
 												<ConditionsBuilder slug="condition" />
 												<Button
 													type="button"
@@ -556,119 +618,115 @@ export const StagePanelAutomationForm = (props: Props) => {
 									</div>
 								)}
 
-								<div className="space-y-2 rounded-md border bg-emerald-50 p-3">
-									<FormField
-										control={form.control}
-										name="action.action"
-										render={({ field }) => {
-											const actionDef = field.value
-												? actions[field.value]
-												: null;
-											return (
-												<FormItem>
-													<FormLabel>Run</FormLabel>
-													{field.value && actionDef ? (
-														<div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-															<actionDef.icon className="h-4 w-4 text-emerald-600" />
-															<span className="flex-1 text-sm font-medium text-emerald-900">
-																{actionDef.name}
-															</span>
-															<Button
-																type="button"
-																variant="ghost"
-																size="sm"
-																className="h-6 text-xs"
-																onClick={() => {
-																	field.onChange(undefined);
-																}}
+								{selectedTriggers.length > 0 && (
+									<div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+										<FormField
+											control={form.control}
+											name="action.action"
+											render={({ field }) => {
+												const actionDef = field.value
+													? actions[field.value]
+													: null;
+												return (
+													<FormItem>
+														<FormLabel>Run</FormLabel>
+														{field.value && actionDef ? (
+															<div className="flex items-center gap-2 rounded-md border border-neutral-300 bg-white p-3">
+																<actionDef.icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
+																<span className="flex-1 text-sm font-medium text-neutral-900">
+																	{actionDef.name}
+																</span>
+																<Button
+																	type="button"
+																	variant="ghost"
+																	size="sm"
+																	className="h-6 text-xs"
+																	onClick={() => {
+																		field.onChange(undefined);
+																	}}
+																>
+																	Change
+																</Button>
+															</div>
+														) : (
+															<Select
+																onValueChange={field.onChange}
+																defaultValue={field.value}
+																value={field.value}
 															>
-																Change
-															</Button>
-														</div>
-													) : (
-														<Select
-															onValueChange={field.onChange}
-															defaultValue={field.value}
-															value={field.value}
-														>
-															<SelectTrigger
-																data-testid="action-selector-select-trigger"
-																className="h-auto justify-start border-dashed"
-															>
-																<SelectValue
-																	placeholder={
-																		<div className="flex items-center gap-2 py-1">
-																			<Plus
-																				size={16}
-																				className="text-neutral-500"
-																			/>
-																			<span className="text-neutral-600">
-																				Add action
-																			</span>
-																		</div>
-																	}
-																/>
-															</SelectTrigger>
-															<SelectContent>
-																{Object.entries(actions).map(
-																	([actionName, action]) => {
-																		return (
-																			<SelectItem
-																				key={actionName}
-																				value={actionName}
-																				className="hover:bg-gray-100"
-																				data-testid={`action-selector-select-item-${actionName}`}
-																			>
-																				<div className="flex flex-row items-center gap-x-2">
-																					<action.icon size="12" />
-																					<span>
-																						{
-																							action.name
-																						}
-																					</span>
-																				</div>
-																			</SelectItem>
-																		);
-																	}
-																)}
-															</SelectContent>
-														</Select>
-													)}
-													<FormMessage />
-												</FormItem>
-											);
-										}}
-									/>
+																<SelectTrigger
+																	data-testid="action-selector-select-trigger"
+																	className="h-auto justify-start border-dashed"
+																>
+																	<SelectValue
+																		placeholder={
+																			<div className="flex items-center gap-2 py-1">
+																				<Plus
+																					size={16}
+																					className="text-neutral-500"
+																				/>
+																				<span className="text-neutral-600">
+																					Choose action
+																				</span>
+																			</div>
+																		}
+																	/>
+																</SelectTrigger>
+																<SelectContent>
+																	{Object.entries(actions).map(
+																		([actionName, action]) => {
+																			return (
+																				<SelectItem
+																					key={actionName}
+																					value={
+																						actionName
+																					}
+																					className="hover:bg-gray-100"
+																					data-testid={`action-selector-select-item-${actionName}`}
+																				>
+																					<div className="flex flex-row items-center gap-x-2">
+																						<action.icon size="12" />
+																						<span>
+																							{
+																								action.name
+																							}
+																						</span>
+																					</div>
+																				</SelectItem>
+																			);
+																		}
+																	)}
+																</SelectContent>
+															</Select>
+														)}
+														<FormMessage />
+													</FormItem>
+												);
+											}}
+										/>
 
-									{selectedAction && (
-										<div className="space-y-2">
-											<h4 className="text-sm font-medium">
-												Action configuration
-											</h4>
-											<div className="rounded-md bg-emerald-50 p-1">
-												{ActionFormComponent && (
+										{selectedAction?.action && ActionFormComponent && (
+											<div className="space-y-2">
+												<FormLabel>Action configuration</FormLabel>
+												<div className="rounded-md border border-neutral-200 bg-white p-3">
 													<ActionFormContext.Provider
 														value={{
 															action: actions[selectedAction.action],
-															// schema: schema._def.schema.shape.action._def.optionsMap.get(
-															// 	selectedAction.action
-															// )?.shape.config._def.schema,
 															schema: actions[selectedAction.action]
 																.config.schema,
 															path: "action.config",
 															form: form as UseFormReturn<any> as UseFormReturn<FieldValues>,
-															// TODO: add default fields
 															defaultFields: [],
 															context: { type: "automation" },
 														}}
 													>
 														<ActionFormComponent />
 													</ActionFormContext.Provider>
-												)}
+												</div>
 											</div>
-										</div>
-									)}
-								</div>
+										)}
+									</div>
+								)}
 							</form>
 							{form.formState.errors.root && (
 								<p
@@ -682,7 +740,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 						</Form>
 						<DialogFooter
 							className={cn(
-								"sticky -bottom-4 flex w-full items-center",
+								"sticky -bottom-4 mt-4 flex w-full items-center",
 								currentlyEditingAutomationId && "!justify-between"
 							)}
 						>
@@ -727,20 +785,20 @@ function TriggerConfigForm(props: {
 		return getTriggerConfigForm(props.trigger.event);
 	}, [props.trigger.event]);
 	return (
-		<div className="flex flex-col gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+		<div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
 			<div className="flex items-center gap-2">
-				<trigger.display.icon className="h-4 w-4 text-blue-600" />
-				<span className="text-sm font-medium text-blue-900">
+				<trigger.display.icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
+				<span className="flex-1 text-sm font-medium text-neutral-900">
 					{humanReadableEventBase(props.trigger.event, props.community)}
 				</span>
 				<Button
 					type="button"
 					variant="ghost"
 					size="sm"
-					className="ml-auto h-5 w-5 p-0"
+					className="h-6 w-6 p-0"
 					onClick={props.removeTrigger}
 				>
-					×
+					<X size={14} />
 				</Button>
 			</div>
 

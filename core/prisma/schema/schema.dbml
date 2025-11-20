@@ -381,6 +381,7 @@ Table automations {
   id String [pk]
   name String [not null]
   description String
+  icon Json [note: '@type(IconConfig, \'../types\', true, false, true)']
   watchedAutomations automation_triggers [not null]
   stage stages
   stageId String

@@ -11,6 +11,7 @@ import { getAutomationRuns } from "~/lib/server/actions";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { ContentLayout } from "../../ContentLayout";
 import { ActionRunsTable } from "./ActionRunsTable";
+import { mapAutomationRunsForTable } from "./mapAutomationRunsForTable";
 
 export const metadata: Metadata = {
 	title: "Action Log",
@@ -34,7 +35,7 @@ export default async function Page(props: {
 		notFound();
 	}
 
-	const [canEditCommunity, actionRuns] = await Promise.all([
+	const [canEditCommunity, automationRuns] = await Promise.all([
 		userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
@@ -46,6 +47,8 @@ export default async function Page(props: {
 	if (!canEditCommunity) {
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
+
+	const actionRuns = mapAutomationRunsForTable(automationRuns);
 
 	return (
 		<ContentLayout

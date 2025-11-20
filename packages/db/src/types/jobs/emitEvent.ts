@@ -20,8 +20,8 @@ export type RunAutomationPayload = {
 	event:
 		| AutomationEvent.pubEnteredStage
 		| AutomationEvent.pubLeftStage
-		| AutomationEvent.actionSucceeded
-		| AutomationEvent.actionFailed;
+		| AutomationEvent.automationSucceeded
+		| AutomationEvent.automationFailed;
 	community: {
 		slug: string;
 	};

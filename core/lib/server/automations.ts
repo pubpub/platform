@@ -178,6 +178,7 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 					id: props.id ?? (randomUUID() as AutomationsId),
 					name: props.name,
 					description: props.description,
+					icon: props.icon,
 					communityId: props.communityId,
 					stageId: props.stageId,
 					conditionEvaluationTiming: props.conditionEvaluationTiming,
@@ -186,6 +187,7 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 					oc.columns(["id"]).doUpdateSet((eb) => ({
 						name: eb.ref("excluded.name"),
 						description: eb.ref("excluded.description"),
+						icon: eb.ref("excluded.icon"),
 						communityId: eb.ref("excluded.communityId"),
 						stageId: eb.ref("excluded.stageId"),
 						conditionEvaluationTiming: eb.ref("excluded.conditionEvaluationTiming"),

@@ -2,101 +2,10 @@ import type { LucideIcon, LucideProps } from "lucide-react";
 
 import React from "react";
 
-import { cn } from "utils";
+// prettier-ignore
+import { Activity, AlertCircle, AlignCenter, AlignLeft, AlignRight, AlignVerticalSpaceAround, Archive, ArchiveRestore, ArrowLeft, ArrowRight, BadgeCheck, Book, BookDashed, Bookmark, BookOpen, BookOpenText, Bot, BoxSelect, Calendar, CalendarClock, CaseSensitive, Check, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, ChevronUp, CircleCheck, CircleDashed, CircleDollarSign, CircleDot, CircleEllipsis, CircleHelp, CircleSlash, Clipboard, ClipboardPenLine, Cloud, Contact, CurlyBraces, Download, Ellipsis, Expand, ExternalLink, FileText, FlagTriangleRightIcon, FormInput, Globe, GripVertical, Heading2, Heading3, HelpCircle, History, ImagePlus, Info, Layers3, Link, ListPlus, Loader2, Lock, LogOut, Mail, Menu, Minus, MoreVertical, MoveHorizontal, Pencil, Play, Plus, PlusCircle, RefreshCw, Search, Send, Settings, Settings2, Table, Terminal, ToyBrick, Trash, Trash2, TriangleAlert, Type, Undo2, User, UserCheck, UserCircle2, UserPlus, UserRoundCog, Users, UsersRound, Wand2, X, XCircle } from "lucide-react";
 
-export {
-	Activity,
-	AlertCircle,
-	AlignCenter,
-	AlignLeft,
-	AlignRight,
-	AlignVerticalSpaceAround,
-	Archive,
-	ArchiveRestore,
-	ArrowLeft,
-	ArrowRight,
-	BadgeCheck,
-	BookDashed,
-	Bookmark,
-	BookOpen,
-	BookOpenText,
-	BoxSelect,
-	Calendar,
-	CalendarClock,
-	CaseSensitive,
-	Check,
-	CheckCircle,
-	CheckSquare,
-	ChevronDown,
-	ChevronRight,
-	ChevronLeft,
-	ChevronUp,
-	ChevronsUpDown,
-	CircleCheck,
-	CircleDashed,
-	CircleDollarSign,
-	CircleDot,
-	CircleEllipsis,
-	CircleHelp,
-	CircleSlash,
-	Clipboard,
-	ClipboardPenLine,
-	Contact,
-	CurlyBraces,
-	Download,
-	Ellipsis,
-	Expand,
-	ExternalLink,
-	FileText,
-	FlagTriangleRightIcon,
-	FormInput,
-	Globe,
-	GripVertical,
-	Heading2,
-	Heading3,
-	HelpCircle,
-	History,
-	ImagePlus,
-	Info,
-	Layers3,
-	Link,
-	ListPlus,
-	Loader2,
-	Lock,
-	LogOut,
-	Mail,
-	Menu,
-	Minus,
-	MoreVertical,
-	MoveHorizontal,
-	Pencil,
-	Play,
-	Plus,
-	PlusCircle,
-	RefreshCw,
-	Search,
-	Send,
-	Settings,
-	Settings2,
-	Table,
-	Terminal,
-	ToyBrick,
-	Trash,
-	Trash2,
-	TriangleAlert,
-	Type,
-	Undo2,
-	User,
-	UserCheck,
-	UserCircle2,
-	UserPlus,
-	UserRoundCog,
-	Users,
-	UsersRound,
-	Wand2,
-	X,
-	XCircle,
-} from "lucide-react";
+import { cn } from "utils";
 
 export type { LucideIcon } from "lucide-react";
 
@@ -231,3 +140,62 @@ export const Integration = ({ className, size = 16, ...props }: LucideProps) => 
 		</defs>
 	</svg>
 );
+
+export type IconConfig = {
+	name: IconName;
+	variant?: "solid" | "outline";
+	color?: string;
+};
+
+type DynamicIconProps = {
+	icon: IconConfig | null | undefined;
+	fallback?: LucideIcon;
+	size?: number | string;
+	className?: string;
+} & Omit<LucideProps, "size" | "color" | "className">;
+
+// prettier-ignore
+export const ICON_MAP = {'activity': Activity, 'alert-circle': AlertCircle, 'align-center': AlignCenter, 'align-left': AlignLeft, 'align-right': AlignRight, 'align-vertical-space-around': AlignVerticalSpaceAround, 'archive': Archive, 'archive-restore': ArchiveRestore, 'arrow-left': ArrowLeft, 'arrow-right': ArrowRight, 'badge-check': BadgeCheck, 'book': Book, 'book-dashed': BookDashed, 'bookmark': Bookmark, 'book-open': BookOpen, 'book-open-text': BookOpenText, 'bot': Bot, 'box-select': BoxSelect, 'calendar': Calendar, 'calendar-clock': CalendarClock, 'case-sensitive': CaseSensitive, 'check': Check, 'check-circle': CheckCircle, 'check-square': CheckSquare, 'chevron-down': ChevronDown, 'chevron-right': ChevronRight, 'chevron-left': ChevronLeft, 'chevron-up': ChevronUp, 'chevrons-up-down': ChevronsUpDown, 'circle-check': CircleCheck, 'circle-dashed': CircleDashed, 'circle-dollar-sign': CircleDollarSign, 'circle-dot': CircleDot, 'circle-ellipsis': CircleEllipsis, 'circle-help': CircleHelp, 'circle-slash': CircleSlash, 'clipboard': Clipboard, 'clipboard-pen-line': ClipboardPenLine, 'cloud': Cloud, 'contact': Contact, 'curly-braces': CurlyBraces, 'download': Download, 'ellipsis': Expand, 'external-link': ExternalLink, 'file-text': FileText, 'flag-triangle-right': FlagTriangleRightIcon, 'form-input': FormInput, 'globe': Globe, 'grip-vertical': GripVertical, 'heading-2': Heading2, 'heading-3': Heading3, 'help-circle': HelpCircle, 'history': History, 'image-plus': ImagePlus, 'info': Info, 'layers-3': Layers3, 'link': Link, 'list-plus': ListPlus, 'loader-2': Loader2, 'lock': Lock, 'log-out': LogOut, 'mail': Mail, 'menu': Menu, 'minus': Minus, 'more-vertical': MoreVertical, 'move-horizontal': MoveHorizontal, 'pencil': Pencil, 'play': Play, 'plus': Plus, 'plus-circle': PlusCircle, 'refresh-cw': RefreshCw, 'search': Search, 'send': Send, 'settings': Settings, 'settings-2': Settings2, 'table': Table, 'terminal': Terminal, 'toy-brick': ToyBrick, 'trash': Trash, 'trash-2': Trash2, 'triangle-alert': TriangleAlert, 'type': Type, 'undo-2': Undo2, 'user': User, 'user-check': UserCheck, 'user-circle-2': UserCircle2, 'user-plus': UserPlus, 'user-round-cog': UserRoundCog, 'users': Users, 'users-round': UsersRound, 'wand-2': Wand2, 'x': X, 'x-circle': XCircle,
+} satisfies Record<string, LucideIcon>;
+
+export type IconName = keyof typeof ICON_MAP;
+export type IconMap = typeof ICON_MAP;
+
+export const DynamicIcon = ({
+	icon,
+	fallback = Bot,
+	size = 16,
+	className,
+	...props
+}: DynamicIconProps) => {
+	if (!icon?.name) {
+		const FallbackIcon = fallback;
+		return <FallbackIcon size={size} className={cn(className)} {...props} />;
+	}
+
+	const IconComponent = ICON_MAP[icon.name];
+
+	if (!IconComponent) {
+		const FallbackIcon = fallback;
+		return (
+			<FallbackIcon
+				size={size}
+				className={cn(className, icon.variant === "solid" && "fill-current")}
+				{...props}
+			/>
+		);
+	}
+
+	return (
+		<IconComponent
+			size={size}
+			className={cn(className, icon.variant === "solid" && "fill-current")}
+			style={icon.color ? { color: icon.color } : undefined}
+			{...props}
+		/>
+	);
+};
+
+// prettier-ignore
+export { Activity, AlertCircle, AlignCenter, AlignLeft, AlignRight, AlignVerticalSpaceAround, Archive, ArchiveRestore, ArrowLeft, ArrowRight, BadgeCheck, Book, BookDashed, Bookmark, BookOpen, BookOpenText, Bot, BoxSelect, Calendar, CalendarClock, CaseSensitive, Check, CheckCircle, CheckSquare, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, ChevronsUpDown, CircleCheck, CircleDashed, CircleDollarSign, CircleDot, CircleEllipsis, CircleHelp, CircleSlash, Clipboard, ClipboardPenLine, Cloud, Contact, CurlyBraces, Download, Ellipsis, Expand, ExternalLink, FileText, FlagTriangleRightIcon, FormInput, Globe, GripVertical, Heading2, Heading3, HelpCircle, History, ImagePlus, Info, Layers3, Link, ListPlus, Loader2, Lock, LogOut, Mail, Menu, Minus, MoreVertical, MoveHorizontal, Pencil, Play, Plus, PlusCircle, RefreshCw, Search, Send, Settings, Settings2, Table, Terminal, ToyBrick, Trash, Trash2, TriangleAlert, Type, Undo2, User, UserCheck, UserCircle2, UserPlus, UserRoundCog, Users, UsersRound, Wand2, X, XCircle,
+};

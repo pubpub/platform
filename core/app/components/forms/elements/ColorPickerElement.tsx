@@ -46,7 +46,7 @@ export const ColorPickerPopover = ({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
-				className="w-auto overflow-clip border-none bg-transparent p-0 shadow-none"
+				className="w-auto overflow-clip !border-0 border-transparent bg-transparent p-0 shadow-none"
 				aria-label="Color picker"
 				side="top"
 			>

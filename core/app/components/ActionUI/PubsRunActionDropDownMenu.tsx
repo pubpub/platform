@@ -4,7 +4,7 @@ import type { ActionInstances, Automations, PubsId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
-import { ChevronDown, Play } from "ui/icon";
+import { Bot, ChevronDown, Play } from "ui/icon";
 import { cn } from "utils";
 
 import type { ActionInstanceWithConfigDefaults } from "~/lib/types";

@@ -11,14 +11,17 @@ import { AutomationEvent } from "db/public";
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
+import { DynamicIcon } from "ui/icon";
 
 import type { PubTitleProps } from "~/lib/pubs";
+import type { IconConfig } from "~/lib/types";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getPubTitle } from "~/lib/pubs";
 
 export type ActionRun = {
 	id: string;
 	createdAt: Date;
+	automation: { id: string; name: string; icon: IconConfig | null } | null;
 	actionInstance: { name: string; action: string } | null;
 	sourceActionInstance: { name: string; action: string } | null;
 	stage: { id: string; name: string } | null;
@@ -42,11 +45,19 @@ export type ActionRun = {
 export const getActionRunsTableColumns = (communitySlug: string) => {
 	const cols = [
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Action" />,
-			accessorKey: "actionInstance",
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Automation" />,
+			accessorKey: "automation",
 			cell: ({ getValue }) => {
-				const actionInstance = getValue<ActionRun["actionInstance"]>();
-				return actionInstance ? actionInstance.name : "Unknown";
+				const automation = getValue<ActionRun["automation"]>();
+				if (!automation) {
+					return "Unknown";
+				}
+				return (
+					<div className="flex items-center gap-2">
+						<DynamicIcon icon={automation.icon} size={14} />
+						<span>{automation.name}</span>
+					</div>
+				);
 			},
 		} satisfies ColumnDef<ActionRun, ActionInstances>,
 		{
