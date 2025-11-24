@@ -104,6 +104,10 @@ export const CreatePubButton = async (props: Props) => {
 
 	const pubTypes = await getCreatablePubTypes(user.id, community.id);
 
+	if (pubTypes.length === 0) {
+		return null;
+	}
+
 	const stageId = "stageId" in props ? props.stageId : undefined;
 
 	return (
