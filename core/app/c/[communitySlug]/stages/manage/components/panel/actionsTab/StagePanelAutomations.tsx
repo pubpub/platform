@@ -1,83 +1,80 @@
-import { Suspense } from "react";
+import type { CommunitiesId, StagesId, UsersId } from "db/public"
 
-import type { CommunitiesId, StagesId, UsersId } from "db/public";
-import { Card, CardContent } from "ui/card";
+import { Suspense } from "react"
 
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage, getStageAutomations } from "~/lib/db/queries";
-import { StagePanelAutomation } from "./StagePanelAutomation";
-import { StagePanelAutomationForm } from "./StagePanelAutomationForm";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card"
+import { ItemGroup } from "ui/item"
+
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
+import { getStage, getStageAutomations } from "~/lib/db/queries"
+import { StagePanelAutomation } from "./StagePanelAutomation"
+import { StagePanelAutomationForm } from "./StagePanelAutomationForm"
 
 type PropsInner = {
-	stageId: StagesId;
-	userId: UsersId;
-};
+	stageId: StagesId
+	userId: UsersId
+}
 
 const StagePanelAutomationsInner = async (props: PropsInner) => {
-	const [stage, actionInstances, automations] = await Promise.all([
+	const [stage, automations] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getStageAutomations(props.stageId).execute(),
-		getStageAutomations(props.stageId).execute(),
-	]);
+	])
 
 	if (!stage) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
 	return (
 		<Card>
-			<CardContent className="space-y-2 p-4">
-				<h4 className="mb-2 text-base font-semibold">Automations</h4>
-				{actionInstances.length > 0 ? (
-					<>
-						<div className="flex flex-col gap-2">
-							{automations.length > 0 ? (
-								<>
-									{automations.map((automation) => (
-										<StagePanelAutomation
-											stageId={stage.id}
-											communityId={stage.communityId as CommunitiesId}
-											automation={automation}
-											key={automation.id}
-										/>
-									))}
-								</>
-							) : (
-								<div>
-									There are no automations for <em>{stage.name}</em>
-								</div>
-							)}
+			<CardHeader>
+				<div className="flex items-center justify-between">
+					<CardTitle>Automations</CardTitle>
+					<StagePanelAutomationForm
+						stageId={stage.id}
+						communityId={stage.communityId as CommunitiesId}
+						automations={automations}
+					/>
+				</div>
+				<CardDescription>
+					Automations are used to automate actions in a stage.
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<ItemGroup className="gap-y-2">
+					{automations.length > 0 ? (
+						automations.map((automation) => (
+							<StagePanelAutomation
+								stageId={stage.id}
+								communityId={stage.communityId as CommunitiesId}
+								automation={automation}
+								key={automation.id}
+							/>
+						))
+					) : (
+						<div>
+							There are no automations for <em>{stage.name}</em>
 						</div>
-						<StagePanelAutomationForm
-							stageId={stage.id}
-							communityId={stage.communityId}
-							automations={automations}
-						/>
-					</>
-				) : (
-					<div>
-						There are no actions for <em>{stage.name}</em>. Once you add an action to
-						this stage you can add automations to it here.
-					</div>
-				)}
+					)}
+				</ItemGroup>
 			</CardContent>
 		</Card>
-	);
-};
+	)
+}
 
 type Props = {
-	stageId?: StagesId;
-	userId: UsersId;
-};
+	stageId?: StagesId
+	userId: UsersId
+}
 
 export const StagePanelAutomations = async (props: Props) => {
 	if (props.stageId === undefined) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
 			<StagePanelAutomationsInner stageId={props.stageId} userId={props.userId} />
 		</Suspense>
-	);
-};
+	)
+}

@@ -9,6 +9,7 @@ import { Copy } from "lucide-react"
 import { parseAsString, useQueryState } from "nuqs"
 
 import { DynamicIcon, Pencil, Trash2 } from "ui/icon"
+import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "ui/item"
 import { toast } from "ui/use-toast"
 
 import { getTriggerByName } from "~/actions/_lib/triggers"
@@ -57,17 +58,19 @@ export const StagePanelAutomation = (props: Props) => {
 	const triggerIcons = automation.triggers.map((trigger) => getTriggerByName(trigger.event))
 
 	return (
-		<div className="w-full space-y-2 border px-3 py-2">
-			<div className="flex w-full items-center justify-between space-x-4 text-sm">
-				<div className="flex items-center gap-2 overflow-auto">
-					<DynamicIcon icon={automation.icon} size={16} />
+		<Item variant="outline">
+			<ItemMedia>
+				<DynamicIcon icon={automation.icon} size={16} />
+			</ItemMedia>
+			<ItemContent>
+				{/* <div className="flex w-full items-center justify-between space-x-4 text-sm"> */}
+				<ItemTitle>
+					{/* <div className="flex items-center gap-2 overflow-auto"> */}
 					{/* When{" "} */}
-					<span className="italic underline decoration-dotted">
-						{/* {
+					{/* {
 								<automationSettings.display.icon className="mr-1 inline h-4 w-4 text-xs" />
 							} */}
-						{automation.name}
-					</span>
+					{automation.name}
 
 					{/* <br /> run{" "}
 						<span className="italic underline decoration-dotted">
@@ -77,26 +80,29 @@ export const StagePanelAutomation = (props: Props) => {
 							/>
 							{automation.actionInstance.name}
 						</span>{" "} */}
-				</div>
-				<div className="flex gap-1 p-1">
-					<div className="flex items-center gap-2 rounded-full border bg-gray-50 p-0.5 px-2">
+					{/* </div> */}
+					<div className="flex items-center gap-2 rounded-full border bg-gray-50 p-2">
 						{triggerIcons.map((icon) => (
 							<icon.display.icon key={icon.event} className="h-3 w-3 text-xs" />
 						))}
 					</div>
-					<EllipsisMenu>
-						<EllipsisMenuButton onClick={onEditClick}>
-							<Pencil size={14} /> Edit
-						</EllipsisMenuButton>
-						<EllipsisMenuButton onClick={onDuplicateClick}>
-							<Copy size={14} /> Duplicate
-						</EllipsisMenuButton>
-						<EllipsisMenuButton onClick={onDeleteClick} className="text-red-500">
-							<Trash2 size={14} /> Delete
-						</EllipsisMenuButton>
-					</EllipsisMenu>
-				</div>
-			</div>
-		</div>
+				</ItemTitle>
+			</ItemContent>
+
+			<ItemActions>
+				<EllipsisMenu>
+					<EllipsisMenuButton onClick={onEditClick}>
+						<Pencil size={14} /> Edit
+					</EllipsisMenuButton>
+					<EllipsisMenuButton onClick={onDuplicateClick}>
+						<Copy size={14} /> Duplicate
+					</EllipsisMenuButton>
+					<EllipsisMenuButton onClick={onDeleteClick} className="text-red-500">
+						<Trash2 size={14} /> Delete
+					</EllipsisMenuButton>
+				</EllipsisMenu>
+			</ItemActions>
+			{/* </div> */}
+		</Item>
 	)
 }

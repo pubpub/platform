@@ -6,13 +6,12 @@ import type { IconConfig } from "ui/icon"
 import type { Trigger } from "~/actions/_lib/triggers"
 import type { getAutomation, getStageAutomations } from "~/lib/db/queries"
 import type { AutoReturnType } from "~/lib/types"
-import type { ConditionBlockFormValue } from "./ConditionBlock"
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { X } from "lucide-react"
+import { ChevronRight, X } from "lucide-react"
 import { parseAsString, useQueryState } from "nuqs"
-import { useFieldArray, useForm, useWatch } from "react-hook-form"
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
 import {
@@ -25,6 +24,7 @@ import {
 	conditionEvaluationTimingSchema,
 } from "db/public"
 import { Button } from "ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
 import {
 	Dialog,
 	DialogContent,
@@ -34,9 +34,11 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "ui/dialog"
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field"
+import { Form, FormField, FormItem, FormMessage } from "ui/form"
 import { Plus } from "ui/icon"
 import { Input } from "ui/input"
+import { Item, ItemContent, ItemHeader } from "ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 import { FormSubmitButton } from "ui/submit-button"
 import { cn } from "utils"
@@ -58,7 +60,7 @@ import { entries } from "~/lib/mapping"
 import { findRanksBetween } from "~/lib/rank"
 import { isClientException, useServerAction } from "~/lib/serverActions"
 import { addOrUpdateAutomation } from "../../../actions"
-import { ConditionsBuilder } from "./ConditionsBuilder"
+import { ConditionBlock, type ConditionBlockFormValue } from "./ConditionBlock"
 import { IconPicker } from "./IconPicker"
 
 type Props = {
@@ -173,14 +175,14 @@ export const StagePanelAutomationForm = (props: Props) => {
 			z
 				.object({
 					name: z.string().min(1, "Name is required"),
-					description: z.string().optional(),
+					description: z.string().nullish(),
 					icon: z
 						.object({
 							name: z.string(),
-							variant: z.enum(["solid", "outline"]).optional(),
-							color: z.string().optional(),
+							variant: z.enum(["solid", "outline"]).nullish(),
+							color: z.string().nullish(),
 						})
-						.optional(),
+						.nullish(),
 					conditionEvaluationTiming: conditionEvaluationTimingSchema.nullish(),
 					condition: conditionBlockSchema.nullish(),
 					triggers: z
@@ -211,7 +213,15 @@ export const StagePanelAutomationForm = (props: Props) => {
 									.withDefaults({})
 									.getSchema(),
 							})
-						)
+						),
+						{
+							message: "Action is required",
+							errorMap: (issue, ctx) => {
+								if (issue.code === z.ZodIssueCode.invalid_union_discriminator) {
+									return "Action is required"
+								}
+							},
+						}
 					),
 				})
 				.superRefine((data, ctx) => {
@@ -346,14 +356,6 @@ export const StagePanelAutomationForm = (props: Props) => {
 
 	const selectedAction = useWatch({ control: form.control, name: "action" })
 
-	const ActionFormComponent = useMemo(() => {
-		if (!selectedAction?.action) {
-			return null
-		}
-
-		return getActionFormComponent(selectedAction.action)
-	}, [selectedAction?.action])
-
 	useEffect(() => {
 		if (selectedAction?.action) {
 			form.setValue("action.config", {})
@@ -374,365 +376,431 @@ export const StagePanelAutomationForm = (props: Props) => {
 		name: "triggers",
 	})
 
-	console.log(form.formState.errors)
+	const errors = form.formState.errors
 
 	return (
-		<div className="space-y-2 py-2">
-			<Dialog open={isOpen} onOpenChange={onOpenChange}>
-				<DialogTrigger asChild>
-					<Button variant="secondary" data-testid="add-automation-button">
-						Add automation
-					</Button>
-				</DialogTrigger>
-				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
-					<DialogHeader className="sticky inset-0 top-0 z-10 bg-white p-6 pb-2">
-						<DialogTitle>
-							{isExistingAutomation ? "Edit automation" : "Add automation"}
-						</DialogTitle>
-						<DialogDescription>
-							Set up an automation to run whenever a certain event is triggered.
-						</DialogDescription>
-					</DialogHeader>
+		<Dialog open={isOpen} onOpenChange={onOpenChange}>
+			<DialogTrigger asChild>
+				<Button
+					variant="ghost"
+					size="sm"
+					data-testid="add-automation-button"
+					className="m-0 h-6 p-0 text-gray-400 hover:bg-transparent hover:text-gray-900"
+				>
+					<Plus size={16} /> Add automation
+				</Button>
+			</DialogTrigger>
+			<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
+				<DialogHeader className="sticky inset-0 top-0 z-10 bg-white p-6 pb-2">
+					<DialogTitle>
+						{isExistingAutomation ? "Edit automation" : "Add automation"}
+					</DialogTitle>
+					<DialogDescription>
+						Set up an automation to run whenever a certain event is triggered.
+					</DialogDescription>
+				</DialogHeader>
 
-					<div className="p-6 pt-0">
-						<Form {...form}>
-							<form
-								id={formId}
-								onSubmit={form.handleSubmit(onSubmit)}
-								className="flex flex-col gap-y-4"
-							>
-								<div className="flex items-end gap-x-2">
-									<FormField
+				<div className="p-6 pt-0">
+					<Form {...form}>
+						<form
+							id={formId}
+							onSubmit={form.handleSubmit(onSubmit)}
+							className="flex flex-col gap-y-6"
+						>
+							<div className="flex flex-col gap-y-2">
+								<div className="flex items-start gap-x-2">
+									<Controller
 										control={form.control}
 										name="icon"
-										render={({ field }) => {
+										render={({ field, fieldState }) => {
 											return (
-												<FormItem className="shrink">
-													<FormLabel className="sr-only">
-														Icon (optional)
-													</FormLabel>
-													<div className="flex items-center gap-2">
-														<IconPicker
-															value={field.value}
-															onChange={field.onChange}
-														/>
-														{field.value && (
-															<Button
-																type="button"
-																variant="ghost"
-																size="sm"
-																onClick={() =>
-																	field.onChange(undefined)
-																}
-															>
-																Clear
-															</Button>
-														)}
-													</div>
-													<FormMessage />
-												</FormItem>
+												<Field
+													className="w-9"
+													data-invalid={fieldState.invalid}
+												>
+													<FieldLabel>
+														<span className="sr-only">Icon</span>
+														{/* okay this is evil but i just don't want to show the label it looks bad */}
+														<span className="w-full pt-[18px]"></span>
+													</FieldLabel>
+													<IconPicker
+														value={field.value}
+														onChange={field.onChange}
+													/>
+												</Field>
 											)
 										}}
 									/>
-									<FormField
+									<Controller
 										control={form.control}
 										name="name"
-										render={({ field }) => {
+										render={({ field, fieldState }) => {
 											return (
-												<FormItem className="grow">
-													<FormLabel>Name</FormLabel>
+												<Field data-invalid={fieldState.invalid}>
+													<FieldLabel>Name</FieldLabel>
 													<Input
-														className="w-full"
 														placeholder="Automation name"
 														{...field}
 													/>
-													<FormMessage />
-												</FormItem>
+												</Field>
 											)
 										}}
 									/>
 								</div>
+								{errors.icon && (
+									<FieldError className="text-xs">
+										Icon Error: {errors.icon.message}
+									</FieldError>
+								)}
+								{errors.name && (
+									<FieldError className="text-xs">
+										Name Error: {errors.name.message}
+									</FieldError>
+								)}
+							</div>
 
-								<FormField
-									control={form.control}
-									name="triggers"
-									render={({ field }) => {
-										return (
-											<FormItem>
-												<FormLabel>When</FormLabel>
-												<div className="space-y-2">
-													{field.value && field.value.length > 0 ? (
-														<div className="flex flex-col gap-2">
-															{field.value.map((trigger, idx) => {
+							<Controller
+								control={form.control}
+								name="triggers"
+								render={({ field, fieldState }) => {
+									return (
+										<div className="space-y-2">
+											<FieldLabel>When</FieldLabel>
+											<div className="space-y-2">
+												{field.value && field.value.length > 0
+													? field.value.map((trigger, idx) => {
+															return (
+																<TriggerConfigCard
+																	key={`${trigger.event}-${idx}`}
+																	currentlyEditingAutomationId={
+																		currentlyEditingAutomationId
+																	}
+																	stageAutomations={
+																		props.automations
+																	}
+																	trigger={trigger}
+																	form={form}
+																	idx={idx}
+																	community={community}
+																	removeTrigger={() =>
+																		removeTrigger(idx)
+																	}
+																	isEditing={
+																		!!currentlyEditingAutomationId
+																	}
+																/>
+															)
+														})
+													: null}
+												<Select
+													onValueChange={(value) => {
+														appendTrigger({
+															event: value as AutomationEvent,
+															config: {},
+															sourceAutomationId: undefined,
+														})
+													}}
+												>
+													<SelectTrigger
+														data-testid={`event-select-trigger`}
+														className="h-auto w-full justify-start border-dashed"
+													>
+														<div className="flex items-center gap-2 py-1">
+															<Plus
+																size={16}
+																className="text-neutral-500"
+															/>
+															<span className="text-neutral-600">
+																Add trigger
+															</span>
+														</div>
+													</SelectTrigger>
+													<SelectContent>
+														{Object.values(AutomationEvent)
+															.filter(
+																(event) =>
+																	!field.value?.some(
+																		(t) => t.event === event
+																	)
+															)
+															.map((event) => {
+																const automation =
+																	getTriggerByName(event)
+
 																return (
-																	<TriggerConfigForm
-																		key={`${trigger.event}-${idx}`}
-																		currentlyEditingAutomationId={
-																			currentlyEditingAutomationId
-																		}
-																		stageAutomations={
-																			props.automations
-																		}
-																		trigger={trigger}
-																		form={form}
-																		idx={idx}
-																		community={community}
-																		removeTrigger={() =>
-																			removeTrigger(idx)
-																		}
-																	/>
+																	<SelectItem
+																		key={event}
+																		value={event}
+																		className="hover:bg-gray-100"
+																		data-testid={`trigger-select-item-${event}`}
+																	>
+																		<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
+																		{humanReadableEventBase(
+																			event,
+																			community
+																		)}
+																	</SelectItem>
 																)
 															})}
-														</div>
-													) : null}
-													<Select
-														onValueChange={(value) => {
-															appendTrigger({
-																event: value as AutomationEvent,
-																config: {},
-																sourceAutomationId: undefined,
+													</SelectContent>
+												</Select>
+											</div>
+											{fieldState.error && (
+												<FieldError className="text-xs">
+													{fieldState.error.message}
+												</FieldError>
+											)}
+										</div>
+									)
+								}}
+							/>
+
+							{selectedTriggers.length > 0 && (
+								<Controller
+									control={form.control}
+									name="condition"
+									render={({ field, fieldState }) => (
+										<Field data-invalid={fieldState.invalid}>
+											<div className="flex items-center justify-between">
+												<FieldLabel>Conditions (optional)</FieldLabel>
+												{!condition ? (
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														className="h-7 text-xs"
+														onClick={() => {
+															const ranks = findRanksBetween({
+																numberOfRanks: 1,
+															})
+															field.onChange({
+																type: AutomationConditionBlockType.OR,
+																kind: "block",
+																rank: ranks[0],
+																items: [],
 															})
 														}}
 													>
-														<SelectTrigger
-															data-testid={`event-select-trigger`}
-															className="h-auto w-full justify-start border-dashed"
-														>
-															<div className="flex items-center gap-2 py-1">
-																<Plus
-																	size={16}
-																	className="text-neutral-500"
-																/>
-																<span className="text-neutral-600">
-																	Add trigger
-																</span>
-															</div>
-														</SelectTrigger>
-														<SelectContent>
-															{Object.values(AutomationEvent)
-																.filter(
-																	(event) =>
-																		!field.value?.some(
-																			(t) => t.event === event
-																		)
-																)
-																.map((event) => {
-																	const automation =
-																		getTriggerByName(event)
+														<Plus size={14} />
+														Add conditions
+													</Button>
+												) : (
+													<Button
+														type="button"
+														variant="ghost"
+														size="sm"
+														className="h-7 text-neutral-500 text-xs"
+														onClick={() => {
+															field.onChange(undefined)
+														}}
+													>
+														Remove all conditions
+													</Button>
+												)}
+											</div>
+											{condition && (
+												<>
+													<FieldDescription>
+														Define conditions that must be met for this
+														automation to run. Use JSONata expressions
+														to construct a boolean value like{" "}
+														<code>'Hello' in $.pub.values.title</code>.
+													</FieldDescription>
+													<ConditionBlock
+														slug={"condition"}
+														id={"root-block"}
+													/>
+												</>
+											)}
+											{fieldState.error && (
+												<FieldError className="text-xs">
+													{fieldState.error.message}
+												</FieldError>
+											)}
+										</Field>
+									)}
+								/>
+							)}
 
-																	return (
-																		<SelectItem
-																			key={event}
-																			value={event}
-																			className="hover:bg-gray-100"
-																			data-testid={`trigger-select-item-${event}`}
-																		>
-																			<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
-																			{humanReadableEventBase(
-																				event,
-																				community
-																			)}
-																		</SelectItem>
-																	)
-																})}
-														</SelectContent>
-													</Select>
+							{selectedTriggers.length > 0 && (
+								<Controller
+									control={form.control}
+									name="action"
+									render={({ field, fieldState }) => {
+										return (
+											<div className="space-y-2">
+												<FieldLabel>Run</FieldLabel>
+												<div className="space-y-2">
+													{field.value?.action ? (
+														<ActionConfigCard
+															action={field.value.action}
+															form={form}
+															removeAction={() => {
+																field.onChange({
+																	action: undefined,
+																	config: {},
+																})
+															}}
+															isEditing={
+																!!currentlyEditingAutomationId
+															}
+														/>
+													) : null}
+													{!field.value?.action && (
+														<Select
+															onValueChange={(value) => {
+																form.setValue("action", {
+																	action: value as Action,
+																	config: {},
+																})
+															}}
+														>
+															<SelectTrigger
+																data-testid="action-selector-select-trigger"
+																className="h-auto justify-start border-dashed"
+															>
+																<div className="flex items-center gap-2 py-1">
+																	<Plus
+																		size={16}
+																		className="text-neutral-500"
+																	/>
+																	<span className="text-neutral-600">
+																		Add action
+																	</span>
+																</div>
+															</SelectTrigger>
+															<SelectContent>
+																{Object.entries(actions).map(
+																	([actionName, action]) => {
+																		return (
+																			<SelectItem
+																				key={actionName}
+																				value={actionName}
+																				className="hover:bg-gray-100"
+																				data-testid={`action-selector-select-item-${actionName}`}
+																			>
+																				<div className="flex flex-row items-center gap-x-2">
+																					<action.icon size="12" />
+																					<span>
+																						{
+																							action.name
+																						}
+																					</span>
+																				</div>
+																			</SelectItem>
+																		)
+																	}
+																)}
+															</SelectContent>
+														</Select>
+													)}
 												</div>
-												<FormMessage />
-											</FormItem>
+												{fieldState.error && (
+													<FieldError className="text-xs">
+														{fieldState.error.message}
+													</FieldError>
+												)}
+											</div>
 										)
 									}}
 								/>
-
-								{selectedTriggers.length > 0 && (
-									<div className="space-y-2">
-										<div className="flex items-center justify-between">
-											<FormLabel>Conditions (optional)</FormLabel>
-											{!condition && (
-												<Button
-													type="button"
-													variant="outline"
-													size="sm"
-													className="h-7 text-xs"
-													onClick={() => {
-														const ranks = findRanksBetween({
-															numberOfRanks: 1,
-														})
-														form.setValue("condition", {
-															type: AutomationConditionBlockType.OR,
-															kind: "block",
-															rank: ranks[0],
-															items: [],
-														})
-													}}
-												>
-													<Plus size={14} />
-													Add conditions
-												</Button>
-											)}
-										</div>
-										{condition && (
-											<div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-												<ConditionsBuilder slug="condition" />
-												<Button
-													type="button"
-													variant="ghost"
-													size="sm"
-													className="h-7 text-neutral-500 text-xs"
-													onClick={() => {
-														form.setValue("condition", undefined)
-													}}
-												>
-													Remove all conditions
-												</Button>
-											</div>
-										)}
-									</div>
-								)}
-
-								{selectedTriggers.length > 0 && (
-									<div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-										<FormField
-											control={form.control}
-											name="action.action"
-											render={({ field }) => {
-												const actionDef = field.value
-													? actions[field.value]
-													: null
-												return (
-													<FormItem>
-														<FormLabel>Run</FormLabel>
-														{field.value && actionDef ? (
-															<div className="flex items-center gap-2 rounded-md border border-neutral-300 bg-white p-3">
-																<actionDef.icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
-																<span className="flex-1 font-medium text-neutral-900 text-sm">
-																	{actionDef.name}
-																</span>
-																<Button
-																	type="button"
-																	variant="ghost"
-																	size="sm"
-																	className="h-6 text-xs"
-																	onClick={() => {
-																		field.onChange(undefined)
-																	}}
-																>
-																	Change
-																</Button>
-															</div>
-														) : (
-															<Select
-																onValueChange={field.onChange}
-																defaultValue={field.value}
-																value={field.value}
-															>
-																<SelectTrigger
-																	data-testid="action-selector-select-trigger"
-																	className="h-auto justify-start border-dashed"
-																>
-																	<SelectValue
-																		placeholder={
-																			<div className="flex items-center gap-2 py-1">
-																				<Plus
-																					size={16}
-																					className="text-neutral-500"
-																				/>
-																				<span className="text-neutral-600">
-																					Choose action
-																				</span>
-																			</div>
-																		}
-																	/>
-																</SelectTrigger>
-																<SelectContent>
-																	{Object.entries(actions).map(
-																		([actionName, action]) => {
-																			return (
-																				<SelectItem
-																					key={actionName}
-																					value={
-																						actionName
-																					}
-																					className="hover:bg-gray-100"
-																					data-testid={`action-selector-select-item-${actionName}`}
-																				>
-																					<div className="flex flex-row items-center gap-x-2">
-																						<action.icon size="12" />
-																						<span>
-																							{
-																								action.name
-																							}
-																						</span>
-																					</div>
-																				</SelectItem>
-																			)
-																		}
-																	)}
-																</SelectContent>
-															</Select>
-														)}
-														<FormMessage />
-													</FormItem>
-												)
-											}}
-										/>
-
-										{selectedAction?.action && ActionFormComponent && (
-											<div className="space-y-2">
-												<FormLabel>Action configuration</FormLabel>
-												<div className="rounded-md border border-neutral-200 bg-white p-3">
-													<ActionFormContext.Provider
-														value={{
-															action: actions[selectedAction.action],
-															schema: actions[selectedAction.action]
-																.config.schema,
-															path: "action.config",
-															form: form as UseFormReturn<any> as UseFormReturn<FieldValues>,
-															defaultFields: [],
-															context: { type: "automation" },
-														}}
-													>
-														<ActionFormComponent />
-													</ActionFormContext.Provider>
-												</div>
-											</div>
-										)}
-									</div>
-								)}
-							</form>
-							{form.formState.errors.root && (
-								<p
-									className={
-										"font-medium text-[0.8rem] text-red-500 dark:text-red-900"
-									}
-								>
-									{form.formState.errors.root.message}
-								</p>
 							)}
-						</Form>
-						<DialogFooter
-							className={cn(
-								"-bottom-4 sticky mt-4 flex w-full items-center",
-								currentlyEditingAutomationId && "!justify-between"
-							)}
-						>
-							<FormSubmitButton
-								form={formId}
-								formState={form.formState}
-								idleText="Save automation"
-								pendingText="Saving automation..."
-								successText="Automation saved"
-								errorText="Error saving automation"
-							/>
-						</DialogFooter>
-					</div>
-				</DialogContent>
-			</Dialog>
-		</div>
+						</form>
+						{form.formState.errors.root && (
+							<p
+								className={
+									"font-medium text-[0.8rem] text-red-500 dark:text-red-900"
+								}
+							>
+								{form.formState.errors.root.message}
+							</p>
+						)}
+					</Form>
+					<DialogFooter
+						className={cn(
+							"-bottom-4 sticky mt-4 flex w-full items-center",
+							currentlyEditingAutomationId && "!justify-between"
+						)}
+					>
+						<FormSubmitButton
+							form={formId}
+							formState={form.formState}
+							idleText="Save automation"
+							pendingText="Saving automation..."
+							successText="Automation saved"
+							errorText="Error saving automation"
+						/>
+					</DialogFooter>
+				</div>
+			</DialogContent>
+		</Dialog>
 	)
 }
 
-function TriggerConfigForm(props: {
+type ConfigCardProps = {
+	icon: React.ComponentType<{ className?: string }>
+	title: string
+	onRemove: () => void
+	children?: React.ReactNode
+	showCollapseToggle?: boolean
+	defaultCollapsed?: boolean
+}
+
+function ConfigCard(props: ConfigCardProps) {
+	const [isCollapsed, setIsCollapsed] = useState(props.defaultCollapsed ?? false)
+	const hasContent = !!props.children
+	const Icon = props.icon
+
+	return (
+		<Collapsible
+			open={!isCollapsed}
+			onOpenChange={(open) => setIsCollapsed(!open)}
+			defaultOpen={!props.defaultCollapsed}
+		>
+			<Item variant="outline" className="bg-neutral-50">
+				{/* <div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2"> */}
+				<ItemHeader>
+					{props.showCollapseToggle && hasContent && (
+						<CollapsibleTrigger asChild>
+							<Button type="button" variant="ghost" size="sm" className="h-6 w-6 p-0">
+								<span className="sr-only">
+									{isCollapsed ? "Expand" : "Collapse"}
+								</span>
+								<ChevronRight
+									size={14}
+									className={cn(
+										"transition-transform duration-200",
+										isCollapsed ? "rotate-90" : "rotate-0"
+									)}
+								/>
+							</Button>
+						</CollapsibleTrigger>
+					)}
+					<Icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
+					<span className="flex-1 font-medium text-neutral-900 text-sm">
+						{props.title}
+					</span>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="h-6 w-6 p-0"
+						onClick={props.onRemove}
+					>
+						<span className="sr-only">Remove</span>
+						<X size={14} />
+					</Button>
+				</ItemHeader>
+
+				<CollapsibleContent className="pt-2 will-change-auto">
+					{hasContent && <ItemContent>{props.children}</ItemContent>}
+				</CollapsibleContent>
+			</Item>
+		</Collapsible>
+	)
+}
+
+function TriggerConfigCard(props: {
 	trigger: Trigger
 	form: UseFormReturn<CreateAutomationsSchema>
 	idx: number
@@ -740,6 +808,7 @@ function TriggerConfigForm(props: {
 	removeTrigger: () => void
 	currentlyEditingAutomationId: AutomationsId | undefined
 	stageAutomations: AutoReturnType<typeof getStageAutomations>["execute"]
+	isEditing: boolean
 }) {
 	const trigger = getTriggerByName(props.trigger.event)
 	const TriggerForm = useMemo(() => {
@@ -749,24 +818,18 @@ function TriggerConfigForm(props: {
 
 		return getTriggerConfigForm(props.trigger.event)
 	}, [props.trigger.event])
-	return (
-		<div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
-			<div className="flex items-center gap-2">
-				<trigger.display.icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
-				<span className="flex-1 font-medium text-neutral-900 text-sm">
-					{humanReadableEventBase(props.trigger.event, props.community)}
-				</span>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					className="h-6 w-6 p-0"
-					onClick={props.removeTrigger}
-				>
-					<X size={14} />
-				</Button>
-			</div>
 
+	const hasConfig =
+		isSequentialAutomationEvent(props.trigger.event) || (trigger.config && TriggerForm)
+
+	return (
+		<ConfigCard
+			icon={trigger.display.icon}
+			title={humanReadableEventBase(props.trigger.event, props.community)}
+			onRemove={props.removeTrigger}
+			showCollapseToggle={hasConfig}
+			defaultCollapsed={props.isEditing}
+		>
 			{isSequentialAutomationEvent(props.trigger.event) && (
 				<FormField
 					control={props.form.control}
@@ -785,6 +848,60 @@ function TriggerConfigForm(props: {
 			)}
 
 			{trigger.config && TriggerForm && <TriggerForm form={props.form} idx={props.idx} />}
-		</div>
+		</ConfigCard>
+	)
+}
+
+function ActionConfigCard(props: {
+	action: Action
+	form: UseFormReturn<CreateAutomationsSchema>
+	removeAction: () => void
+	isEditing: boolean
+}) {
+	const actionDef = actions[props.action]
+	const ActionFormComponent = useMemo(() => {
+		return getActionFormComponent(props.action)
+	}, [props.action])
+
+	return (
+		<ConfigCard
+			icon={actionDef.icon}
+			title={actionDef.name}
+			onRemove={props.removeAction}
+			showCollapseToggle={true}
+			defaultCollapsed={props.isEditing}
+		>
+			{ActionFormComponent && (
+				<Controller
+					control={props.form.control}
+					name="action.config"
+					render={({ fieldState }) => {
+						return (
+							<>
+								<ActionFormContext.Provider
+									value={{
+										action: actionDef,
+										schema: actionDef.config.schema,
+										path: "action.config",
+										form: props.form as UseFormReturn<any> as UseFormReturn<FieldValues>,
+										defaultFields: [],
+										context: {
+											type: "automation",
+										},
+									}}
+								>
+									<ActionFormComponent />
+								</ActionFormContext.Provider>
+								{fieldState.error && (
+									<FieldError className="text-xs">
+										{fieldState.error.message}
+									</FieldError>
+								)}
+							</>
+						)
+					}}
+				/>
+			)}
+		</ConfigCard>
 	)
 }

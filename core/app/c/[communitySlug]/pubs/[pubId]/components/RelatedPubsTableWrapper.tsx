@@ -1,9 +1,10 @@
-import { Info } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import type { FullProcessedPubWithForm } from "~/lib/server"
 
-import type { FullProcessedPubWithForm } from "~/lib/server";
-import { PubsRunAutomationsDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { RelatedPubsTable } from "./RelatedPubsTable";
+import { Info } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
+
+import { PubsRunAutomationsDropDownMenu } from "~/app/components/ActionUI/PubsRunAutomationDropDownMenu"
+import { RelatedPubsTable } from "./RelatedPubsTable"
 
 const NoActions = () => {
 	return (
@@ -20,8 +21,8 @@ const NoActions = () => {
 				</Tooltip>
 			</TooltipProvider>
 		</div>
-	);
-};
+	)
+}
 
 const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
 	return row.stage && row.stage?.actionInstances.length > 0 ? (
@@ -31,13 +32,13 @@ const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
 		/>
 	) : (
 		<NoActions />
-	);
-};
+	)
+}
 
 type Props = {
-	pub: FullProcessedPubWithForm;
-	userCanRunActions: boolean;
-};
+	pub: FullProcessedPubWithForm
+	userCanRunActions: boolean
+}
 
 export const RelatedPubsTableWrapper = async (props: Props) => {
 	const relatedPubRunActionsDropdowns = !props.userCanRunActions
@@ -53,11 +54,11 @@ export const RelatedPubsTableWrapper = async (props: Props) => {
 							}
 						: a,
 				{}
-			);
+			)
 	return (
 		<RelatedPubsTable
 			pub={props.pub}
 			relatedPubActionsDropdowns={relatedPubRunActionsDropdowns}
 		/>
-	);
-};
+	)
+}

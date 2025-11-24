@@ -1,6 +1,7 @@
 import type { IconConfig } from "ui/icon"
 
 import { Suspense, use, useMemo } from "react"
+import { XIcon } from "lucide-react"
 
 import { Button } from "ui/button"
 import { FormLabel } from "ui/form"
@@ -90,7 +91,7 @@ export const IconPickerContent = ({
 	return (
 		<div className="space-y-2">
 			<FormLabel className="sr-only text-xs">Icon</FormLabel>
-			<div className="flex items-center gap-2">
+			<div className="flex items-center justify-between gap-2">
 				<ColorPickerPopover
 					color={value?.color ?? "#000000"}
 					onChange={(color) => {
@@ -102,6 +103,23 @@ export const IconPickerContent = ({
 					}}
 					presets={DEFAULT_ICON_COLOR_PRESETS}
 				/>
+				{value?.color || (value?.name && value?.name !== "bot") ? (
+					<Button
+						variant="ghost"
+						size="sm"
+						type="button"
+						onClick={() =>
+							onChange({
+								name: "bot",
+								color: undefined,
+								variant: "outline",
+							})
+						}
+					>
+						<span className="sr-only">Clear icon</span>
+						<XIcon className="h-4 w-4" />
+					</Button>
+				) : null}
 			</div>
 			<div className="grid grid-cols-8 gap-1">{icons}</div>
 		</div>

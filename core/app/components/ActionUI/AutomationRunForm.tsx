@@ -1,46 +1,40 @@
-"use client";
+"use client"
 
-import type { UseFormReturn } from "react-hook-form";
+import type { Automations, CommunitiesId, PubsId } from "db/public"
+import type { UseFormReturn } from "react-hook-form"
+import type { ActionInstanceWithConfigDefaults } from "~/lib/types"
 
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react"
 
-import type {
-	ActionConfigDefaults,
-	ActionInstances,
-	Automations,
-	CommunitiesId,
-	PubsId,
-} from "db/public";
-import { logger } from "logger";
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
-import { DynamicIcon } from "ui/icon";
-import { Separator } from "ui/separator";
-import { TokenProvider } from "ui/tokens";
-import { toast } from "ui/use-toast";
+import { logger } from "logger"
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog"
+import { DynamicIcon } from "ui/icon"
+import { Separator } from "ui/separator"
+import { TokenProvider } from "ui/tokens"
+import { toast } from "ui/use-toast"
 
-import type { ActionInstanceWithConfigDefaults, IconConfig } from "~/lib/types";
-import { ActionForm } from "~/actions/_lib/ActionForm";
-import { getActionByName } from "~/actions/api";
-import { runAutomationManual } from "~/actions/api/serverAction";
-import { getActionFormComponent } from "~/actions/forms";
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { useServerAction } from "~/lib/serverActions";
-import { useCommunity } from "../providers/CommunityProvider";
+import { ActionForm } from "~/actions/_lib/ActionForm"
+import { getActionByName } from "~/actions/api"
+import { runAutomationManual } from "~/actions/api/serverAction"
+import { getActionFormComponent } from "~/actions/forms"
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { useCommunity } from "../providers/CommunityProvider"
 
 type Props = {
 	automation: Automations & {
-		actionInstances: [ActionInstanceWithConfigDefaults];
-	};
-	pubId: PubsId;
-};
+		actionInstances: [ActionInstanceWithConfigDefaults]
+	}
+	pubId: PubsId
+}
 
 export const AutomationRunForm = (props: Props) => {
-	const mainActionInstance = props.automation.actionInstances[0];
-	const action = getActionByName(mainActionInstance.action);
-	const ActionFormComponent = getActionFormComponent(action.name);
-	const community = useCommunity();
-	const runAutomation = useServerAction(runAutomationManual);
+	const mainActionInstance = props.automation.actionInstances[0]
+	const action = getActionByName(mainActionInstance.action)
+	const ActionFormComponent = getActionFormComponent(action.name)
+	const community = useCommunity()
+	const runAutomation = useServerAction(runAutomationManual)
 
 	const onSubmit = useCallback(
 		async (values: Record<string, unknown>, form: UseFormReturn<any>) => {
@@ -52,9 +46,11 @@ export const AutomationRunForm = (props: Props) => {
 				},
 				communityId: community.id as CommunitiesId,
 				stack: [],
-			});
+			})
 
-			if ("success" in result) {
+			console.log(result)
+
+			if (didSucceed(result)) {
 				toast({
 					title:
 						"title" in result && typeof result.title === "string"
@@ -64,21 +60,21 @@ export const AutomationRunForm = (props: Props) => {
 					description: (
 						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>
 					),
-				});
-				return;
+				})
+				return
 			}
 			if ("issues" in result && result.issues) {
-				const issues = result.issues;
+				const issues = result.issues
 				for (const issue of issues) {
 					form.setError(issue.path.join("."), {
 						message: issue.message,
-					});
+					})
 				}
 			}
 
 			form.setError("root.serverError", {
 				message: result.error,
-			});
+			})
 		},
 		[
 			runAutomation,
@@ -89,22 +85,22 @@ export const AutomationRunForm = (props: Props) => {
 			community.id,
 			action.name,
 		]
-	);
+	)
 
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(false)
 
 	const onClose = useCallback(() => {
-		setOpen(false);
-	}, []);
+		setOpen(false)
+	}, [])
 
 	if (!action) {
 		logger.info(
 			`Invalid action name for automation ${props.automation.name}: ${mainActionInstance.action}`
-		);
-		return null;
+		)
+		return null
 	}
 
-	const automationIcon = props.automation.icon as IconConfig | null | undefined;
+	const automationIcon = props.automation.icon
 
 	return (
 		<TokenProvider tokens={action.tokens ?? {}}>
@@ -115,8 +111,8 @@ export const AutomationRunForm = (props: Props) => {
 						className="flex w-full items-center justify-start gap-x-4 px-4 py-2"
 					>
 						<DynamicIcon
-							icon={automationIcon}
-							fallback={action.icon}
+							icon={automationIcon ?? undefined}
+							// fallback={action.icon}
 							size="14"
 							className="flex-shrink-0"
 						/>
@@ -128,7 +124,7 @@ export const AutomationRunForm = (props: Props) => {
 						<div className="flex items-start gap-x-2">
 							<DynamicIcon
 								icon={automationIcon}
-								fallback={action.icon}
+								// fallback={action.icon}
 								size="16"
 								className="mt-0.5 flex-shrink-0"
 							/>
@@ -164,5 +160,5 @@ export const AutomationRunForm = (props: Props) => {
 				</DialogContent>
 			</Dialog>
 		</TokenProvider>
-	);
-};
+	)
+}

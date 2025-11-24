@@ -1,25 +1,26 @@
-import "server-only";
+import "server-only"
 
-import type { ActionInstances, Automations, PubsId } from "db/public";
-import type { ButtonProps } from "ui/button";
-import { Button } from "ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
-import { Bot, ChevronDown, Play } from "ui/icon";
-import { cn } from "utils";
+import type { Automations, PubsId } from "db/public"
+import type { ButtonProps } from "ui/button"
+import type { ActionInstanceWithConfigDefaults } from "~/lib/types"
 
-import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
-import { AutomationRunForm } from "./AutomationRunForm";
+import { Button } from "ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu"
+import { ChevronDown, Play } from "ui/icon"
+import { cn } from "utils"
 
-export type PubsRunActionDropDownMenuProps = {
+import { AutomationRunForm } from "./AutomationRunForm"
+
+export type PubsRunAutomationDropDownMenuProps = {
 	automations: (Automations & {
-		actionInstances: [ActionInstanceWithConfigDefaults];
-	})[];
-	pubId: PubsId;
-	testId?: string;
+		actionInstances: [ActionInstanceWithConfigDefaults]
+	})[]
+	pubId: PubsId
+	testId?: string
 	/* accessible text for the button */
-	buttonText?: string;
-	iconOnly?: boolean;
-} & ButtonProps;
+	buttonText?: string
+	iconOnly?: boolean
+} & ButtonProps
 
 export const PubsRunAutomationsDropDownMenu = async ({
 	pubId,
@@ -28,9 +29,9 @@ export const PubsRunAutomationsDropDownMenu = async ({
 	buttonText,
 	automations,
 	...buttonProps
-}: PubsRunActionDropDownMenuProps) => {
+}: PubsRunAutomationDropDownMenuProps) => {
 	if (!automations.length) {
-		return null;
+		return null
 	}
 
 	return (
@@ -56,5 +57,5 @@ export const PubsRunAutomationsDropDownMenu = async ({
 				))}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}
