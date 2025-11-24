@@ -1,34 +1,60 @@
-"use client";
+"use client"
 
-import { useCallback } from "react";
-import { parseAsString, useQueryState } from "nuqs";
+import type { CommunitiesId, StagesId } from "db/public"
+import type { getAutomation } from "~/lib/db/queries"
+import type { AutoReturnType } from "~/lib/types"
 
-import type { CommunitiesId, StagesId } from "db/public";
-import { Button } from "ui/button";
-import { DynamicIcon, Pencil } from "ui/icon";
+import { useCallback } from "react"
+import { Copy } from "lucide-react"
+import { parseAsString, useQueryState } from "nuqs"
 
-import type { getAutomation } from "~/lib/db/queries";
-import type { AutoReturnType } from "~/lib/types";
-import { getTriggerByName } from "~/actions/_lib/triggers";
+import { DynamicIcon, Pencil, Trash2 } from "ui/icon"
+import { toast } from "ui/use-toast"
+
+import { getTriggerByName } from "~/actions/_lib/triggers"
+import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { deleteAutomation, duplicateAutomation } from "../../../actions"
 
 type Props = {
-	stageId: StagesId;
-	communityId: CommunitiesId;
-	automation: AutoReturnType<typeof getAutomation>["executeTakeFirstOrThrow"];
-};
+	stageId: StagesId
+	communityId: CommunitiesId
+	automation: AutoReturnType<typeof getAutomation>["executeTakeFirstOrThrow"]
+}
 
 export const StagePanelAutomation = (props: Props) => {
-	const { automation } = props;
+	const { automation } = props
 
 	const [, setEditingAutomationId] = useQueryState(
 		"automation-id",
 		parseAsString.withDefault("new-automation")
-	);
+	)
 
 	const onEditClick = useCallback(() => {
-		setEditingAutomationId(automation.id);
-	}, [automation.id, setEditingAutomationId]);
-	const triggerIcons = automation.triggers.map((trigger) => getTriggerByName(trigger.event));
+		setEditingAutomationId(automation.id)
+	}, [automation.id, setEditingAutomationId])
+
+	const runDeleteAutomation = useServerAction(deleteAutomation)
+	const onDeleteClick = useCallback(async () => {
+		const res = await runDeleteAutomation(automation.id, props.stageId)
+		if (didSucceed(res)) {
+			toast({
+				title: "Automation deleted successfully",
+			})
+		}
+	}, [props.stageId, runDeleteAutomation, automation.id])
+
+	const runDuplicateAutomation = useServerAction(duplicateAutomation)
+	const onDuplicateClick = useCallback(async () => {
+		const res = await runDuplicateAutomation(automation.id, props.stageId)
+		if (didSucceed(res)) {
+			toast({
+				title: "Automation duplicated successfully",
+			})
+		}
+	}, [props.stageId, runDuplicateAutomation, automation.id])
+
+	const triggerIcons = automation.triggers.map((trigger) => getTriggerByName(trigger.event))
 
 	return (
 		<div className="w-full space-y-2 border px-3 py-2">
@@ -58,11 +84,19 @@ export const StagePanelAutomation = (props: Props) => {
 							<icon.display.icon key={icon.event} className="h-3 w-3 text-xs" />
 						))}
 					</div>
-					<Button variant="ghost" size="sm" className="flex gap-2" onClick={onEditClick}>
-						<Pencil size={14} />
-					</Button>
+					<EllipsisMenu>
+						<EllipsisMenuButton onClick={onEditClick}>
+							<Pencil size={14} /> Edit
+						</EllipsisMenuButton>
+						<EllipsisMenuButton onClick={onDuplicateClick}>
+							<Copy size={14} /> Duplicate
+						</EllipsisMenuButton>
+						<EllipsisMenuButton onClick={onDeleteClick} className="text-red-500">
+							<Trash2 size={14} /> Delete
+						</EllipsisMenuButton>
+					</EllipsisMenu>
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}

@@ -10,7 +10,7 @@ import type { ConditionBlockFormValue } from "./ConditionBlock"
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Trash, X } from "lucide-react"
+import { X } from "lucide-react"
 import { parseAsString, useQueryState } from "nuqs"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
@@ -39,7 +39,6 @@ import { Plus } from "ui/icon"
 import { Input } from "ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 import { FormSubmitButton } from "ui/submit-button"
-import { toast } from "ui/use-toast"
 import { cn } from "utils"
 
 import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder"
@@ -57,8 +56,8 @@ import { isSequentialAutomationEvent } from "~/actions/types"
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
 import { entries } from "~/lib/mapping"
 import { findRanksBetween } from "~/lib/rank"
-import { didSucceed, isClientException, useServerAction } from "~/lib/serverActions"
-import { addOrUpdateAutomation, deleteAutomation } from "../../../actions"
+import { isClientException, useServerAction } from "~/lib/serverActions"
+import { addOrUpdateAutomation } from "../../../actions"
 import { ConditionsBuilder } from "./ConditionsBuilder"
 import { IconPicker } from "./IconPicker"
 
@@ -342,32 +341,6 @@ export const StagePanelAutomationForm = (props: Props) => {
 		},
 		[form, setCurrentlyEditingAutomationId]
 	)
-
-	const runDeleteAutomation = useServerAction(deleteAutomation)
-	const onDeleteClick = useCallback(async () => {
-		if (!currentlyEditingAutomationId) {
-			return
-		}
-
-		const res = await runDeleteAutomation(
-			currentlyEditingAutomationId as AutomationsId,
-			props.stageId
-		)
-		if (didSucceed(res)) {
-			setCurrentlyEditingAutomationId(null)
-			reset()
-			setIsOpen(false)
-			toast({
-				title: "Automation deleted successfully",
-			})
-		}
-	}, [
-		currentlyEditingAutomationId,
-		props.stageId,
-		reset,
-		runDeleteAutomation,
-		setCurrentlyEditingAutomationId,
-	])
 
 	const formId = useId()
 
@@ -743,13 +716,6 @@ export const StagePanelAutomationForm = (props: Props) => {
 								currentlyEditingAutomationId && "!justify-between"
 							)}
 						>
-							{currentlyEditingAutomationId && (
-								<Button type="button" variant="destructive" onClick={onDeleteClick}>
-									<Trash size="14" />
-									Delete automation
-								</Button>
-							)}
-
 							<FormSubmitButton
 								form={formId}
 								formState={form.formState}

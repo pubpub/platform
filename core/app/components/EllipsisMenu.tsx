@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
+import type { ButtonProps } from "ui/button"
 
-import { forwardRef } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { forwardRef } from "react"
+import { MoreHorizontal, MoreVertical } from "lucide-react"
 
-import type { ButtonProps } from "ui/button";
-import { Button } from "ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu"
+import { cn } from "utils"
 
 /**
  * reusable ellipsis dropdown menu component that works well on mobile
@@ -25,14 +25,19 @@ import { cn } from "utils";
  */
 
 interface EllipsisMenuProps {
-	children: ReactNode;
-	triggerClassName?: string;
-	contentClassName?: string;
-	align?: "start" | "center" | "end";
-	side?: "top" | "right" | "bottom" | "left";
-	sideOffset?: number;
-	triggerSize?: "sm" | "default" | "lg" | "icon";
-	disabled?: boolean;
+	children: ReactNode
+	triggerClassName?: string
+	contentClassName?: string
+	align?: "start" | "center" | "end"
+	side?: "top" | "right" | "bottom" | "left"
+	sideOffset?: number
+	triggerSize?: "sm" | "default" | "lg" | "icon"
+	disabled?: boolean
+	/**
+	 * use horizontal if the menu represents a truncation of a list of other options, use vertical if the menu is the only list of options
+	 * @default "vertical"
+	 */
+	orientation?: "horizontal" | "vertical"
 }
 
 /**
@@ -51,11 +56,11 @@ export const EllipsisMenuButton = forwardRef<HTMLButtonElement, ButtonProps>(
 			>
 				{children}
 			</Button>
-		);
+		)
 	}
-);
+)
 
-EllipsisMenuButton.displayName = "EllipsisMenuButton";
+EllipsisMenuButton.displayName = "EllipsisMenuButton"
 
 export const EllipsisMenu = ({
 	children,
@@ -65,6 +70,7 @@ export const EllipsisMenu = ({
 	side = "bottom",
 	sideOffset = 4,
 	triggerSize = "sm",
+	orientation = "vertical",
 	disabled = false,
 }: EllipsisMenuProps) => {
 	return (
@@ -81,7 +87,11 @@ export const EllipsisMenu = ({
 					)}
 				>
 					<span className="sr-only">Open menu</span>
-					<MoreHorizontal className="h-4 w-4" />
+					{orientation === "horizontal" ? (
+						<MoreHorizontal className="h-4 w-4" />
+					) : (
+						<MoreVertical className="h-4 w-4" />
+					)}
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
@@ -93,5 +103,5 @@ export const EllipsisMenu = ({
 				{children}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}
