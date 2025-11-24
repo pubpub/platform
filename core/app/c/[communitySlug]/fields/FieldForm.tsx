@@ -209,7 +209,6 @@ const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: 
 								disabled={isDisabled}
 								checked={field.value}
 								onCheckedChange={(change) => {
-									console.log("change", change)
 									if (typeof change === "boolean") {
 										field.onChange(change)
 									}

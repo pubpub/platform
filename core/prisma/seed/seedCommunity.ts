@@ -1131,8 +1131,6 @@ export async function seedCommunity<
 								}
 							}) ?? []
 
-						console.log(stage, to, tos, from, froms)
-
 						return [...tos, ...froms]
 					})
 				)
