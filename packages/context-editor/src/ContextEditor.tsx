@@ -83,6 +83,7 @@ const ContextEditor = (props: ContextEditorProps) => {
 	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps)
 
 	const doc = props.initialDoc ?? getEmptyDoc()
+	console.log("doc", doc)
 
 	const [editorState, setEditorState] = useState(() => {
 		let state = EditorState.create({

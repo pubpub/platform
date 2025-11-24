@@ -48,9 +48,10 @@ const EditorFormElement = function EditorFormElement({
 	const formElementToggle = useFormElementToggleContext()
 	const { pubs, pubTypes, pubId, pubTypeId, registerGetter } = useContextEditorContext()
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: it is unfortunately pretty important that this not change
 	const f = useMemo(() => {
 		return field
-	}, [field])
+	}, [])
 
 	const contextEditorRef = useRef<ContextEditorGetter>(null)
 
@@ -58,6 +59,7 @@ const EditorFormElement = function EditorFormElement({
 		registerGetter(f.name, contextEditorRef)
 	}, [f.name, registerGetter])
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: it is unfortunately pretty important that this not change. maybe better as a ref then
 	const initialDoc = useMemo(() => {
 		if (f.value instanceof Node) {
 			return f.value
@@ -68,7 +70,7 @@ const EditorFormElement = function EditorFormElement({
 		}
 
 		return baseSchema.nodeFromJSON(f.value)
-	}, [f.value])
+	}, [])
 
 	const form = useFormContext()
 

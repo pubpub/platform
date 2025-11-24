@@ -155,7 +155,7 @@ const SlugField = ({
 			const autoSlug = slugifyString(watchName)
 			setValue("slug", autoSlug)
 		}
-	}, [watchName, readOnly, setValue])
+	}, [watchName])
 
 	return (
 		<FormField
@@ -209,6 +209,7 @@ const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: 
 								disabled={isDisabled}
 								checked={field.value}
 								onCheckedChange={(change) => {
+									console.log("change", change)
 									if (typeof change === "boolean") {
 										field.onChange(change)
 									}
@@ -262,32 +263,30 @@ export const FieldForm = ({
 				onSubmitSuccess()
 			}
 		},
-		[community.id, createField, onSubmitSuccess]
+		[]
 	)
 
-	const handleUpdate = useCallback(
-		async (values: FormValues) => {
-			const result = await updateFieldName(values.id, values.name)
-			if (didSucceed(result)) {
-				toast({ title: `Updated field ${values.name}` })
-				onSubmitSuccess()
-			}
-		},
-		[onSubmitSuccess, updateFieldName]
-	)
-
-	const handleSubmit = async (
-		values: FormValues & { schemaName: CoreSchemaType | null | undefined }
-	) => {
-		if (isEditing) {
-			handleUpdate(values)
-			return
+	const handleUpdate = useCallback(async (values: FormValues) => {
+		const result = await updateFieldName(values.id, values.name)
+		if (didSucceed(result)) {
+			toast({ title: `Updated field ${values.name}` })
+			onSubmitSuccess()
 		}
+	}, [])
 
-		const slug = `${community?.slug}:${slugifyString(values.slug)}`
-		const schemaName = values.schemaName ?? CoreSchemaType.Null
-		handleCreate({ ...values, slug, schemaName })
-	}
+	const handleSubmit = useCallback(
+		async (values: FormValues & { schemaName: CoreSchemaType | null | undefined }) => {
+			if (isEditing) {
+				handleUpdate(values)
+				return
+			}
+
+			const slug = `${community?.slug}:${slugifyString(values.slug)}`
+			const schemaName = values.schemaName ?? CoreSchemaType.Null
+			handleCreate({ ...values, slug, schemaName })
+		},
+		[handleUpdate, handleCreate]
+	)
 
 	const form = useForm<FormValues>({
 		defaultValues: defaultValues ?? DEFAULT_VALUES,

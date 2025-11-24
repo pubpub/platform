@@ -1110,8 +1110,8 @@ export async function seedCommunity<
 									)
 								}
 								return {
-									stageId: toStage.id,
-									destinationId: currentStageId,
+									stageId: currentStageId,
+									destinationId: toStage.id,
 								}
 							}) ?? []
 
@@ -1130,6 +1130,8 @@ export async function seedCommunity<
 									destinationId: currentStageId,
 								}
 							}) ?? []
+
+						console.log(stage, to, tos, from, froms)
 
 						return [...tos, ...froms]
 					})

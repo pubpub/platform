@@ -67,6 +67,7 @@ export const SubmitButton = ({
 		setErrorTimeout(timeout as unknown as number)
 	}, [errorTimeout])
 
+	// if setErrorState is specified you get inf loop
 	useEffect(() => {
 		// determine state based on props
 		if (state) {
@@ -87,7 +88,7 @@ export const SubmitButton = ({
 			setButtonState("idle")
 		}
 		return
-	}, [state, isSubmitting, isSubmitSuccessful, isSubmitError, setErrorState])
+	}, [state, isSubmitting, isSubmitSuccessful, isSubmitError])
 
 	// clean up timeout on unmount
 	useEffect(() => {

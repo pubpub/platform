@@ -212,6 +212,8 @@ test.describe("Creating a pub", () => {
 	})
 
 	test("Can create and edit a rich text field", async () => {
+		test.skip(!process.env.CI, "this test for some reason works differently locally")
+
 		// Add a rich text field
 		const fieldsPage = new FieldsPage(page, community.community.slug)
 		await fieldsPage.goto()
