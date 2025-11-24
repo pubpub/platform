@@ -1,27 +1,30 @@
-"use client";
+"use client"
 
-import type { ControllerRenderProps, FieldValues, UseFormReturn } from "react-hook-form";
+import type { AutomationsId, Communities, CommunitiesId, StagesId } from "db/public"
+import type { ControllerRenderProps, FieldValues, UseFormReturn } from "react-hook-form"
+import type { IconConfig } from "ui/icon"
+import type { Trigger } from "~/actions/_lib/triggers"
+import type { getAutomation, getStageAutomations } from "~/lib/db/queries"
+import type { AutoReturnType } from "~/lib/types"
+import type { ConditionBlockFormValue } from "./ConditionBlock"
 
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash, X } from "lucide-react";
-import { parseAsString, useQueryState } from "nuqs";
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
+import { useCallback, useEffect, useId, useMemo, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Trash, X } from "lucide-react"
+import { parseAsString, useQueryState } from "nuqs"
+import { useFieldArray, useForm, useWatch } from "react-hook-form"
+import { z } from "zod"
 
-import type { AutomationsId, Communities, CommunitiesId, StagesId } from "db/public";
-import type { IconConfig } from "ui/icon";
 import {
-	Action,
+	type Action,
 	AutomationConditionBlockType,
 	AutomationConditionType,
 	AutomationEvent,
 	automationsIdSchema,
-	ConditionEvaluationTiming,
+	type ConditionEvaluationTiming,
 	conditionEvaluationTimingSchema,
-} from "db/public";
-import { Button } from "ui/button";
-import { ColorPicker } from "ui/color";
+} from "db/public"
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -30,45 +33,40 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "ui/dialog";
-import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { DynamicIcon, Plus } from "ui/icon";
-import { Input } from "ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { FormSubmitButton } from "ui/submit-button";
-import { toast } from "ui/use-toast";
-import { cn } from "utils";
+} from "ui/dialog"
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Plus } from "ui/icon"
+import { Input } from "ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { FormSubmitButton } from "ui/submit-button"
+import { toast } from "ui/use-toast"
+import { cn } from "utils"
 
-import type { ConditionBlockFormValue } from "./ConditionBlock";
-import type { Trigger } from "~/actions/_lib/triggers";
-import type { getAutomation, getStageAutomations } from "~/lib/db/queries";
-import type { AutoReturnType } from "~/lib/types";
-import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
-import { ActionFormContext } from "~/actions/_lib/ActionForm";
+import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder"
+import { ActionFormContext } from "~/actions/_lib/ActionForm"
 import {
 	getTriggerByName,
 	humanReadableEventBase,
 	isTriggerWithConfig,
 	triggers,
-} from "~/actions/_lib/triggers";
-import { getTriggerConfigForm } from "~/actions/_lib/triggers/forms";
-import { actions } from "~/actions/api";
-import { getActionFormComponent } from "~/actions/forms";
-import { isSequentialAutomationEvent } from "~/actions/types";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { entries } from "~/lib/mapping";
-import { findRanksBetween } from "~/lib/rank";
-import { didSucceed, isClientException, useServerAction } from "~/lib/serverActions";
-import { addOrUpdateAutomation, deleteAutomation } from "../../../actions";
-import { ConditionsBuilder } from "./ConditionsBuilder";
-import { IconPicker } from "./IconPicker";
+} from "~/actions/_lib/triggers"
+import { getTriggerConfigForm } from "~/actions/_lib/triggers/forms"
+import { actions } from "~/actions/api"
+import { getActionFormComponent } from "~/actions/forms"
+import { isSequentialAutomationEvent } from "~/actions/types"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { entries } from "~/lib/mapping"
+import { findRanksBetween } from "~/lib/rank"
+import { didSucceed, isClientException, useServerAction } from "~/lib/serverActions"
+import { addOrUpdateAutomation, deleteAutomation } from "../../../actions"
+import { ConditionsBuilder } from "./ConditionsBuilder"
+import { IconPicker } from "./IconPicker"
 
 type Props = {
-	stageId: StagesId;
-	communityId: CommunitiesId;
-	automations: AutoReturnType<typeof getAutomation>["execute"];
-};
+	stageId: StagesId
+	communityId: CommunitiesId
+	automations: AutoReturnType<typeof getAutomation>["execute"]
+}
 
 const AutomationSelector = ({
 	fieldProps,
@@ -81,12 +79,12 @@ const AutomationSelector = ({
 	fieldProps: ControllerRenderProps<
 		CreateAutomationsSchema,
 		`triggers.${number}.sourceAutomationId`
-	>;
-	label: string;
-	placeholder: string;
-	disabledAutomationId?: AutomationsId;
-	dataTestIdPrefix?: string;
-	automations: Props["automations"];
+	>
+	label: string
+	placeholder: string
+	disabledAutomationId?: AutomationsId
+	dataTestIdPrefix?: string
+	automations: Props["automations"]
 }) => {
 	return (
 		<FormItem>
@@ -100,7 +98,7 @@ const AutomationSelector = ({
 				</SelectTrigger>
 				<SelectContent>
 					{automations.map((automation) => {
-						const isDisabled = disabledAutomationId === automation.id;
+						const isDisabled = disabledAutomationId === automation.id
 						return (
 							<SelectItem
 								key={automation.id}
@@ -112,20 +110,20 @@ const AutomationSelector = ({
 								<div className="flex flex-row items-center gap-x-2">
 									<span>{automation.name}</span>
 									{isDisabled && (
-										<span className="text-xs text-gray-400">
+										<span className="text-gray-400 text-xs">
 											(self-reference not allowed)
 										</span>
 									)}
 								</div>
 							</SelectItem>
-						);
+						)
 					})}
 				</SelectContent>
 			</Select>
 			<FormMessage />
 		</FormItem>
-	);
-};
+	)
+}
 
 const conditionBlockSchema: z.ZodType<ConditionBlockFormValue> = z.lazy(() =>
 	z.object({
@@ -148,29 +146,29 @@ const conditionBlockSchema: z.ZodType<ConditionBlockFormValue> = z.lazy(() =>
 			)
 			.min(1),
 	})
-);
+)
 
 export type CreateAutomationsSchema = {
-	name: string;
-	description?: string;
-	icon?: IconConfig;
-	condition?: ConditionBlockFormValue;
+	name: string
+	description?: string
+	icon?: IconConfig
+	condition?: ConditionBlockFormValue
 	triggers: {
-		event: AutomationEvent;
-		config: Record<string, unknown>;
-		sourceAutomationId: AutomationsId | undefined;
-	}[];
+		event: AutomationEvent
+		config: Record<string, unknown>
+		sourceAutomationId: AutomationsId | undefined
+	}[]
 	action: {
-		action: Action;
-		config: Record<string, unknown>;
-	};
-	conditionEvaluationTiming: ConditionEvaluationTiming;
-};
+		action: Action
+		config: Record<string, unknown>
+	}
+	conditionEvaluationTiming: ConditionEvaluationTiming
+}
 
 export const StagePanelAutomationForm = (props: Props) => {
 	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] = useQueryState<
 		AutomationsId | undefined
-	>("automation-id", parseAsString);
+	>("automation-id", parseAsString)
 	const schema = useMemo(
 		() =>
 			z
@@ -185,7 +183,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 						})
 						.optional(),
 					conditionEvaluationTiming: conditionEvaluationTimingSchema.nullish(),
-					condition: conditionBlockSchema.optional(),
+					condition: conditionBlockSchema.nullish(),
 					triggers: z
 						.array(
 							z.discriminatedUnion(
@@ -219,12 +217,12 @@ export const StagePanelAutomationForm = (props: Props) => {
 				})
 				.superRefine((data, ctx) => {
 					if (!data.triggers?.length) {
-						return;
+						return
 					}
 
 					for (const [idx, trigger] of data.triggers.entries()) {
 						if (!isSequentialAutomationEvent(trigger.event)) {
-							continue;
+							continue
 						}
 						if (!trigger.sourceAutomationId) {
 							ctx.addIssue({
@@ -232,8 +230,8 @@ export const StagePanelAutomationForm = (props: Props) => {
 								code: z.ZodIssueCode.custom,
 								message:
 									"Source automation is required for automation chaining events",
-							});
-							continue;
+							})
+							continue
 						}
 
 						if (trigger.sourceAutomationId === currentlyEditingAutomationId) {
@@ -241,20 +239,19 @@ export const StagePanelAutomationForm = (props: Props) => {
 								path: ["triggers", idx, "sourceAutomationId"],
 								code: z.ZodIssueCode.custom,
 								message: "Automations may not trigger themselves in a loop",
-							});
-							continue;
+							})
 						}
 					}
 				}),
 		[props.stageId, currentlyEditingAutomationId]
-	);
+	)
 
-	const runUpsertAutomation = useServerAction(addOrUpdateAutomation);
-	const [isOpen, setIsOpen] = useState(false);
+	const runUpsertAutomation = useServerAction(addOrUpdateAutomation)
+	const [isOpen, setIsOpen] = useState(false)
 
 	const currentAutomation = props.automations.find(
 		(automation) => automation.id === currentlyEditingAutomationId
-	);
+	)
 
 	const form = useForm<CreateAutomationsSchema>({
 		resolver: zodResolver(schema),
@@ -270,11 +267,11 @@ export const StagePanelAutomationForm = (props: Props) => {
 			condition: undefined,
 			conditionEvaluationTiming: undefined,
 		},
-	});
+	})
 
-	const { reset, setError } = form;
+	const { reset, setError } = form
 
-	const community = useCommunity();
+	const community = useCommunity()
 
 	const onSubmit = useCallback(
 		async (data: CreateAutomationsSchema) => {
@@ -282,15 +279,15 @@ export const StagePanelAutomationForm = (props: Props) => {
 				stageId: props.stageId,
 				data,
 				automationId: currentlyEditingAutomationId as AutomationsId | undefined,
-			});
+			})
 			if (!isClientException(result)) {
-				setIsOpen(false);
-				setCurrentlyEditingAutomationId(null);
-				reset();
-				return;
+				setIsOpen(false)
+				setCurrentlyEditingAutomationId(null)
+				reset()
+				return
 			}
 
-			setError("root", { message: result.error });
+			setError("root", { message: result.error })
 		},
 		[
 			currentlyEditingAutomationId,
@@ -300,15 +297,15 @@ export const StagePanelAutomationForm = (props: Props) => {
 			reset,
 			setError,
 		]
-	);
+	)
 
 	useEffect(() => {
 		if (!currentAutomation) {
-			return;
+			return
 		}
 
-		setIsOpen(true);
-		const actionInstance = currentAutomation.actionInstances[0];
+		setIsOpen(true)
+		const actionInstance = currentAutomation.actionInstances[0]
 
 		reset({
 			name: currentAutomation.name,
@@ -321,8 +318,8 @@ export const StagePanelAutomationForm = (props: Props) => {
 			triggers: currentAutomation.triggers,
 			conditionEvaluationTiming: currentAutomation.conditionEvaluationTiming,
 			condition: currentAutomation.condition,
-		} as CreateAutomationsSchema);
-	}, [currentAutomation, reset]);
+		} as CreateAutomationsSchema)
+	}, [currentAutomation, reset])
 
 	const onOpenChange = useCallback(
 		(open: boolean) => {
@@ -338,31 +335,31 @@ export const StagePanelAutomationForm = (props: Props) => {
 					triggers: [],
 					condition: undefined,
 					conditionEvaluationTiming: undefined,
-				});
-				setCurrentlyEditingAutomationId(null);
+				})
+				setCurrentlyEditingAutomationId(null)
 			}
-			setIsOpen(open);
+			setIsOpen(open)
 		},
 		[form, setCurrentlyEditingAutomationId]
-	);
+	)
 
-	const runDeleteAutomation = useServerAction(deleteAutomation);
+	const runDeleteAutomation = useServerAction(deleteAutomation)
 	const onDeleteClick = useCallback(async () => {
 		if (!currentlyEditingAutomationId) {
-			return;
+			return
 		}
 
 		const res = await runDeleteAutomation(
 			currentlyEditingAutomationId as AutomationsId,
 			props.stageId
-		);
+		)
 		if (didSucceed(res)) {
-			setCurrentlyEditingAutomationId(null);
-			reset();
-			setIsOpen(false);
+			setCurrentlyEditingAutomationId(null)
+			reset()
+			setIsOpen(false)
 			toast({
 				title: "Automation deleted successfully",
-			});
+			})
 		}
 	}, [
 		currentlyEditingAutomationId,
@@ -370,30 +367,30 @@ export const StagePanelAutomationForm = (props: Props) => {
 		reset,
 		runDeleteAutomation,
 		setCurrentlyEditingAutomationId,
-	]);
+	])
 
-	const formId = useId();
+	const formId = useId()
 
-	const selectedAction = useWatch({ control: form.control, name: "action" });
+	const selectedAction = useWatch({ control: form.control, name: "action" })
 
 	const ActionFormComponent = useMemo(() => {
 		if (!selectedAction?.action) {
-			return null;
+			return null
 		}
 
-		return getActionFormComponent(selectedAction.action);
-	}, [selectedAction?.action]);
+		return getActionFormComponent(selectedAction.action)
+	}, [selectedAction?.action])
 
 	useEffect(() => {
 		if (selectedAction?.action) {
-			form.setValue("action.config", {});
+			form.setValue("action.config", {})
 		}
-	}, [selectedAction?.action, form]);
+	}, [selectedAction?.action, form])
 
-	const isExistingAutomation = !!currentlyEditingAutomationId;
+	const isExistingAutomation = !!currentlyEditingAutomationId
 
-	const condition = form.watch("condition");
-	const iconConfig = form.watch("icon");
+	const condition = form.watch("condition")
+	const _iconConfig = form.watch("icon")
 
 	const {
 		fields: selectedTriggers,
@@ -402,7 +399,9 @@ export const StagePanelAutomationForm = (props: Props) => {
 	} = useFieldArray<CreateAutomationsSchema, "triggers">({
 		control: form.control,
 		name: "triggers",
-	});
+	})
+
+	console.log(form.formState.errors)
 
 	return (
 		<div className="space-y-2 py-2">
@@ -459,7 +458,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 													</div>
 													<FormMessage />
 												</FormItem>
-											);
+											)
 										}}
 									/>
 									<FormField
@@ -476,7 +475,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 													/>
 													<FormMessage />
 												</FormItem>
-											);
+											)
 										}}
 									/>
 								</div>
@@ -509,7 +508,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 																			removeTrigger(idx)
 																		}
 																	/>
-																);
+																)
 															})}
 														</div>
 													) : null}
@@ -519,7 +518,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 																event: value as AutomationEvent,
 																config: {},
 																sourceAutomationId: undefined,
-															});
+															})
 														}}
 													>
 														<SelectTrigger
@@ -546,7 +545,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 																)
 																.map((event) => {
 																	const automation =
-																		getTriggerByName(event);
+																		getTriggerByName(event)
 
 																	return (
 																		<SelectItem
@@ -561,14 +560,14 @@ export const StagePanelAutomationForm = (props: Props) => {
 																				community
 																			)}
 																		</SelectItem>
-																	);
+																	)
 																})}
 														</SelectContent>
 													</Select>
 												</div>
 												<FormMessage />
 											</FormItem>
-										);
+										)
 									}}
 								/>
 
@@ -585,13 +584,13 @@ export const StagePanelAutomationForm = (props: Props) => {
 													onClick={() => {
 														const ranks = findRanksBetween({
 															numberOfRanks: 1,
-														});
+														})
 														form.setValue("condition", {
 															type: AutomationConditionBlockType.OR,
 															kind: "block",
 															rank: ranks[0],
 															items: [],
-														});
+														})
 													}}
 												>
 													<Plus size={14} />
@@ -606,9 +605,9 @@ export const StagePanelAutomationForm = (props: Props) => {
 													type="button"
 													variant="ghost"
 													size="sm"
-													className="h-7 text-xs text-neutral-500"
+													className="h-7 text-neutral-500 text-xs"
 													onClick={() => {
-														form.setValue("condition", undefined);
+														form.setValue("condition", undefined)
 													}}
 												>
 													Remove all conditions
@@ -626,14 +625,14 @@ export const StagePanelAutomationForm = (props: Props) => {
 											render={({ field }) => {
 												const actionDef = field.value
 													? actions[field.value]
-													: null;
+													: null
 												return (
 													<FormItem>
 														<FormLabel>Run</FormLabel>
 														{field.value && actionDef ? (
 															<div className="flex items-center gap-2 rounded-md border border-neutral-300 bg-white p-3">
 																<actionDef.icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
-																<span className="flex-1 text-sm font-medium text-neutral-900">
+																<span className="flex-1 font-medium text-neutral-900 text-sm">
 																	{actionDef.name}
 																</span>
 																<Button
@@ -642,7 +641,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 																	size="sm"
 																	className="h-6 text-xs"
 																	onClick={() => {
-																		field.onChange(undefined);
+																		field.onChange(undefined)
 																	}}
 																>
 																	Change
@@ -693,7 +692,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 																						</span>
 																					</div>
 																				</SelectItem>
-																			);
+																			)
 																		}
 																	)}
 																</SelectContent>
@@ -701,7 +700,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 														)}
 														<FormMessage />
 													</FormItem>
-												);
+												)
 											}}
 										/>
 
@@ -731,7 +730,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 							{form.formState.errors.root && (
 								<p
 									className={
-										"text-[0.8rem] font-medium text-red-500 dark:text-red-900"
+										"font-medium text-[0.8rem] text-red-500 dark:text-red-900"
 									}
 								>
 									{form.formState.errors.root.message}
@@ -740,7 +739,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 						</Form>
 						<DialogFooter
 							className={cn(
-								"sticky -bottom-4 mt-4 flex w-full items-center",
+								"-bottom-4 sticky mt-4 flex w-full items-center",
 								currentlyEditingAutomationId && "!justify-between"
 							)}
 						>
@@ -764,31 +763,31 @@ export const StagePanelAutomationForm = (props: Props) => {
 				</DialogContent>
 			</Dialog>
 		</div>
-	);
-};
+	)
+}
 
 function TriggerConfigForm(props: {
-	trigger: Trigger;
-	form: UseFormReturn<CreateAutomationsSchema>;
-	idx: number;
-	community: Communities;
-	removeTrigger: () => void;
-	currentlyEditingAutomationId: AutomationsId | undefined;
-	stageAutomations: AutoReturnType<typeof getStageAutomations>["execute"];
+	trigger: Trigger
+	form: UseFormReturn<CreateAutomationsSchema>
+	idx: number
+	community: Communities
+	removeTrigger: () => void
+	currentlyEditingAutomationId: AutomationsId | undefined
+	stageAutomations: AutoReturnType<typeof getStageAutomations>["execute"]
 }) {
-	const trigger = getTriggerByName(props.trigger.event);
+	const trigger = getTriggerByName(props.trigger.event)
 	const TriggerForm = useMemo(() => {
 		if (!isTriggerWithConfig(props.trigger.event)) {
-			return null;
+			return null
 		}
 
-		return getTriggerConfigForm(props.trigger.event);
-	}, [props.trigger.event]);
+		return getTriggerConfigForm(props.trigger.event)
+	}, [props.trigger.event])
 	return (
 		<div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
 			<div className="flex items-center gap-2">
 				<trigger.display.icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
-				<span className="flex-1 text-sm font-medium text-neutral-900">
+				<span className="flex-1 font-medium text-neutral-900 text-sm">
 					{humanReadableEventBase(props.trigger.event, props.community)}
 				</span>
 				<Button
@@ -821,5 +820,5 @@ function TriggerConfigForm(props: {
 
 			{trigger.config && TriggerForm && <TriggerForm form={props.form} idx={props.idx} />}
 		</div>
-	);
+	)
 }
