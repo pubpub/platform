@@ -88,9 +88,7 @@ export const StagePanelActionCreator = (props: Props) => {
 	return (
 		<div className="space-y-2 py-2">
 			<Dialog open={isOpen} onOpenChange={onOpenChange}>
-				<DialogTrigger asChild>
-					{props.children}
-				</DialogTrigger>
+				<DialogTrigger asChild>{props.children}</DialogTrigger>
 				<DialogContent data-testid={"add-action-dialog"}>
 					<DialogHeader>
 						<DialogTitle>Add an action</DialogTitle>
