@@ -1,10 +1,10 @@
-import * as z from "zod";
+import * as z from "zod"
 
-import { Action } from "db/public";
-import { MoveHorizontal } from "ui/icon";
+import { Action } from "db/public"
+import { MoveHorizontal } from "ui/icon"
 
-import { stage } from "../_lib/zodTypes";
-import { defineAction } from "../types";
+import { stage } from "../_lib/zodTypes"
+import { defineAction } from "../types"
 
 export const action = defineAction({
 	name: Action.move,
@@ -16,4 +16,4 @@ export const action = defineAction({
 	},
 	description: "Move a pub into a different stage",
 	icon: MoveHorizontal,
-});
+})

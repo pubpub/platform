@@ -1,27 +1,31 @@
-"use client";
+"use client"
 
-import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
+import type { PubTypesId } from "db/public"
 
-import type { PubTypesId } from "db/public";
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog";
-import { Plus } from "ui/icon";
-import { cn } from "utils";
+import { useCallback, useState } from "react"
+import { useRouter } from "next/navigation"
 
-import { Footer } from "~/app/components/CreateEditDialog";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { NewTypeForm } from "./NewTypeForm";
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog"
+import { Plus } from "ui/icon"
+import { cn } from "utils"
+
+import { Footer } from "~/app/components/CreateEditDialog"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { NewTypeForm } from "./NewTypeForm"
 
 export const CreatePubTypeButton = ({ className }: { className?: string }) => {
-	const [isOpen, setIsOpen] = useState(false);
-	const router = useRouter();
-	const community = useCommunity();
+	const [isOpen, setIsOpen] = useState(false)
+	const router = useRouter()
+	const community = useCommunity()
 
-	const onSuccess = useCallback((pubTypeId: PubTypesId) => {
-		setIsOpen(false);
-		router.push(`/c/${community.slug}/types/${pubTypeId}/edit`);
-	}, []);
+	const onSuccess = useCallback(
+		(pubTypeId: PubTypesId) => {
+			setIsOpen(false)
+			router.push(`/c/${community.slug}/types/${pubTypeId}/edit`)
+		},
+		[community.slug, router.push]
+	)
 
 	return (
 		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen}>
@@ -49,5 +53,5 @@ export const CreatePubTypeButton = ({ className }: { className?: string }) => {
 				)}
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

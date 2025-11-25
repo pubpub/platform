@@ -1,64 +1,65 @@
-import type { KeyboardEvent } from "react";
-import type { NodeProps } from "reactflow";
+import type { StagesId } from "db/public"
+import type { KeyboardEvent } from "react"
+import type { NodeProps } from "reactflow"
+import type { CommunityStage } from "~/lib/server/stages"
 
-import { memo, useCallback, useRef, useState } from "react";
-import Link from "next/link";
-import { Handle, Position } from "reactflow";
+import { memo, useCallback, useRef, useState } from "react"
+import Link from "next/link"
+import { Handle, Position } from "reactflow"
 
-import type { StagesId } from "db/public";
-import { Button } from "ui/button";
-import { Settings } from "ui/icon";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { Settings } from "ui/icon"
+import { cn } from "utils"
 
-import type { CommunityStage } from "~/lib/server/stages";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { constructStageMangePanel } from "~/lib/links";
-import { slugifyString } from "~/lib/string";
-import { useStages } from "../../StagesContext";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { constructStageMangePanel } from "~/lib/links"
+import { slugifyString } from "~/lib/string"
+import { useStages } from "../../StagesContext"
 
-export const STAGE_NODE_WIDTH = 250;
-export const STAGE_NODE_HEIGHT = 50;
+export const STAGE_NODE_WIDTH = 250
+export const STAGE_NODE_HEIGHT = 50
 
 export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>) => {
-	const community = useCommunity();
-	const { updateStageName } = useStages();
-	const [isEditingName, setIsEditingName] = useState(false);
-	const nodeRef = useRef<HTMLDivElement>(null);
-	const nameRef = useRef<HTMLHeadingElement>(null);
+	const community = useCommunity()
+	const { updateStageName } = useStages()
+	const [isEditingName, setIsEditingName] = useState(false)
+	const nodeRef = useRef<HTMLDivElement>(null)
+	const nameRef = useRef<HTMLHeadingElement>(null)
 
 	const onDoubleClick = useCallback(() => {
-		setIsEditingName(true);
+		setIsEditingName(true)
 		if (nameRef.current) {
-			const range = document.createRange();
-			const selection = window.getSelection()!;
-			const selectionStart = nameRef.current.childNodes[0];
-			range.setStart(selectionStart, 0);
-			range.setEnd(selectionStart, selectionStart.textContent!.length);
-			selection.removeAllRanges();
-			selection.addRange(range);
+			const range = document.createRange()
+			const selection = window.getSelection()!
+			const selectionStart = nameRef.current.childNodes[0]
+			range.setStart(selectionStart, 0)
+			range.setEnd(selectionStart, selectionStart.textContent?.length ?? 0)
+			selection.removeAllRanges()
+			selection.addRange(range)
 		}
-	}, []);
+	}, [])
 
 	const onKeyDown = useCallback(
 		(e: KeyboardEvent) => {
 			if (isEditingName && e.key === "Enter") {
-				nameRef.current?.blur();
+				nameRef.current?.blur()
 			}
 		},
 		[isEditingName]
-	);
+	)
 
 	const onBlur = useCallback(() => {
 		if (isEditingName) {
-			window.getSelection()?.removeAllRanges();
+			window.getSelection()?.removeAllRanges()
 			if (nameRef.current?.textContent) {
-				updateStageName(props.data.stage.id as StagesId, nameRef.current.textContent!);
+				updateStageName(props.data.stage.id as StagesId, nameRef.current.textContent!)
 			}
-			setIsEditingName(false);
+			setIsEditingName(false)
 		}
-	}, [isEditingName]);
+	}, [isEditingName])
 
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: it has buttons in it, can't be a button
 		<div
 			className={cn(
 				"flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
@@ -89,15 +90,15 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 			/>
 			<div className="flex flex-col">
 				<div>
+					<span className="sr-only">Edit stage name</span>
 					<p
-						className="nodrag cursor-text text-sm font-medium"
+						className="nodrag cursor-text font-medium text-sm"
 						contentEditable
 						onBeforeInput={() => {
-							setIsEditingName(true);
+							setIsEditingName(true)
 						}}
 						suppressContentEditableWarning
 						ref={nameRef}
-						aria-label="Edit stage name"
 					>
 						{props.data.stage.name}
 					</p>
@@ -106,7 +107,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 text-xs font-light"
+							className="m-0 h-auto p-0 font-light text-xs"
 							asChild
 						>
 							<Link
@@ -123,7 +124,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 text-xs font-light"
+							className="m-0 h-auto p-0 font-light text-xs"
 							asChild
 						>
 							<Link
@@ -140,7 +141,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 text-xs font-light"
+							className="m-0 h-auto p-0 font-light text-xs"
 							asChild
 						>
 							<Link
@@ -167,5 +168,5 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 				<Settings className="h-4 w-4 hover:text-gray-700" />
 			</Link>
 		</div>
-	);
-});
+	)
+})

@@ -1,30 +1,30 @@
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
+import type { FormsId } from "db/public"
 
-import { ArchiveFormButton } from "app/components/FormBuilder/ArchiveFormButton";
+import { ArchiveFormButton } from "app/components/FormBuilder/ArchiveFormButton"
 
-import type { FormsId } from "db/public";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
-import { DataTableColumnHeader } from "ui/data-table";
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { DataTableColumnHeader } from "ui/data-table"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { Ellipsis, History, ToyBrick } from "ui/icon";
+} from "ui/dropdown-menu"
+import { Ellipsis, History, ToyBrick } from "ui/icon"
 
-import { RestoreFormButton } from "~/app/components/FormBuilder/RestoreFormButton";
+import { RestoreFormButton } from "~/app/components/FormBuilder/RestoreFormButton"
 
 export type TableForm = {
-	id: FormsId;
-	slug: string;
-	formName: string;
-	pubType: string;
-	updated: Date;
-	isArchived: boolean;
-	isDefault: boolean;
-};
+	id: FormsId
+	slug: string
+	formName: string
+	pubType: string
+	updated: Date
+	isArchived: boolean
+	isDefault: boolean
+}
 
 export const getFormTableColumns = () =>
 	[
@@ -86,7 +86,7 @@ export const getFormTableColumns = () =>
 			),
 			accessorKey: "updated",
 			cell: ({ row }) => {
-				return <div className="pr-10">{row.original.updated.toLocaleDateString()}</div>;
+				return <div className="pr-10">{row.original.updated.toLocaleDateString()}</div>
 			},
 		},
 		{
@@ -123,7 +123,7 @@ export const getFormTableColumns = () =>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
-				);
+				)
 			},
 		},
-	] as const satisfies ColumnDef<TableForm, unknown>[];
+	] as const satisfies ColumnDef<TableForm, unknown>[]

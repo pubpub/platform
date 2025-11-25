@@ -1,15 +1,15 @@
-import type { Static } from "@sinclair/typebox";
-import type { Node } from "prosemirror-model";
-import type { ReactNode } from "react";
+import type { Static } from "@sinclair/typebox"
+import type { Node } from "prosemirror-model"
 
-import React, { useMemo } from "react";
-import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
-import { TypeCompiler } from "@sinclair/typebox/compiler";
-import { useForm } from "react-hook-form";
+import * as React from "react"
+import { useMemo } from "react"
+import { useEditorEventCallback } from "@handlewithcare/react-prosemirror"
+import { typeboxResolver } from "@hookform/resolvers/typebox"
+import { Type } from "@sinclair/typebox"
+import { TypeCompiler } from "@sinclair/typebox/compiler"
+import { useForm } from "react-hook-form"
 
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 import {
 	AlignCenter,
 	AlignLeft,
@@ -18,15 +18,15 @@ import {
 	Expand,
 	ExternalLink,
 	HelpCircle,
-} from "ui/icon";
-import { Input } from "ui/input";
-import { RadioGroup, RadioGroupCard } from "ui/radio-group";
-import { Slider } from "ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+} from "ui/icon"
+import { Input } from "ui/input"
+import { RadioGroup, RadioGroupCard } from "ui/radio-group"
+import { Slider } from "ui/slider"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
 
-import { Alignment } from "../../schemas/image";
-import { MenuInputField, MenuSwitchField } from "./MenuFields";
+import { Alignment } from "../../schemas/image"
+import { MenuInputField, MenuSwitchField } from "./MenuFields"
 
 const formSchema = Type.Object({
 	src: Type.String(),
@@ -34,45 +34,45 @@ const formSchema = Type.Object({
 	linkTo: Type.String(),
 	width: Type.Number(),
 	align: Type.Enum(Alignment),
-});
+})
 
-const compiledSchema = TypeCompiler.Compile(formSchema);
+const compiledSchema = TypeCompiler.Compile(formSchema)
 
-type FormSchema = Static<typeof formSchema>;
+type FormSchema = Static<typeof formSchema>
 
-const ALIGNMENT_INFO: Record<Alignment, { icon: ReactNode; label: string }> = {
+const ALIGNMENT_INFO: Record<Alignment, { icon: React.ReactNode; label: string }> = {
 	[Alignment.left]: { icon: <AlignLeft />, label: "Align left" },
 	[Alignment.center]: { icon: <AlignCenter />, label: "Align center" },
 	[Alignment.right]: { icon: <AlignRight />, label: "Align right" },
 	[Alignment.verticalCenter]: { icon: <AlignVerticalSpaceAround />, label: "Vertically center" },
 	[Alignment.expand]: { icon: <Expand />, label: "Expand" },
-};
+}
 
 const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
-	const { icon, label } = ALIGNMENT_INFO[alignment];
+	const { icon, label } = ALIGNMENT_INFO[alignment]
 	return (
 		<FormItem>
 			<FormControl>
 				<RadioGroupCard
 					value={alignment}
-					className="data-[state=checked]:border-ring-0 rounded border-0 data-[state=checked]:bg-gray-200"
+					className="rounded border-0 data-[state=checked]:border-ring-0 data-[state=checked]:bg-gray-200"
 				>
 					{icon}
 				</RadioGroupCard>
 			</FormControl>
 			<FormLabel className="sr-only">{label}</FormLabel>
 		</FormItem>
-	);
-};
+	)
+}
 
 type Props = {
-	node: Node;
-	nodePos: number;
-};
+	node: Node
+	nodePos: number
+}
 
 export const MediaUpload = (props: Props) => {
-	const { attrs } = props.node;
-	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
+	const { attrs } = props.node
+	const resolver = useMemo(() => typeboxResolver(compiledSchema), [])
 
 	const form = useForm<FormSchema>({
 		resolver,
@@ -84,17 +84,17 @@ export const MediaUpload = (props: Props) => {
 			width: attrs.width ?? 100,
 			align: attrs.align ?? "center",
 		},
-	});
+	})
 
 	const handleSubmit = useEditorEventCallback((view, values: FormSchema) => {
 		if (!view) {
-			return;
+			return
 		}
 
-		const node = view.state.doc.nodeAt(props.nodePos);
+		const node = view.state.doc.nodeAt(props.nodePos)
 
 		if (!node) {
-			return;
+			return
 		}
 
 		const tr = view.state.tr.setNodeMarkup(
@@ -102,14 +102,14 @@ export const MediaUpload = (props: Props) => {
 			node.type,
 			{ ...node.attrs, ...values },
 			node.marks
-		);
-		view.dispatch(tr);
-	});
+		)
+		view.dispatch(tr)
+	})
 
 	return (
 		<Form {...form}>
 			<form onChange={form.handleSubmit(handleSubmit)}>
-				<h2 className="text-md font-medium">Media Attributes</h2>
+				<h2 className="font-medium text-md">Media Attributes</h2>
 				<Tabs defaultValue="info">
 					<TabsList className="grid w-full grid-cols-2 bg-muted">
 						<TabsTrigger value="info">Info</TabsTrigger>
@@ -185,7 +185,7 @@ export const MediaUpload = (props: Props) => {
 															onChange={(e) => {
 																field.onChange(
 																	e.target.valueAsNumber
-																);
+																)
 															}}
 														/>
 														%
@@ -195,7 +195,7 @@ export const MediaUpload = (props: Props) => {
 										</div>
 										<FormMessage />
 									</FormItem>
-								);
+								)
 							}}
 						/>
 						<FormField
@@ -234,7 +234,7 @@ export const MediaUpload = (props: Props) => {
 										</div>
 										<FormMessage />
 									</FormItem>
-								);
+								)
 							}}
 						/>
 						<hr />
@@ -243,5 +243,5 @@ export const MediaUpload = (props: Props) => {
 				</Tabs>
 			</form>
 		</Form>
-	);
-};
+	)
+}

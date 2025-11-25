@@ -1,34 +1,35 @@
-"use client";
+"use client"
 
-import { useRef, useState } from "react";
+import type { NonGenericProcessedPub, ProcessedPub } from "contracts"
+import type { PubsId, PubTypes } from "db/public"
 
-import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
-import type { PubsId, PubTypes } from "db/public";
-import { Button } from "ui/button";
+import { useRef, useState } from "react"
 
-import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
-import { FormPubSearchSelect } from "../pubs/FormPubSearchSelect";
+import { Button } from "ui/button"
+
+import { PanelHeader, SidePanel } from "~/app/components/SidePanel"
+import { FormPubSearchSelect } from "../pubs/FormPubSearchSelect"
 
 type AddRelatedPubsPanelProps = {
-	title: string;
-	formSlug: string;
-	fieldSlug: string;
-	relatedPubs: ProcessedPub<{ withPubType: true }>[];
-	onCancel: () => void;
-	onChangeRelatedPubs: (pubs: ProcessedPub<{ withPubType: true }>[]) => void;
-	disabledPubs?: PubsId[];
-	pubTypes?: Pick<PubTypes, "id" | "name">[];
-	currentPubId?: PubsId;
-};
+	title: string
+	formSlug: string
+	fieldSlug: string
+	relatedPubs: ProcessedPub<{ withPubType: true }>[]
+	onCancel: () => void
+	onChangeRelatedPubs: (pubs: ProcessedPub<{ withPubType: true }>[]) => void
+	disabledPubs?: PubsId[]
+	pubTypes?: Pick<PubTypes, "id" | "name">[]
+	currentPubId?: PubsId
+}
 
 export const AddRelatedPubsPanel = (props: AddRelatedPubsPanelProps) => {
-	const sidebarRef = useRef(null);
-	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(props.relatedPubs);
+	const sidebarRef = useRef(null)
+	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(props.relatedPubs)
 
 	const handleUpdate = () => {
-		props.onChangeRelatedPubs(selected as ProcessedPub<{ withPubType: true }>[]);
-		props.onCancel();
-	};
+		props.onChangeRelatedPubs(selected as ProcessedPub<{ withPubType: true }>[])
+		props.onCancel()
+	}
 
 	return (
 		<SidePanel ref={sidebarRef}>
@@ -61,5 +62,5 @@ export const AddRelatedPubsPanel = (props: AddRelatedPubsPanelProps) => {
 				</Button>
 			</div>
 		</SidePanel>
-	);
-};
+	)
+}

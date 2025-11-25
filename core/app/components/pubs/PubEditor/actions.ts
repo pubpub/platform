@@ -1,43 +1,38 @@
-"use server";
+"use server"
 
-import { Value } from "@sinclair/typebox/value";
-import { getJsonSchemaByCoreSchemaType } from "schemas";
+import type { Json, JsonValue } from "contracts"
+import type { PubsId, PubTypesId, StagesId, UsersId } from "db/public"
 
-import type { Json, JsonValue } from "contracts";
-import type { PubsId, PubTypesId, StagesId, UsersId } from "db/public";
-import {
-	Capabilities,
-	CoreSchemaType,
-	FormAccessType,
-	MemberRole,
-	MembershipType,
-} from "db/public";
-import { logger } from "logger";
+import { Value } from "@sinclair/typebox/value"
+import { getJsonSchemaByCoreSchemaType } from "schemas"
 
-import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan, userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities";
-import { parseRichTextForPubFieldsAndRelatedPubs } from "~/lib/fields/richText";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { ApiError, createPubRecursiveNew, makeFileUploadPermanent } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { defineServerAction } from "~/lib/server/defineServerAction";
-import { getForm, grantFormAccess } from "~/lib/server/form";
-import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
-import { deletePub, normalizePubValues } from "~/lib/server/pub";
-import { PubOp } from "~/lib/server/pub-op";
+import { Capabilities, CoreSchemaType, FormAccessType, MemberRole, MembershipType } from "db/public"
+import { logger } from "logger"
 
-type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">;
+import { db } from "~/kysely/database"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { userCan, userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities"
+import { parseRichTextForPubFieldsAndRelatedPubs } from "~/lib/fields/richText"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { ApiError, createPubRecursiveNew, makeFileUploadPermanent } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { defineServerAction } from "~/lib/server/defineServerAction"
+import { getForm, grantFormAccess } from "~/lib/server/form"
+import { maybeWithTrx } from "~/lib/server/maybeWithTrx"
+import { deletePub, normalizePubValues } from "~/lib/server/pub"
+import { PubOp } from "~/lib/server/pub-op"
+
+type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
 	props: CreatePubRecursiveProps & {
-		formSlug: string;
-		addUserToForm?: boolean;
+		formSlug: string
+		addUserToForm?: boolean
 		relation?: {
-			pubId: PubsId;
-			value: Date | Json;
-			slug: string;
-		};
+			pubId: PubsId
+			value: Date | Json
+			slug: string
+		}
 	}
 ) {
 	const {
@@ -47,17 +42,17 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 		addUserToForm,
 		body: { values, ...body },
 		...createPubProps
-	} = props;
-	const loginData = await getLoginData();
+	} = props
+	const loginData = await getLoginData()
 
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
-	const { user } = loginData;
+	const { user } = loginData
 
 	if (!formSlug) {
-		logger.debug({ msg: "Pub creation error: form slug not sent to action", user, props });
-		return ApiError.UNAUTHORIZED;
+		logger.debug({ msg: "Pub creation error: form slug not sent to action", user, props })
+		return ApiError.UNAUTHORIZED
 	}
 
 	const [form, canCreatePub, canCreateRelation] = await Promise.all([
@@ -73,14 +68,14 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 				pubId: relation.pubId,
 				userId: user.id,
 			}),
-	]);
+	])
 
 	if (!form) {
-		logger.debug({ msg: "Pub creation error: form not found", user, props });
-		return ApiError.UNAUTHORIZED;
+		logger.debug({ msg: "Pub creation error: form not found", user, props })
+		return ApiError.UNAUTHORIZED
 	}
 
-	const isPublicForm = form.access === FormAccessType.public;
+	const isPublicForm = form.access === FormAccessType.public
 
 	if (!canCreatePub && !isPublicForm) {
 		logger.debug({
@@ -90,22 +85,22 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 			form,
 			user,
 			props,
-		});
-		return ApiError.UNAUTHORIZED;
+		})
+		return ApiError.UNAUTHORIZED
 	}
 
 	const lastModifiedBy = createLastModifiedBy({
 		userId: user.id as UsersId,
-	});
+	})
 
-	const fileUploads: { fileName: string; tempUrl: string }[] = [];
-	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
+	const fileUploads: { fileName: string; tempUrl: string }[] = []
+	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload)
 	const filteredValues = values
 		? Object.fromEntries(
 				Object.entries(values).filter(([slug, value]) => {
-					const element = form.elements.find((element) => element.slug === slug);
+					const element = form.elements.find((element) => element.slug === slug)
 					if (!element) {
-						return false;
+						return false
 					}
 					if (
 						element.schemaName === CoreSchemaType.FileUpload &&
@@ -115,13 +110,13 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 						fileUploads.push({
 							tempUrl: value[0].fileUploadUrl,
 							fileName: value[0].fileName,
-						});
+						})
 					}
-					return true;
+					return true
 				})
 			)
-		: {};
-	logger.debug({ msg: "creating pub", filteredValues, fileUploads });
+		: {}
+	logger.debug({ msg: "creating pub", filteredValues, fileUploads })
 	try {
 		// need this in order to test it properly
 		const result = await maybeWithTrx(db, async (trx) => {
@@ -137,7 +132,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 				},
 				lastModifiedBy,
 				trx,
-			});
+			})
 
 			await Promise.all(
 				fileUploads.map(({ fileName, tempUrl }) =>
@@ -146,7 +141,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 						trx
 					)
 				)
-			);
+			)
 
 			if (relation && canCreateRelation && body.id) {
 				await PubOp.update(relation.pubId, {
@@ -156,7 +151,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 					trx,
 				})
 					.relate(relation.slug, relation.value, body.id)
-					.execute();
+					.execute()
 			}
 
 			if (addUserToForm && formSlug) {
@@ -168,23 +163,23 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 						pubId: createdPub.id,
 					},
 					trx
-				);
+				)
 			}
 			return {
 				success: true,
 				report: `Successfully created a new Pub`,
-			};
-		});
+			}
+		})
 
-		return result;
+		return result
 	} catch (error) {
-		logger.error(error);
+		logger.error(error)
 		return {
 			error: "Failed to create pub",
 			cause: error,
-		};
+		}
 	}
-});
+})
 
 export const updatePub = defineServerAction(async function updatePub({
 	pubId,
@@ -194,68 +189,68 @@ export const updatePub = defineServerAction(async function updatePub({
 	continueOnValidationError,
 	deleted,
 }: {
-	pubId: PubsId;
+	pubId: PubsId
 	pubValues: Record<
 		string,
 		JsonValue | Date | { value: JsonValue | Date; relatedPubId: PubsId }[]
-	>;
-	stageId?: StagesId;
-	formSlug: string;
-	continueOnValidationError: boolean;
-	deleted: { slug: string; relatedPubId: PubsId }[];
+	>
+	stageId?: StagesId
+	formSlug: string
+	continueOnValidationError: boolean
+	deleted: { slug: string; relatedPubId: PubsId }[]
 }) {
-	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()])
 
 	if (!loginData || !loginData.user || !community) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	if (!formSlug) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	const [form, canEdit] = await Promise.all([
 		getForm({ slug: formSlug, communityId: community.id }).executeTakeFirst(),
 		userCanEditPub({ pubId, userId: loginData.user.id, formSlug }),
-	]);
+	])
 
 	if (!form || !canEdit) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	const lastModifiedBy = createLastModifiedBy({
 		userId: loginData.user.id as UsersId,
-	});
+	})
 
 	try {
 		const updateQuery = PubOp.update(pubId, {
 			communityId: community.id,
 			lastModifiedBy,
 			continueOnValidationError,
-		});
+		})
 
 		if (stageId) {
-			updateQuery.setStage(stageId);
+			updateQuery.setStage(stageId)
 		}
 
 		const { values: processedVals }: { values: typeof pubValues } =
 			parseRichTextForPubFieldsAndRelatedPubs({
 				pubId: pubId,
 				values: pubValues as Record<string, JsonValue>,
-			});
+			})
 
-		const normalizedValues = normalizePubValues(processedVals);
-		const fileUploads: { fileName: string; tempUrl: string }[] = [];
-		const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
+		const normalizedValues = normalizePubValues(processedVals)
+		const fileUploads: { fileName: string; tempUrl: string }[] = []
+		const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload)
 
 		for (const { slug, value, relatedPubId } of normalizedValues) {
-			const element = form.elements.find((element) => element.slug === slug);
+			const element = form.elements.find((element) => element.slug === slug)
 			if (!element) {
-				continue;
+				continue
 			}
 
 			if (
@@ -269,20 +264,20 @@ export const updatePub = defineServerAction(async function updatePub({
 				fileUploads.push({
 					tempUrl: value[0].fileUploadUrl,
 					fileName: value[0].fileName,
-				});
+				})
 			}
 
 			if (relatedPubId) {
 				updateQuery.relate(slug, value, relatedPubId, {
 					replaceExisting: false,
-				});
+				})
 			} else {
-				updateQuery.set(slug, value);
+				updateQuery.set(slug, value)
 			}
 		}
 
 		for (const { slug, relatedPubId } of deleted) {
-			updateQuery.unrelate(slug, relatedPubId);
+			updateQuery.unrelate(slug, relatedPubId)
 		}
 
 		const [pub] = await Promise.all([
@@ -290,55 +285,55 @@ export const updatePub = defineServerAction(async function updatePub({
 			...fileUploads.map(({ fileName, tempUrl }) =>
 				makeFileUploadPermanent({ pubId, tempUrl, fileName, userId: loginData.user.id })
 			),
-		]);
-		return pub;
+		])
+		return pub
 	} catch (error) {
-		logger.error(error);
+		logger.error(error)
 		return {
 			error: "Failed to update pub",
 			cause: error,
-		};
+		}
 	}
-});
+})
 
 export const removePub = defineServerAction(async function removePub({ pubId }: { pubId: PubsId }) {
-	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()])
 
 	if (!loginData || !loginData.user || !community) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const lastModifiedBy = createLastModifiedBy({
 		userId: loginData.user.id,
-	});
-	const { user } = loginData;
+	})
+	const { user } = loginData
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	const authorized = await userCan(
 		Capabilities.deletePub,
 		{ type: MembershipType.pub, pubId },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
-		await deletePub({ pubId, lastModifiedBy, communityId: community.id });
+		await deletePub({ pubId, lastModifiedBy, communityId: community.id })
 
 		return {
 			success: true,
 			report: `Successfully removed the pub`,
-		};
+		}
 	} catch (error) {
-		logger.error({ msg: "Failed to remove pub", err: error });
+		logger.error({ msg: "Failed to remove pub", err: error })
 		return {
 			error: "Failed to remove pub",
 			cause: error,
-		};
+		}
 	}
-});
+})

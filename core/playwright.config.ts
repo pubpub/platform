@@ -1,6 +1,6 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test"
 
-const baseURL = `http://${process.env.INTEGRATION_TEST_HOST || "localhost"}:3000`;
+const baseURL = `http://${process.env.INTEGRATION_TEST_HOST || "localhost"}:3000`
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -53,4 +53,4 @@ export default defineConfig({
 			use: { ...devices["Desktop Chrome"] },
 		},
 	],
-});
+})

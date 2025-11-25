@@ -1,6 +1,7 @@
-import { z } from "zod";
+import type { Invites } from "../public"
 
-import type { Invites } from "../public";
+import { z } from "zod"
+
 import {
 	actionRunsIdSchema,
 	communitiesIdSchema,
@@ -13,9 +14,9 @@ import {
 	stagesIdSchema,
 	usersIdSchema,
 	usersSchema,
-} from "../public";
-import { InviteStatus } from "../public/InviteStatus";
-import { lastModifiedBySchema } from "./LastModifiedBy";
+} from "../public"
+import { InviteStatus } from "../public/InviteStatus"
+import { lastModifiedBySchema } from "./LastModifiedBy"
 
 export const inviteSchema = z
 	.object({
@@ -140,24 +141,24 @@ export const inviteSchema = z
 				status: z.literal(InviteStatus.created),
 			}),
 		])
-	) satisfies z.ZodType<Invites>;
+	) satisfies z.ZodType<Invites>
 
 type Prettify<T> = {
-	[K in keyof T]: T[K];
-} & {};
+	[K in keyof T]: T[K]
+} & {}
 
-export type Invite = Prettify<z.infer<typeof inviteSchema>>;
+export type Invite = Prettify<z.infer<typeof inviteSchema>>
 
 const _typeTestFunc = () => {
-	let invite = {} as Invite;
-	let invite2 = {} as Invites;
+	const invite = {} as Invite
+	let _invite2 = {} as Invites
 
 	// this should be allowed, Invite should be a subtype of Invites
-	invite2 = invite;
-};
+	_invite2 = invite
+}
 
 // 30 days
-export const DEFAULT_INVITE_EXPIRATION_TIME = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12);
+export const DEFAULT_INVITE_EXPIRATION_TIME = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12)
 
 export const newInviteSchema = z
 	.object({
@@ -257,7 +258,7 @@ export const newInviteSchema = z
 				status: z.literal(InviteStatus.created).default(InviteStatus.created),
 			}),
 		])
-	);
+	)
 
-export type NewInviteInput = Prettify<z.input<typeof newInviteSchema>>;
-export type NewInvite = Prettify<z.infer<typeof newInviteSchema>>;
+export type NewInviteInput = Prettify<z.input<typeof newInviteSchema>>
+export type NewInvite = Prettify<z.infer<typeof newInviteSchema>>

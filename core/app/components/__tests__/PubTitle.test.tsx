@@ -1,10 +1,10 @@
-import { render, screen } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { render, screen } from "@testing-library/react"
+import { expect, test } from "vitest"
 
-import { PubTitle } from "../PubTitle";
+import { PubTitle } from "../PubTitle"
 
 test("PubTitle component includes the pub title", async () => {
-	const currentDate = new Date();
+	const currentDate = new Date()
 
 	const pub = {
 		id: "b5702ef8-29b9-43ad-866c-4c337f598d88",
@@ -108,18 +108,18 @@ test("PubTitle component includes the pub title", async () => {
 			},
 		],
 		members: [],
-	};
+	}
 
-	render(<PubTitle pub={pub} />);
-	expect(screen.getByText(`Why Cyclamates were Banned`)).toBeDefined();
+	render(<PubTitle pub={pub} />)
+	expect(screen.getByText(`Why Cyclamates were Banned`)).toBeDefined()
 
-	pub.title = `Why Cyclamates were not Banned`;
-	render(<PubTitle pub={pub} />);
-	expect(screen.getByText(`Why Cyclamates were not Banned`)).toBeDefined();
+	pub.title = `Why Cyclamates were not Banned`
+	render(<PubTitle pub={pub} />)
+	expect(screen.getByText(`Why Cyclamates were not Banned`)).toBeDefined()
 
-	pub.title = null;
-	pub.values = [];
+	pub.title = null
+	pub.values = []
 
-	render(<PubTitle pub={pub} />);
-	expect(screen.getByText(`Untitled Submission - ${currentDate.toDateString()}`)).toBeDefined();
-});
+	render(<PubTitle pub={pub} />)
+	expect(screen.getByText(`Untitled Submission - ${currentDate.toDateString()}`)).toBeDefined()
+})

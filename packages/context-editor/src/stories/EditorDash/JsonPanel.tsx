@@ -1,16 +1,16 @@
-import type { EditorState } from "prosemirror-state";
+import type { EditorState } from "prosemirror-state"
 
-import React, { useMemo, useState } from "react";
-import JsonView from "@uiw/react-json-view";
+import React from "react"
+import JsonView from "@uiw/react-json-view"
 
 type Props = {
-	editorState: EditorState;
-};
+	editorState: EditorState
+}
 
 export default function JsonPanel({ editorState }: Props) {
 	return (
 		<>
-			<h2 className="sticky left-0 top-0">Doc JSON</h2>
+			<h2 className="sticky top-0 left-0">Doc JSON</h2>
 			<div className="panel-content">
 				{/* <pre>{JSON.stringify(editorState.doc.toJSON(), null, 2)}</pre> */}
 				<JsonView
@@ -21,5 +21,5 @@ export default function JsonPanel({ editorState }: Props) {
 				/>
 			</div>
 		</>
-	);
+	)
 }

@@ -1,8 +1,9 @@
-import { faker } from "@faker-js/faker";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
-import { describe, expect, test } from "vitest";
+import type { ApiAccessTokensId, PubsId, PubTypesId, StagesId, UsersId } from "db/public"
 
-import type { ApiAccessTokensId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
+import { faker } from "@faker-js/faker"
+import { jsonArrayFrom } from "kysely/helpers/postgres"
+import { describe, expect, test } from "vitest"
+
 import {
 	Action,
 	CoreSchemaType,
@@ -10,30 +11,30 @@ import {
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
-} from "db/public";
+} from "db/public"
 
-import { mockServerCode } from "~/lib/__tests__/utils";
-import { allPermissions } from "~/lib/server/apiAccessTokens";
+import { mockServerCode } from "~/lib/__tests__/utils"
+import { allPermissions } from "~/lib/server/apiAccessTokens"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode()
 
-const { getTrx, rollback, commit } = createForEachMockedTransaction();
+const { getTrx, rollback } = createForEachMockedTransaction()
 
 describe("seedCommunity", () => {
 	test("Should be able to create some sort of community", async () => {
-		const trx = getTrx();
+		const trx = getTrx()
 
-		const seedCommunity = await import("./seedCommunity").then((mod) => mod.seedCommunity);
-		const testUserId = crypto.randomUUID() as UsersId;
+		const seedCommunity = await import("./seedCommunity").then((mod) => mod.seedCommunity)
+		const testUserId = crypto.randomUUID() as UsersId
 
-		const submissionPubId = crypto.randomUUID() as PubsId;
-		const authorPubId = crypto.randomUUID() as PubsId;
-		const author2PubId = crypto.randomUUID() as PubsId;
+		const submissionPubId = crypto.randomUUID() as PubsId
+		const authorPubId = crypto.randomUUID() as PubsId
+		const author2PubId = crypto.randomUUID() as PubsId
 
-		const stage1Id = crypto.randomUUID() as StagesId;
-		const AuthorPubTypeId = crypto.randomUUID() as PubTypesId;
+		const stage1Id = crypto.randomUUID() as StagesId
+		const AuthorPubTypeId = crypto.randomUUID() as PubTypesId
 
-		const email = faker.internet.email();
+		const email = faker.internet.email()
 
 		const seededCommunity = await seedCommunity({
 			community: {
@@ -184,13 +185,13 @@ describe("seedCommunity", () => {
 					},
 				},
 			},
-		});
+		})
 
-		expect(seededCommunity).toBeDefined();
+		expect(seededCommunity).toBeDefined()
 
 		expect(seededCommunity.community, "community").toMatchObject({
 			name: "test",
-		});
+		})
 
 		expect(seededCommunity.actions, "actions").toMatchObject([
 			{
@@ -201,12 +202,12 @@ describe("seedCommunity", () => {
 				},
 				name: "1",
 			},
-		]);
+		])
 
 		expect(seededCommunity.users, "users").toMatchObject({
 			hih: {},
 			test: {},
-		});
+		})
 
 		expect(seededCommunity.members, "members").toMatchObject([
 			{
@@ -215,7 +216,7 @@ describe("seedCommunity", () => {
 			{
 				role: "contributor",
 			},
-		]);
+		])
 
 		expect(seededCommunity.pubFields, "pubFields").toMatchObject({
 			Title: {
@@ -228,7 +229,7 @@ describe("seedCommunity", () => {
 				name: "SubmissionAuthor",
 				schemaName: "Number",
 			},
-		});
+		})
 
 		expect(seededCommunity.pubTypes, "pubTypes").toMatchObject({
 			Submission: {
@@ -239,7 +240,7 @@ describe("seedCommunity", () => {
 				id: AuthorPubTypeId,
 				name: "Author",
 			},
-		});
+		})
 
 		expect(seededCommunity.pubs, "pubs").toMatchObject([
 			{ id: authorPubId },
@@ -257,13 +258,13 @@ describe("seedCommunity", () => {
 					{
 						value: 1,
 						relatedPub: {
-							pubTypeId: seededCommunity.pubTypes["Author"].id,
+							pubTypeId: seededCommunity.pubTypes.Author.id,
 						},
 					},
 					{
 						value: 2,
 						relatedPub: {
-							pubTypeId: seededCommunity.pubTypes["Author"].id,
+							pubTypeId: seededCommunity.pubTypes.Author.id,
 						},
 					},
 				],
@@ -271,9 +272,9 @@ describe("seedCommunity", () => {
 				stageId: seededCommunity.stages["Stage 1"].id,
 			},
 			{ id: author2PubId },
-		]);
+		])
 
-		expect(seededCommunity.stageConnections, "stageConnections").toMatchObject([]);
+		expect(seededCommunity.stageConnections, "stageConnections").toMatchObject([])
 
 		expect(seededCommunity.stages, "stages").toMatchObject({
 			"Stage 1": {
@@ -285,7 +286,7 @@ describe("seedCommunity", () => {
 				name: "Stage 2",
 				order: "bb",
 			},
-		});
+		})
 
 		expect(seededCommunity.forms, "forms").toMatchObject({
 			"submission-form": {
@@ -354,12 +355,12 @@ describe("seedCommunity", () => {
 				name: "author-form",
 				slug: "author-form",
 			},
-		});
+		})
 
 		expect(seededCommunity.apiTokens, "apiTokens").toMatchObject({
 			"all token": expect.stringMatching(/^[a-f0-9-]{36}\..{22}$/),
 			"test-token": expect.stringMatching(/^[a-f0-9-]{36}\..{22}$/),
-		});
+		})
 
 		const permissions = await trx
 			.selectFrom("api_access_tokens")
@@ -380,10 +381,10 @@ describe("seedCommunity", () => {
 				seededCommunity.apiTokens["test-token"].split(".")[0] as ApiAccessTokensId,
 				seededCommunity.apiTokens["all token"].split(".")[0] as ApiAccessTokensId,
 			])
-			.execute();
+			.execute()
 
-		const testToken = permissions.find((token) => token.name === "test-token");
-		const allToken = permissions.find((token) => token.name === "all token");
+		const testToken = permissions.find((token) => token.name === "test-token")
+		const allToken = permissions.find((token) => token.name === "all token")
 
 		expect(testToken?.permissions).toMatchObject([
 			{
@@ -394,7 +395,7 @@ describe("seedCommunity", () => {
 					pubTypes: [AuthorPubTypeId],
 				},
 			},
-		]);
+		])
 
 		expect(
 			allToken?.permissions?.sort((a, b) =>
@@ -404,8 +405,8 @@ describe("seedCommunity", () => {
 			allPermissions.sort((a, b) =>
 				`${a.scope}-${a.accessType}`.localeCompare(`${b.scope}-${b.accessType}`)
 			)
-		);
+		)
 
-		rollback();
-	});
-});
+		rollback()
+	})
+})

@@ -1,9 +1,9 @@
-import type { ExpressionBuilder } from "kysely";
+import type { FormsId } from "db/public"
+import type { ExpressionBuilder } from "kysely"
 
-import { sql } from "kysely";
+import { sql } from "kysely"
 
-import type { FormsId } from "db/public";
-import { MembershipType } from "db/public";
+import { MembershipType } from "db/public"
 
 export const withInvitedFormIds = <EB extends ExpressionBuilder<any, any>>(
 	eb: EB,
@@ -27,4 +27,4 @@ export const withInvitedFormIds = <EB extends ExpressionBuilder<any, any>>(
 		.where("invite_forms.type", "=", MembershipType.stage)
 		.select("formId")
 		.as("stageFormIds")})`.as("stageFormIds"),
-];
+]

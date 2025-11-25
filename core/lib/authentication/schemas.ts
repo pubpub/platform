@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 export const setupSchema = z.object({
 	email: z.string().email(),
@@ -8,4 +8,4 @@ export const setupSchema = z.object({
 	communityName: z.string().min(1),
 	communitySlug: z.string().min(1),
 	communityAvatar: z.string().optional(),
-});
+})

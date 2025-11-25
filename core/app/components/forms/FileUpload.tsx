@@ -1,38 +1,38 @@
-import type { InputTypeForCoreSchemaType } from "schemas";
+import type { CoreSchemaType } from "db/public"
+import type { InputTypeForCoreSchemaType } from "schemas"
 
-import { FileAudio, FileImage, FilePen, FileSpreadsheet, FileVideo } from "lucide-react";
+import { FileAudio, FileImage, FilePen, FileSpreadsheet, FileVideo } from "lucide-react"
 
-import type { CoreSchemaType } from "db/public";
-import { Button } from "ui/button";
-import { Card, CardContent } from "ui/card";
-import { ExternalLink, FileText, Trash2 } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import { Button } from "ui/button"
+import { Card, CardContent } from "ui/card"
+import { ExternalLink, FileText, Trash2 } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
 
 function formatFileSize(bytes: number): string {
-	if (bytes === 0) return "0 B";
+	if (bytes === 0) return "0 B"
 
-	const k = 1024;
-	const sizes = ["B", "KB", "MB", "GB"];
-	const i = Math.floor(Math.log(bytes) / Math.log(k));
+	const k = 1024
+	const sizes = ["B", "KB", "MB", "GB"]
+	const i = Math.floor(Math.log(bytes) / Math.log(k))
 
-	return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+	return `${parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`
 }
 
 type FileTypeInfo = {
-	description: string;
-	icon: typeof FileText;
-};
+	description: string
+	icon: typeof FileText
+}
 
 function getFileTypeInfo(mimeType: string): FileTypeInfo {
 	if (mimeType.startsWith("image/")) {
 		if (mimeType === "image/svg+xml") {
-			return { description: "SVG image", icon: FilePen };
+			return { description: "SVG image", icon: FilePen }
 		}
-		return { description: "Image file", icon: FileImage };
+		return { description: "Image file", icon: FileImage }
 	}
 
 	if (mimeType === "application/pdf") {
-		return { description: "PDF document", icon: FileText };
+		return { description: "PDF document", icon: FileText }
 	}
 
 	if (
@@ -40,51 +40,50 @@ function getFileTypeInfo(mimeType: string): FileTypeInfo {
 		mimeType === "application/vnd.ms-excel" ||
 		mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 	) {
-		return { description: "Spreadsheet", icon: FileSpreadsheet };
+		return { description: "Spreadsheet", icon: FileSpreadsheet }
 	}
 
 	if (
 		mimeType === "application/msword" ||
 		mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 	) {
-		return { description: "Document", icon: FileText };
+		return { description: "Document", icon: FileText }
 	}
 
 	if (mimeType.startsWith("video/")) {
-		return { description: "Video file", icon: FileVideo };
+		return { description: "Video file", icon: FileVideo }
 	}
 
 	if (mimeType.startsWith("audio/")) {
-		return { description: "Audio file", icon: FileAudio };
+		return { description: "Audio file", icon: FileAudio }
 	}
 
-	return { description: "Document", icon: FileText };
+	return { description: "Document", icon: FileText }
 }
 
 type FileUploadPreviewProps = {
-	files: InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>;
+	files: InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>
 	/** Passing this will allow the file to be deleted  */
-	onDelete?: (file: InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>[number]) => void;
-};
+	onDelete?: (file: InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>[number]) => void
+}
 
 export function FileUploadPreview(props: FileUploadPreviewProps) {
 	if (!props.files || props.files.length === 0) {
-		return null;
+		return null
 	}
 
-	const fileCount = props.files.length;
+	const fileCount = props.files.length
 
 	return (
-		<div
+		<section
 			className="space-y-2"
-			role="region"
 			aria-label={`Uploaded files (${fileCount} ${fileCount === 1 ? "file" : "files"})`}
 		>
 			{props.files.map((file, index) => {
-				const fileTypeInfo = getFileTypeInfo(file.fileType);
-				const FileIcon = fileTypeInfo.icon;
-				const fileTypeDescription = fileTypeInfo.description;
-				const fileId = `file-${index}-${file.fileName.replace(/[^a-zA-Z0-9]/g, "-")}`;
+				const fileTypeInfo = getFileTypeInfo(file.fileType)
+				const FileIcon = fileTypeInfo.icon
+				const _fileTypeDescription = fileTypeInfo.description
+				const fileId = `file-${index}-${file.fileName.replace(/[^a-zA-Z0-9]/g, "-")}`
 
 				return (
 					<Card
@@ -103,19 +102,19 @@ export function FileUploadPreview(props: FileUploadPreviewProps) {
 								<div className="min-w-0 flex-1">
 									<p
 										id={`${fileId}-name`}
-										className="truncate text-sm font-medium"
+										className="truncate font-medium text-sm"
 									>
 										{file.fileName}
 									</p>
 									<p
 										id={`${fileId}-details`}
-										className="text-xs text-muted-foreground"
-										aria-label={`${fileTypeDescription}, ${formatFileSize(file.fileSize)}`}
+										className="text-muted-foreground text-xs"
 									>
 										{formatFileSize(file.fileSize)} • {file.fileType}
 									</p>
 								</div>
 
+								{/** biome-ignore lint/a11y/useSemanticElements: shh */}
 								<div
 									className="flex flex-shrink-0 items-center gap-1"
 									role="group"
@@ -155,7 +154,7 @@ export function FileUploadPreview(props: FileUploadPreviewProps) {
 														variant="ghost"
 														size="sm"
 														className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-														onClick={() => props.onDelete!(file)}
+														onClick={() => props.onDelete?.(file)}
 														aria-label={`Delete ${file.fileName}`}
 													>
 														<Trash2 className="h-4 w-4" />
@@ -172,8 +171,8 @@ export function FileUploadPreview(props: FileUploadPreviewProps) {
 							</div>
 						</CardContent>
 					</Card>
-				);
+				)
 			})}
-		</div>
-	);
+		</section>
+	)
 }

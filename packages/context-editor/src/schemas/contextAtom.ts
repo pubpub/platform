@@ -1,4 +1,4 @@
-import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
+import type { DOMOutputSpec, NodeSpec } from "prosemirror-model"
 
 export default {
 	atom: true,
@@ -17,10 +17,10 @@ export default {
 			tag: "section",
 			getAttrs: (node) => {
 				if (!node.getAttribute("data-atom")) {
-					return false;
+					return false
 				}
 
-				const data = node.querySelector("script[x-data]") as HTMLScriptElement;
+				const data = node.querySelector("script[x-data]") as HTMLScriptElement
 
 				return {
 					id: node.getAttribute("id"),
@@ -30,7 +30,7 @@ export default {
 					fieldSlug: node.getAttribute("data-field-slug"),
 					pubTypeId: node.getAttribute("data-pub-type-id"),
 					data: data ? JSON.parse(data.textContent || "{}") : null,
-				};
+				}
 			},
 		},
 	],
@@ -54,6 +54,6 @@ export default {
 				},
 				JSON.stringify(node.attrs.data),
 			],
-		] as DOMOutputSpec;
+		] as DOMOutputSpec
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec

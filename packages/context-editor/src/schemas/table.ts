@@ -1,4 +1,4 @@
-import { tableNodes } from "prosemirror-tables";
+import { tableNodes } from "prosemirror-tables"
 
 const nodes = tableNodes({
 	cellContent: "block+",
@@ -7,12 +7,12 @@ const nodes = tableNodes({
 		class: { default: null },
 	},
 	tableGroup: "block",
-});
+})
 
 nodes.table.attrs = {
 	...nodes.table.attrs,
 	id: { default: null },
 	class: { default: null },
-};
+}
 
-export default nodes;
+export default nodes

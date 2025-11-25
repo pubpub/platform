@@ -1,21 +1,21 @@
-import type { Page } from "@playwright/test";
+import type { Page } from "@playwright/test"
+import type { PubsId } from "db/public"
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test"
 
-import type { PubsId } from "db/public";
-import { CoreSchemaType, MemberRole } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public"
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { LoginPage } from "./fixtures/login-page";
-import { PubsPage } from "./fixtures/pubs-page";
+import { createSeed } from "~/prisma/seed/createSeed"
+import { seedCommunity } from "~/prisma/seed/seedCommunity"
+import { LoginPage } from "./fixtures/login-page"
+import { PubsPage } from "./fixtures/pubs-page"
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial" })
 
-const relatedPubId = crypto.randomUUID() as PubsId;
+const relatedPubId = crypto.randomUUID() as PubsId
 
-let page: Page;
+let page: Page
 const seed = createSeed({
 	community: { name: `test community`, slug: `test-community-slug` },
 	pubFields: {
@@ -95,32 +95,32 @@ const seed = createSeed({
 			},
 		},
 	],
-});
+})
 
-let community: CommunitySeedOutput<typeof seed>;
+let community: CommunitySeedOutput<typeof seed>
 
 test.beforeAll(async ({ browser }) => {
-	community = await seedCommunity(seed);
+	community = await seedCommunity(seed)
 
-	page = await browser.newPage();
+	page = await browser.newPage()
 
-	const loginPage = new LoginPage(page);
-	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
-});
+	const loginPage = new LoginPage(page)
+	await loginPage.goto()
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password")
+})
 
 test.afterAll(async () => {
-	await page.close();
-});
+	await page.close()
+})
 
 test("Can see a pub's relations on a pub card", async () => {
-	const pubsPage = new PubsPage(page, community.community.slug);
-	pubsPage.goTo();
+	const pubsPage = new PubsPage(page, community.community.slug)
+	pubsPage.goTo()
 	await page
 		.getByTestId(`pub-card-${community.pubs[0].id}`)
 		.getByRole("button", { name: "Relations" })
-		.click();
-	await expect(page.getByRole("menuitem")).toHaveCount(4);
-	await page.getByRole("link", { name: "Woody Dog" }).click();
-	await page.waitForURL(`/c/${community.community.slug}/pubs/${relatedPubId}`);
-});
+		.click()
+	await expect(page.getByRole("menuitem")).toHaveCount(4)
+	await page.getByRole("link", { name: "Woody Dog" }).click()
+	await page.waitForURL(`/c/${community.community.slug}/pubs/${relatedPubId}`)
+})

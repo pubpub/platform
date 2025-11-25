@@ -1,17 +1,17 @@
-"use server";
+"use server"
 
-import type { User } from "lucia";
+import type { CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public"
+import type { User } from "lucia"
+import type { CommunityData } from "~/lib/server/community"
 
-import type { CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
-import { Capabilities, MemberRole, MembershipType } from "db/public";
+import { Capabilities, MemberRole, MembershipType } from "db/public"
 
-import type { CommunityData } from "~/lib/server/community";
-import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
-import { userCan } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { defineServerAction } from "~/lib/server/defineServerAction";
+import { db } from "~/kysely/database"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { isCommunityAdmin } from "~/lib/authentication/roles"
+import { userCan } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { defineServerAction } from "~/lib/server/defineServerAction"
 import {
 	deleteCommunityMemberships,
 	deletePubMemberships,
@@ -19,7 +19,7 @@ import {
 	insertCommunityMemberships,
 	insertPubMemberships,
 	insertStageMemberships,
-} from "~/lib/server/member";
+} from "~/lib/server/member"
 
 async function userCanEditMember(
 	community: NonNullable<CommunityData>,
@@ -29,23 +29,23 @@ async function userCanEditMember(
 ) {
 	switch (targetType) {
 		case MembershipType.community:
-			return isCommunityAdmin(user, community);
+			return isCommunityAdmin(user, community)
 		case MembershipType.stage:
 			return userCan(
 				Capabilities.removeStageMember,
 				{ type: MembershipType.stage, stageId: targetId as StagesId },
 				user.id
-			);
+			)
 		case MembershipType.pub:
 			return userCan(
 				Capabilities.removePubMember,
 				{ type: MembershipType.pub, pubId: targetId as PubsId },
 				user.id
-			);
+			)
 		default:
 			return {
 				error: "Invalid membership type",
-			};
+			}
 	}
 }
 
@@ -56,25 +56,25 @@ export const updateMember = defineServerAction(async function updateMember({
 	targetId,
 	targetType,
 }: {
-	userId: UsersId;
-	role: MemberRole;
-	forms: FormsId[];
-	targetId: CommunitiesId | StagesId | PubsId;
-	targetType: MembershipType;
+	userId: UsersId
+	role: MemberRole
+	forms: FormsId[]
+	targetId: CommunitiesId | StagesId | PubsId
+	targetType: MembershipType
 }) {
 	try {
-		const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+		const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()])
 
 		if (!community) {
 			return {
 				error: "Community not found",
-			};
+			}
 		}
 
 		if (!user) {
 			return {
 				error: "You are not logged in",
-			};
+			}
 		}
 
 		const userCanEditMemberResult = await userCanEditMember(
@@ -82,36 +82,36 @@ export const updateMember = defineServerAction(async function updateMember({
 			user,
 			targetId,
 			targetType
-		);
+		)
 
 		if (
 			userCanEditMemberResult === false ||
 			(typeof userCanEditMemberResult === "object" && userCanEditMemberResult.error)
 		) {
-			let target: string;
+			let target: string
 			switch (targetType) {
 				case MembershipType.community:
-					target = "community";
-					break;
+					target = "community"
+					break
 				case MembershipType.stage:
-					target = "stage";
-					break;
+					target = "stage"
+					break
 				case MembershipType.pub:
-					target = "pub";
-					break;
+					target = "pub"
+					break
 				default:
 					return {
 						title: "Failed to update member",
 						error: "Invalid membership type",
-					};
+					}
 			}
 			return {
 				title: "Failed to update member",
 				error: `You do not have permission to edit members in this ${target}`,
-			};
+			}
 		}
 
-		const formsToInsert = role === MemberRole.contributor ? forms : [];
+		const formsToInsert = role === MemberRole.contributor ? forms : []
 
 		const result = await db.transaction().execute(async (trx) => {
 			switch (targetType) {
@@ -122,7 +122,7 @@ export const updateMember = defineServerAction(async function updateMember({
 							userId,
 						},
 						trx
-					).execute();
+					).execute()
 
 					return insertPubMemberships(
 						{
@@ -132,7 +132,7 @@ export const updateMember = defineServerAction(async function updateMember({
 							forms: formsToInsert,
 						},
 						trx
-					).execute();
+					).execute()
 				case MembershipType.stage:
 					await deleteStageMemberships(
 						{
@@ -140,7 +140,7 @@ export const updateMember = defineServerAction(async function updateMember({
 							userId,
 						},
 						trx
-					).execute();
+					).execute()
 
 					return insertStageMemberships(
 						{
@@ -150,7 +150,7 @@ export const updateMember = defineServerAction(async function updateMember({
 							forms: formsToInsert,
 						},
 						trx
-					).execute();
+					).execute()
 				case MembershipType.community:
 					await deleteCommunityMemberships(
 						{
@@ -158,7 +158,7 @@ export const updateMember = defineServerAction(async function updateMember({
 							userId,
 						},
 						trx
-					).execute();
+					).execute()
 
 					return insertCommunityMemberships(
 						{
@@ -168,28 +168,28 @@ export const updateMember = defineServerAction(async function updateMember({
 							forms: formsToInsert,
 						},
 						trx
-					).execute();
+					).execute()
 				default:
 					return {
 						title: "Failed to update member",
 						error: "An unexpected error occurred",
-					};
+					}
 			}
-		});
+		})
 
 		if (!result) {
 			return {
 				title: "Failed to update member",
 				error: "An unexpected error occurred",
-			};
+			}
 		}
 
-		return { success: true };
+		return { success: true }
 	} catch (error) {
 		return {
 			title: "Failed to update member",
 			error: "An unexpected error occurred",
 			cause: error,
-		};
+		}
 	}
-});
+})

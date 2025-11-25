@@ -10,8 +10,6 @@
 		"./package.json": "./package.json"
 	},
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit",
 		"test": "vitest run"
 	},
@@ -22,25 +20,18 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@pubpub/prettier-config": "workspace:*",
 		"react": "catalog:react19",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"preconstruct": {
-		"entrypoints": [
-			"index.ts",
-			"schemas.ts",
-			"formats.ts",
-			"utils.ts"
-		],
+		"entrypoints": ["index.ts", "schemas.ts", "formats.ts", "utils.ts"],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,
 			"distInRoot": true,
 			"importsConditions": true
 		}
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

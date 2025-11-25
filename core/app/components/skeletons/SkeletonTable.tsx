@@ -1,5 +1,5 @@
-import { Skeleton } from "ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table";
+import { Skeleton } from "ui/skeleton"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table"
 
 function SkeletonTable() {
 	return (
@@ -36,7 +36,7 @@ function SkeletonTable() {
 				</TableBody>
 			</Table>
 		</div>
-	);
+	)
 }
 
-export default SkeletonTable;
+export default SkeletonTable

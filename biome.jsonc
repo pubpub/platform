@@ -1,0 +1,312 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.3.6/schema.json",
+	"files": {
+		"includes": ["**", "!!**/*stoplight.styles.css"]
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"indentStyle": "tab",
+		"indentWidth": 4,
+		"lineEnding": "lf",
+		"lineWidth": 100,
+		"attributePosition": "auto",
+		"bracketSameLine": false,
+		"bracketSpacing": true,
+		"expand": "auto",
+		"useEditorconfig": true,
+		"includes": [
+			"**",
+			"!app/c/\\[communitySlug\\]/developers/docs/stoplight.styles.css",
+			"!**/vitest-bench.local.json",
+			"!**/*.html",
+			"!node_modules/**"
+		]
+	},
+	"linter": {
+		"rules": {
+			"recommended": true,
+			"a11y": {
+				"noAccessKey": "error",
+				"noAriaUnsupportedElements": "error",
+				"noAutofocus": "error",
+				"noDistractingElements": "error",
+				"noHeaderScope": "error",
+				"noInteractiveElementToNoninteractiveRole": "error",
+				"noLabelWithoutControl": "error",
+				"noNoninteractiveElementInteractions": "error",
+				"noNoninteractiveElementToInteractiveRole": "error",
+				"noNoninteractiveTabindex": "error",
+				"noPositiveTabindex": "error",
+				"noRedundantAlt": "error",
+				"noRedundantRoles": "error",
+				"noStaticElementInteractions": "error",
+				"useAltText": "error",
+				"useAnchorContent": "error",
+				"useAriaActivedescendantWithTabindex": "error",
+				"useAriaPropsForRole": "error",
+				"useAriaPropsSupportedByRole": "error",
+				"useFocusableInteractive": "error",
+				"useHeadingContent": "error",
+				"useHtmlLang": "error",
+				"useIframeTitle": "error",
+				"useKeyWithClickEvents": "error",
+				"useKeyWithMouseEvents": "error",
+				"useMediaCaption": "error",
+				"useValidAnchor": "error",
+				"useValidAriaProps": "error",
+				"useValidAriaRole": "error",
+				"useValidAriaValues": "error",
+				"useValidAutocomplete": "error"
+			},
+			"style": {
+				"useImportType": "error",
+				"useNodejsImportProtocol": {
+					"level": "info",
+					"fix": "safe"
+				}
+			},
+			"suspicious": {
+				"noUnknownAtRules": {
+					"level": "error",
+					"options": {
+						"ignore": ["tailwind", "theme"]
+					}
+				}
+			},
+			"correctness": {
+				"noUnusedVariables": {
+					"level": "warn",
+					"fix": "safe"
+				},
+				"noUnusedImports": {
+					"level": "warn",
+					"fix": "safe"
+				},
+				"useExhaustiveDependencies": "warn",
+				"useHookAtTopLevel": "error",
+				"useJsxKeyInIterable": "error"
+			},
+			"nursery": {
+				"useSortedClasses": {
+					"fix": "safe",
+					"level": "error",
+					"options": {
+						"functions": ["cn", "cva"]
+					}
+				}
+			}
+		},
+		"includes": [
+			"**",
+			"!node_modules/**",
+			"!app/c/\\[communitySlug\\]/developers/docs/stoplight.styles.css"
+		]
+	},
+	"javascript": {
+		"formatter": {
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"trailingCommas": "es5",
+			"semicolons": "asNeeded",
+			"arrowParentheses": "always",
+			"bracketSameLine": false,
+			"quoteStyle": "double",
+			"attributePosition": "auto",
+			"bracketSpacing": true
+		},
+		"globals": []
+	},
+	"html": {
+		"experimentalFullSupportEnabled": true,
+		"formatter": {
+			"indentScriptAndStyle": false,
+			"selfCloseVoidElements": "always"
+		}
+	},
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							{
+								"type": true,
+								"source": [":NODE:", ":BUN:"]
+							},
+							":BLANK_LINE:",
+							{
+								"type": true
+							},
+							":BLANK_LINE:",
+							{
+								"type": true,
+								"source": ["react", "react-dom", "react-native"]
+							},
+							{
+								"type": true,
+								"source": ["next", "next/**"]
+							},
+							{
+								"type": true,
+								"source": [
+									":PACKAGE:",
+									"!lib/**",
+									"!db/**",
+									"!ui/**",
+									"!@pubpub/**",
+									"!utils/**",
+									"!contracts/**",
+									"!logger/**",
+									"!lib",
+									"!db",
+									"!ui",
+									"!@pubpub",
+									"!utils",
+									"!contracts",
+									"!logger"
+								]
+							},
+							":BLANK_LINE:",
+							{
+								"type": true,
+								"source": [
+									"lib/**",
+									"db/**",
+									"ui/**",
+									"@pubpub/**",
+									"utils/**",
+									"contracts/**",
+									"logger/**",
+									"lib",
+									"db",
+									"ui",
+									"@pubpub",
+									"utils",
+									"contracts",
+									"logger"
+								]
+							},
+							":BLANK_LINE:",
+							{
+								"type": true,
+								"source": [":ALIAS:", ":RELATIVE:"]
+							},
+							":BLANK_LINE:",
+							{
+								"type": false,
+								"source": ["react", "react-dom", "react-native"]
+							},
+							{
+								"type": false,
+								"source": ["next", "next/**"]
+							},
+							{
+								"type": false,
+								"source": [
+									":PACKAGE:",
+									":NODE:",
+									":BUN:",
+									"!lib/**",
+									"!db/**",
+									"!ui/**",
+									"!@pubpub/**",
+									"!utils/**",
+									"!contracts/**",
+									"!logger/**",
+									"!lib",
+									"!db",
+									"!ui",
+									"!@pubpub",
+									"!utils",
+									"!contracts",
+									"!logger"
+								]
+							},
+							":BLANK_LINE:",
+							{
+								"type": false,
+								"source": [
+									"lib/**",
+									"db/**",
+									"ui/**",
+									"@pubpub/**",
+									"utils/**",
+									"contracts/**",
+									"logger/**",
+									"lib",
+									"db",
+									"ui",
+									"@pubpub",
+									"utils",
+									"contracts",
+									"logger"
+								]
+							},
+							":BLANK_LINE:",
+							{
+								"type": false,
+								"source": [":ALIAS:", ":RELATIVE:"]
+							},
+							{
+								"type": false,
+								"source": ["**/*.css"]
+							}
+						]
+					}
+				},
+				"recommended": true
+			}
+		}
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
+
+	"overrides": [
+		{
+			"includes": [
+				"packages/ui/**/*.tsx",
+				"packages/context-editor/**/*.tsx",
+				"packages/emails/**/*.tsx"
+			],
+			// so that the `import React from "react"` is not removed
+			"javascript": {
+				"jsxRuntime": "reactClassic"
+			}
+		},
+		{
+			// disabled until https://github.com/biomejs/biome/issues/7912 is fixed
+			"includes": ["**/*.astro"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						// it's unable to properly detect unused variables in Astro templates
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off"
+					}
+				}
+			},
+			// "css": {
+			// 	"formatter": {
+			// 		"enabled": false
+			// 	}
+			// },
+			"assist": {
+				"actions": {
+					"source": {
+						"organizeImports": "off"
+					}
+				}
+			}
+		}
+	]
+}

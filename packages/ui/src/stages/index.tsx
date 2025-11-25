@@ -1,3 +1,3 @@
-export * from "./StagesProvider";
-export * from "./StagesSelect";
-export * from "./StagesDAO";
+export * from "./StagesDAO"
+export * from "./StagesProvider"
+export * from "./StagesSelect"

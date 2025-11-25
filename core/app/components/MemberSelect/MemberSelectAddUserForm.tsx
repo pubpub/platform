@@ -1,37 +1,37 @@
-import type { SyntheticEvent } from "react";
+import type { Communities } from "db/public"
+import type { SyntheticEvent } from "react"
 
-import { useCallback, useEffect, useTransition } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useCallback, useEffect, useTransition } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import type { Communities } from "db/public";
-import { MemberRole } from "db/public";
-import { logger } from "logger";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { toast } from "ui/use-toast";
+import { MemberRole } from "db/public"
+import { logger } from "logger"
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { toast } from "ui/use-toast"
 
-import { createUserWithCommunityMembership } from "~/app/c/[communitySlug]/members/actions";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { createUserWithCommunityMembership } from "~/app/c/[communitySlug]/members/actions"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
 
 type Props = {
-	email: string;
-	community: Communities;
-	onSubmitSuccess: () => void;
-};
+	email: string
+	community: Communities
+	onSubmitSuccess: () => void
+}
 
 const addUserFormSchema = z.object({
 	email: z.string().email(),
 	firstName: z.string(),
 	lastName: z.string().optional(),
-});
+})
 
 export const MemberSelectAddUserForm = ({ email, community, onSubmitSuccess }: Props) => {
-	const [isPending, startTransition] = useTransition();
-	const runCreateUserWithMembership = useServerAction(createUserWithCommunityMembership);
+	const [_isPending, startTransition] = useTransition()
+	const runCreateUserWithMembership = useServerAction(createUserWithCommunityMembership)
 
 	const form = useForm<z.infer<typeof addUserFormSchema>>({
 		resolver: zodResolver(addUserFormSchema),
@@ -40,17 +40,17 @@ export const MemberSelectAddUserForm = ({ email, community, onSubmitSuccess }: P
 			lastName: "",
 			email,
 		},
-	});
+	})
 
 	useEffect(() => {
-		form.setValue("email", email);
-	}, [form, email]);
+		form.setValue("email", email)
+	}, [form, email])
 
 	// NOTE: We run `form.handleSubmit` manually here because the UserSelect
 	// component may be used within a <form> and that breaks HTML semantics/
 	// a11y practices.
 	const onSubmitClick = useCallback(
-		(e: SyntheticEvent) => {
+		(_e: SyntheticEvent) => {
 			startTransition(() => {
 				return form.handleSubmit(
 					async ({ email, firstName, lastName }) => {
@@ -60,28 +60,28 @@ export const MemberSelectAddUserForm = ({ email, community, onSubmitSuccess }: P
 							lastName,
 							role: MemberRole.contributor,
 							forms: [],
-						});
+						})
 
 						if (didSucceed(result)) {
 							toast({
 								title: "Success",
 								description: "User successfully invited",
-							});
-							onSubmitSuccess();
+							})
+							onSubmitSuccess()
 						}
 					},
 					(errors) => {
 						logger.warn({
 							msg: "user couldn't be created because of validation errors",
 							errors,
-						});
+						})
 						// TODO: we should render this error somewhere
 					}
-				)();
-			});
+				)()
+			})
 		},
-		[form, community]
-	);
+		[form, onSubmitSuccess, runCreateUserWithMembership]
+	)
 
 	return (
 		<Form {...form}>
@@ -135,5 +135,5 @@ export const MemberSelectAddUserForm = ({ email, community, onSubmitSuccess }: P
 				</CardFooter>
 			</Card>
 		</Form>
-	);
-};
+	)
+}

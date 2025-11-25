@@ -1,17 +1,18 @@
-import * as React from "react";
+import type { AutoFormInputComponentProps } from "../types"
 
-import type { AutoFormInputComponentProps } from "../types";
-import { DatePicker } from "../../date-picker";
-import { FormControl, FormItem, FormMessage } from "../../form";
+import React from "react"
+
+import { DatePicker } from "../../date-picker"
+import { FormControl, FormItem, FormMessage } from "../../form"
 import {
 	PubFieldSelect,
 	PubFieldSelectProvider,
 	PubFieldSelectToggleButton,
 	PubFieldSelectWrapper,
-} from "../../pubFields/pubFieldSelect";
-import AutoFormDescription from "../common/description";
-import AutoFormLabel from "../common/label";
-import AutoFormTooltip from "../common/tooltip";
+} from "../../pubFields/pubFieldSelect"
+import AutoFormDescription from "../common/description"
+import AutoFormLabel from "../common/label"
+import AutoFormTooltip from "../common/tooltip"
 
 export default function AutoFormDate({
 	label,
@@ -22,7 +23,7 @@ export default function AutoFormDate({
 	fieldProps,
 	zodItem,
 }: AutoFormInputComponentProps) {
-	const { showLabel = true } = fieldProps;
+	const { showLabel = true } = fieldProps
 
 	return (
 		<PubFieldSelectProvider
@@ -53,5 +54,5 @@ export default function AutoFormDate({
 				</FormItem>
 			</div>
 		</PubFieldSelectProvider>
-	);
+	)
 }

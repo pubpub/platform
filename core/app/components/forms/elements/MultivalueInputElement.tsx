@@ -1,16 +1,17 @@
-"use client";
+"use client"
 
-import { Value } from "@sinclair/typebox/value";
-import { useFormContext } from "react-hook-form";
-import { multivalueInputConfigSchema } from "schemas";
+import type { InputComponent } from "db/public"
+import type { ElementProps } from "../types"
 
-import type { InputComponent } from "db/public";
-import { CoreSchemaType } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { MultiValueInput } from "ui/multivalue-input";
+import { Value } from "@sinclair/typebox/value"
+import { useFormContext } from "react-hook-form"
+import { multivalueInputConfigSchema } from "schemas"
 
-import type { ElementProps } from "../types";
-import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { CoreSchemaType } from "db/public"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { MultiValueInput } from "ui/multivalue-input"
+
+import { useFormElementToggleContext } from "../FormElementToggleContext"
 
 export const MultivalueInputElement = ({
 	slug,
@@ -18,14 +19,14 @@ export const MultivalueInputElement = ({
 	config,
 	schemaName,
 }: ElementProps<InputComponent.multivalueInput>) => {
-	const { control } = useFormContext();
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
-	const isNumeric = schemaName === CoreSchemaType.NumericArray;
+	const { control } = useFormContext()
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(slug)
+	const isNumeric = schemaName === CoreSchemaType.NumericArray
 
-	Value.Default(multivalueInputConfigSchema, config);
+	Value.Default(multivalueInputConfigSchema, config)
 	if (!Value.Check(multivalueInputConfigSchema, config)) {
-		return null;
+		return null
 	}
 
 	return (
@@ -44,18 +45,18 @@ export const MultivalueInputElement = ({
 								value={field.value ?? []}
 								onChange={(newValues) => {
 									if (isNumeric) {
-										field.onChange(newValues.map((v) => +v));
-										return;
+										field.onChange(newValues.map((v) => +v))
+										return
 									}
-									field.onChange(newValues);
+									field.onChange(newValues)
 								}}
 							/>
 						</FormControl>
 						{config.help && <FormDescription>{config.help}</FormDescription>}
 						<FormMessage />
 					</FormItem>
-				);
+				)
 			}}
 		/>
-	);
-};
+	)
+}

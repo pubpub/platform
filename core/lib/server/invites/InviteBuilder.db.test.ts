@@ -1,6 +1,7 @@
-import { beforeAll, describe, expect, expectTypeOf, it } from "vitest";
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import type { PubsId, PubTypes, Stages } from "db/public";
+import { beforeAll, describe, expect, it } from "vitest"
+
 import {
 	CoreSchemaType,
 	ElementType,
@@ -8,16 +9,14 @@ import {
 	InviteStatus,
 	MemberRole,
 	StructuralFormElement,
-} from "db/public";
-import { inviteSchema } from "db/types";
+} from "db/public"
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
+import { mockServerCode } from "~/lib/__tests__/utils"
+import { createSeed } from "~/prisma/seed/createSeed"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode()
 
-const { getTrx } = createForEachMockedTransaction();
+const { getTrx } = createForEachMockedTransaction()
 
 const seed = createSeed({
 	community: {
@@ -108,18 +107,18 @@ const seed = createSeed({
 			],
 		},
 	},
-});
+})
 
-let community: CommunitySeedOutput<typeof seed>;
+let community: CommunitySeedOutput<typeof seed>
 
 beforeAll(async () => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-	community = await seedCommunity(seed);
-});
+	const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+	community = await seedCommunity(seed)
+})
 
 describe("InviteBuilder", () => {
 	it("should be able to create an invite", async () => {
-		const { InviteBuilder } = await import("./InviteBuilder");
+		const { InviteBuilder } = await import("./InviteBuilder")
 
 		const invite = await InviteBuilder.inviteUser({
 			email: "test@test.com",
@@ -129,8 +128,8 @@ describe("InviteBuilder", () => {
 			.invitedBy({ userId: community.users.admin.id })
 			.forCommunity(community.community.id)
 			.withRole(MemberRole.contributor)
-			.create();
-		expect(invite).toBeDefined();
+			.create()
+		expect(invite).toBeDefined()
 
 		expect(invite).toMatchObject({
 			user: {
@@ -147,11 +146,11 @@ describe("InviteBuilder", () => {
 			status: InviteStatus.created,
 			lastSentAt: null,
 			invitedByUserId: community.users.admin.id,
-		});
-	});
+		})
+	})
 
 	it("should be able to create an invite with pubOrStageFormIds", async () => {
-		const { InviteBuilder } = await import("./InviteBuilder");
+		const { InviteBuilder } = await import("./InviteBuilder")
 		const invite = await InviteBuilder.inviteUser({
 			email: "test@test.com",
 			firstName: "Test",
@@ -163,7 +162,7 @@ describe("InviteBuilder", () => {
 			.forPub(community.pubs[0].id)
 			.withRole(MemberRole.contributor)
 			.withForms([community.forms.TestForm.id])
-			.create();
+			.create()
 
 		expect(invite).toMatchObject({
 			pubFormIds: [community.forms.TestForm.id],
@@ -172,11 +171,11 @@ describe("InviteBuilder", () => {
 				firstName: "Test",
 				lastName: "User",
 			},
-		});
-	});
+		})
+	})
 
 	it("can create invites with form slugs", async () => {
-		const { InviteBuilder } = await import("./InviteBuilder");
+		const { InviteBuilder } = await import("./InviteBuilder")
 		const invite = await InviteBuilder.inviteUser({
 			email: "test@test.com",
 			firstName: "Test",
@@ -191,7 +190,7 @@ describe("InviteBuilder", () => {
 			.withForms([community.forms.TestForm.slug])
 			.withMessage("Hello")
 			.expiresInDays(1)
-			.create();
+			.create()
 
 		expect(invite).toMatchObject({
 			stageId: community.stages["Stage 1"].id,
@@ -204,6 +203,6 @@ describe("InviteBuilder", () => {
 				firstName: "Test",
 				lastName: "User",
 			},
-		});
-	});
-});
+		})
+	})
+})

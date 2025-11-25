@@ -1,17 +1,18 @@
-"use client";
+"use client"
 
-import type { z } from "zod";
+import type { z } from "zod"
+import type { DialogProps } from "./types"
 
-import { useEffect, useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { skipToken } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useEffect, useMemo } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { skipToken } from "@tanstack/react-query"
+import { useForm } from "react-hook-form"
 
-import { MemberRole, MembershipType } from "db/public";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Button } from "ui/button";
-import { Card, CardContent } from "ui/card";
-import { Checkbox } from "ui/checkbox";
+import { MemberRole } from "db/public"
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Button } from "ui/button"
+import { Card, CardContent } from "ui/card"
+import { Checkbox } from "ui/checkbox"
 import {
 	Form,
 	FormControl,
@@ -20,19 +21,18 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Loader2, Mail, UserPlus } from "ui/icon";
-import { Input } from "ui/input";
-import { MultiSelect } from "ui/multi-select";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { toast } from "ui/use-toast";
+} from "ui/form"
+import { Loader2, Mail, UserPlus } from "ui/icon"
+import { Input } from "ui/input"
+import { MultiSelect } from "ui/multi-select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { toast } from "ui/use-toast"
 
-import type { DialogProps } from "./types";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { client } from "~/lib/api";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { descriptions } from "./constants";
-import { memberInviteFormSchema } from "./memberInviteFormSchema";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { client } from "~/lib/api"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { descriptions } from "./constants"
+import { memberInviteFormSchema } from "./memberInviteFormSchema"
 
 export const MemberInviteForm = ({
 	existingMembers,
@@ -43,12 +43,12 @@ export const MemberInviteForm = ({
 	membershipType,
 	availableForms,
 }: DialogProps & {
-	closeForm: () => void;
+	closeForm: () => void
 }) => {
-	const community = useCommunity();
+	const community = useCommunity()
 
-	const runCreateUserWithMembership = useServerAction(addUserMember);
-	const runAddMember = useServerAction(addMember);
+	const runCreateUserWithMembership = useServerAction(addUserMember)
+	const runAddMember = useServerAction(addMember)
 
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
@@ -57,30 +57,30 @@ export const MemberInviteForm = ({
 			isSuperAdmin: false,
 		},
 		mode: "onChange",
-	});
-	const email = form.watch("email");
-	const emailState = form.getFieldState("email", form.formState);
-	const query = { email, limit: 1, communityId: community.id };
-	const shouldSearch = email && (!emailState.error || emailState.error.type === "alreadyMember");
+	})
+	const email = form.watch("email")
+	const emailState = form.getFieldState("email", form.formState)
+	const query = { email, limit: 1, communityId: community.id }
+	const shouldSearch = email && (!emailState.error || emailState.error.type === "alreadyMember")
 	const { data: userSuggestions, status } = client.users.search.useQuery({
 		queryKey: ["searchUsers", query, community.slug],
 		queryData: shouldSearch ? { query, params: { communitySlug: community.slug } } : skipToken,
-	});
-	const user = userSuggestions?.body?.[0];
-	const isPending = email && !emailState.invalid && status === "pending";
+	})
+	const user = userSuggestions?.body?.[0]
+	const isPending = email && !emailState.invalid && status === "pending"
 
 	const userIsAlreadyMember = useMemo(
 		() => user && existingMembers.includes(user.id),
 		[user, existingMembers]
-	);
+	)
 	useEffect(() => {
 		if (userIsAlreadyMember) {
 			form.setError("email", {
 				type: "alreadyMember",
 				message: "This user is already a member",
-			});
+			})
 		}
-	}, [userIsAlreadyMember, form.setError]);
+	}, [userIsAlreadyMember, form.setError])
 
 	async function onSubmit(data: z.infer<typeof memberInviteFormSchema>) {
 		if (!user) {
@@ -91,8 +91,8 @@ export const MemberInviteForm = ({
 				form.setError(!data.firstName ? "firstName" : "lastName", {
 					type: "manual",
 					message: `Please provide a ${!data.firstName ? "first" : "last"} name`,
-				});
-				return;
+				})
+				return
 			}
 
 			const result = await runCreateUserWithMembership({
@@ -102,36 +102,36 @@ export const MemberInviteForm = ({
 				role: data.role,
 				isSuperAdmin: data.isSuperAdmin,
 				forms: data.forms,
-			});
+			})
 
 			if (didSucceed(result)) {
 				toast({
 					title: "Success",
 					description: "User successfully invited",
-				});
-				closeForm();
+				})
+				closeForm()
 			}
 
-			return;
+			return
 		}
 
 		const result = await runAddMember({
 			userId: user.id,
 			role: data.role,
 			forms: data.forms,
-		});
+		})
 
 		if (didSucceed(result)) {
 			toast({
 				title: "Success",
 				description: "Member added successfully",
-			});
+			})
 
-			closeForm();
+			closeForm()
 		}
 	}
 
-	const isContributor = form.watch("role") === MemberRole.contributor;
+	const isContributor = form.watch("role") === MemberRole.contributor
 
 	return (
 		<Form {...form}>
@@ -259,7 +259,7 @@ export const MemberInviteForm = ({
 								control={form.control}
 								name="forms"
 								render={({ field }) => {
-									const description = descriptions[membershipType];
+									const description = descriptions[membershipType]
 									return (
 										<FormItem>
 											<FormLabel>Edit/View Access</FormLabel>
@@ -268,7 +268,7 @@ export const MemberInviteForm = ({
 													{...field}
 													defaultValue={field.value ?? []}
 													onValueChange={(newValues) => {
-														field.onChange(newValues);
+														field.onChange(newValues)
 													}}
 													options={availableForms.map((f) => ({
 														label: f.name,
@@ -280,7 +280,7 @@ export const MemberInviteForm = ({
 											<FormDescription>{description}</FormDescription>
 											<FormMessage />
 										</FormItem>
-									);
+									)
 								}}
 							/>
 						)}
@@ -325,5 +325,5 @@ export const MemberInviteForm = ({
 				)}
 			</form>
 		</Form>
-	);
-};
+	)
+}

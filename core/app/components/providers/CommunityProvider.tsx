@@ -1,24 +1,24 @@
-"use client";
+"use client"
 
-import { createContext, useContext } from "react";
+import type { CommunityData } from "~/lib/server/community"
 
-import type { CommunityData } from "~/lib/server/community";
+import { createContext, useContext } from "react"
 
 type Props = {
-	children: React.ReactNode;
-	community: CommunityData;
-};
+	children: React.ReactNode
+	community: CommunityData
+}
 
-const CommunityContext = createContext<CommunityData>(undefined);
+const CommunityContext = createContext<CommunityData>(undefined)
 
 export function CommunityProvider({ children, community }: Props) {
-	return <CommunityContext.Provider value={community}>{children}</CommunityContext.Provider>;
+	return <CommunityContext.Provider value={community}>{children}</CommunityContext.Provider>
 }
 
 export const useCommunity = () => {
-	const community = useContext(CommunityContext);
+	const community = useContext(CommunityContext)
 	if (!community) {
-		throw new Error("Community context used without provider");
+		throw new Error("Community context used without provider")
 	}
-	return community;
-};
+	return community
+}

@@ -10,12 +10,8 @@
 		"./resources/site-builder": "./dist/contracts-resources-site-builder.js",
 		"./package.json": "./package.json"
 	},
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit"
 	},
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
@@ -30,20 +26,14 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@pubpub/prettier-config": "workspace:*",
 		"@ts-rest/core": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"zod": "catalog:"
 	},
-	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
 		"exports": true,
-		"entrypoints": [
-			"index.ts",
-			"resources/site.ts",
-			"resources/site-builder.ts"
-		],
+		"entrypoints": ["index.ts", "resources/site.ts", "resources/site-builder.ts"],
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,
 			"distInRoot": true,

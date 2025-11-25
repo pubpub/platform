@@ -1,74 +1,75 @@
-import { cache } from "react";
-import { notFound, redirect } from "next/navigation";
+import type { PubTypesId } from "db/public"
 
-import type { PubTypesId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
+import { cache } from "react"
+import { notFound, redirect } from "next/navigation"
+
+import { Capabilities, MembershipType } from "db/public"
 import {
 	BreadcrumbItem,
 	BreadcrumbLink,
 	BreadcrumbList,
 	BreadcrumbPage,
 	BreadcrumbSeparator,
-} from "ui/breadcrumb";
-import { Button } from "ui/button";
-import { ToyBrick } from "ui/icon";
-import { PubFieldProvider } from "ui/pubFields";
+} from "ui/breadcrumb"
+import { Button } from "ui/button"
+import { ToyBrick } from "ui/icon"
+import { PubFieldProvider } from "ui/pubFields"
 
-import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { getPubType, getPubTypesForCommunity } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { redirectToLogin } from "~/lib/server/navigation/redirects";
-import { getPubFields } from "~/lib/server/pubFields";
-import { ContentLayout } from "../../../ContentLayout";
-import { UpdatePubTypeButton } from "../../UpdatePubTypeDialog";
-import { TypeBuilder } from "./TypeBuilder";
+import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { getPubType, getPubTypesForCommunity } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { redirectToLogin } from "~/lib/server/navigation/redirects"
+import { getPubFields } from "~/lib/server/pubFields"
+import { ContentLayout } from "../../../ContentLayout"
+import { UpdatePubTypeButton } from "../../UpdatePubTypeDialog"
+import { TypeBuilder } from "./TypeBuilder"
 
 const getPubTypeCached = cache(async (pubTypeId: PubTypesId) => {
-	return getPubType(pubTypeId).executeTakeFirstOrThrow();
-});
+	return getPubType(pubTypeId).executeTakeFirstOrThrow()
+})
 
 export const generateMetadata = async ({
 	params,
 }: {
-	params: Promise<{ pubTypeId: PubTypesId }>;
+	params: Promise<{ pubTypeId: PubTypesId }>
 }) => {
-	const { pubTypeId } = await params;
-	const pubType = await getPubTypeCached(pubTypeId);
+	const { pubTypeId } = await params
+	const pubType = await getPubTypeCached(pubTypeId)
 
 	if (!pubType) {
-		notFound();
+		notFound()
 	}
 
 	return {
 		title: `${pubType.name} [Type]`,
-	};
-};
+	}
+}
 
 export default async function Page(props: {
 	params: Promise<{
-		pubTypeId: PubTypesId;
-		communitySlug: string;
-	}>;
+		pubTypeId: PubTypesId
+		communitySlug: string
+	}>
 }) {
-	const params = await props.params;
+	const params = await props.params
 
-	const { pubTypeId, communitySlug } = params;
+	const { pubTypeId, communitySlug } = params
 	const [{ user }, community] = await Promise.all([
 		getPageLoginData(),
 		findCommunityBySlug(communitySlug),
-	]);
+	])
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	if (!user) {
-		redirectToLogin();
+		redirectToLogin()
 	}
 
-	const [canEditPubType, pubType, { fields }, pubTypes] = await Promise.all([
+	const [canEditPubType, pubType, { fields }, _pubTypes] = await Promise.all([
 		await userCan(
 			Capabilities.editPubType,
 			{ type: MembershipType.community, communityId: community.id },
@@ -78,13 +79,13 @@ export default async function Page(props: {
 		getPubType(pubTypeId).executeTakeFirstOrThrow(),
 		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
 		getPubTypesForCommunity(community.id, { limit: 0 }),
-	]);
+	])
 
 	if (!canEditPubType) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
-	const pubtypebuilderId = "pubtypebuilder";
+	const pubtypebuilderId = "pubtypebuilder"
 
 	return (
 		<ContentLayout
@@ -105,7 +106,7 @@ export default async function Page(props: {
 							<BreadcrumbPage className="font-bold">{pubType.name}</BreadcrumbPage>
 						</BreadcrumbList>
 						{pubType.description && (
-							<div className="text-sm font-normal text-muted-foreground">
+							<div className="font-normal text-muted-foreground text-sm">
 								{pubType.description}
 							</div>
 						)}
@@ -140,5 +141,5 @@ export default async function Page(props: {
 				<TypeBuilder pubType={pubType} formId={pubtypebuilderId} />
 			</PubFieldProvider>
 		</ContentLayout>
-	);
+	)
 }

@@ -1,15 +1,15 @@
-import type { ReactNode } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { ReactNode } from "react"
+import type { UseFormReturn } from "react-hook-form"
+import type { MaybeHas } from "utils/types"
 
-import { useCallback, useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
-import { z } from "zod";
+import { useCallback, useEffect } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { SCHEMA_TYPES_WITH_ICONS } from "schemas"
+import { z } from "zod"
 
-import type { MaybeHas } from "utils/types";
-import { CoreSchemaType } from "db/public";
-import { Checkbox } from "ui/checkbox";
+import { CoreSchemaType } from "db/public"
+import { Checkbox } from "ui/checkbox"
 import {
 	Form,
 	FormControl,
@@ -18,16 +18,16 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Input } from "ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { toast } from "ui/use-toast";
-import { cn } from "utils";
+} from "ui/form"
+import { Input } from "ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { toast } from "ui/use-toast"
+import { cn } from "utils"
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { slugifyString } from "~/lib/string";
-import * as actions from "./actions";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { slugifyString } from "~/lib/string"
+import * as actions from "./actions"
 
 const baseSchema = z.object({
 	id: z.string(),
@@ -36,7 +36,7 @@ const baseSchema = z.object({
 		.string()
 		.min(1)
 		.refine((s) => !s.includes(" "), { message: "Slug must not have spaces" }),
-});
+})
 
 const schema = z.discriminatedUnion("isRelation", [
 	z
@@ -50,14 +50,14 @@ const schema = z.discriminatedUnion("isRelation", [
 			isRelation: z.literal(false),
 			schemaName: z.nativeEnum(CoreSchemaType, {
 				errorMap: () => {
-					return { message: "Please select a schema type for this field" };
+					return { message: "Please select a schema type for this field" }
 				},
 			}),
 		})
 		.merge(baseSchema),
-]);
+])
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<typeof schema>
 
 const DEFAULT_VALUES = {
 	id: "",
@@ -69,12 +69,12 @@ const DEFAULT_VALUES = {
 	schemaName: null,
 	slug: "",
 	isRelation: false,
-} as unknown as DefaultFieldFormValues;
+} as unknown as DefaultFieldFormValues
 
-type FormType = UseFormReturn<FormValues, any, undefined>;
+type FormType = UseFormReturn<FormValues, any, undefined>
 
 const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: boolean }) => {
-	const schemaTypes = Object.values(CoreSchemaType).filter((v) => v !== CoreSchemaType.Null);
+	const schemaTypes = Object.values(CoreSchemaType).filter((v) => v !== CoreSchemaType.Null)
 
 	return (
 		<FormField
@@ -101,7 +101,7 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 						<SelectContent>
 							{schemaTypes.map((schemaName) => {
 								const { description, icon: Icon } =
-									SCHEMA_TYPES_WITH_ICONS[schemaName];
+									SCHEMA_TYPES_WITH_ICONS[schemaName]
 								return (
 									<SelectItem
 										data-testid={`select-${schemaName}`}
@@ -112,13 +112,13 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 											<Icon className="w-4" />
 											<div className="flex flex-col items-start font-medium">
 												<div>{schemaName}</div>
-												<div className="text-xs text-muted-foreground">
+												<div className="text-muted-foreground text-xs">
 													{description}
 												</div>
 											</div>
 										</div>
 									</SelectItem>
-								);
+								)
 							})}
 						</SelectContent>
 					</Select>
@@ -129,8 +129,8 @@ const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: 
 				</FormItem>
 			)}
 		/>
-	);
-};
+	)
+}
 
 /**
  * This field watches the `name` field and will try to autogenerate a slug from it.
@@ -142,20 +142,20 @@ const SlugField = ({
 	communitySlug,
 	readOnly,
 }: {
-	form: FormType;
-	communitySlug: string;
-	readOnly?: boolean;
+	form: FormType
+	communitySlug: string
+	readOnly?: boolean
 }) => {
-	const { watch, setValue } = form;
+	const { watch, setValue } = form
 
-	const watchName = watch("name");
+	const watchName = watch("name")
 
 	useEffect(() => {
 		if (!readOnly) {
-			const autoSlug = slugifyString(watchName);
-			setValue("slug", autoSlug);
+			const autoSlug = slugifyString(watchName)
+			setValue("slug", autoSlug)
 		}
-	}, [watchName]);
+	}, [watchName])
 
 	return (
 		<FormField
@@ -190,11 +190,11 @@ const SlugField = ({
 						</FormControl>
 						<FormMessage />
 					</FormItem>
-				);
+				)
 			}}
 		/>
-	);
-};
+	)
+}
 
 const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: boolean }) => {
 	return (
@@ -210,7 +210,7 @@ const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: 
 								checked={field.value}
 								onCheckedChange={(change) => {
 									if (typeof change === "boolean") {
-										field.onChange(change);
+										field.onChange(change)
 									}
 								}}
 								className="rounded"
@@ -229,24 +229,24 @@ const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: 
 				</FormItem>
 			)}
 		/>
-	);
-};
+	)
+}
 
-export type DefaultFieldFormValues = MaybeHas<FormValues, "id">;
+export type DefaultFieldFormValues = MaybeHas<FormValues, "id">
 
 export const FieldForm = ({
 	defaultValues,
 	onSubmitSuccess,
 	children,
 }: {
-	defaultValues?: DefaultFieldFormValues;
-	onSubmitSuccess: () => void;
-	children: ReactNode;
+	defaultValues?: DefaultFieldFormValues
+	onSubmitSuccess: () => void
+	children: ReactNode
 }) => {
-	const createField = useServerAction(actions.createField);
-	const updateFieldName = useServerAction(actions.updateFieldName);
-	const community = useCommunity();
-	const isEditing = !!defaultValues;
+	const createField = useServerAction(actions.createField)
+	const updateFieldName = useServerAction(actions.updateFieldName)
+	const community = useCommunity()
+	const isEditing = !!defaultValues
 
 	const handleCreate = useCallback(
 		async (values: FormValues & { schemaName: CoreSchemaType }) => {
@@ -256,40 +256,41 @@ export const FieldForm = ({
 				schemaName: values.schemaName,
 				communityId: community.id,
 				isRelation: values.isRelation,
-			});
+			})
 			if (didSucceed(result)) {
-				toast({ title: `Created field ${values.name}` });
-				onSubmitSuccess();
+				toast({ title: `Created field ${values.name}` })
+				onSubmitSuccess()
 			}
 		},
 		[]
-	);
+	)
 
 	const handleUpdate = useCallback(async (values: FormValues) => {
-		const result = await updateFieldName(values.id, values.name);
+		const result = await updateFieldName(values.id, values.name)
 		if (didSucceed(result)) {
-			toast({ title: `Updated field ${values.name}` });
-			onSubmitSuccess();
+			toast({ title: `Updated field ${values.name}` })
+			onSubmitSuccess()
 		}
-	}, []);
+	}, [])
 
-	const handleSubmit = async (
-		values: FormValues & { schemaName: CoreSchemaType | null | undefined }
-	) => {
-		if (isEditing) {
-			handleUpdate(values);
-			return;
-		}
+	const handleSubmit = useCallback(
+		async (values: FormValues & { schemaName: CoreSchemaType | null | undefined }) => {
+			if (isEditing) {
+				handleUpdate(values)
+				return
+			}
 
-		const slug = `${community?.slug}:${slugifyString(values.slug)}`;
-		const schemaName = values.schemaName ?? CoreSchemaType.Null;
-		handleCreate({ ...values, slug, schemaName });
-	};
+			const slug = `${community?.slug}:${slugifyString(values.slug)}`
+			const schemaName = values.schemaName ?? CoreSchemaType.Null
+			handleCreate({ ...values, slug, schemaName })
+		},
+		[handleUpdate, handleCreate]
+	)
 
 	const form = useForm<FormValues>({
 		defaultValues: defaultValues ?? DEFAULT_VALUES,
 		resolver: zodResolver(schema),
-	});
+	})
 
 	return (
 		<Form {...form}>
@@ -316,5 +317,5 @@ export const FieldForm = ({
 				{children}
 			</form>
 		</Form>
-	);
-};
+	)
+}

@@ -1,14 +1,15 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import { Action, CoreSchemaType, Event, MemberRole } from "db/public";
+import { beforeAll, describe, expect, it } from "vitest"
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
+import { Action, CoreSchemaType, Event, MemberRole } from "db/public"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+import { mockServerCode } from "~/lib/__tests__/utils"
+import { createSeed } from "~/prisma/seed/createSeed"
 
-createForEachMockedTransaction();
+const { createForEachMockedTransaction } = await mockServerCode()
+
+createForEachMockedTransaction()
 
 const seed = createSeed({
 	community: {
@@ -93,79 +94,73 @@ const seed = createSeed({
 			stage: "Stage 1",
 		},
 	],
-});
+})
 
-let community: CommunitySeedOutput<typeof seed>;
+let community: CommunitySeedOutput<typeof seed>
 
 beforeAll(async () => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-	community = await seedCommunity(seed);
-});
+	const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+	community = await seedCommunity(seed)
+})
 
 describe("automations.db", () => {
 	it("should create an automation", async () => {
-		const { createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
-			await import("./automations");
+		const { createOrUpdateAutomationWithCycleCheck } = await import("./automations")
 		const automation = await createOrUpdateAutomationWithCycleCheck({
 			event: Event.pubEnteredStage,
 			actionInstanceId: community.stages["Stage 1"].actions["1"].id,
-		});
+		})
 
-		expect(automation).toBeDefined();
-	});
+		expect(automation).toBeDefined()
+	})
 
 	it("should throw a RegularAutomationAlreadyExistsError if a regular automation already exists", async () => {
-		const {
-			createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
-			RegularAutomationAlreadyExistsError,
-		} = await import("./automations");
+		const { createOrUpdateAutomationWithCycleCheck, RegularAutomationAlreadyExistsError } =
+			await import("./automations")
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
 				event: Event.pubLeftStage,
 				actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 			})
-		).rejects.toThrow(RegularAutomationAlreadyExistsError);
-	});
+		).rejects.toThrow(RegularAutomationAlreadyExistsError)
+	})
 
 	it("should throw a SequentialAutomationAlreadyExistsError if a sequential automation already exists", async () => {
-		const {
-			createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
-			SequentialAutomationAlreadyExistsError,
-		} = await import("./automations");
+		const { createOrUpdateAutomationWithCycleCheck, SequentialAutomationAlreadyExistsError } =
+			await import("./automations")
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
 				event: Event.actionSucceeded,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				sourceActionInstanceId: community.stages["Stage 1"].actions["2"].id,
 			})
-		).rejects.toThrow(SequentialAutomationAlreadyExistsError);
-	});
+		).rejects.toThrow(SequentialAutomationAlreadyExistsError)
+	})
 
 	it("should throw a AutomationConfigError if the config is invalid", async () => {
-		const {
-			createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
-			AutomationConfigError,
-		} = await import("./automations");
+		const { createOrUpdateAutomationWithCycleCheck, AutomationConfigError } = await import(
+			"./automations"
+		)
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
 				event: Event.pubInStageForDuration,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 			})
-		).rejects.toThrowError(AutomationConfigError);
-	});
+		).rejects.toThrowError(AutomationConfigError)
+	})
 
 	describe("cycle detection", () => {
 		it("should throw a AutomationCycleError if the automation is a cycle", async () => {
 			const { createOrUpdateAutomationWithCycleCheck, AutomationCycleError } = await import(
 				"./automations"
-			);
+			)
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				})
-			).rejects.toThrow(AutomationCycleError);
+			).rejects.toThrow(AutomationCycleError)
 
 			// should also happen for ActionFailed
 			await expect(
@@ -174,7 +169,7 @@ describe("automations.db", () => {
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				})
-			).rejects.toThrow(AutomationCycleError);
+			).rejects.toThrow(AutomationCycleError)
 
 			// just to check that if we have 2->1, 1->2 will create a cycle
 			await expect(
@@ -183,23 +178,23 @@ describe("automations.db", () => {
 					actionInstanceId: community.stages["Stage 1"].actions["2"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				})
-			).rejects.toThrow(AutomationCycleError);
-		});
+			).rejects.toThrow(AutomationCycleError)
+		})
 		it("should not throw an error if the automation is not a cycle", async () => {
 			// 3 -> 1 is fine, bc we only have 3 -> 2 and 2 -> 1 thus far
-			const { createOrUpdateAutomationWithCycleCheck } = await import("./automations");
+			const { createOrUpdateAutomationWithCycleCheck } = await import("./automations")
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["3"].id,
 				})
-			).resolves.not.toThrow();
-		});
+			).resolves.not.toThrow()
+		})
 
 		it("should throw a AutomationMaxDepthError if the automation would exceed the maximum stack depth", async () => {
 			const { createOrUpdateAutomationWithCycleCheck, AutomationMaxDepthError } =
-				await import("./automations");
+				await import("./automations")
 			await expect(
 				createOrUpdateAutomationWithCycleCheck(
 					{
@@ -209,7 +204,7 @@ describe("automations.db", () => {
 					},
 					3
 				)
-			).rejects.toThrow(AutomationMaxDepthError);
-		});
-	});
-});
+			).rejects.toThrow(AutomationMaxDepthError)
+		})
+	})
+})

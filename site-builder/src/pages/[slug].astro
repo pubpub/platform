@@ -1,8 +1,9 @@
 ---
-import type { FileUpload } from "../layouts/Layout.astro";
-import Layout from "../layouts/Layout.astro";
-import { getHeader, getJournal, getPages } from "../lib/client/queries";
-import { getFieldValue } from "../lib/getValue";
+import type { FileUpload } from "../layouts/Layout.astro"
+import Layout from "../layouts/Layout.astro"
+
+import { getHeader, getJournal, getPages } from "../lib/client/queries"
+import { getFieldValue } from "../lib/getValue"
 
 export async function getStaticPaths() {
 	const [pages, journal, header] = await Promise.all([
@@ -12,28 +13,28 @@ export async function getStaticPaths() {
 			withRelatedPubs: true,
 		}),
 		getHeader(),
-	]);
+	])
 
 	const paths = pages
 		.map((page) => {
-			const slug = getFieldValue<string>(page, "Slug");
+			const slug = getFieldValue<string>(page, "Slug")
 			if (!slug || typeof slug !== "string") {
 				// console.log("Page has no slug", page);
-				return null;
+				return null
 			}
-			const layout = getFieldValue<string>(page, "Layout");
+			const layout = getFieldValue<string>(page, "Layout")
 			if (!layout) {
 				// console.log("Page has no layout", page);
-				return null;
+				return null
 			}
 
-			const isPublic = getFieldValue<boolean>(page, "Is Public");
+			const isPublic = getFieldValue<boolean>(page, "Is Public")
 			if (!isPublic) {
-				return null;
+				return null
 			}
 
 			if (slug === "/") {
-				return null;
+				return null
 			}
 
 			return {
@@ -41,28 +42,26 @@ export async function getStaticPaths() {
 					slug,
 				},
 				props: { page, journal, header },
-			};
+			}
 		})
-		.filter((page) => !!page && page.params.slug);
+		.filter((page) => !!page && page.params.slug)
 
 	console.log(
 		"Paths",
 		paths.filter((p) => p)
-	);
-	return paths;
+	)
+	return paths
 }
 
-console.log(Astro.params);
-const { slug } = Astro.params;
+const { slug } = Astro.params
 
-const { page, journal, header } = Astro.props;
+const { page, journal, header } = Astro.props
 
-const title = getFieldValue<string>(page, "Title");
-const description = getFieldValue<string>(page, "Description");
-const layout = getFieldValue<string>(page, "Layout");
-const avatar = getFieldValue<FileUpload | undefined>(page, "Avatar");
+const title = getFieldValue<string>(page, "Title")
+const description = getFieldValue<string>(page, "Description")
+const layout = getFieldValue<string>(page, "Layout")
+const avatar = getFieldValue<FileUpload | undefined>(page, "Avatar")
 
-console.log(page, journal, header);
 ---
 
 <Layout journal={journal} title={title} header={header}

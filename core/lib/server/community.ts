@@ -1,23 +1,23 @@
-import { cache } from "react";
+import type { CommunitiesId, PubsId } from "db/public"
 
-import type { CommunitiesId, PubsId } from "db/public";
+import { cache } from "react"
 
-import { db } from "~/kysely/database";
-import { createCacheTag } from "./cache/cacheTags";
-import { ONE_DAY } from "./cache/constants";
-import { getCommunitySlug } from "./cache/getCommunitySlug";
-import { memoize } from "./cache/memoize";
+import { db } from "~/kysely/database"
+import { createCacheTag } from "./cache/cacheTags"
+import { ONE_DAY } from "./cache/constants"
+import { getCommunitySlug } from "./cache/getCommunitySlug"
+import { memoize } from "./cache/memoize"
 
 export const findCommunityBySlug = cache(async (communitySlug?: string) => {
-	const slug = communitySlug ?? (await getCommunitySlug());
+	const slug = communitySlug ?? (await getCommunitySlug())
 	return memoize(
 		() => db.selectFrom("communities").selectAll().where("slug", "=", slug).executeTakeFirst(),
 		{
 			additionalCacheKey: [slug],
 			revalidateTags: [createCacheTag(`community-all_${slug}`)],
 		}
-	)();
-});
+	)()
+})
 
 export const getCommunity = memoize(
 	async (communityId: CommunitiesId) => {
@@ -25,10 +25,10 @@ export const getCommunity = memoize(
 			.selectFrom("communities")
 			.selectAll()
 			.where("id", "=", communityId)
-			.executeTakeFirst();
+			.executeTakeFirst()
 	},
 	{ revalidateTags: ["all", "all-communities"], duration: ONE_DAY }
-);
+)
 
 // Retrieve the pub's community id in order to revalidate the next server
 // cache after the action is run.
@@ -47,11 +47,11 @@ export const findCommunityByPubId = memoize(
 				"communities.createdAt",
 				"communities.updatedAt",
 			])
-			.executeTakeFirst();
+			.executeTakeFirst()
 
-		return community;
+		return community
 	},
 	{ revalidateTags: ["all", "all-pubs"], duration: ONE_DAY }
-);
+)
 
-export type CommunityData = Awaited<ReturnType<typeof findCommunityByPubId>>;
+export type CommunityData = Awaited<ReturnType<typeof findCommunityByPubId>>

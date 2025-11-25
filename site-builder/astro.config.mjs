@@ -1,8 +1,8 @@
 // @ts-check
-import react from "@astrojs/react";
-import tailwind from "@astrojs/tailwind";
+import react from "@astrojs/react"
+import tailwind from "@astrojs/tailwind"
 // import pdf from "astro-pdf";
-import { defineConfig } from "astro/config";
+import { defineConfig } from "astro/config"
 
 // https://astro.build/config
 export default defineConfig({
@@ -36,4 +36,4 @@ export default defineConfig({
 		// }),
 	],
 	prefetch: true,
-});
+})

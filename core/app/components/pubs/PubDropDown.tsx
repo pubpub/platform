@@ -1,25 +1,26 @@
-import Link from "next/link";
+import type { PubsId } from "db/public"
 
-import type { PubsId } from "db/public";
-import { Button } from "ui/button";
+import Link from "next/link"
+
+import { Button } from "ui/button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { MoreVertical, Pencil } from "ui/icon";
+} from "ui/dropdown-menu"
+import { MoreVertical, Pencil } from "ui/icon"
 
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { RemovePubButton } from "./RemovePubButton";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { RemovePubButton } from "./RemovePubButton"
 
 type Props = {
-	pubId: PubsId;
-	searchParams: Record<string, unknown>;
-};
+	pubId: PubsId
+	searchParams: Record<string, unknown>
+}
 
 export const PubDropDown = async (props: Props) => {
-	const communitySlug = await getCommunitySlug();
+	const communitySlug = await getCommunitySlug()
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -47,5 +48,5 @@ export const PubDropDown = async (props: Props) => {
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}

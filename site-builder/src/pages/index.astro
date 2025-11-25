@@ -1,24 +1,24 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import { getHeader, getJournal, getPages } from "../lib/client/queries";
-import { getFieldValue, getRelatedPubs } from "../lib/getValue";
+import Layout from "../layouts/Layout.astro"
+import { getHeader, getJournal, getPages , } from "../lib/client/queries"
+import { getFieldValue, getRelatedPubs } from "../lib/getValue"
 
-const journal = await getJournal();
-const header = await getHeader();
+const journal = await getJournal()
+const header = await getHeader()
 
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
 // don't want to use any of this? delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 
-const heroText = getFieldValue<string>(journal, "Hero Text");
-const description = getFieldValue<string>(journal, "Description");
-const publishAs = getFieldValue<string>(journal, "Publish As");
-const publicationDate = getFieldValue<string>(journal, "Publication Date");
+const heroText = getFieldValue<string>(journal, "Hero Text")
+const description = getFieldValue<string>(journal, "Description")
+const publishAs = getFieldValue<string>(journal, "Publish As")
+const publicationDate = getFieldValue<string>(journal, "Publication Date")
 
 const page = await getPages({
 	slugs: ["/"],
-});
+})
 
-const layout = getFieldValue<string>(page[0], "Layout");
+const layout = getFieldValue<string>(page[0], "Layout")
 ---
 
 <Layout journal={journal} header={header}>

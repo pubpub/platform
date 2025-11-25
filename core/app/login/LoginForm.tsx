@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
-import { Input } from "ui/input";
-import { PasswordInput } from "ui/password-input";
-import { FormSubmitButton } from "ui/submit-button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form"
+import { Input } from "ui/input"
+import { PasswordInput } from "ui/password-input"
+import { FormSubmitButton } from "ui/submit-button"
 
-import * as actions from "~/lib/authentication/actions";
-import { useServerAction } from "~/lib/serverActions";
+import * as actions from "~/lib/authentication/actions"
+import { useServerAction } from "~/lib/serverActions"
 
 export const loginFormSchema = z.object({
 	email: z.string().email(),
 	password: z.string().min(1),
-});
+})
 
 export default function LoginForm() {
-	const searchParams = useSearchParams();
+	const searchParams = useSearchParams()
 	const form = useForm<z.infer<typeof loginFormSchema>>({
 		resolver: zodResolver(loginFormSchema),
 		defaultValues: {
@@ -29,21 +29,21 @@ export default function LoginForm() {
 			email: "",
 			password: "",
 		},
-	});
+	})
 
-	const runLoginWithPassword = useServerAction(actions.loginWithPassword);
+	const runLoginWithPassword = useServerAction(actions.loginWithPassword)
 
 	const handleSubmit = async (formData: z.infer<typeof loginFormSchema>) => {
 		const result = await runLoginWithPassword({
 			email: formData.email,
 			password: formData.password,
 			redirectTo: searchParams.get("redirectTo") ?? null,
-		});
+		})
 
-		if (result && result.error) {
-			form.setError("root", { message: result.error });
+		if (result?.error) {
+			form.setError("root", { message: result.error })
 		}
-	};
+	}
 
 	return (
 		<Form {...form}>
@@ -94,12 +94,12 @@ export default function LoginForm() {
 							errorText="Error signing in"
 							className="w-full"
 						/>
-						<Link href="/forgot" className="text-sm text-gray-600 hover:underline">
+						<Link href="/forgot" className="text-gray-600 text-sm hover:underline">
 							Forgot Password
 						</Link>
 					</CardFooter>
 				</Card>
 			</form>
 		</Form>
-	);
+	)
 }

@@ -1,26 +1,26 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
-import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { redirectToBaseCommunityPage } from "~/lib/server/navigation/redirects";
-import { hasUsers } from "~/lib/server/user";
-import { DotBackground } from "../components/DotBackground";
-import { LogoWithText } from "../components/Logo";
-import { Notice } from "../components/Notice";
-import LoginForm from "./LoginForm";
-import SetupForm from "./SetupForm";
+import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { redirectToBaseCommunityPage } from "~/lib/server/navigation/redirects"
+import { hasUsers } from "~/lib/server/user"
+import { DotBackground } from "../components/DotBackground"
+import { LogoWithText } from "../components/Logo"
+import { Notice } from "../components/Notice"
+import LoginForm from "./LoginForm"
+import SetupForm from "./SetupForm"
 
 export default async function Login({
 	searchParams,
 }: {
 	searchParams: Promise<{
-		error?: string;
-		notice?: string;
-		body?: string;
-	}>;
+		error?: string
+		notice?: string
+		body?: string
+	}>
 }) {
-	const usersExist = await hasUsers();
+	const usersExist = await hasUsers()
 
 	if (!usersExist) {
 		return (
@@ -34,25 +34,25 @@ export default async function Login({
 					<SetupForm />
 				</div>
 			</div>
-		);
+		)
 	}
 
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 
 	if (user?.id) {
-		const firstSlug = user.memberships[0]?.community?.slug;
-		const cookieStore = await cookies();
-		const lastVisited = cookieStore.get(LAST_VISITED_COOKIE);
-		const communitySlug = lastVisited?.value ?? firstSlug;
+		const firstSlug = user.memberships[0]?.community?.slug
+		const cookieStore = await cookies()
+		const lastVisited = cookieStore.get(LAST_VISITED_COOKIE)
+		const communitySlug = lastVisited?.value ?? firstSlug
 
 		if (firstSlug) {
-			await redirectToBaseCommunityPage({ communitySlug });
+			await redirectToBaseCommunityPage({ communitySlug })
 		}
 
-		redirect("/settings");
+		redirect("/settings")
 	}
 
-	const { notice, error, body } = await searchParams;
+	const { notice, error, body } = await searchParams
 
 	return (
 		<div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-white p-6 md:p-10">
@@ -76,5 +76,5 @@ export default async function Login({
 			</div> */}
 			</div>
 		</div>
-	);
+	)
 }

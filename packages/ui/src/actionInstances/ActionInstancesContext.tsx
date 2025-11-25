@@ -1,46 +1,45 @@
-"use client";
+"use client"
 
-import type { JSX } from "react";
+import type { Action, ActionInstances } from "db/public"
+import type { JSX } from "react"
 
-import React, { createContext, useContext } from "react";
-
-import type { Action, ActionInstances } from "db/public";
+import React, { createContext, useContext } from "react"
 
 type ActionType = {
-	name: Action;
+	name: Action
 	config: {
-		schema: Record<string, any>;
-	};
-	description: string;
+		schema: Record<string, any>
+	}
+	description: string
 	params: {
-		schema: Record<string, any>;
-	};
-	icon: (props: any) => React.ReactNode | JSX.Element;
-	superAdminOnly?: boolean;
-	experimental?: boolean;
-	tokens?: Record<string, string[]>;
-};
+		schema: Record<string, any>
+	}
+	icon: (props: any) => React.ReactNode | JSX.Element
+	superAdminOnly?: boolean
+	experimental?: boolean
+	tokens?: Record<string, string[]>
+}
 
 export type ActionInstanceContext = {
-	actions: Record<string, ActionType>;
-	actionInstances: ActionInstances[];
-};
+	actions: Record<string, ActionType>
+	actionInstances: ActionInstances[]
+}
 
 type Props = {
-	children: React.ReactNode;
-} & ActionInstanceContext;
+	children: React.ReactNode
+} & ActionInstanceContext
 
 const ActionInstanceContext = createContext<ActionInstanceContext>({
 	actions: {},
 	actionInstances: [],
-});
+})
 
 export function ActionInstanceProvider({ children, actionInstances, actions }: Props) {
 	return (
 		<ActionInstanceContext.Provider value={{ actions, actionInstances }}>
 			{children}
 		</ActionInstanceContext.Provider>
-	);
+	)
 }
 
-export const useActionInstanceContext = () => useContext(ActionInstanceContext);
+export const useActionInstanceContext = () => useContext(ActionInstanceContext)

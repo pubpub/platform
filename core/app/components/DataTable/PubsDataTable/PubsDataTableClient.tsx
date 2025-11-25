@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import type {
 	ColumnDef,
@@ -6,33 +6,33 @@ import type {
 	RowSelectionState,
 	SortingState,
 	Updater,
-} from "@tanstack/react-table";
+} from "@tanstack/react-table"
+import type { NonGenericProcessedPub, ProcessedPub } from "contracts"
+import type { PubsId, PubTypes } from "db/public"
+import type { GetManyParams } from "~/lib/server"
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react"
 
-import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
-import type { PubsId, PubTypes } from "db/public";
-import { TOTAL_PUBS_COUNT_HEADER } from "contracts";
-import { Badge } from "ui/badge";
-import { DataTable, useDataTable } from "ui/data-table-paged";
+import { TOTAL_PUBS_COUNT_HEADER } from "contracts"
+import { Badge } from "ui/badge"
+import { DataTable, useDataTable } from "ui/data-table-paged"
 
-import { client } from "~/lib/api";
-import { type GetManyParams } from "~/lib/server";
-import { useCommunity } from "../../providers/CommunityProvider";
-import { useUser } from "../../providers/UserProvider";
-import SkeletonTable from "../../skeletons/SkeletonTable";
-import { getColumns } from "./columns";
+import { client } from "~/lib/api"
+import { useCommunity } from "../../providers/CommunityProvider"
+import { useUser } from "../../providers/UserProvider"
+import SkeletonTable from "../../skeletons/SkeletonTable"
+import { getColumns } from "./columns"
 
 type PubsDataTableProps = {
-	perPage: number;
-	promises: Promise<[number, ProcessedPub<{ withPubType: true }>[]]>;
-};
+	perPage: number
+	promises: Promise<[number, ProcessedPub<{ withPubType: true }>[]]>
+}
 
 /** Can be used with a server component that queries the data and passes the promises in */
 export const PubsDataTable = ({ perPage, ...props }: PubsDataTableProps) => {
-	const [total, data] = React.use(props.promises);
-	const pageCount = Math.ceil(total / perPage);
-	const columns = useMemo(() => getColumns({}), []);
+	const [total, data] = React.use(props.promises)
+	const pageCount = Math.ceil(total / perPage)
+	const columns = useMemo(() => getColumns({}), [])
 
 	const { table } = useDataTable({
 		data,
@@ -46,27 +46,27 @@ export const PubsDataTable = ({ perPage, ...props }: PubsDataTableProps) => {
 		getRowId: (originalRow) => originalRow.id,
 		shallow: false,
 		clearOnDefault: true,
-	});
+	})
 
-	return <DataTable table={table} floatingBar={null} />;
-};
+	return <DataTable table={table} floatingBar={null} />
+}
 
 export type PubsDataTableClientBaseProps = {
-	selectedPubs?: NonGenericProcessedPub[];
-	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
-	disabledRows?: PubsId[];
-	pubTypes?: Pick<PubTypes, "id" | "name">[];
+	selectedPubs?: NonGenericProcessedPub[]
+	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void
+	disabledRows?: PubsId[]
+	pubTypes?: Pick<PubTypes, "id" | "name">[]
 	data:
 		| {
-				status: 200;
-				body: NonGenericProcessedPub[];
-				headers: Headers;
+				status: 200
+				body: NonGenericProcessedPub[]
+				headers: Headers
 		  }
-		| undefined;
-	isLoading: boolean;
-	filterParams: Required<GetManyParams>;
-	setFilterParams: (updaterOrValue: Updater<Required<GetManyParams>>) => void;
-};
+		| undefined
+	isLoading: boolean
+	filterParams: Required<GetManyParams>
+	setFilterParams: (updaterOrValue: Updater<Required<GetManyParams>>) => void
+}
 
 /**
  * Like PubsDataTable, but keeps all state via React instead of query params.
@@ -83,53 +83,53 @@ export const PubsDataTableClientBase = ({
 	data,
 	isLoading,
 }: PubsDataTableClientBaseProps) => {
-	const pubs = data?.body ?? [];
-	const totalFromHeader = data?.headers?.get(TOTAL_PUBS_COUNT_HEADER);
-	const total = totalFromHeader ? parseInt(totalFromHeader) : 0;
+	const pubs = data?.body ?? []
+	const totalFromHeader = data?.headers?.get(TOTAL_PUBS_COUNT_HEADER)
+	const total = totalFromHeader ? parseInt(totalFromHeader, 10) : 0
 
-	const pageCount = Math.ceil(total / filterParams.limit);
+	const pageCount = Math.ceil(total / filterParams.limit)
 	const columns = useMemo(
 		() => getColumns({ disabledRows }),
-		[]
-	) as ColumnDef<NonGenericProcessedPub>[];
+		[disabledRows]
+	) as ColumnDef<NonGenericProcessedPub>[]
 
 	const pagination: PaginationState = {
 		pageIndex: filterParams.offset / filterParams.limit,
 		pageSize: filterParams.limit,
-	};
+	}
 	const sorting: SortingState = [
 		{ id: filterParams.orderBy, desc: filterParams.orderDirection === "desc" },
-	];
+	]
 
 	const handlePaginationChange = (updaterOrValue: Updater<PaginationState>) => {
 		if (typeof updaterOrValue === "function") {
-			const newPagination = updaterOrValue(pagination);
-			const newPage = newPagination.pageIndex;
+			const newPagination = updaterOrValue(pagination)
+			const newPage = newPagination.pageIndex
 			setFilterParams({
 				...filterParams,
 				offset: newPage * newPagination.pageSize,
 				limit: newPagination.pageSize,
-			});
+			})
 		} else {
-			const newPage = updaterOrValue.pageIndex;
+			const newPage = updaterOrValue.pageIndex
 			setFilterParams({
 				...filterParams,
 				offset: newPage * updaterOrValue.pageSize,
 				limit: updaterOrValue.pageSize,
-			});
+			})
 		}
-	};
+	}
 
 	const handleSortingChange = (updaterOrValue: Updater<SortingState>) => {
 		if (typeof updaterOrValue === "function") {
-			const newSorting = updaterOrValue(sorting);
+			const newSorting = updaterOrValue(sorting)
 			setFilterParams({
 				...filterParams,
 				orderBy: newSorting[0].id as "updatedAt" | "createdAt",
 				orderDirection: newSorting[0].desc ? "desc" : "asc",
-			});
+			})
 		}
-	};
+	}
 
 	/**
 	 * Handle the row selection internally so that we can hoist the full pub up
@@ -137,29 +137,29 @@ export const PubsDataTableClientBase = ({
 	 */
 	const rowSelection = useMemo(() => {
 		if (!selectedPubs) {
-			return {};
+			return {}
 		}
-		return Object.fromEntries(selectedPubs.map((p) => [p.id, true]));
-	}, [selectedPubs]);
+		return Object.fromEntries(selectedPubs.map((p) => [p.id, true]))
+	}, [selectedPubs])
 
 	const onRowSelectionChange = useCallback(
 		(updaterOrValue: Updater<RowSelectionState>) => {
 			if (!selectedPubs || !onSelectedPubsChange) {
-				return undefined;
+				return undefined
 			}
-			const prevRows = Object.fromEntries(selectedPubs.map((p) => [p.id, true]));
+			const prevRows = Object.fromEntries(selectedPubs.map((p) => [p.id, true]))
 			const newRows =
-				typeof updaterOrValue === "function" ? updaterOrValue(prevRows) : updaterOrValue;
+				typeof updaterOrValue === "function" ? updaterOrValue(prevRows) : updaterOrValue
 			const newPubs = Object.entries(newRows)
 				.filter(([, selected]) => selected)
 				.map(([pubId]) => {
-					return [...pubs, ...selectedPubs].find((p) => p.id === pubId);
+					return [...pubs, ...selectedPubs].find((p) => p.id === pubId)
 				})
-				.flatMap((p) => (p ? [p] : []));
-			onSelectedPubsChange(newPubs);
+				.flatMap((p) => (p ? [p] : []))
+			onSelectedPubsChange(newPubs)
 		},
 		[onSelectedPubsChange, selectedPubs, pubs]
-	);
+	)
 
 	const { table } = useDataTable({
 		data: pubs,
@@ -183,10 +183,10 @@ export const PubsDataTableClientBase = ({
 			sorting,
 			rowSelection,
 		},
-	});
+	})
 
 	if (isLoading) {
-		return <SkeletonTable />;
+		return <SkeletonTable />
 	}
 
 	return (
@@ -203,25 +203,25 @@ export const PubsDataTableClientBase = ({
 									{name}
 									{index === pubTypes.length - 1 ? "" : ","}
 								</span>
-							);
+							)
 						})}
 					</span>
 				</Badge>
 			) : null}
 			<DataTable table={table} floatingBar={null} className="table-auto" />
 		</div>
-	);
-};
+	)
+}
 
 export const PubsDataTableClient = (props: PubsDataTableClientProps) => {
-	const community = useCommunity();
-	const user = useUser();
+	const community = useCommunity()
+	const user = useUser()
 	const [filterParams, setFilterParams] = useState<Required<GetManyParams>>({
 		limit: 10,
 		offset: 0,
 		orderBy: "updatedAt",
 		orderDirection: "desc",
-	});
+	})
 
 	const { data, isLoading } = client.pubs.getMany.useQuery({
 		queryKey: ["getPubs", filterParams],
@@ -239,7 +239,7 @@ export const PubsDataTableClient = (props: PubsDataTableClientProps) => {
 				communitySlug: community.slug,
 			},
 		},
-	});
+	})
 
 	return (
 		<PubsDataTableClientBase
@@ -249,10 +249,10 @@ export const PubsDataTableClient = (props: PubsDataTableClientProps) => {
 			filterParams={filterParams}
 			setFilterParams={setFilterParams}
 		/>
-	);
-};
+	)
+}
 
 export type PubsDataTableClientProps = Omit<
 	PubsDataTableClientBaseProps,
 	"data" | "isLoading" | "filterParams" | "setFilterParams"
->;
+>

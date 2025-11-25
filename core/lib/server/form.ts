@@ -1,31 +1,31 @@
-import type { QueryCreator } from "kysely";
+import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public"
+import type { QueryCreator } from "kysely"
+import type { XOR } from "utils/types"
+import type { FormElements } from "~/app/components/forms/types"
+import type { GetPubTypesResult } from "./pubtype"
 
-import { sql } from "kysely";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
-import { defaultComponent } from "schemas";
+import { sql } from "kysely"
+import { jsonArrayFrom } from "kysely/helpers/postgres"
+import { defaultComponent } from "schemas"
 
-import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
-import type { XOR } from "utils/types";
 import {
 	AuthTokenType,
 	ElementType,
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
-} from "db/public";
+} from "db/public"
 
-import type { GetPubTypesResult } from "./pubtype";
-import type { FormElements } from "~/app/components/forms/types";
-import { db } from "~/kysely/database";
-import { createMagicLink } from "../authentication/createMagicLink";
-import { defaultFormName, defaultFormSlug } from "../form";
-import { findRanksBetween } from "../rank";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { getCommunitySlug } from "./cache/getCommunitySlug";
-import { findCommunityBySlug } from "./community";
-import { insertCommunityMemberships, insertPubMemberships } from "./member";
-import { getUser } from "./user";
+import { db } from "~/kysely/database"
+import { createMagicLink } from "../authentication/createMagicLink"
+import { defaultFormName, defaultFormSlug } from "../form"
+import { findRanksBetween } from "../rank"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { getCommunitySlug } from "./cache/getCommunitySlug"
+import { findCommunityBySlug } from "./community"
+import { insertCommunityMemberships, insertPubMemberships } from "./member"
+import { getUser } from "./user"
 
 /**
  * Get a form by either slug, id, or pubtype ID. If given a pubtype ID, retrieves the
@@ -99,9 +99,9 @@ export const getForm = (
 						.orderBy("rank")
 				).as("elements")
 			)
-	);
+	)
 
-export type Form = Awaited<ReturnType<ReturnType<typeof getForm>["executeTakeFirstOrThrow"]>>;
+export type Form = Awaited<ReturnType<ReturnType<typeof getForm>["executeTakeFirstOrThrow"]>>
 
 export const userHasPermissionToForm = async (
 	props: XOR<{ formId: FormsId }, { formSlug: string }> &
@@ -137,7 +137,7 @@ export const userHasPermissionToForm = async (
 					)
 					.select("pub_memberships.id")
 			).executeTakeFirst()
-		);
+		)
 	} else {
 		return Boolean(
 			await autoCache(
@@ -164,9 +164,9 @@ export const userHasPermissionToForm = async (
 					)
 					.select("community_memberships.id")
 			).executeTakeFirst()
-		);
+		)
 	}
-};
+}
 
 /**
  * Gives a community member permission to create pubs with a form or edit a specific pub with a form
@@ -179,8 +179,8 @@ export const grantFormAccess = async (
 	trx = db
 ) => {
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
-	const { userId, pubId, ...getFormProps } = props;
-	const form = await getForm(getFormProps, trx).executeTakeFirstOrThrow();
+	const { userId, pubId, ...getFormProps } = props
+	const form = await getForm(getFormProps, trx).executeTakeFirstOrThrow()
 
 	const existingPermission = await autoCache(
 		pubId
@@ -195,7 +195,7 @@ export const grantFormAccess = async (
 					.selectAll("community_memberships")
 					.where("community_memberships.formId", "=", form.id)
 					.where("community_memberships.userId", "=", userId)
-	).executeTakeFirst();
+	).executeTakeFirst()
 
 	if (existingPermission === undefined) {
 		if (pubId) {
@@ -207,7 +207,7 @@ export const grantFormAccess = async (
 					userId,
 				},
 				trx
-			).execute();
+			).execute()
 		} else {
 			await insertCommunityMemberships(
 				{
@@ -217,22 +217,22 @@ export const grantFormAccess = async (
 					userId,
 				},
 				trx
-			).execute();
+			).execute()
 		}
 	}
-};
+}
 
 export const createFormInvitePath = ({
 	formSlug,
 	communitySlug,
 	pubId,
 }: {
-	formSlug: string;
-	communitySlug: string;
-	pubId?: string;
+	formSlug: string
+	communitySlug: string
+	pubId?: string
 }) => {
-	return `/c/${communitySlug}/public/forms/${formSlug}/fill${pubId ? `?pubId=${pubId}` : ""}` as const;
-};
+	return `/c/${communitySlug}/public/forms/${formSlug}/fill${pubId ? `?pubId=${pubId}` : ""}` as const
+}
 
 /**
  * @param days  - The number of days before the link expires
@@ -242,45 +242,45 @@ const createExpiresAtDate = (
 	 * @default 7
 	 */
 	days = 7
-) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+) => new Date(Date.now() + days * 24 * 60 * 60 * 1000)
 
 export type FormInviteLinkProps = XOR<{ formSlug: string }, { formId: FormsId }> &
 	XOR<{ email: string }, { userId: UsersId }> & {
-		pubId?: PubsId;
-		expiresInDays?: number;
-		communityId: CommunitiesId;
-	};
+		pubId?: PubsId
+		expiresInDays?: number
+		communityId: CommunitiesId
+	}
 
 export const createFormInviteLink = async (props: FormInviteLinkProps, trx = db) => {
 	const formPromise = getForm({
 		communityId: props.communityId,
 		...(props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }),
-	}).executeTakeFirstOrThrow();
+	}).executeTakeFirstOrThrow()
 
 	const userPromise = getUser(
 		props.userId !== undefined ? { id: props.userId } : { email: props.email }
-	).executeTakeFirstOrThrow();
+	).executeTakeFirstOrThrow()
 
-	const [formSettled, userSettled] = await Promise.allSettled([formPromise, userPromise]);
+	const [formSettled, userSettled] = await Promise.allSettled([formPromise, userPromise])
 
 	if (formSettled.status === "rejected") {
-		throw formSettled.reason;
+		throw formSettled.reason
 	}
 
 	if (userSettled.status === "rejected") {
-		throw userSettled.reason;
+		throw userSettled.reason
 	}
 
-	const form = formSettled.value;
-	const user = userSettled.value;
+	const form = formSettled.value
+	const user = userSettled.value
 
-	const communitySlug = await getCommunitySlug();
+	const communitySlug = await getCommunitySlug()
 
 	const formPath = createFormInvitePath({
 		formSlug: form.slug,
 		communitySlug: communitySlug,
 		pubId: props.pubId,
-	});
+	})
 
 	const magicLink = await createMagicLink(
 		{
@@ -290,10 +290,10 @@ export const createFormInviteLink = async (props: FormInviteLinkProps, trx = db)
 			type: AuthTokenType.generic,
 		},
 		trx
-	);
+	)
 
-	return magicLink;
-};
+	return magicLink
+}
 
 export const insertForm = (
 	pubType: GetPubTypesResult[number],
@@ -303,7 +303,7 @@ export const insertForm = (
 	isDefault: boolean,
 	trx = db
 ) => {
-	const ranks = findRanksBetween({ numberOfRanks: pubType.fields.length + 1 });
+	const ranks = findRanksBetween({ numberOfRanks: pubType.fields.length + 1 })
 
 	return trx
 		.with("form", (db) =>
@@ -344,19 +344,19 @@ export const insertForm = (
 				rank: ranks[i + 1],
 				formId: eb.selectFrom("form").select("form.id"),
 			}))
-		);
-};
-export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
-export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";
+		)
+}
+export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key"
+export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key"
 
 export const createDefaultForm = (
 	props: {
-		communityId: CommunitiesId;
-		pubType: GetPubTypesResult[number];
+		communityId: CommunitiesId
+		pubType: GetPubTypesResult[number]
 	},
 	trx = db
 ) => {
-	const pubType = props.pubType;
+	const pubType = props.pubType
 
 	return autoRevalidate(
 		insertForm(
@@ -367,23 +367,23 @@ export const createDefaultForm = (
 			true,
 			trx
 		)
-	);
-};
+	)
+}
 
 export type SimpleForm = {
-	id: FormsId;
-	name: string;
-	isDefault: boolean;
-	slug: string;
-};
+	id: FormsId
+	name: string
+	isDefault: boolean
+	slug: string
+}
 
 /**
  * Gets an array of forms suitable for use in a <select> element (no form_elements included)
  */
-export const getSimpleForms = async (userId?: UsersId, pubTypeId?: PubTypesId, trx = db) => {
-	const community = await findCommunityBySlug();
+export const getSimpleForms = async (_userId?: UsersId, pubTypeId?: PubTypesId, trx = db) => {
+	const community = await findCommunityBySlug()
 	if (!community) {
-		throw new Error("Community not found");
+		throw new Error("Community not found")
 	}
 
 	return await autoCache(
@@ -394,5 +394,5 @@ export const getSimpleForms = async (userId?: UsersId, pubTypeId?: PubTypesId, t
 			.select(["forms.name", "forms.isDefault", "forms.id", "forms.slug"])
 			.orderBy("isDefault desc")
 			.orderBy("updatedAt desc")
-	).execute();
-};
+	).execute()
+}

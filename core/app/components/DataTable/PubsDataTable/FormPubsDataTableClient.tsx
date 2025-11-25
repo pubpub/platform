@@ -1,25 +1,25 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import type { NonGenericProcessedPub } from "contracts"
+import type { PubsId, PubTypes } from "db/public"
+import type { GetManyParams } from "~/lib/server"
 
-import type { NonGenericProcessedPub } from "contracts";
-import type { PubsId, PubTypes } from "db/public";
+import { useState } from "react"
 
-import { client } from "~/lib/api";
-import { type GetManyParams } from "~/lib/server";
-import { useCommunity } from "../../providers/CommunityProvider";
-import { PubsDataTableClientBase } from "./PubsDataTableClient";
+import { client } from "~/lib/api"
+import { useCommunity } from "../../providers/CommunityProvider"
+import { PubsDataTableClientBase } from "./PubsDataTableClient"
 
 type FormPubsDataTableClientProps = {
 	/* The slug of the field on the form that's being used to render the table */
-	formSlug: string;
-	fieldSlug: string;
-	selectedPubs?: NonGenericProcessedPub[];
-	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
-	disabledRows?: PubsId[];
-	pubTypes?: Pick<PubTypes, "id" | "name">[];
-	currentPubId?: PubsId;
-};
+	formSlug: string
+	fieldSlug: string
+	selectedPubs?: NonGenericProcessedPub[]
+	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void
+	disabledRows?: PubsId[]
+	pubTypes?: Pick<PubTypes, "id" | "name">[]
+	currentPubId?: PubsId
+}
 
 /**
  * Form-context aware version of PubsDataTableClient that uses the secure form endpoint.
@@ -31,9 +31,9 @@ export const FormPubsDataTableClient = (props: FormPubsDataTableClientProps) => 
 		offset: 0,
 		orderBy: "updatedAt",
 		orderDirection: "desc",
-	});
+	})
 
-	const community = useCommunity();
+	const community = useCommunity()
 
 	const { data, isLoading } = client.forms.getPubsForFormField.useQuery({
 		queryKey: ["getPubsForFormField", props.formSlug, props.fieldSlug, filterParams],
@@ -53,7 +53,7 @@ export const FormPubsDataTableClient = (props: FormPubsDataTableClientProps) => 
 				fieldSlug: props.fieldSlug,
 			},
 		},
-	});
+	})
 
 	return (
 		<PubsDataTableClientBase
@@ -63,5 +63,5 @@ export const FormPubsDataTableClient = (props: FormPubsDataTableClientProps) => 
 			filterParams={filterParams}
 			setFilterParams={setFilterParams}
 		/>
-	);
-};
+	)
+}

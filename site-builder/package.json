@@ -4,8 +4,6 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"type-check": "astro check",
 		"site:dev": "astro dev",
 		"site:build": "astro build",
@@ -46,8 +44,6 @@
 	},
 	"devDependencies": {
 		"@astrojs/check": "^0.9.4",
-		"@pubpub/eslint-config": "workspace:*",
-		"@pubpub/prettier-config": "workspace:*",
 		"@types/archiver": "^6.0.2",
 		"@types/mime-types": "^2.1.4",
 		"@types/node": "22",
@@ -55,7 +51,7 @@
 		"@types/react-dom": "catalog:react19",
 		"dotenv-cli": "^5.0.1"
 	},
-	"prettier": "@pubpub/prettier-config/astro",
+
 	"Goverrides": {
 		"@astrojs/react>vite": "npm:rolldown-vite@latest"
 	}

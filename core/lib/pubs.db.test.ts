@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest"
 
 import {
 	Capabilities,
@@ -7,14 +7,14 @@ import {
 	InputComponent,
 	MemberRole,
 	MembershipType,
-} from "db/public";
+} from "db/public"
 
-import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
+import { mockServerCode } from "~/lib/__tests__/utils"
+import { createSeed } from "~/prisma/seed/createSeed"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode()
 
-const { getTrx } = createForEachMockedTransaction();
+const { getTrx } = createForEachMockedTransaction()
 
 const seed = createSeed({
 	community: {
@@ -130,22 +130,22 @@ const seed = createSeed({
 			],
 		},
 	},
-});
+})
 
 describe("getPubByForm", () => {
 	const getAllImports = async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { getPubByForm } = await import("./pubs");
-		const { getPubsWithRelatedValues } = await import("./server/pub");
-		const { getForm } = await import("./server/form");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { getPubByForm } = await import("./pubs")
+		const { getPubsWithRelatedValues } = await import("./server/pub")
+		const { getForm } = await import("./server/form")
 
-		return { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm };
-	};
+		return { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm }
+	}
 
 	it("should be able to get a pub with form elements", async () => {
 		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
-			await getAllImports();
-		const { pubs, community } = await seedCommunity(seed);
+			await getAllImports()
+		const { pubs, community } = await seedCommunity(seed)
 
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -163,9 +163,9 @@ describe("getPubByForm", () => {
 				pubTypeId: pubs[0].pubTypeId,
 				communityId: community.id,
 			}).executeTakeFirstOrThrow(),
-		]);
+		])
 
-		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
+		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true })
 
 		expect(pubWithForm).toMatchObject({
 			values: [
@@ -187,15 +187,15 @@ describe("getPubByForm", () => {
 					value: "Some description",
 				},
 			],
-		});
+		})
 		// Check that the element without a form does not have any form related values
-		expect(pubWithForm.values[2]).not.toHaveProperty("formElementId");
-	});
+		expect(pubWithForm.values[2]).not.toHaveProperty("formElementId")
+	})
 
 	it("should filter out pub values if needed", async () => {
 		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
-			await getAllImports();
-		const { pubs, community } = await seedCommunity(seed);
+			await getAllImports()
+		const { pubs, community } = await seedCommunity(seed)
 
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -213,9 +213,9 @@ describe("getPubByForm", () => {
 				pubTypeId: pubs[0].pubTypeId,
 				communityId: community.id,
 			}).executeTakeFirstOrThrow(),
-		]);
+		])
 
-		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: false });
+		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: false })
 		expect(pubWithForm).toMatchObject({
 			values: [
 				// Pub value and form element
@@ -232,14 +232,14 @@ describe("getPubByForm", () => {
 					},
 				},
 			],
-		});
-	});
+		})
+	})
 
 	it("should filter out pub values by user permissions", async () => {
 		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
-			await getAllImports();
-		const { pubs, community, users } = await seedCommunity(seed);
-		const { userCan } = await import("./authorization/capabilities");
+			await getAllImports()
+		const { pubs, community, users } = await seedCommunity(seed)
+		const { userCan } = await import("./authorization/capabilities")
 
 		const [pub, form, adminCan, editorCan, contributorCan] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -272,22 +272,22 @@ describe("getPubByForm", () => {
 				{ type: MembershipType.community, communityId: community.id },
 				users.contributor.id
 			),
-		]);
+		])
 
-		[
+		;[
 			{ withExtraPubValues: adminCan, expected: 3 },
 			{ withExtraPubValues: editorCan, expected: 3 },
 			{ withExtraPubValues: contributorCan, expected: 2 },
 		].forEach(({ withExtraPubValues, expected }) => {
-			const pubWithForm = getPubByForm({ pub, form, withExtraPubValues });
-			expect(pubWithForm.values).toHaveLength(expected);
-		});
-	});
+			const pubWithForm = getPubByForm({ pub, form, withExtraPubValues })
+			expect(pubWithForm.values).toHaveLength(expected)
+		})
+	})
 
 	it("should respect form order", async () => {
 		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
-			await getAllImports();
-		const { pubs, community, forms } = await seedCommunity(seed);
+			await getAllImports()
+		const { pubs, community, forms } = await seedCommunity(seed)
 
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -305,9 +305,9 @@ describe("getPubByForm", () => {
 				id: forms["basic-pub-form"].id,
 				communityId: community.id,
 			}).executeTakeFirstOrThrow(),
-		]);
+		])
 
-		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
+		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true })
 
 		expect(pubWithForm).toMatchObject({
 			values: [
@@ -320,8 +320,8 @@ describe("getPubByForm", () => {
 					formElementConfig: { label: "Title" },
 				},
 			],
-		});
-	});
+		})
+	})
 
 	it("should keep extra pub values ordered", async () => {
 		const seed2 = createSeed({
@@ -376,12 +376,12 @@ describe("getPubByForm", () => {
 					],
 				},
 			},
-		});
+		})
 		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
-			await getAllImports();
-		const { pubs, community, forms } = await seedCommunity(seed2);
+			await getAllImports()
+		const { pubs, community, forms } = await seedCommunity(seed2)
 
-		const pubId = pubs[0].id;
+		const pubId = pubs[0].id
 
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -398,25 +398,25 @@ describe("getPubByForm", () => {
 				id: forms["basic-pub-form"].id,
 				communityId: community.id,
 			}).executeTakeFirstOrThrow(),
-		]);
+		])
 
-		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
+		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true })
 
 		// The extra pub values should be in the same order as the original `pub`
-		const justTheValues = pubWithForm.values.map((v) => v.value);
-		const pubValues = pub.values.filter((v) => v.fieldName !== "Title").map((v) => v.value);
-		const expectedValues = ["Some title", ...pubValues];
+		const justTheValues = pubWithForm.values.map((v) => v.value)
+		const pubValues = pub.values.filter((v) => v.fieldName !== "Title").map((v) => v.value)
+		const expectedValues = ["Some title", ...pubValues]
 
-		expect(justTheValues).toEqual(expectedValues);
-	});
+		expect(justTheValues).toEqual(expectedValues)
+	})
 
 	it("should handle multiple relations with a form", async () => {
 		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
-			await getAllImports();
-		const { pubs, community, forms } = await seedCommunity(seed);
+			await getAllImports()
+		const { pubs, community, forms } = await seedCommunity(seed)
 		// This pub has relation fields
-		const pubId = pubs[1].id;
-		const communityId = community.id;
+		const pubId = pubs[1].id
+		const communityId = community.id
 
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -434,9 +434,9 @@ describe("getPubByForm", () => {
 				id: forms["second-form"].id,
 				communityId,
 			}).executeTakeFirstOrThrow(),
-		]);
+		])
 
-		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
+		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true })
 
 		expect(pubWithForm).toMatchObject({
 			values: [
@@ -465,16 +465,16 @@ describe("getPubByForm", () => {
 					},
 				},
 			],
-		});
-	});
+		})
+	})
 
 	it("should handle multiple relations without a form element", async () => {
 		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
-			await getAllImports();
-		const { pubs, community, forms } = await seedCommunity(seed);
+			await getAllImports()
+		const { pubs, community, forms } = await seedCommunity(seed)
 		// This pub has relation fields
-		const pubId = pubs[1].id;
-		const communityId = community.id;
+		const pubId = pubs[1].id
+		const communityId = community.id
 
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -492,8 +492,8 @@ describe("getPubByForm", () => {
 				id: forms["basic-pub-form"].id,
 				communityId,
 			}).executeTakeFirstOrThrow(),
-		]);
-		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
+		])
+		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true })
 		expect(pubWithForm).toMatchObject({
 			values: [
 				{
@@ -511,9 +511,9 @@ describe("getPubByForm", () => {
 					value: "second relation value",
 				},
 			],
-		});
+		})
 		// Check that the element without a form does not have any form related values
-		expect(pubWithForm.values[2]).not.toHaveProperty("formElementId");
-		expect(pubWithForm.values[3]).not.toHaveProperty("formElementId");
-	});
-});
+		expect(pubWithForm.values[2]).not.toHaveProperty("formElementId")
+		expect(pubWithForm.values[3]).not.toHaveProperty("formElementId")
+	})
+})

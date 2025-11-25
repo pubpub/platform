@@ -1,14 +1,15 @@
-"use client";
+"use client"
 
-import type { VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority"
 
-import React, { useState } from "react";
-import { cva } from "class-variance-authority";
+import * as React from "react"
+import { useState } from "react"
+import { cva } from "class-variance-authority"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import { Button } from "./button";
-import { ChevronDown, ChevronUp } from "./icon";
+import { Button } from "./button"
+import { ChevronDown, ChevronUp } from "./icon"
 
 const showMoreVariants = cva("relative overflow-hidden", {
 	variants: {
@@ -22,15 +23,15 @@ const showMoreVariants = cva("relative overflow-hidden", {
 	defaultVariants: {
 		variant: "default",
 	},
-});
+})
 
 export interface ShowMoreProps
 	extends React.HTMLAttributes<HTMLDivElement>,
 		VariantProps<typeof showMoreVariants> {
-	children: React.ReactNode;
-	showMoreText?: string;
-	showLessText?: string;
-	animate?: boolean;
+	children: React.ReactNode
+	showMoreText?: string
+	showLessText?: string
+	animate?: boolean
 }
 
 export function ShowMore({
@@ -42,9 +43,9 @@ export function ShowMore({
 	animate = true,
 	...props
 }: ShowMoreProps) {
-	const [expanded, setExpanded] = useState(false);
+	const [expanded, setExpanded] = useState(false)
 
-	const toggleExpanded = () => setExpanded((prev) => !prev);
+	const toggleExpanded = () => setExpanded((prev) => !prev)
 
 	return (
 		<div className={cn("w-fit", className)} {...props}>
@@ -80,5 +81,5 @@ export function ShowMore({
 				</Button>
 			</div>
 		</div>
-	);
+	)
 }

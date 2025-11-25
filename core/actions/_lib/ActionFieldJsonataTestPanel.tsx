@@ -1,33 +1,32 @@
-import type z from "zod";
+import type { ProcessedPub } from "contracts"
+import type { Action as ActionEnum, PubsId } from "db/public"
+import type z from "zod"
+import type { ActionFormContextContextValue } from "./ActionForm"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { skipToken } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Loader2, Play, Zap, ZapOff } from "lucide-react";
-import { useWatch } from "react-hook-form";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { skipToken } from "@tanstack/react-query"
+import { AlertCircle, CheckCircle2, Loader2, Play, Zap, ZapOff } from "lucide-react"
+import { useWatch } from "react-hook-form"
 
-import type { ProcessedPub } from "contracts";
-import type { PubsId } from "db/public";
-import { interpolate } from "@pubpub/json-interpolate";
-import { Action as ActionEnum } from "db/public";
-import { Alert, AlertDescription } from "ui/alert";
-import { Button } from "ui/button";
-import { Label } from "ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
-import { Textarea } from "ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { cn } from "utils";
-import { tryCatch } from "utils/try-catch";
+import { interpolate } from "@pubpub/json-interpolate"
+import { Alert, AlertDescription } from "ui/alert"
+import { Button } from "ui/button"
+import { Label } from "ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs"
+import { Textarea } from "ui/textarea"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { cn } from "utils"
+import { tryCatch } from "utils/try-catch"
 
-import type { ActionFormContextContextValue } from "./ActionForm";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { PubSearchSelect } from "~/app/components/pubs/PubSearchSelect";
-import { client } from "~/lib/api";
-import { getActionByName } from "../api";
-import { useActionForm } from "./ActionForm";
-import { createPubProxy } from "./pubProxy";
-import { extractJsonata } from "./schemaWithJsonFields";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { PubSearchSelect } from "~/app/components/pubs/PubSearchSelect"
+import { client } from "~/lib/api"
+import { getActionByName } from "../api"
+import { useActionForm } from "./ActionForm"
+import { createPubProxy } from "./pubProxy"
+import { extractJsonata } from "./schemaWithJsonFields"
 
-export type TestInputType = "current-pub" | "select-pub" | "json-blob";
+export type TestInputType = "current-pub" | "select-pub" | "json-blob"
 
 function getDefaultTestInputType(
 	contextType: string,
@@ -35,46 +34,46 @@ function getDefaultTestInputType(
 	actionAccepts: readonly string[]
 ): TestInputType {
 	if (contextType === "run" && pubId) {
-		return "current-pub";
+		return "current-pub"
 	}
 	if (actionAccepts.includes("json")) {
-		return "json-blob";
+		return "json-blob"
 	}
-	return "select-pub";
+	return "select-pub"
 }
 
 export function ActionFieldJsonataTestPanel(props: {
-	actionName: ActionEnum;
-	configKey: string;
-	value: string;
-	pubId: PubsId | undefined;
-	contextType: ActionFormContextContextValue;
-	actionAccepts: readonly string[];
-	mode?: "template" | "jsonata";
+	actionName: ActionEnum
+	configKey: string
+	value: string
+	pubId: PubsId | undefined
+	contextType: ActionFormContextContextValue
+	actionAccepts: readonly string[]
+	mode?: "template" | "jsonata"
 }) {
 	const [inputType, setInputType] = useState<TestInputType>(() =>
 		getDefaultTestInputType(props.contextType, props.pubId, props.actionAccepts)
-	);
-	const { form, path } = useActionForm();
+	)
+	const { form, path } = useActionForm()
 
-	const action = getActionByName(props.actionName);
-	const [selectedPubId, setSelectedPubId] = useState(props.pubId);
-	const [jsonBlob, setJsonBlob] = useState("{}");
-	const [autoEvaluate, setAutoEvaluate] = useState(true);
+	const action = getActionByName(props.actionName)
+	const [selectedPubId, setSelectedPubId] = useState(props.pubId)
+	const [jsonBlob, setJsonBlob] = useState("{}")
+	const [autoEvaluate, setAutoEvaluate] = useState(true)
 
-	const community = useCommunity();
+	const community = useCommunity()
 
 	const [testResult, setTestResult] = useState<{
-		status: "success" | "error" | "pending" | "ready" | "start" | "idle";
-		interpolated?: unknown;
+		status: "success" | "error" | "pending" | "ready" | "start" | "idle"
+		interpolated?: unknown
 		error?: {
-			type: string;
-			message: string;
-			issues?: z.ZodIssue[];
-		};
-	}>({ status: "idle" });
+			type: string
+			message: string
+			issues?: z.ZodIssue[]
+		}
+	}>({ status: "idle" })
 
-	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
 	const { data, isFetching } = client.pubs.get.useQuery({
 		queryData: selectedPubId
@@ -93,44 +92,44 @@ export function ActionFieldJsonataTestPanel(props: {
 			: skipToken,
 		initialData: undefined,
 		queryKey: ["pubs", "getMany", community.id, selectedPubId],
-	});
+	})
 
 	// cleanup debounce timer on unmount
 	useEffect(() => {
 		return () => {
 			if (debounceTimerRef.current) {
-				clearTimeout(debounceTimerRef.current);
+				clearTimeout(debounceTimerRef.current)
 			}
-		};
-	}, []);
+		}
+	}, [])
 
 	const bodyForTest = useMemo(() => {
 		if (inputType === "current-pub" && selectedPubId && data?.body) {
-			return { pub: createPubProxy(data.body as ProcessedPub, community.slug) };
+			return { pub: createPubProxy(data.body as ProcessedPub, community.slug) }
 		}
 		if (inputType === "select-pub") {
 			if (selectedPubId && data?.body) {
-				return { pub: createPubProxy(data.body as ProcessedPub, community.slug) };
+				return { pub: createPubProxy(data.body as ProcessedPub, community.slug) }
 			}
-			return {};
+			return {}
 		}
 		if (inputType === "json-blob") {
 			try {
-				return { json: JSON.parse(jsonBlob) };
+				return { json: JSON.parse(jsonBlob) }
 			} catch {
-				return null;
+				return null
 			}
 		}
-		return null;
-	}, [inputType, selectedPubId, jsonBlob, data?.body, community.slug]);
+		return null
+	}, [inputType, selectedPubId, jsonBlob, data?.body, community.slug])
 
-	const values = useWatch({ control: form.control, ...(path ? { name: path } : {}) });
+	const values = useWatch({ control: form.control, ...(path ? { name: path } : {}) })
 
 	const valuesMinusCurrent = useMemo(() => {
-		const { [props.configKey]: _, ...rest } = values;
+		const { [props.configKey]: _, ...rest } = values
 
-		return rest;
-	}, [values, props.configKey]);
+		return rest
+	}, [values, props.configKey])
 
 	const bodyWithAction = useMemo(() => {
 		return {
@@ -139,26 +138,26 @@ export function ActionFieldJsonataTestPanel(props: {
 				...action,
 				config: valuesMinusCurrent,
 			},
-		};
-	}, [bodyForTest, valuesMinusCurrent, action]);
+		}
+	}, [bodyForTest, valuesMinusCurrent, action])
 
 	const canTest = useMemo(() => {
 		if (inputType === "current-pub") {
-			return !!props.pubId;
+			return !!props.pubId
 		}
 		if (inputType === "select-pub") {
-			return !!selectedPubId;
+			return !!selectedPubId
 		}
 		if (inputType === "json-blob") {
 			try {
-				JSON.parse(jsonBlob);
-				return true;
+				JSON.parse(jsonBlob)
+				return true
 			} catch {
-				return false;
+				return false
 			}
 		}
-		return false;
-	}, [inputType, jsonBlob, props.pubId, selectedPubId]);
+		return false
+	}, [inputType, jsonBlob, props.pubId, selectedPubId])
 
 	const handleTest = useCallback(async () => {
 		if (!bodyWithAction) {
@@ -168,11 +167,11 @@ export function ActionFieldJsonataTestPanel(props: {
 					type: "unknown_error" as const,
 					message: "No data available to test",
 				},
-			});
-			return;
+			})
+			return
 		}
 
-		const configShape = action.config.schema.shape as Record<string, z.ZodType<any>>;
+		const configShape = action.config.schema.shape as Record<string, z.ZodType<any>>
 
 		if (!(props.configKey in configShape)) {
 			setTestResult({
@@ -181,31 +180,31 @@ export function ActionFieldJsonataTestPanel(props: {
 					type: "invalid_key" as const,
 					message: `Key ${props.configKey} not found in action ${props.actionName}`,
 				},
-			});
-			return;
+			})
+			return
 		}
 
-		setTestResult({ status: "pending" });
+		setTestResult({ status: "pending" })
 
 		try {
 			const extractedValue =
-				props.mode === "jsonata" ? extractJsonata(props.value) : props.value;
+				props.mode === "jsonata" ? extractJsonata(props.value) : props.value
 			const [interpolateError, interpolated] = await tryCatch(
 				interpolate(extractedValue, bodyWithAction)
-			);
+			)
 
 			if (interpolateError) {
 				let errorType: "jsonata_error" | "parse_error" | "syntax_error" | "unknown_error" =
-					"unknown_error";
+					"unknown_error"
 				if (interpolateError?.message.includes("expression")) {
-					errorType = "jsonata_error";
+					errorType = "jsonata_error"
 				} else if (
 					interpolateError?.message.includes("parse") ||
 					interpolateError?.message.includes("JSON")
 				) {
-					errorType = "parse_error";
+					errorType = "parse_error"
 				} else if (interpolateError?.message.includes("unclosed interpolation")) {
-					errorType = "syntax_error";
+					errorType = "syntax_error"
 				}
 
 				setTestResult({
@@ -214,11 +213,11 @@ export function ActionFieldJsonataTestPanel(props: {
 						type: errorType,
 						message: interpolateError.message,
 					},
-				});
-				return;
+				})
+				return
 			}
 
-			const parsedBody = configShape[props.configKey].safeParse(interpolated);
+			const parsedBody = configShape[props.configKey].safeParse(interpolated)
 			if (!parsedBody.success) {
 				setTestResult({
 					status: "error",
@@ -229,14 +228,14 @@ export function ActionFieldJsonataTestPanel(props: {
 							"Interpolated correctly, but interpolated value does not match the expected type for this field",
 						issues: parsedBody.error.issues,
 					},
-				});
-				return;
+				})
+				return
 			}
 
 			setTestResult({
 				status: "success",
 				interpolated: parsedBody.data,
-			});
+			})
 		} catch (error) {
 			setTestResult({
 				status: "error",
@@ -244,7 +243,7 @@ export function ActionFieldJsonataTestPanel(props: {
 					type: "unknown_error" as const,
 					message: error instanceof Error ? error.message : String(error),
 				},
-			});
+			})
 		}
 	}, [
 		bodyWithAction,
@@ -253,45 +252,45 @@ export function ActionFieldJsonataTestPanel(props: {
 		props.actionName,
 		props.value,
 		props.mode,
-	]);
+	])
 
-	const showInputSelector = inputType !== "current-pub";
+	const showInputSelector = inputType !== "current-pub"
 
 	// auto-evaluate with debouncing
 	useEffect(() => {
 		if (!autoEvaluate) {
-			return;
+			return
 		}
 
 		if (!canTest) {
-			setTestResult({ status: "idle" });
-			return;
+			setTestResult({ status: "idle" })
+			return
 		}
 
 		if (debounceTimerRef.current) {
-			clearTimeout(debounceTimerRef.current);
+			clearTimeout(debounceTimerRef.current)
 		}
 
 		debounceTimerRef.current = setTimeout(() => {
-			handleTest();
-		}, 500);
+			handleTest()
+		}, 500)
 
 		return () => {
 			if (debounceTimerRef.current) {
-				clearTimeout(debounceTimerRef.current);
+				clearTimeout(debounceTimerRef.current)
 			}
-		};
-	}, [autoEvaluate, canTest, handleTest]);
+		}
+	}, [autoEvaluate, canTest, handleTest])
 
 	const tabCount =
 		(props.pubId && props.contextType === "run" ? 1 : 0) +
 		1 +
-		(props.actionAccepts.includes("json") ? 1 : 0);
+		(props.actionAccepts.includes("json") ? 1 : 0)
 
 	return (
 		<div className="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2 transition-all duration-200">
 			<div className="flex items-center justify-between">
-				<Label className="text-xs font-medium text-gray-700">Test result</Label>
+				<Label className="font-medium text-gray-700 text-xs">Test result</Label>
 
 				<div className="flex items-center gap-2">
 					{!autoEvaluate && (
@@ -351,110 +350,107 @@ export function ActionFieldJsonataTestPanel(props: {
 
 			<div className="min-h-[60px] transition-all duration-200">
 				{/* to make it easier for screen readers to understand the output */}
-				<output htmlFor={props.configKey}>
-					{testResult.status === "pending" && (
-						<div className="flex items-center justify-center py-4 text-xs text-gray-500">
-							<Loader2 className="mr-2 h-3 w-3 animate-spin" />
-							Evaluating...
-						</div>
-					)}
+				{testResult.status === "pending" && (
+					<div className="flex items-center justify-center py-4 text-gray-500 text-xs">
+						<Loader2 className="mr-2 h-3 w-3 animate-spin" />
+						Evaluating...
+					</div>
+				)}
 
-					{testResult.status === "idle" && (
-						<div className="flex items-center justify-center py-4 text-xs text-gray-400">
-							{isFetching
-								? "Loading Pub data..."
-								: !canTest
-									? props.actionAccepts.includes("pub")
-										? "No Pub selected to test JSONata expression against"
-										: "No test data provided"
-									: "Waiting for input..."}
-						</div>
-					)}
+				{testResult.status === "idle" && (
+					<div className="flex items-center justify-center py-4 text-gray-400 text-xs">
+						{isFetching
+							? "Loading Pub data..."
+							: !canTest
+								? props.actionAccepts.includes("pub")
+									? "No Pub selected to test JSONata expression against"
+									: "No test data provided"
+								: "Waiting for input..."}
+					</div>
+				)}
 
-					{testResult.status === "success" && testResult.interpolated !== undefined && (
-						<Alert className="border-green-200 bg-green-50 duration-200 animate-in fade-in-50">
-							<CheckCircle2 className="h-4 w-4 text-green-600" />
-							<AlertDescription className="ml-2">
-								<div className="text-xs font-medium text-green-900">Success</div>
-								<pre
-									className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-xs text-gray-900"
-									aria-label="Success: JSONata test interpolated value"
-								>
+				{testResult.status === "success" && testResult.interpolated !== undefined && (
+					<Alert className="fade-in-50 animate-in border-green-200 bg-green-50 duration-200">
+						<CheckCircle2 className="h-4 w-4 text-green-600" />
+						<AlertDescription className="ml-2">
+							<div className="font-medium text-green-900 text-xs">Success</div>
+							<output
+								htmlFor={props.configKey}
+								aria-label="Success: JSONata test interpolated value"
+							>
+								<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-gray-900 text-xs">
 									{JSON.stringify(testResult.interpolated, null, 2)}
 								</pre>
-							</AlertDescription>
-						</Alert>
-					)}
+							</output>
+						</AlertDescription>
+					</Alert>
+				)}
 
-					{testResult.status === "error" && testResult.error !== undefined && (
-						<Alert className="border-red-200 bg-red-50 duration-200 animate-in fade-in-50">
-							<AlertCircle className="h-4 w-4 text-red-600" />
-							<AlertDescription className="ml-2">
-								<div className="text-xs font-medium text-red-900">
-									{testResult.error.type === "jsonata_error" && "JSONata Error"}
-									{testResult.error.type === "parse_error" && "Parse Error"}
-									{testResult.error.type === "syntax_error" && "Syntax Error"}
-									{testResult.error.type === "validation_error" &&
-										"Validation Error"}
-									{testResult.error.type === "invalid_key" &&
-										"Configuration Error"}
-									{testResult.error.type === "unknown_error" && "Error"}
-								</div>
-								<div className="mt-1 text-xs text-red-800">
-									{testResult.error.message}
-								</div>
-								{testResult.interpolated ? (
-									<pre
-										className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-xs text-gray-900"
-										aria-label="Error: JSONata test interpolated value"
-									>
+				{testResult.status === "error" && testResult.error !== undefined && (
+					<Alert className="fade-in-50 animate-in border-red-200 bg-red-50 duration-200">
+						<AlertCircle className="h-4 w-4 text-red-600" />
+						<AlertDescription className="ml-2">
+							<div className="font-medium text-red-900 text-xs">
+								{testResult.error.type === "jsonata_error" && "JSONata Error"}
+								{testResult.error.type === "parse_error" && "Parse Error"}
+								{testResult.error.type === "syntax_error" && "Syntax Error"}
+								{testResult.error.type === "validation_error" && "Validation Error"}
+								{testResult.error.type === "invalid_key" && "Configuration Error"}
+								{testResult.error.type === "unknown_error" && "Error"}
+							</div>
+							<div className="mt-1 text-red-800 text-xs">
+								{testResult.error.message}
+							</div>
+							{testResult.interpolated ? (
+								<output
+									htmlFor={props.configKey}
+									aria-label="Error: JSONata test interpolated value"
+								>
+									<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-gray-900 text-xs">
 										{JSON.stringify(testResult.interpolated, null, 2)}
 									</pre>
-								) : null}
-								{testResult.error.issues && testResult.error.issues.length > 0 && (
-									<div
-										className="mt-2 space-y-1"
-										aria-label="JSONata test issues"
-									>
-										{testResult.error.issues.map((issue: any, idx: number) => (
-											<div key={idx} className="text-xs text-red-700">
-												{issue.path?.length > 0 && (
-													<span className="font-medium">
-														{issue.path.join(".")}:{" "}
-													</span>
-												)}
-												{issue.message}
-											</div>
-										))}
-									</div>
-								)}
-							</AlertDescription>
-						</Alert>
-					)}
-				</output>
+								</output>
+							) : null}
+							{testResult.error.issues && testResult.error.issues.length > 0 && (
+								<div className="mt-2 space-y-1">
+									{testResult.error.issues.map((issue, idx) => (
+										<div key={idx} className="text-red-700 text-xs">
+											{issue.path?.length > 0 && (
+												<span className="font-medium">
+													{issue.path.join(".")}:{" "}
+												</span>
+											)}
+											{issue.message}
+										</div>
+									))}
+								</div>
+							)}
+						</AlertDescription>
+					</Alert>
+				)}
 			</div>
 		</div>
-	);
+	)
 }
 
 export const InputSelector = (props: {
-	setSelectedPubId: (pubId: PubsId | undefined) => void;
+	setSelectedPubId: (pubId: PubsId | undefined) => void
 	/* the id of the pub we are going to run the action on */
-	currentPubId?: PubsId;
-	contextType: ActionFormContextContextValue;
-	actionAccepts: readonly string[];
-	inputType: TestInputType;
-	setInputType: (inputType: TestInputType) => void;
-	tabCount: number;
-	jsonBlob: string;
-	setJsonBlob: (jsonBlob: string) => void;
+	currentPubId?: PubsId
+	contextType: ActionFormContextContextValue
+	actionAccepts: readonly string[]
+	inputType: TestInputType
+	setInputType: (inputType: TestInputType) => void
+	tabCount: number
+	jsonBlob: string
+	setJsonBlob: (jsonBlob: string) => void
 }) => {
 	return (
 		<div className="space-y-2">
 			<Tabs
 				value={props.inputType}
 				onValueChange={(v) => {
-					props.setInputType(v as TestInputType);
+					props.setInputType(v as TestInputType)
 				}}
 				className="w-full"
 			>
@@ -483,7 +479,7 @@ export const InputSelector = (props: {
 					</TabsList>
 				)}
 				<TabsContent value="current-pub" className="mt-2">
-					<p className="text-xs text-gray-600">Test using the current pub context</p>
+					<p className="text-gray-600 text-xs">Test using the current pub context</p>
 				</TabsContent>
 				<TabsContent value="select-pub" className="mt-2 space-y-2">
 					{/* <Input
@@ -498,10 +494,10 @@ export const InputSelector = (props: {
 						<PubSearchSelect
 							onSelectedPubsChange={(pubs) => {
 								if (!pubs.length) {
-									props.setSelectedPubId(undefined);
-									return;
+									props.setSelectedPubId(undefined)
+									return
 								}
-								props.setSelectedPubId(pubs[0].id);
+								props.setSelectedPubId(pubs[0].id)
 							}}
 							placeholder="Search for a pub to test..."
 						/>
@@ -517,5 +513,5 @@ export const InputSelector = (props: {
 				</TabsContent>
 			</Tabs>
 		</div>
-	);
-};
+	)
+}

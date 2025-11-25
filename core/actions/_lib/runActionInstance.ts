@@ -1,8 +1,3 @@
-import type { ZodError } from "zod";
-
-import { captureException } from "@sentry/nextjs";
-import { sql } from "kysely";
-
 import type {
 	ActionInstancesId,
 	ActionRunsId,
@@ -10,50 +5,55 @@ import type {
 	PubsId,
 	StagesId,
 	UsersId,
-} from "db/public";
-import type { BaseActionInstanceConfig, Json } from "db/types";
-import type { Prettify, XOR } from "utils/types";
-import { ActionRunStatus, Event } from "db/public";
-import { logger } from "logger";
+} from "db/public"
+import type { BaseActionInstanceConfig, Json } from "db/types"
+import type { Prettify, XOR } from "utils/types"
+import type { ZodError } from "zod"
+import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions"
+import type { run as logRun } from "../log/run"
+import type { ActionSuccess } from "../types"
 
-import type { run as logRun } from "../log/run";
-import type { ActionSuccess } from "../types";
-import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
-import { db } from "~/kysely/database";
-import { env } from "~/lib/env/env";
-import { hydratePubValues } from "~/lib/fields/utils";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { ApiError, getPubsWithRelatedValues } from "~/lib/server";
-import { getActionConfigDefaults } from "~/lib/server/actions";
-import { MAX_STACK_DEPTH } from "~/lib/server/automations";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { getCommunity } from "~/lib/server/community";
-import { isClientExceptionOptions } from "~/lib/serverActions";
-import { getActionByName } from "../api";
-import { ActionConfigBuilder } from "./ActionConfigBuilder";
-import { getActionRunByName } from "./getRuns";
-import { createPubProxy } from "./pubProxy";
-import { scheduleActionInstances } from "./scheduleActionInstance";
+import { captureException } from "@sentry/nextjs"
+import { sql } from "kysely"
+
+import { ActionRunStatus, Event } from "db/public"
+import { logger } from "logger"
+
+import { db } from "~/kysely/database"
+import { env } from "~/lib/env/env"
+import { hydratePubValues } from "~/lib/fields/utils"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { ApiError, getPubsWithRelatedValues } from "~/lib/server"
+import { getActionConfigDefaults } from "~/lib/server/actions"
+import { MAX_STACK_DEPTH } from "~/lib/server/automations"
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
+import { getCommunity } from "~/lib/server/community"
+import { isClientExceptionOptions } from "~/lib/serverActions"
+import { getActionByName } from "../api"
+import { ActionConfigBuilder } from "./ActionConfigBuilder"
+import { getActionRunByName } from "./getRuns"
+import { createPubProxy } from "./pubProxy"
+import { scheduleActionInstances } from "./scheduleActionInstance"
 
 export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions | ActionSuccess) & {
-	stack: ActionRunsId[];
-};
+	stack: ActionRunsId[]
+}
 
 export type RunActionInstanceArgs = Prettify<
 	{
-		communityId: CommunitiesId;
-		actionInstanceId: ActionInstancesId;
+		communityId: CommunitiesId
+		actionInstanceId: ActionInstancesId
 		/**
 		 * extra params passed to the action instance
 		 * for now these are the manual arguments when running the action
 		 * or the config for an automation
 		 */
-		actionInstanceArgs: Record<string, unknown> | null;
-		stack: ActionRunsId[];
-		scheduledActionRunId?: ActionRunsId;
+		actionInstanceArgs: Record<string, unknown> | null
+		stack: ActionRunsId[]
+		scheduledActionRunId?: ActionRunsId
 	} & XOR<{ event: Event }, { userId: UsersId }> &
 		XOR<{ pubId: PubsId }, { json: Json }>
->;
+>
 
 const getActionInstance = (actionInstanceId: ActionInstancesId, trx = db) =>
 	trx
@@ -68,19 +68,19 @@ const getActionInstance = (actionInstanceId: ActionInstancesId, trx = db) =>
 			"action",
 			"name",
 		])
-		.executeTakeFirst();
+		.executeTakeFirst()
 
 const _runActionInstance = async (
 	args: RunActionInstanceArgs & {
-		actionInstance: Exclude<Awaited<ReturnType<typeof getActionInstance>>, undefined>;
-		actionRunId: ActionRunsId;
+		actionInstance: Exclude<Awaited<ReturnType<typeof getActionInstance>>, undefined>
+		actionRunId: ActionRunsId
 	}
 ): Promise<ActionInstanceRunResult> => {
-	const isActionUserInitiated = "userId" in args;
+	const isActionUserInitiated = "userId" in args
 
-	const stack = [...args.stack, args.actionRunId];
+	const stack = [...args.stack, args.actionRunId]
 
-	const action = getActionByName(args.actionInstance.action);
+	const action = getActionByName(args.actionInstance.action)
 	const [actionRun, actionDefaults, pub, community] = await Promise.all([
 		getActionRunByName(args.actionInstance.action),
 		getActionConfigDefaults(args.communityId, args.actionInstance.action).executeTakeFirst(),
@@ -99,57 +99,57 @@ const _runActionInstance = async (
 					}
 				),
 		getCommunity(args.communityId),
-	]);
+	])
 
 	if (!community) {
 		return {
 			error: "Community not found",
 			stack,
-		};
+		}
 	}
 
 	if (!args.json && !pub) {
 		return {
 			error: "No input found",
 			stack,
-		};
+		}
 	}
 
 	if (!actionRun || !action) {
 		return {
 			error: "Action not found",
 			stack,
-		};
+		}
 	}
 
 	const actionConfigBuilder = new ActionConfigBuilder(args.actionInstance.action)
 		.withConfig(args.actionInstance.config as Record<string, any>)
 		.withOverrides(args.actionInstanceArgs as Record<string, any>)
 		.withDefaults(actionDefaults?.config as Record<string, any>)
-		.validate();
+		.validate()
 
-	let inputPubInput = pub
+	const inputPubInput = pub
 		? {
 				...pub,
 				values: hydratePubValues(pub.values),
 			}
-		: null;
+		: null
 
-	let config = null;
-	const mergedConfig = actionConfigBuilder.getMergedConfig();
+	let config = null
+	const mergedConfig = actionConfigBuilder.getMergedConfig()
 	const actionForInterpolation = {
 		...args.actionInstance,
 		config: mergedConfig,
-	};
+	}
 	if (inputPubInput) {
 		const thing = {
 			pub: createPubProxy(inputPubInput, community?.slug),
 			action: actionForInterpolation,
-		};
+		}
 
-		const interpolated = await actionConfigBuilder.interpolate(thing);
+		const interpolated = await actionConfigBuilder.interpolate(thing)
 
-		const result = interpolated.validate().getResult();
+		const result = interpolated.validate().getResult()
 
 		if (!result.success) {
 			logger.error("Invalid action configuration", {
@@ -157,7 +157,7 @@ const _runActionInstance = async (
 				error: result.error.message,
 				code: result.error.code,
 				cause: result.error.zodError,
-			});
+			})
 
 			return {
 				title: "Invalid action configuration",
@@ -165,14 +165,14 @@ const _runActionInstance = async (
 				cause: result.error.zodError as ZodError<any>,
 				issues: result.error.zodError?.issues,
 				stack,
-			};
+			}
 		}
 
-		config = result.config;
+		config = result.config
 	} else {
-		const thing = { json: args.json, action: actionForInterpolation };
+		const thing = { json: args.json, action: actionForInterpolation }
 
-		const result = (await actionConfigBuilder.interpolate(thing)).getResult();
+		const result = (await actionConfigBuilder.interpolate(thing)).getResult()
 		if (!result.success) {
 			return {
 				title: "Invalid action configuration",
@@ -180,16 +180,16 @@ const _runActionInstance = async (
 				cause: result.error.zodError ?? result.error.cause,
 				issues: result.error.zodError?.issues,
 				stack,
-			};
+			}
 		}
-		config = result.config;
+		config = result.config
 	}
 
 	const lastModifiedBy = createLastModifiedBy({
 		actionRunId: args.actionRunId,
-	});
+	})
 
-	const jsonOrPubId = args.pubId ? { pubId: args.pubId } : { json: args.json! };
+	const jsonOrPubId = args.pubId ? { pubId: args.pubId } : { json: args.json! }
 	try {
 		// just hard cast it to one option so we at least have some typesafety
 		const result = await (actionRun as typeof logRun)({
@@ -204,7 +204,7 @@ const _runActionInstance = async (
 			actionRunId: args.actionRunId,
 			userId: isActionUserInitiated ? args.userId : undefined,
 			actionInstance: args.actionInstance,
-		});
+		})
 
 		if (isClientExceptionOptions(result)) {
 			await scheduleActionInstances({
@@ -213,8 +213,8 @@ const _runActionInstance = async (
 				stack,
 				sourceActionInstanceId: args.actionInstance.id,
 				...jsonOrPubId,
-			});
-			return { ...result, stack };
+			})
+			return { ...result, stack }
 		}
 
 		await scheduleActionInstances({
@@ -223,12 +223,12 @@ const _runActionInstance = async (
 			stack,
 			sourceActionInstanceId: args.actionInstance.id,
 			...jsonOrPubId,
-		});
+		})
 
-		return { ...result, stack };
+		return { ...result, stack }
 	} catch (error) {
-		captureException(error);
-		logger.error(error);
+		captureException(error)
+		logger.error(error)
 
 		await scheduleActionInstances({
 			stageId: args.actionInstance.stageId,
@@ -236,43 +236,43 @@ const _runActionInstance = async (
 			stack,
 			sourceActionInstanceId: args.actionInstance.id,
 			...jsonOrPubId,
-		});
+		})
 
 		return {
 			title: "Failed to run action",
 			error: error.message,
 			stack,
-		};
+		}
 	}
-};
+}
 
 export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 	if (args.stack.length > MAX_STACK_DEPTH) {
 		throw new Error(
 			`Action instance stack depth of ${args.stack.length} exceeds the maximum allowed depth of ${MAX_STACK_DEPTH}`
-		);
+		)
 	}
-	const actionInstance = await getActionInstance(args.actionInstanceId);
+	const actionInstance = await getActionInstance(args.actionInstanceId)
 
 	if (actionInstance === undefined) {
 		return {
 			error: "Action instance not found",
 			stack: args.stack,
-		};
+		}
 	}
 
 	if (env.FLAGS?.get("disabled-actions").includes(actionInstance.action)) {
-		return { ...ApiError.FEATURE_DISABLED, stack: args.stack };
+		return { ...ApiError.FEATURE_DISABLED, stack: args.stack }
 	}
 
 	if (!actionInstance.action) {
 		return {
 			error: "Action not found",
 			stack: args.stack,
-		};
+		}
 	}
 
-	const isActionUserInitiated = "userId" in args;
+	const isActionUserInitiated = "userId" in args
 
 	// we need to first create the action run,
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
@@ -310,7 +310,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 					event: "userId" in args ? undefined : args.event,
 				})
 			)
-	).execute();
+	).execute()
 
 	if (actionRuns.length > 1) {
 		const errorMessage: ActionInstanceRunResult = {
@@ -318,7 +318,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 			error: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
 			cause: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
 			stack: args.stack,
-		};
+		}
 
 		await autoRevalidate(
 			trx
@@ -332,20 +332,20 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 					"in",
 					actionRuns.map((ar) => ar.id)
 				)
-		).execute();
+		).execute()
 
 		throw new Error(
 			`Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`
-		);
+		)
 	}
 
-	const actionRun = actionRuns[0];
+	const actionRun = actionRuns[0]
 
-	const result = await _runActionInstance({ ...args, actionInstance, actionRunId: actionRun.id });
+	const result = await _runActionInstance({ ...args, actionInstance, actionRunId: actionRun.id })
 
 	const status = isClientExceptionOptions(result)
 		? ActionRunStatus.failure
-		: ActionRunStatus.success;
+		: ActionRunStatus.success
 
 	logger[status === ActionRunStatus.failure ? "error" : "info"]({
 		msg: "Action run finished",
@@ -353,7 +353,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 		actionInstanceId: args.actionInstanceId,
 		status,
 		result,
-	});
+	})
 
 	// update the action run with the result
 	await autoRevalidate(
@@ -366,9 +366,9 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 			new Error(
 				`Failed to update action run ${actionRun.id} for pub ${args.pubId} and action instance ${args.actionInstanceId}`
 			)
-	);
+	)
 
-	return result;
+	return result
 }
 
 export const runInstancesForEvent = async (
@@ -389,7 +389,7 @@ export const runInstancesForEvent = async (
 		])
 		.where("automations.event", "=", event)
 		.where("action_instances.stageId", "=", stageId)
-		.execute();
+		.execute()
 
 	const results = await Promise.all(
 		instances.map(async (instance) => {
@@ -407,9 +407,9 @@ export const runInstancesForEvent = async (
 					},
 					trx
 				),
-			};
+			}
 		})
-	);
+	)
 
-	return results;
-};
+	return results
+}

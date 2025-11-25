@@ -1,4 +1,4 @@
-import { LogoWithText } from "../components/Logo";
+import { LogoWithText } from "../components/Logo"
 
 export default async function UserLayout({ children }: { children: React.ReactNode }) {
 	return (
@@ -6,5 +6,5 @@ export default async function UserLayout({ children }: { children: React.ReactNo
 			<LogoWithText />
 			<div className="container mx-auto">{children}</div>
 		</div>
-	);
+	)
 }

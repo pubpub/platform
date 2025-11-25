@@ -1,8 +1,8 @@
-import type { NodeSpec } from "prosemirror-model";
+import type { NodeSpec } from "prosemirror-model"
 
 export default {
 	content: "block+",
 	attrs: {
 		meta: { default: {} },
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec

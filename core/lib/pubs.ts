@@ -1,31 +1,31 @@
-import type { MaybePubOptions, ProcessedPub, ProcessedPubWithForm } from "contracts";
-import type { PubFieldsId } from "db/public";
-import { ElementType } from "db/public";
+import type { MaybePubOptions, ProcessedPub, ProcessedPubWithForm } from "contracts"
+import type { PubFieldsId } from "db/public"
+import type { Form } from "./server/form"
 
-import type { Form } from "./server/form";
+import { ElementType } from "db/public"
 
 export type PubTitleProps = {
-	title?: string | null;
-	createdAt: Date;
+	title?: string | null
+	createdAt: Date
 	values?:
 		| { field: { slug: string }; value: unknown }[]
 		| Record<string, unknown>
-		| { fieldSlug: string; value: unknown }[];
+		| { fieldSlug: string; value: unknown }[]
 } & {
-	pubType: { name: string };
-};
+	pubType: { name: string }
+}
 
 export const getPubTitle = (pub: PubTitleProps): string => {
-	const pubTitle = pub.title;
+	const pubTitle = pub.title
 
 	if (pubTitle) {
-		return pubTitle;
+		return pubTitle
 	}
 
-	const fallbackTitle = `Untitled ${pub.pubType.name} - ${new Date(pub.createdAt).toDateString()}`;
+	const fallbackTitle = `Untitled ${pub.pubType.name} - ${new Date(pub.createdAt).toDateString()}`
 
 	if (!pub.values) {
-		return fallbackTitle;
+		return fallbackTitle
 	}
 
 	// backup logic for when title is not defined on the pubtype
@@ -34,48 +34,48 @@ export const getPubTitle = (pub: PubTitleProps): string => {
 			(Object.entries(pub.values).find(([key]) => key.includes("title"))?.[1] as
 				| string
 				| undefined) ?? fallbackTitle
-		);
+		)
 	}
 
 	const title = pub.values.find((value) => {
 		if ("field" in value) {
-			return value.field.slug.includes("title") && value.value;
+			return value.field.slug.includes("title") && value.value
 		}
-		return value.fieldSlug.includes("title") && value.value;
-	})?.value as string | undefined;
+		return value.fieldSlug.includes("title") && value.value
+	})?.value as string | undefined
 
-	return title ?? fallbackTitle;
-};
+	return title ?? fallbackTitle
+}
 
-type InputPub = ProcessedPub<{ withStage: true; withPubType: true }>;
+type InputPub = ProcessedPub<{ withStage: true; withPubType: true }>
 
 export const getTitleField = <
 	T extends ProcessedPubWithForm<{
-		withRelatedPubs: true;
-		withStage: true;
-		withPubType: true;
-		withMembers: true;
+		withRelatedPubs: true
+		withStage: true
+		withPubType: true
+		withMembers: true
 	}>,
 >(
 	pub: T
-): T["pubType"]["fields"][number] | undefined => pub.pubType.fields.find((field) => field.isTitle);
+): T["pubType"]["fields"][number] | undefined => pub.pubType.fields.find((field) => field.isTitle)
 
 export const valuesWithoutTitle = <
 	T extends ProcessedPubWithForm<{
-		withRelatedPubs: true;
-		withStage: true;
-		withPubType: true;
-		withMembers: true;
+		withRelatedPubs: true
+		withStage: true
+		withPubType: true
+		withMembers: true
 	}>,
 >(
 	pub: T
 ): T["values"] => {
-	const titleField = getTitleField(pub);
+	const titleField = getTitleField(pub)
 	if (!titleField) {
-		return pub.values;
+		return pub.values
 	}
-	return pub.values.filter((value) => value.fieldId !== titleField?.id);
-};
+	return pub.values.filter((value) => value.fieldId !== titleField?.id)
+}
 
 /**
  * Merges a pub with a form so that each pub value also has information from its
@@ -87,37 +87,37 @@ export const getPubByForm = <T extends MaybePubOptions>({
 	form,
 	withExtraPubValues,
 }: {
-	pub: ProcessedPub<T>;
-	form: Form;
-	withExtraPubValues: boolean;
+	pub: ProcessedPub<T>
+	form: Form
+	withExtraPubValues: boolean
 }): ProcessedPubWithForm<T> => {
-	const { values } = pub;
+	const { values } = pub
 
 	if (!values.length) {
-		return pub;
+		return pub
 	}
 
 	const valuesByFieldSlug = values.reduce(
 		(acc, value) => {
 			if (!acc[value.fieldSlug]) {
-				acc[value.fieldSlug] = [value] as ProcessedPub<T>["values"];
+				acc[value.fieldSlug] = [value] as ProcessedPub<T>["values"]
 			} else {
-				acc[value.fieldSlug].push(value);
+				acc[value.fieldSlug].push(value)
 			}
-			return acc;
+			return acc
 		},
 		{} as Record<string, ProcessedPub<T>["values"]>
-	);
+	)
 
-	const pubFieldFormElements = form.elements.filter((fe) => fe.type === ElementType.pubfield);
-	const valuesWithFormElements = [] as ProcessedPubWithForm<T>["values"];
+	const pubFieldFormElements = form.elements.filter((fe) => fe.type === ElementType.pubfield)
+	const valuesWithFormElements = [] as ProcessedPubWithForm<T>["values"]
 	for (const formElement of pubFieldFormElements) {
-		const values = valuesByFieldSlug[formElement.slug];
+		const values = valuesByFieldSlug[formElement.slug]
 		const formInfo = {
 			formElementId: formElement.id,
 			formElementLabel: formElement.label,
 			formElementConfig: formElement.config,
-		};
+		}
 		if (!values) {
 			valuesWithFormElements.push({
 				id: null,
@@ -131,29 +131,29 @@ export const getPubByForm = <T extends MaybePubOptions>({
 				relatedPubId: null,
 				rank: null,
 				...formInfo,
-			});
+			})
 		} else {
 			for (const value of values) {
-				valuesWithFormElements.push({ ...value, ...formInfo });
+				valuesWithFormElements.push({ ...value, ...formInfo })
 			}
 		}
 	}
 
 	if (!withExtraPubValues) {
-		return { ...pub, values: valuesWithFormElements };
+		return { ...pub, values: valuesWithFormElements }
 	}
 
-	const formElementSlugs = new Set(pubFieldFormElements.map((fe) => fe.slug));
-	const valueFieldSlugs = new Set(Object.keys(valuesByFieldSlug));
-	const slugsNotInForm = Array.from(valueFieldSlugs.difference(formElementSlugs));
-	const valuesNotInForm = [] as ProcessedPubWithForm<T>["values"];
+	const formElementSlugs = new Set(pubFieldFormElements.map((fe) => fe.slug))
+	const valueFieldSlugs = new Set(Object.keys(valuesByFieldSlug))
+	const slugsNotInForm = Array.from(valueFieldSlugs.difference(formElementSlugs))
+	const valuesNotInForm = [] as ProcessedPubWithForm<T>["values"]
 	for (const slug of slugsNotInForm) {
 		for (const value of valuesByFieldSlug[slug]) {
-			valuesNotInForm.push(value);
+			valuesNotInForm.push(value)
 		}
 	}
 
-	const newValues = [...valuesWithFormElements, ...valuesNotInForm];
+	const newValues = [...valuesWithFormElements, ...valuesNotInForm]
 
-	return { ...pub, values: newValues };
-};
+	return { ...pub, values: newValues }
+}

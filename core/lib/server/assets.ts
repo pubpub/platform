@@ -1,4 +1,5 @@
-import type { InputTypeForCoreSchemaType } from "schemas";
+import type { CoreSchemaType, PubsId, UsersId } from "db/public"
+import type { InputTypeForCoreSchemaType } from "schemas"
 
 import {
 	CopyObjectCommand,
@@ -6,22 +7,21 @@ import {
 	PutObjectCommand,
 	S3Client,
 	waitUntilObjectExists,
-} from "@aws-sdk/client-s3";
-import { Upload } from "@aws-sdk/lib-storage";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { sql } from "kysely";
+} from "@aws-sdk/client-s3"
+import { Upload } from "@aws-sdk/lib-storage"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { sql } from "kysely"
 
-import type { CoreSchemaType, PubsId, UsersId } from "db/public";
-import { logger } from "logger";
+import { logger } from "logger"
 
-import { db } from "~/kysely/database";
-import { env } from "../env/env";
-import { createLastModifiedBy } from "../lastModifiedBy";
-import { getCommunitySlug } from "./cache/getCommunitySlug";
+import { db } from "~/kysely/database"
+import { env } from "../env/env"
+import { createLastModifiedBy } from "../lastModifiedBy"
+import { getCommunitySlug } from "./cache/getCommunitySlug"
 
-let s3Client: S3Client;
+let s3Client: S3Client
 
-export type FileMetadata = InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>[number];
+export type FileMetadata = InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>[number]
 
 /**
  * Useful for migrating data from other S3 buckets to the new one.
@@ -31,21 +31,21 @@ export const generateMetadataFromS3 = async (
 	communitySlug: string
 ): Promise<FileMetadata> => {
 	// fetch headers from s3
-	const encodedUrl = encodeURI(url);
+	const encodedUrl = encodeURI(url)
 
-	const response = await fetch(encodedUrl, { method: "HEAD" });
+	const response = await fetch(encodedUrl, { method: "HEAD" })
 
 	if (!response.ok) {
-		throw new Error(`failed to fetch metadata from s3: ${response.statusText}`);
+		throw new Error(`failed to fetch metadata from s3: ${response.statusText}`)
 	}
-	const baseId = `dashboard-${communitySlug}:file`;
+	const baseId = `dashboard-${communitySlug}:file`
 
-	const fileName = encodedUrl.split("/").pop() || "";
-	const fileSize = parseInt(response.headers.get("content-length") || "0", 10);
-	const fileType = response.headers.get("content-type") || "application/octet-stream";
+	const fileName = encodedUrl.split("/").pop() || ""
+	const fileSize = parseInt(response.headers.get("content-length") || "0", 10)
+	const fileType = response.headers.get("content-type") || "application/octet-stream"
 
 	// generate a deterministic id using the same format as uppy
-	const id = `${baseId}-${fileName.replace(/\./g, "-")}-${fileType.replace("/", "-")}-${fileSize}-${Date.now()}`;
+	const id = `${baseId}-${fileName.replace(/\./g, "-")}-${fileType.replace("/", "-")}-${fileSize}-${Date.now()}`
 
 	return {
 		id,
@@ -59,13 +59,13 @@ export const generateMetadataFromS3 = async (
 			type: fileType,
 		},
 		fileUploadUrl: encodedUrl,
-	};
-};
+	}
+}
 
 export const getS3Client = () => {
-	const region = env.ASSETS_REGION;
-	const key = env.ASSETS_UPLOAD_KEY;
-	const secret = env.ASSETS_UPLOAD_SECRET_KEY;
+	const region = env.ASSETS_REGION
+	const key = env.ASSETS_UPLOAD_KEY
+	const secret = env.ASSETS_UPLOAD_SECRET_KEY
 
 	logger.info({
 		msg: "Initializing S3 client",
@@ -73,9 +73,9 @@ export const getS3Client = () => {
 		region,
 		key,
 		secret,
-	});
+	})
 	if (s3Client) {
-		return s3Client;
+		return s3Client
 	}
 
 	s3Client = new S3Client({
@@ -86,23 +86,23 @@ export const getS3Client = () => {
 			secretAccessKey: secret,
 		},
 		forcePathStyle: !!env.ASSETS_STORAGE_ENDPOINT, // Required for MinIO
-	});
+	})
 
 	logger.info({
 		msg: "S3 client initialized",
-	});
+	})
 
-	return s3Client;
-};
+	return s3Client
+}
 
 // we create a separate client for generating signed URLs that uses the public endpoint
 // this is bc, when using `minio` locally, the server
 // uses `minio:9000`, but for the client this does not make sense
 const getPublicS3Client = () => {
-	const region = env.ASSETS_REGION;
-	const key = env.ASSETS_UPLOAD_KEY;
-	const secret = env.ASSETS_UPLOAD_SECRET_KEY;
-	const publicEndpoint = env.ASSETS_PUBLIC_ENDPOINT || env.ASSETS_STORAGE_ENDPOINT;
+	const region = env.ASSETS_REGION
+	const key = env.ASSETS_UPLOAD_KEY
+	const secret = env.ASSETS_UPLOAD_SECRET_KEY
+	const publicEndpoint = env.ASSETS_PUBLIC_ENDPOINT || env.ASSETS_STORAGE_ENDPOINT
 
 	return new S3Client({
 		endpoint: publicEndpoint,
@@ -112,32 +112,32 @@ const getPublicS3Client = () => {
 			secretAccessKey: secret,
 		},
 		forcePathStyle: !!publicEndpoint, // Required for MinIO
-	});
-};
+	})
+}
 
 export const generateSignedAssetUploadUrl = async (
 	userId: UsersId,
 	fileName: string,
-	pubId?: PubsId
+	_pubId?: PubsId
 ) => {
-	const communitySlug = await getCommunitySlug();
-	const key = `temporary/${communitySlug}/${userId}/${crypto.randomUUID()}/${fileName}`;
+	const communitySlug = await getCommunitySlug()
+	const key = `temporary/${communitySlug}/${userId}/${crypto.randomUUID()}/${fileName}`
 
-	const client = getPublicS3Client(); // use public client for signed URLs
+	const client = getPublicS3Client() // use public client for signed URLs
 
-	const bucket = env.ASSETS_BUCKET_NAME;
+	const bucket = env.ASSETS_BUCKET_NAME
 	const command = new PutObjectCommand({
 		Bucket: bucket,
 		Key: key,
-	});
+	})
 
-	return await getSignedUrl(client, command, { expiresIn: 3600 });
-};
+	return await getSignedUrl(client, command, { expiresIn: 3600 })
+}
 
 export class InvalidFileUrlError extends Error {
 	constructor(message: string) {
-		super(message);
-		this.name = "InvalidFileUrlError";
+		super(message)
+		this.name = "InvalidFileUrlError"
 	}
 }
 
@@ -145,26 +145,26 @@ export class InvalidFileUrlError extends Error {
  * Be very careful with this, always confirm whether the user is allowed to access this file
  */
 export const deleteFileFromS3 = async (fileUrl: string) => {
-	const client = getPublicS3Client();
-	const bucket = env.ASSETS_BUCKET_NAME;
+	const client = getPublicS3Client()
+	const bucket = env.ASSETS_BUCKET_NAME
 
-	const fileKey = fileUrl.split(new RegExp(`^.+${env.ASSETS_BUCKET_NAME}/`))[1];
+	const fileKey = fileUrl.split(new RegExp(`^.+${env.ASSETS_BUCKET_NAME}/`))[1]
 
 	if (!fileKey) {
-		logger.error({ msg: "Unable to parse URL of uploaded file", fileUrl });
-		throw new InvalidFileUrlError("Unable to parse URL of uploaded file");
+		logger.error({ msg: "Unable to parse URL of uploaded file", fileUrl })
+		throw new InvalidFileUrlError("Unable to parse URL of uploaded file")
 	}
 
 	const command = new DeleteObjectCommand({
 		Bucket: bucket,
 		Key: fileKey,
-	});
-	logger.info({ msg: "Deleting file from S3", fileKey });
-	const res = await client.send(command);
-	logger.info({ msg: "File deleted from S3", fileKey });
+	})
+	logger.info({ msg: "Deleting file from S3", fileKey })
+	const res = await client.send(command)
+	logger.info({ msg: "File deleted from S3", fileKey })
 
-	return res;
-};
+	return res
+}
 
 export const makeFileUploadPermanent = async (
 	{
@@ -173,53 +173,53 @@ export const makeFileUploadPermanent = async (
 		fileName,
 		userId,
 	}: {
-		pubId: PubsId;
-		tempUrl: string;
-		fileName: string;
-		userId: UsersId;
+		pubId: PubsId
+		tempUrl: string
+		fileName: string
+		userId: UsersId
 	},
 	trx = db
 ) => {
-	const matches = tempUrl.match(`(^.+${env.ASSETS_BUCKET_NAME}/)(temporary/.+)`);
-	const prefix = matches?.[1];
-	const source = matches?.[2];
+	const matches = tempUrl.match(`(^.+${env.ASSETS_BUCKET_NAME}/)(temporary/.+)`)
+	const prefix = matches?.[1]
+	const source = matches?.[2]
 	if (!source || !fileName || !prefix) {
-		logger.error({ msg: "Unable to parse URL of uploaded file", pubId, tempUrl });
-		throw new Error("Unable to parse URL of uploaded file");
+		logger.error({ msg: "Unable to parse URL of uploaded file", pubId, tempUrl })
+		throw new Error("Unable to parse URL of uploaded file")
 	}
-	const newKey = `${pubId}/${fileName}`;
+	const newKey = `${pubId}/${fileName}`
 
 	logger.info({
 		msg: "Retrieving S3 clients for makeFileUploadPermanent",
 		source,
 		newKey,
-	});
+	})
 
-	const s3Client = getS3Client();
+	const s3Client = getS3Client()
 
 	logger.info({
 		msg: "S3 client retrieved for makeFileUploadPermanent. Creating copy command",
 		source,
 		newKey,
-	});
+	})
 
 	const copyCommand = new CopyObjectCommand({
 		CopySource: `${env.ASSETS_BUCKET_NAME}/${source}`,
 		Bucket: env.ASSETS_BUCKET_NAME,
 		Key: newKey,
-	});
+	})
 
 	logger.info({
 		msg: "Sending copy command",
 		copyCommand,
-	});
+	})
 
-	await s3Client.send(copyCommand);
+	await s3Client.send(copyCommand)
 
 	logger.info({
 		msg: "Waiting for object to exist",
 		newKey,
-	});
+	})
 
 	await waitUntilObjectExists(
 		{
@@ -228,8 +228,8 @@ export const makeFileUploadPermanent = async (
 			minDelay: 1,
 		},
 		{ Bucket: env.ASSETS_BUCKET_NAME, Key: newKey }
-	);
-	logger.debug({ msg: "successfully copied temp file to permanent directory", newKey, tempUrl });
+	)
+	logger.debug({ msg: "successfully copied temp file to permanent directory", newKey, tempUrl })
 	await trx
 		.updateTable("pub_values")
 		.where("pub_values.pubId", "=", pubId)
@@ -243,13 +243,13 @@ export const makeFileUploadPermanent = async (
 			]),
 			lastModifiedBy: createLastModifiedBy({ userId }),
 		}))
-		.execute();
+		.execute()
 
 	logger.info({
 		msg: "File uploaded permanently",
 		newKey,
-	});
-};
+	})
+}
 
 /**
  * Uploads a file to the S3 bucket using the S3 client directly
@@ -269,15 +269,15 @@ export const uploadFileToS3 = async (
 		partSize,
 		progressCallback,
 	}: {
-		contentType: string;
-		queueSize?: number;
-		partSize?: number;
-		progressCallback?: (progress: any) => void;
+		contentType: string
+		queueSize?: number
+		partSize?: number
+		progressCallback?: (progress: any) => void
 	}
 ): Promise<string> => {
-	const client = getS3Client();
-	const bucket = env.ASSETS_BUCKET_NAME;
-	const key = `${id}/${fileName}`;
+	const client = getS3Client()
+	const bucket = env.ASSETS_BUCKET_NAME
+	const key = `${id}/${fileName}`
 
 	const parallelUploads3 = new Upload({
 		client,
@@ -290,17 +290,17 @@ export const uploadFileToS3 = async (
 		queueSize: queueSize ?? 3, // optional concurrency configuration
 		partSize: partSize ?? 1024 * 1024 * 5, // optional size of each part, in bytes, at least 5MB
 		leavePartsOnError: false, // optional manually handle dropped parts
-	});
+	})
 
 	parallelUploads3.on(
 		"httpUploadProgress",
 		progressCallback ??
 			((progress) => {
-				logger.debug(progress);
+				logger.debug(progress)
 			})
-	);
+	)
 
-	const result = await parallelUploads3.done();
+	const result = await parallelUploads3.done()
 
-	return result.Location!;
-};
+	return result.Location!
+}
