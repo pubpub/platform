@@ -1,13 +1,13 @@
-import { redirect } from "next/navigation";
-import { getPathname } from "@nimpl/getters/get-pathname";
+import type { PubsId } from "db/public"
+import type { XOR } from "utils/types"
+import type { NoticeParams } from "~/app/components/Notice"
+import type { LoginRedirectOpts } from "../../links"
 
-import type { PubsId } from "db/public";
-import type { XOR } from "utils/types";
+import { redirect } from "next/navigation"
+import { getPathname } from "@nimpl/getters/get-pathname"
 
-import type { LoginRedirectOpts } from "../../links";
-import type { NoticeParams } from "~/app/components/Notice";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCanViewStagePage } from "~/lib/authorization/capabilities";
+import { getLoginData } from "~/lib/authentication/loginData"
+import { userCanViewStagePage } from "~/lib/authorization/capabilities"
 import {
 	constructRedirectToPubCreatePage,
 	constructRedirectToPubDetailPage,
@@ -15,63 +15,63 @@ import {
 	constructVerifyLink,
 	defaultLoginRedirectError,
 	maybeWithSearchParams,
-} from "../../links";
-import { getCommunitySlug } from "../cache/getCommunitySlug";
-import { findCommunityBySlug } from "../community";
+} from "../../links"
+import { getCommunitySlug } from "../cache/getCommunitySlug"
+import { findCommunityBySlug } from "../community"
 
 export const constructLoginLink = (opts?: LoginRedirectOpts) => {
-	const searchParams = new URLSearchParams();
+	const searchParams = new URLSearchParams()
 
 	if (opts?.loginNotice !== false) {
-		const notice = opts?.loginNotice ?? defaultLoginRedirectError;
-		searchParams.set(notice.type, notice.title);
+		const notice = opts?.loginNotice ?? defaultLoginRedirectError
+		searchParams.set(notice.type, notice.title)
 		if (notice.body) {
-			searchParams.set("body", notice.body);
+			searchParams.set("body", notice.body)
 		}
 	}
 
-	const redirectTo = opts?.redirectTo ?? getPathname();
+	const redirectTo = opts?.redirectTo ?? getPathname()
 	if (redirectTo) {
-		searchParams.set("redirectTo", redirectTo);
+		searchParams.set("redirectTo", redirectTo)
 	}
 
-	const basePath = `/login`;
-	return maybeWithSearchParams(basePath, searchParams);
-};
+	const basePath = `/login`
+	return maybeWithSearchParams(basePath, searchParams)
+}
 
 /**
  * Redirect the user to the login page, with a notice to display.
  */
 export function redirectToLogin(opts?: LoginRedirectOpts): never {
-	const basePath = constructLoginLink(opts);
-	redirect(basePath);
+	const basePath = constructLoginLink(opts)
+	redirect(basePath)
 }
 
 export const constructCommunitySignupLink = async (opts: {
-	redirectTo: string;
-	notice?: NoticeParams;
-	inviteToken?: string;
+	redirectTo: string
+	notice?: NoticeParams
+	inviteToken?: string
 }) => {
-	const communitySlug = await getCommunitySlug();
+	const communitySlug = await getCommunitySlug()
 
-	const searchParams = new URLSearchParams();
+	const searchParams = new URLSearchParams()
 
-	searchParams.set("redirectTo", opts.redirectTo);
+	searchParams.set("redirectTo", opts.redirectTo)
 
 	if (opts.notice) {
-		searchParams.set(opts.notice.type, opts.notice.title);
+		searchParams.set(opts.notice.type, opts.notice.title)
 		if (opts.notice.body) {
-			searchParams.set("body", opts.notice.body);
+			searchParams.set("body", opts.notice.body)
 		}
 	}
 
 	if (opts.inviteToken) {
-		searchParams.set("inviteToken", opts.inviteToken);
+		searchParams.set("inviteToken", opts.inviteToken)
 	}
 
-	const basePath = `/c/${communitySlug}/public/signup`;
-	return maybeWithSearchParams(basePath, searchParams);
-};
+	const basePath = `/c/${communitySlug}/public/signup`
+	return maybeWithSearchParams(basePath, searchParams)
+}
 
 /**
  * Redirect the user to the signup page, optionally with a notice.
@@ -80,17 +80,17 @@ export const constructCommunitySignupLink = async (opts: {
  * NOTE: you need to be inside a community to use this
  */
 export async function redirectToCommunitySignup(opts: {
-	redirectTo: string;
-	notice?: NoticeParams;
-	inviteToken?: string;
+	redirectTo: string
+	notice?: NoticeParams
+	inviteToken?: string
 }): Promise<never> {
-	const basePath = await constructCommunitySignupLink(opts);
-	redirect(basePath);
+	const basePath = await constructCommunitySignupLink(opts)
+	redirect(basePath)
 }
 
 export function redirectToVerify(opts: { redirectTo: string }): never {
-	const basePath = constructVerifyLink(opts);
-	redirect(basePath);
+	const basePath = constructVerifyLink(opts)
+	redirect(basePath)
 }
 
 type RedirectToBaseCommunityPageOpts = XOR<
@@ -98,8 +98,8 @@ type RedirectToBaseCommunityPageOpts = XOR<
 	{ searchParams?: Record<string, string> }
 > & {
 	// can manually specify the community slug to redirect the user to a different community
-	communitySlug?: string;
-};
+	communitySlug?: string
+}
 
 export const constructRedirectToBaseCommunityPage = async (
 	opts?: RedirectToBaseCommunityPageOpts
@@ -108,85 +108,85 @@ export const constructRedirectToBaseCommunityPage = async (
 		getLoginData(),
 		// weird ternary bc no-params findCommunityBySlug is likely cached, while findCommunityBySlug(undefined) likely isn't
 		!opts?.communitySlug ? findCommunityBySlug() : findCommunityBySlug(opts?.communitySlug),
-	]);
+	])
 
 	if (!user || !community) {
-		redirectToLogin();
+		redirectToLogin()
 	}
 
 	const isAbleToViewStages = await userCanViewStagePage(
 		user.id,
 		community.id,
 		opts?.communitySlug
-	);
+	)
 
-	const searchParams = new URLSearchParams();
+	const searchParams = new URLSearchParams()
 
 	if (opts?.redirectTo) {
-		searchParams.set("redirectTo", opts.redirectTo);
+		searchParams.set("redirectTo", opts.redirectTo)
 	}
 
 	if (opts?.searchParams) {
 		Object.entries(opts.searchParams).forEach(([key, value]) => {
-			searchParams.set(key, value);
-		});
+			searchParams.set(key, value)
+		})
 	}
 
-	const page = isAbleToViewStages ? "stages" : "pubs";
+	const page = isAbleToViewStages ? "stages" : "pubs"
 
-	const basePath = `/c/${community.slug}/${page}`;
-	return maybeWithSearchParams(basePath, searchParams);
-};
+	const basePath = `/c/${community.slug}/${page}`
+	return maybeWithSearchParams(basePath, searchParams)
+}
 
 export async function redirectToUnauthorized(opts?: { communitySlug: string }): Promise<never> {
-	const communitySlug = opts?.communitySlug ?? (await getCommunitySlug());
+	const communitySlug = opts?.communitySlug ?? (await getCommunitySlug())
 
-	redirect(`/c/${communitySlug}/unauthorized`);
+	redirect(`/c/${communitySlug}/unauthorized`)
 }
 
 export async function redirectToBaseCommunityPage(
 	opts?: RedirectToBaseCommunityPageOpts
 ): Promise<never> {
-	const basePath = await constructRedirectToBaseCommunityPage(opts);
-	redirect(basePath);
+	const basePath = await constructRedirectToBaseCommunityPage(opts)
+	redirect(basePath)
 }
 
 export async function redirectToPubEditPage(opts: {
-	pubId: PubsId;
-	communitySlug?: string;
-	formSlug?: string;
+	pubId: PubsId
+	communitySlug?: string
+	formSlug?: string
 }): Promise<never> {
-	const communitySlug = opts.communitySlug ?? (await getCommunitySlug());
+	const communitySlug = opts.communitySlug ?? (await getCommunitySlug())
 	const basePath = constructRedirectToPubEditPage({
 		...opts,
 		communitySlug,
-	});
-	redirect(basePath);
+	})
+	redirect(basePath)
 }
 
 export async function redirectToPubCreatePage(opts: {
-	communitySlug?: string;
-	formSlug?: string;
-	relatedPubId?: PubsId;
-	relatedFieldSlug?: string;
+	communitySlug?: string
+	formSlug?: string
+	relatedPubId?: PubsId
+	relatedFieldSlug?: string
 }): Promise<never> {
-	const communitySlug = opts.communitySlug ?? (await getCommunitySlug());
+	const communitySlug = opts.communitySlug ?? (await getCommunitySlug())
 	const basePath = constructRedirectToPubCreatePage({
 		...opts,
 		communitySlug,
-	});
-	redirect(basePath);
+	})
+	redirect(basePath)
 }
 
 export async function redirectToPubDetailPage(opts: {
-	pubId: PubsId;
-	communitySlug?: string;
-	formSlug?: string;
+	pubId: PubsId
+	communitySlug?: string
+	formSlug?: string
 }): Promise<never> {
-	const communitySlug = opts.communitySlug ?? (await getCommunitySlug());
+	const communitySlug = opts.communitySlug ?? (await getCommunitySlug())
 	const basePath = constructRedirectToPubDetailPage({
 		...opts,
 		communitySlug,
-	});
-	redirect(basePath);
+	})
+	redirect(basePath)
 }

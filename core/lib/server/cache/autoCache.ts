@@ -1,54 +1,55 @@
-import { cache } from "react";
+import type { autoRevalidate } from "./autoRevalidate"
+import type { AutoCacheOptions, DirectAutoOutput, ExecuteFn, SQB } from "./types"
 
-import { logger } from "logger";
+import { cache } from "react"
 
-import type { autoRevalidate } from "./autoRevalidate";
-import type { AutoCacheOptions, AutoOptions, DirectAutoOutput, ExecuteFn, SQB } from "./types";
-import { env } from "~/lib/env/env";
-import { createCacheTag, createCommunityCacheTags } from "./cacheTags";
-import { getCommunitySlug } from "./getCommunitySlug";
-import { memoize } from "./memoize";
-import { cachedFindTables, directAutoOutput } from "./sharedAuto";
-import { getTablesWithLinkedTables } from "./specialTables";
-import { getTransactionStore, setTransactionStore } from "./transactionStorage";
+import { logger } from "logger"
+
+import { env } from "~/lib/env/env"
+import { createCacheTag, createCommunityCacheTags } from "./cacheTags"
+import { getCommunitySlug } from "./getCommunitySlug"
+import { memoize } from "./memoize"
+import { cachedFindTables, directAutoOutput } from "./sharedAuto"
+import { getTablesWithLinkedTables } from "./specialTables"
+import { getTransactionStore, setTransactionStore } from "./transactionStorage"
 
 const handleTransactionLogicAndDetermineWhetherToSkipCache = (
 	revalidateTags: string[],
 	asOne: string
 ) => {
-	const transactionStore = getTransactionStore();
+	const transactionStore = getTransactionStore()
 
 	if (!transactionStore?.isTransaction) {
 		// we can safely use the cache
-		return false;
+		return false
 	}
 
 	// always do this
 	setTransactionStore({
 		savedTags: revalidateTags,
 		key: asOne,
-	});
+	})
 
 	// now we need to do something complex: if
 	// if we are in a transaction and any of the tags we're saving have been invalidated
 	// or if the key we're using has been used before, skip the cache
-	const transactionKeys = transactionStore.keys;
+	const transactionKeys = transactionStore.keys
 
 	if (!transactionKeys.has(asOne)) {
 		// we can safely use the cache, as this key has not been used before
-		return false;
+		return false
 	}
 
-	const toBeSavedTags = new Set(revalidateTags);
-	const toBeRevalidated = transactionStore.revalidateTags;
+	const toBeSavedTags = new Set(revalidateTags)
+	const toBeRevalidated = transactionStore.revalidateTags
 
 	if (toBeRevalidated.intersection(toBeSavedTags).size > 0) {
 		// bypass cache and execute directly: we are otherwise likely reusing stale data, as an update has been issued
-		return true;
+		return true
 	}
 
-	return false;
-};
+	return false
+}
 
 const executeWithCache = <
 	Q extends SQB<any>,
@@ -59,19 +60,19 @@ const executeWithCache = <
 	options?: AutoCacheOptions
 ) => {
 	const executeFn = cache(async (...args: Parameters<Q[M]>) => {
-		const communitySlug = options?.communitySlug ?? (await getCommunitySlug());
+		const communitySlug = options?.communitySlug ?? (await getCommunitySlug())
 
-		const compiledQuery = qb.compile();
+		const compiledQuery = qb.compile()
 
-		const tables = await cachedFindTables(compiledQuery, "select");
+		const tables = await cachedFindTables(compiledQuery, "select")
 
-		const allTables = getTablesWithLinkedTables(tables);
+		const allTables = getTablesWithLinkedTables(tables)
 
 		const revalidateTags = [
 			...createCommunityCacheTags(allTables, communitySlug),
 			createCacheTag(`community-all_${communitySlug}`),
 			...(options?.additionalRevalidateTags ?? []),
-		];
+		]
 		const additionalCacheKey = [
 			...(compiledQuery.parameters as string[]),
 			...(options?.additionalCacheKey ?? []),
@@ -79,20 +80,20 @@ const executeWithCache = <
 			// very important, this is really then only thing
 			// that uniquely identifies the query
 			compiledQuery.sql,
-		];
-		const asOne = additionalCacheKey.join("|");
+		]
+		const asOne = additionalCacheKey.join("|")
 
 		const shouldSkipCache = handleTransactionLogicAndDetermineWhetherToSkipCache(
 			revalidateTags,
 			asOne
-		);
+		)
 
 		if (shouldSkipCache || options?.skipCacheFn?.()) {
 			if (env.CACHE_LOG) {
-				logger.debug(`AUTOCACHE: Skipping cache for query: ${asOne}`);
+				logger.debug(`AUTOCACHE: Skipping cache for query: ${asOne}`)
 			}
 
-			return qb[method](...args) as ReturnType<Q[M]>;
+			return qb[method](...args) as ReturnType<Q[M]>
 		}
 
 		const cachedExecute = memoize(
@@ -103,19 +104,19 @@ const executeWithCache = <
 				// saves one compile cycle
 				// necessary assertion here due to
 				// https://github.com/microsoft/TypeScript/issues/241
-				return qb[method](...args) as ReturnType<Q[M]>;
+				return qb[method](...args) as ReturnType<Q[M]>
 			},
 			{
 				...options,
 				revalidateTags,
 				additionalCacheKey,
 			}
-		);
+		)
 
-		const result = await cachedExecute(method);
+		const result = await cachedExecute(method)
 
-		return result;
-	});
+		return result
+	})
 
 	// we are reaching the limit of typescript's type inference here
 	// without this cast, the return type of the function
@@ -123,8 +124,8 @@ const executeWithCache = <
 	// possibly an instance of this 10(!) year old issue, as when
 	// i leave out the type in qb[method], you get ()=>any
 	// https://github.com/microsoft/TypeScript/issues/241
-	return executeFn as ExecuteFn<Q, M>;
-};
+	return executeFn as ExecuteFn<Q, M>
+}
 
 /**
  * **✨ autoCache**
@@ -239,5 +240,5 @@ export function autoCache<Q extends SQB<any>>(
 	qb: Q,
 	options?: AutoCacheOptions // this kind of short-circuits typescripts type inference, while it's kind of lying as it doesn't really have anything to do what happens in the function, it's a lot faster
 ): DirectAutoOutput<Q> {
-	return directAutoOutput(qb, executeWithCache, options);
+	return directAutoOutput(qb, executeWithCache, options)
 }

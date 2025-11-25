@@ -1,4 +1,4 @@
-import { Capabilities, MemberRole, MembershipType } from "db/public";
+import { Capabilities, MemberRole, MembershipType } from "db/public"
 
 /**
  * Admins always have all capabilities if editor has them, editor always have all capabilities if contributor has them
@@ -6,7 +6,7 @@ import { Capabilities, MemberRole, MembershipType } from "db/public";
 type RoleTuple =
 	| [MemberRole.admin, MemberRole.editor, MemberRole.contributor]
 	| [MemberRole.admin, MemberRole.editor]
-	| [MemberRole.admin];
+	| [MemberRole.admin]
 
 // canonical definition of capability mappings
 // this is the single source of truth that will be used to generate migrations and sync the database
@@ -299,64 +299,64 @@ export const CAPABILITY_MAPPINGS = {
 		/**
 		 * The target is the membership type that can be invoked by using `userCan`.
 		 */
-		target: MembershipType[];
+		target: MembershipType[]
 		access: Partial<Record<MembershipType, RoleTuple>> & {
 			// it's mandatory to allow community admins to have all capabilities
-			[MembershipType.community]: RoleTuple;
-		};
+			[MembershipType.community]: RoleTuple
+		}
 	}
->;
+>
 
-export type CapabilityMappings = typeof CAPABILITY_MAPPINGS;
+export type CapabilityMappings = typeof CAPABILITY_MAPPINGS
 
 type GetCapabilitesForMembershipType<T extends MembershipType> = {
-	[K in keyof CapabilityMappings]: T extends keyof CapabilityMappings[K] ? K : never;
-}[keyof CapabilityMappings];
+	[K in keyof CapabilityMappings]: T extends keyof CapabilityMappings[K] ? K : never
+}[keyof CapabilityMappings]
 
-export type PubCapabilities = GetCapabilitesForMembershipType<MembershipType.pub>;
-export type StageCapabilities = GetCapabilitesForMembershipType<MembershipType.stage>;
-export type CommunityCapabilities = GetCapabilitesForMembershipType<MembershipType.community>;
+export type PubCapabilities = GetCapabilitesForMembershipType<MembershipType.pub>
+export type StageCapabilities = GetCapabilitesForMembershipType<MembershipType.stage>
+export type CommunityCapabilities = GetCapabilitesForMembershipType<MembershipType.community>
 
 type GetTargetCapabilities<T extends MembershipType> = {
-	[K in keyof CapabilityMappings]: T extends CapabilityMappings[K]["target"][number] ? K : never;
-}[keyof CapabilityMappings];
+	[K in keyof CapabilityMappings]: T extends CapabilityMappings[K]["target"][number] ? K : never
+}[keyof CapabilityMappings]
 
-export type PubTargetCapabilities = GetTargetCapabilities<MembershipType.pub>;
-export type StageTargetCapabilities = GetTargetCapabilities<MembershipType.stage>;
-export type CommunityTargetCapabilities = GetTargetCapabilities<MembershipType.community>;
+export type PubTargetCapabilities = GetTargetCapabilities<MembershipType.pub>
+export type StageTargetCapabilities = GetTargetCapabilities<MembershipType.stage>
+export type CommunityTargetCapabilities = GetTargetCapabilities<MembershipType.community>
 
 export const getTargetCapabilitiesForMembershipType = <T extends MembershipType>(
 	membershipType: T
 ): GetTargetCapabilities<T>[] => {
-	const capabilities: Capabilities[] = [];
+	const capabilities: Capabilities[] = []
 
 	for (const [capability, { target }] of Object.entries(CAPABILITY_MAPPINGS)) {
 		if (target.length === 0 || !target.some((t) => t === membershipType)) {
-			continue;
+			continue
 		}
-		capabilities.push(capability as Capabilities);
+		capabilities.push(capability as Capabilities)
 	}
 
-	return capabilities as GetTargetCapabilities<T>[];
-};
+	return capabilities as GetTargetCapabilities<T>[]
+}
 
-export const pubTargetCapabilities = getTargetCapabilitiesForMembershipType(MembershipType.pub);
-export const stageTargetCapabilities = getTargetCapabilitiesForMembershipType(MembershipType.stage);
+export const pubTargetCapabilities = getTargetCapabilitiesForMembershipType(MembershipType.pub)
+export const stageTargetCapabilities = getTargetCapabilitiesForMembershipType(MembershipType.stage)
 export const communityTargetCapabilities = getTargetCapabilitiesForMembershipType(
 	MembershipType.community
-);
+)
 
 // convert the nested structure back to the flat array format for database operations
 export const getCapabilityMappingsArray = (): Array<{
-	type: MembershipType;
-	role: MemberRole;
-	capability: Capabilities;
+	type: MembershipType
+	role: MemberRole
+	capability: Capabilities
 }> => {
 	const mappings: Array<{
-		type: MembershipType;
-		role: MemberRole;
-		capability: Capabilities;
-	}> = [];
+		type: MembershipType
+		role: MemberRole
+		capability: Capabilities
+	}> = []
 
 	for (const [capability, { target, access }] of Object.entries(CAPABILITY_MAPPINGS)) {
 		for (const [membershipType, roles] of Object.entries(access)) {
@@ -365,60 +365,60 @@ export const getCapabilityMappingsArray = (): Array<{
 					type: membershipType as MembershipType,
 					role: role as MemberRole,
 					capability: capability as Capabilities,
-				});
+				})
 			}
 		}
 	}
 
-	return mappings;
-};
+	return mappings
+}
 
 // helper functions to work with the capability mappings
 export const getCapabilitiesForRole = (type: MembershipType, role: MemberRole): Capabilities[] => {
-	const capabilities: Capabilities[] = [];
+	const capabilities: Capabilities[] = []
 
 	for (const [capability, { target, access }] of Object.entries(CAPABILITY_MAPPINGS)) {
 		if (!(type in access)) {
-			continue;
+			continue
 		}
 		// silly cast necessary because typescript cannot comprehend my plans
-		const roles = access[type as keyof typeof access];
+		const roles = access[type as keyof typeof access]
 		if (roles.some((r) => r === role)) {
-			capabilities.push(capability as Capabilities);
+			capabilities.push(capability as Capabilities)
 		}
 	}
 
-	return capabilities;
-};
+	return capabilities
+}
 
 export const hasCapability = (
 	type: MembershipType,
 	role: MemberRole,
 	capability: Capabilities
 ): boolean => {
-	const { access } = CAPABILITY_MAPPINGS[capability];
+	const { access } = CAPABILITY_MAPPINGS[capability]
 	if (!(type in access)) {
-		return false;
+		return false
 	}
 	// silly cast necessary because typescript cannot comprehend my plans
-	const roles = access[type as keyof typeof access];
-	return roles.some((r) => r === role);
-};
+	const roles = access[type as keyof typeof access]
+	return roles.some((r) => r === role)
+}
 
 // generate the sql insert statements for the capability mappings
 export const generateCapabilityInserts = (): string => {
-	const mappings = getCapabilityMappingsArray();
+	const mappings = getCapabilityMappingsArray()
 	const values = mappings
 		.map(
 			(mapping) =>
 				`    ('${mapping.type}'::"MembershipType", '${mapping.role}'::"MemberRole", '${mapping.capability}'::"Capabilities")`
 		)
-		.join(",\n");
+		.join(",\n")
 
 	return `TRUNCATE TABLE "membership_capabilities";
 
 INSERT INTO "membership_capabilities" (type, role, capability)
 VALUES
 ${values}
-;`;
-};
+;`
+}

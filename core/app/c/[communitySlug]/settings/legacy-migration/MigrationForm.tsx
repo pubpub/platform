@@ -1,16 +1,17 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
+import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId } from "db/public"
+import type { getToBeDeletedStructure } from "~/lib/server/legacy-migration/legacy-cleanup"
 
-import { useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { UndoIcon } from "lucide-react";
-import { parseAsBoolean, useQueryState } from "nuqs";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useMemo } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { UndoIcon } from "lucide-react"
+import { parseAsBoolean, useQueryState } from "nuqs"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId } from "db/public";
-import { pubFieldsIdSchema, pubsIdSchema, pubTypesIdSchema } from "db/public";
+import { pubFieldsIdSchema, pubsIdSchema, pubTypesIdSchema } from "db/public"
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -19,9 +20,9 @@ import {
 	AlertDialogFooter,
 	AlertDialogTitle,
 	AlertDialogTrigger,
-} from "ui/alert-dialog";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
+} from "ui/alert-dialog"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
 import {
 	Form,
 	FormControl,
@@ -30,39 +31,38 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Input } from "ui/input";
-import { FormSubmitButton } from "ui/submit-button";
-import { toast } from "ui/use-toast";
+} from "ui/form"
+import { Input } from "ui/input"
+import { FormSubmitButton } from "ui/submit-button"
+import { toast } from "ui/use-toast"
 
-import type { getToBeDeletedStructure } from "~/lib/server/legacy-migration/legacy-cleanup";
-import { DataTable } from "~/app/components/DataTable/v2/DataTable";
-import { getPubTitle } from "~/lib/pubs";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { importFromLegacy, undoMigration } from "./actions";
+import { DataTable } from "~/app/components/DataTable/v2/DataTable"
+import { getPubTitle } from "~/lib/pubs"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { importFromLegacy, undoMigration } from "./actions"
 
 const migrationFormSchema = z.object({
 	file: z.instanceof(File),
-});
-export type MigrationFormSchema = z.infer<typeof migrationFormSchema>;
+})
+export type MigrationFormSchema = z.infer<typeof migrationFormSchema>
 
 export function MigrationForm() {
 	const form = useForm<z.infer<typeof migrationFormSchema>>({
 		resolver: zodResolver(migrationFormSchema),
-	});
+	})
 
-	const runImportFromLegacy = useServerAction(importFromLegacy);
+	const runImportFromLegacy = useServerAction(importFromLegacy)
 
 	const onSubmit = async (data: MigrationFormSchema) => {
-		const result = await runImportFromLegacy(data);
+		const result = await runImportFromLegacy(data)
 
 		if (didSucceed(result)) {
 			toast({
 				title: "Import successful!",
 				description: "The import has been completed successfully.",
-			});
+			})
 		}
-	};
+	}
 
 	return (
 		<Form {...form}>
@@ -77,7 +77,7 @@ export function MigrationForm() {
 								type="file"
 								accept="application/json"
 								onChange={(e) => {
-									field.onChange(e.target.files && e.target.files[0]);
+									field.onChange(e.target.files?.[0])
 								}}
 							/>
 							<FormDescription>
@@ -96,21 +96,21 @@ export function MigrationForm() {
 				/>
 			</form>
 		</Form>
-	);
+	)
 }
 
 const undoMigrationFormSchema = z.object({
 	pubTypes: z.record(pubTypesIdSchema, z.boolean()),
 	pubFields: z.record(pubFieldsIdSchema, z.boolean()),
 	pubs: z.record(pubsIdSchema, z.boolean()),
-});
+})
 
 export function UndoMigrationForm({
 	community,
 	toBeDeletedStructure,
 }: {
-	community: { slug: string; id: CommunitiesId };
-	toBeDeletedStructure: Awaited<ReturnType<typeof getToBeDeletedStructure>> | undefined;
+	community: { slug: string; id: CommunitiesId }
+	toBeDeletedStructure: Awaited<ReturnType<typeof getToBeDeletedStructure>> | undefined
 }) {
 	const form = useForm({
 		resolver: zodResolver(undoMigrationFormSchema),
@@ -123,61 +123,61 @@ export function UndoMigrationForm({
 			),
 			pubs: Object.fromEntries(toBeDeletedStructure?.pubs.map((p) => [p.id, true]) ?? []),
 		},
-	});
+	})
 
 	const [undo, setUndo] = useQueryState(
 		"undo",
 		parseAsBoolean.withDefault(false).withOptions({
 			shallow: false,
 		})
-	);
+	)
 	const actualSetUndo = (value: boolean) => {
-		setUndo(value);
-	};
+		setUndo(value)
+	}
 
-	const runUndoMigration = useServerAction(undoMigration);
+	const runUndoMigration = useServerAction(undoMigration)
 
 	const onSubmit = form.handleSubmit(async (data) => {
 		const pubTypesNotToDelete = Object.keys(data.pubTypes).filter(
 			(key) => !data.pubTypes[key]
-		) as PubTypesId[];
+		) as PubTypesId[]
 		const pubFieldsNotToDelete = Object.keys(data.pubFields).filter(
 			(key) => !data.pubFields[key]
-		) as PubFieldsId[];
-		const pubsNotToDelete = Object.keys(data.pubs).filter((key) => !data.pubs[key]) as PubsId[];
+		) as PubFieldsId[]
+		const pubsNotToDelete = Object.keys(data.pubs).filter((key) => !data.pubs[key]) as PubsId[]
 
 		const result = await runUndoMigration({
 			pubTypesNotToDelete,
 			pubFieldsNotToDelete,
 			pubsNotToDelete,
-		});
+		})
 
 		if (didSucceed(result)) {
 			toast({
 				title: "Migration undone",
 				description: "The migration has been undone",
-			});
+			})
 
-			setUndo(false);
+			setUndo(false)
 		}
-	});
+	})
 
-	const selectedPubTypes = form.watch("pubTypes") as Record<PubTypesId, boolean>;
-	const selectedPubFields = form.watch("pubFields");
-	const selectedPubs = form.watch("pubs");
+	const selectedPubTypes = form.watch("pubTypes") as Record<PubTypesId, boolean>
+	const selectedPubFields = form.watch("pubFields")
+	const selectedPubs = form.watch("pubs")
 
 	const unselectableFields = useMemo(() => {
 		return (
 			toBeDeletedStructure?.pubFields
 				.filter((pf) => !selectedPubTypes[pf.B!])
 				.map((pf) => pf.id) ?? []
-		);
-	}, [toBeDeletedStructure, selectedPubTypes]);
+		)
+	}, [toBeDeletedStructure, selectedPubTypes])
 
 	const getSelectedCount = (values: Record<string, boolean> | undefined) => {
-		if (!values) return 0;
-		return Object.values(values).filter(Boolean).length;
-	};
+		if (!values) return 0
+		return Object.values(values).filter(Boolean).length
+	}
 
 	const renderCheckbox = (
 		itemId: string,
@@ -197,7 +197,7 @@ export function UndoMigrationForm({
 				/>
 			)}
 		/>
-	);
+	)
 
 	const handleSelectAll = (
 		fieldName: "pubTypes" | "pubFields" | "pubs",
@@ -205,16 +205,16 @@ export function UndoMigrationForm({
 		checked: boolean,
 		filter?: (id: string) => boolean
 	) => {
-		const newValues: Record<string, boolean> = {};
+		const newValues: Record<string, boolean> = {}
 		items.forEach((item) => {
 			if (!filter || filter(item.id)) {
-				newValues[item.id] = checked;
+				newValues[item.id] = checked
 			} else {
-				newValues[item.id] = form.getValues(`${fieldName}.${item.id}`);
+				newValues[item.id] = form.getValues(`${fieldName}.${item.id}`)
 			}
-		});
-		form.setValue(fieldName, newValues);
-	};
+		})
+		form.setValue(fieldName, newValues)
+	}
 
 	const pubTypeColumns = useMemo(() => {
 		return [
@@ -248,8 +248,8 @@ export function UndoMigrationForm({
 					<span className="truncate">{row.original.name || row.original.id}</span>
 				),
 			},
-		] satisfies ColumnDef<NonNullable<typeof toBeDeletedStructure>["pubTypes"][number]>[];
-	}, [toBeDeletedStructure]);
+		] satisfies ColumnDef<NonNullable<typeof toBeDeletedStructure>["pubTypes"][number]>[]
+	}, [toBeDeletedStructure, selectedPubTypes])
 
 	const pubFieldColumns = useMemo(() => {
 		return [
@@ -292,8 +292,15 @@ export function UndoMigrationForm({
 					</span>
 				),
 			},
-		] satisfies ColumnDef<NonNullable<typeof toBeDeletedStructure>["pubFields"][number]>[];
-	}, [toBeDeletedStructure, selectedPubFields, unselectableFields]);
+		] satisfies ColumnDef<NonNullable<typeof toBeDeletedStructure>["pubFields"][number]>[]
+	}, [
+		toBeDeletedStructure,
+		selectedPubFields,
+		unselectableFields,
+		getSelectedCount,
+		handleSelectAll,
+		renderCheckbox,
+	])
 
 	const pubColumns = useMemo(() => {
 		return [
@@ -333,8 +340,8 @@ export function UndoMigrationForm({
 					</span>
 				),
 			},
-		] satisfies ColumnDef<NonNullable<typeof toBeDeletedStructure>["pubs"][number]>[];
-	}, [toBeDeletedStructure, selectedPubs, selectedPubTypes]);
+		] satisfies ColumnDef<NonNullable<typeof toBeDeletedStructure>["pubs"][number]>[]
+	}, [toBeDeletedStructure, selectedPubs, getSelectedCount, handleSelectAll, renderCheckbox])
 
 	return (
 		<AlertDialog open={undo} onOpenChange={actualSetUndo}>
@@ -448,5 +455,5 @@ export function UndoMigrationForm({
 				</Form>
 			</AlertDialogContent>
 		</AlertDialog>
-	);
+	)
 }

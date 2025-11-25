@@ -1,13 +1,13 @@
-import type { Job } from "graphile-worker";
+import type { Job } from "graphile-worker"
+import type { ClientException, ClientExceptionOptions } from "../serverActions"
 
-import { makeWorkerUtils } from "graphile-worker";
+import { makeWorkerUtils } from "graphile-worker"
 
-import { logger } from "logger";
+import { logger } from "logger"
 
-import type { ClientException, ClientExceptionOptions } from "../serverActions";
-import { env } from "../env/env";
+import { env } from "../env/env"
 
-import "date-fns";
+import "date-fns"
 
 import type {
 	ActionInstancesId,
@@ -60,19 +60,19 @@ export type JobsClient = {
 export const makeJobsClient = async (): Promise<JobsClient> => {
 	const workerUtils = await makeWorkerUtils({
 		connectionString: env.DATABASE_URL,
-	});
-	await workerUtils.migrate();
+	})
+	await workerUtils.migrate()
 	return {
 		async unscheduleJob(jobKey: string) {
-			logger.info({ msg: `Unscheduling job with key: ${jobKey}`, job: { key: jobKey } });
+			logger.info({ msg: `Unscheduling job with key: ${jobKey}`, job: { key: jobKey } })
 			await workerUtils.withPgClient(async (pg) => {
-				await pg.query(`SELECT graphile_worker.remove_job($1);`, [jobKey]);
-			});
+				await pg.query(`SELECT graphile_worker.remove_job($1);`, [jobKey])
+			})
 
 			logger.info({
 				msg: `Successfully unscheduled job with key: ${jobKey}`,
 				job: { key: jobKey },
-			});
+			})
 		},
 		async scheduleDelayedAutomation({
 			automationId,
@@ -123,7 +123,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 						jobKey,
 						jobKeyMode: "replace",
 					}
-				);
+				)
 
 				logger.info({
 					msg: `Successfully scheduled delayed automation ${automationId} to run at ${runAt}`,
@@ -145,17 +145,17 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				});
 				return {
 					error: err,
-				} as ClientException;
+				} as ClientException
 			}
 		},
-	};
-};
+	}
+}
 
-let jobsClient: JobsClient;
+let jobsClient: JobsClient
 
 export const getJobsClient = async () => {
 	if (!jobsClient) {
-		jobsClient = await makeJobsClient();
+		jobsClient = await makeJobsClient()
 	}
-	return jobsClient;
-};
+	return jobsClient
+}

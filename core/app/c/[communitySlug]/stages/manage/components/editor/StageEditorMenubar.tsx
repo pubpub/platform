@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useCallback } from "react";
-import { useReactFlow } from "reactflow";
+import { useCallback } from "react"
+import { useReactFlow } from "reactflow"
 
-import "reactflow/dist/style.css";
+import "reactflow/dist/style.css"
 
 import {
 	Menubar,
@@ -13,32 +13,32 @@ import {
 	MenubarSeparator,
 	MenubarShortcut,
 	MenubarTrigger,
-} from "ui/menubar";
-import { SidebarTrigger } from "ui/sidebar";
+} from "ui/menubar"
+import { SidebarTrigger } from "ui/sidebar"
 
-import { useStages } from "../../StagesContext";
-import { useStageEditor } from "./StageEditorContext";
+import { useStages } from "../../StagesContext"
+import { useStageEditor } from "./StageEditorContext"
 
 export const StageEditorMenubar = () => {
-	const { zoomIn, zoomOut, fitView } = useReactFlow();
-	const { createStage } = useStages();
-	const { deleteSelection, hasSelection } = useStageEditor();
-	const { resetLayout } = useStageEditor();
+	const { zoomIn, zoomOut, fitView } = useReactFlow()
+	const { createStage } = useStages()
+	const { deleteSelection, hasSelection } = useStageEditor()
+	const { resetLayout } = useStageEditor()
 
 	const onZoomInClick = useCallback(() => {
-		zoomIn();
-	}, [zoomIn]);
+		zoomIn()
+	}, [zoomIn])
 
 	const onZoomOutClick = useCallback(() => {
-		zoomOut();
-	}, [zoomOut]);
+		zoomOut()
+	}, [zoomOut])
 
 	const onFitViewClick = useCallback(() => {
-		fitView();
-	}, [fitView]);
+		fitView()
+	}, [fitView])
 
 	return (
-		<Menubar className="absolute left-3 top-3 z-50">
+		<Menubar className="absolute top-3 left-3 z-50">
 			<SidebarTrigger className="h-6 w-6 hover:bg-muted" />
 			<MenubarMenu>
 				<MenubarTrigger>File</MenubarTrigger>
@@ -92,5 +92,5 @@ export const StageEditorMenubar = () => {
 				</MenubarContent>
 			</MenubarMenu>
 		</Menubar>
-	);
-};
+	)
+}

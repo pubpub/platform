@@ -1,4 +1,4 @@
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType } from "db/public"
 
 export const REQUIRED_LEGACY_PUB_FIELDS = {
 	Title: { schemaName: CoreSchemaType.String },
@@ -103,7 +103,7 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 
 	Footer: { schemaName: CoreSchemaType.Null, relation: true },
 	Header: { schemaName: CoreSchemaType.Null, relation: true },
-} as const;
+} as const
 
 export const REQUIRED_LEGACY_PUB_TYPES = {
 	"Journal Article": {
@@ -378,13 +378,13 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 	{
 		fields: {
 			[K in keyof typeof REQUIRED_LEGACY_PUB_FIELDS]?: {
-				isTitle: boolean;
+				isTitle: boolean
 			} & ("relation" extends keyof (typeof REQUIRED_LEGACY_PUB_FIELDS)[K]
 				? {
-						defaultFormTargets?: string[]; //(keyof typeof REQUIRED_LEGACY_PUB_TYPES)[];
+						defaultFormTargets?: string[] //(keyof typeof REQUIRED_LEGACY_PUB_TYPES)[];
 					}
-				: {});
-		};
-		description: string;
+				: {})
+		}
+		description: string
 	}
->;
+>

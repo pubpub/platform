@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import type {
 	ActionInstances,
 	AutomationConditionBlocks,
@@ -20,9 +18,10 @@ import type {
 	Users,
 	UsersId,
 } from "db/public";
-import type { CoreSchemaType, MemberRole } from "db/public";
+import {  MemberRole } from "db/public";
 import type { FullAutomation, IconConfig } from "db/types";
 import {
+	type CoreSchemaType,
 	communitiesIdSchema,
 	coreSchemaTypeSchema,
 	formElementsSchema,
@@ -37,7 +36,8 @@ import {
 	stagesSchema,
 	usersIdSchema,
 	usersSchema,
-} from "db/public";
+} from "db/public"
+import z from "zod";
 
 // Auth types
 
@@ -48,21 +48,21 @@ export const SafeUser = z.object({
 	lastName: z.string().nullable(),
 	avatar: z.string().nullable(),
 	createdAt: z.date(),
-});
-export type SafeUser = z.infer<typeof SafeUser>;
+})
+export type SafeUser = z.infer<typeof SafeUser>
 
 export const User = SafeUser.and(
 	z.object({
 		email: z.string(),
 	})
-);
-export type User = z.infer<typeof User>;
+)
+export type User = z.infer<typeof User>
 
 // Json value types taken from prisma
-export type JsonObject = { [Key in string]: JsonValue };
+export type JsonObject = { [Key in string]: JsonValue }
 export interface JsonArray extends Array<JsonValue> {}
-export type JsonValue = string | number | boolean | JsonObject | JsonArray | null;
-export type InputJsonObject = { readonly [Key in string]?: InputJsonValue | null };
+export type JsonValue = string | number | boolean | JsonObject | JsonArray | null
+export type InputJsonObject = { readonly [Key in string]?: InputJsonValue | null }
 interface InputJsonArray extends ReadonlyArray<InputJsonValue | null> {}
 type InputJsonValue =
 	| string
@@ -70,30 +70,30 @@ type InputJsonValue =
 	| boolean
 	| InputJsonObject
 	| InputJsonArray
-	| { toJSON(): unknown };
+	| { toJSON(): unknown }
 
-export type JsonInput = InputJsonValue;
+export type JsonInput = InputJsonValue
 export const JsonInput: z.ZodType<JsonInput> = z.lazy(() =>
 	z.union([
 		z.union([z.string(), z.number(), z.boolean()]),
 		z.array(JsonInput),
 		z.record(JsonInput),
 	])
-);
-export type JsonOutput = JsonValue;
-export const JsonOutput = JsonInput as z.ZodType<JsonOutput>;
+)
+export type JsonOutput = JsonValue
+export const JsonOutput = JsonInput as z.ZodType<JsonOutput>
 
 // @see: https://github.com/colinhacks/zod#json-type
-const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
-type Literal = string | number | boolean | null;
-export type Json = Literal | { [key: string]: Json } | Json[];
+const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()])
+type Literal = string | number | boolean | null
+export type Json = Literal | { [key: string]: Json } | Json[]
 export const jsonSchema: z.ZodType<Json> = z.lazy(() =>
 	z.union([literalSchema, z.array(jsonSchema), z.record(jsonSchema)])
-);
+)
 
 const commonPubFields = z.object({
 	pubTypeId: z.string(),
-});
+})
 
 // Get pub types
 
@@ -102,16 +102,16 @@ export const GetPubResponseBody = commonPubFields.extend({
 	values: z.record(JsonOutput),
 	communityId: z.string(),
 	createdAt: z.date(),
-});
-export type GetPubResponseBody = z.infer<typeof GetPubResponseBody>;
+})
+export type GetPubResponseBody = z.infer<typeof GetPubResponseBody>
 
 // Create pub types
 
 export const CreatePubRequestBody = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(JsonInput),
-});
-export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBody>;
+})
+export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBody>
 
 // TODO: there has to be a better way to allow the API requests to include nulls in json fields
 export const CreatePubRequestBodyWithNulls = commonPubFields.extend({
@@ -122,14 +122,14 @@ export const CreatePubRequestBodyWithNulls = commonPubFields.extend({
 			z.object({ value: jsonSchema.or(z.date()), relatedPubId: pubsIdSchema }).array(),
 		])
 	),
-});
+})
 
-export type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNulls>;
+export type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNulls>
 
 export const CreatePubResponseBody = commonPubFields.extend({
 	id: z.string(),
-});
-export type CreatePubResponseBody = z.infer<typeof CreatePubResponseBody>;
+})
+export type CreatePubResponseBody = z.infer<typeof CreatePubResponseBody>
 
 export const formSchema = formsSchema.extend({
 	elements: z.array(
@@ -142,17 +142,17 @@ export const formSchema = formsSchema.extend({
 			})
 			.merge(formElementsSchema.omit({ formId: true, createdAt: true, updatedAt: true }))
 	),
-});
+})
 
-export const TOTAL_PUBS_COUNT_HEADER = "x-total-pubs";
+export const TOTAL_PUBS_COUNT_HEADER = "x-total-pubs"
 
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNulls> & {
-	stageId?: StagesId;
-	relatedPubs?: Record<string, { value: Json | Date; pub: CreatePubRequestBodyWithNulls }[]>;
-	members?: Record<UsersId, MemberRole>;
-};
+	stageId?: StagesId
+	relatedPubs?: Record<string, { value: Json | Date; pub: CreatePubRequestBodyWithNulls }[]>
+	members?: Record<UsersId, MemberRole>
+}
 
-export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
+export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict()
 
 const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNulls.extend({
 	stageId: stagesIdSchema.optional(),
@@ -171,7 +171,7 @@ const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNulls.e
 	members: (
 		z.record(usersIdSchema, memberRoleSchema) as z.ZodType<Record<UsersId, MemberRole>>
 	).optional(),
-});
+})
 
 export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
 	CreatePubRequestBodyWithNullsWithStageId.extend({
@@ -187,7 +187,7 @@ export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWit
 				)
 			)
 			.optional(),
-	});
+	})
 
 export const upsertPubRelationsSchema = z.record(
 	z.array(
@@ -199,7 +199,7 @@ export const upsertPubRelationsSchema = z.record(
 			z.object({ value: jsonSchema.or(z.date()), relatedPubId: pubsIdSchema }),
 		])
 	)
-);
+)
 
 /**
  * Only add the `stage` if the `withStage` option has not been set to `false
@@ -211,31 +211,31 @@ type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] exten
 					| (Stages & {
 							automations: FullAutomation[];
 					  })
-					| null;
+					| null
 			}
 		: { stage: Stages | null }
 	: Options["withStage"] extends false
 		? { stage?: never }
-		: { stage?: Stages | null };
+		: { stage?: Stages | null }
 
 export type PubTypePubField = Pick<
 	PubFields,
 	"id" | "name" | "slug" | "schemaName" | "isRelation"
 > & {
-	isTitle: boolean;
-};
+	isTitle: boolean
+}
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false`
  */
 type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] extends true
 	? {
 			pubType: PubTypes & {
-				fields: PubTypePubField[];
-			};
+				fields: PubTypePubField[]
+			}
 		}
 	: Options["withPubType"] extends false
 		? { pubType?: never }
-		: { pubType?: PubTypes & { fields: PubTypePubField[] } };
+		: { pubType?: PubTypes & { fields: PubTypePubField[] } }
 
 /**
  * Only add the `members` if the `withMembers` option has not been set to `false`
@@ -246,19 +246,19 @@ type MaybePubMembers<Options extends MaybePubOptions> = Options["withMembers"] e
 		? { members?: never }
 		: {
 				members?: (Omit<Users, "passwordHash"> & {
-					role: MemberRole;
-					formId: FormsId | null;
-				})[];
-			};
+					role: MemberRole
+					formId: FormsId | null
+				})[]
+			}
 
 type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedPubs"] extends false
 	? { relatedPub?: never; relatedPubId: PubsId | null }
-	: { relatedPub?: ProcessedPub<Options> | null; relatedPubId: PubsId | null };
+	: { relatedPub?: ProcessedPub<Options> | null; relatedPubId: PubsId | null }
 
 type MaybePubRelatedCounts<Options extends MaybePubOptions> =
 	Options["withRelatedCounts"] extends false
 		? { relatedPubsCount?: never }
-		: { relatedPubsCount?: number };
+		: { relatedPubsCount?: number }
 
 /**
  * Those options of `getPubsWithRelatedValuesOptions` that affect the output of `ProcessedPub`
@@ -272,19 +272,19 @@ export type MaybePubOptions = {
 	 *
 	 * @default true
 	 */
-	withRelatedPubs?: boolean;
+	withRelatedPubs?: boolean
 	/**
 	 * Whether to include the pub type.
 	 *
 	 * @default false
 	 */
-	withPubType?: boolean;
+	withPubType?: boolean
 	/**
 	 * Whether to include the stage.
 	 *
 	 * @default false
 	 */
-	withStage?: boolean;
+	withStage?: boolean
 	/**
 	 * Whether to include action instances for pub stages.
 	 *
@@ -296,85 +296,85 @@ export type MaybePubOptions = {
 	 *
 	 * @default false
 	 */
-	withMembers?: boolean;
+	withMembers?: boolean
 	/**
 	 * Whether to include the values.
 	 *
 	 * @default boolean
 	 */
-	withValues?: boolean;
+	withValues?: boolean
 	/**
 	 * Whether to include a count of related pubs
 	 *
 	 * @default false
 	 */
-	withRelatedCounts?: boolean;
+	withRelatedCounts?: boolean
 
 	/**
 	 * The search query to use for matching values
 	 */
-	search?: string;
+	search?: string
 
 	/**
 	 * Whether to include matched and highlighted values
 	 * @default true if `search` is defined
 	 */
-	withSearchValues?: boolean;
-};
+	withSearchValues?: boolean
+}
 
 /**
  * Information about the field that the value belongs to.
  */
 type ValueFieldInfo = {
-	schemaName: CoreSchemaType;
-	fieldId: PubFieldsId;
-	fieldSlug: string;
-	fieldName: string;
-	rank: string | null;
-};
+	schemaName: CoreSchemaType
+	fieldId: PubFieldsId
+	fieldSlug: string
+	fieldName: string
+	rank: string | null
+}
 
 type ValueBase = {
-	id: PubValuesId;
-	value: unknown;
-	createdAt: Date;
-	updatedAt: Date;
-} & ValueFieldInfo;
+	id: PubValuesId
+	value: unknown
+	createdAt: Date
+	updatedAt: Date
+} & ValueFieldInfo
 
 type ValuesWithFormElements =
 	| // With both values and form elements
 	(ValueBase & {
-			formElementId: FormElementsId;
-			formElementLabel: string | null;
+			formElementId: FormElementsId
+			formElementLabel: string | null
 			formElementConfig:
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }
-				| null;
+				| null
 	  })
 	// With only value info
 	| ValueBase
 	// With only form info
 	| ({
-			id: null;
-			value: null;
-			createdAt: null;
-			updatedAt: null;
-			formElementId: FormElementsId;
-			formElementLabel: string | null;
+			id: null
+			value: null
+			createdAt: null
+			updatedAt: null
+			formElementId: FormElementsId
+			formElementLabel: string | null
 			formElementConfig:
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }
-				| null;
-	  } & ValueFieldInfo);
+				| null
+	  } & ValueFieldInfo)
 
 type ProcessedPubBase = {
-	id: PubsId;
-	stageId: StagesId | null;
-	communityId: CommunitiesId;
-	pubTypeId: PubTypesId;
-	createdAt: Date;
-	title: string | null;
-	depth: number;
-	isCycle?: boolean;
+	id: PubsId
+	stageId: StagesId | null
+	communityId: CommunitiesId
+	pubTypeId: PubTypesId
+	createdAt: Date
+	title: string | null
+	depth: number
+	isCycle?: boolean
 	/**
 	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
 	 *
@@ -382,8 +382,8 @@ type ProcessedPubBase = {
 	 * TODO: Possibly add the `updatedAt` of `PubsInStages` here as well?
 	 * At time of writing (2024/11/04) I don't think that table has an `updatedAt`.
 	 */
-	updatedAt: Date;
-};
+	updatedAt: Date
+}
 
 type MaybeSearchResults<Options extends MaybePubOptions> = Options["search"] extends undefined
 	? { matchingValues?: never }
@@ -391,47 +391,47 @@ type MaybeSearchResults<Options extends MaybePubOptions> = Options["search"] ext
 		? { matchingValues?: never }
 		: {
 				matchingValues?: {
-					slug: string;
-					name: string;
-					value: Json;
-					isTitle: boolean;
-					highlights: string;
-				}[];
-			};
+					slug: string
+					name: string
+					value: Json
+					isTitle: boolean
+					highlights: string
+				}[]
+			}
 
 export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBase & {
 	/**
 	 * Is an empty array if `withValues` is false
 	 */
-	values: (ValueBase & MaybePubRelatedPub<Options>)[];
+	values: (ValueBase & MaybePubRelatedPub<Options>)[]
 } & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
 	MaybePubMembers<Options> &
 	MaybePubRelatedCounts<Options> &
-	MaybeSearchResults<Options>;
+	MaybeSearchResults<Options>
 
 export type ProcessedPubWithForm<
 	Options extends Omit<MaybePubOptions, "withValues" & { withValues: true }> = {},
 > = ProcessedPubBase & {
-	values: (ValuesWithFormElements & MaybePubRelatedPub<Options>)[];
+	values: (ValuesWithFormElements & MaybePubRelatedPub<Options>)[]
 } & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
 	MaybePubMembers<Options> &
-	MaybePubRelatedCounts<Options>;
+	MaybePubRelatedCounts<Options>
 
 export interface NonGenericProcessedPub extends ProcessedPubBase {
-	stage?: Stages | null;
-	pubType?: PubTypes;
+	stage?: Stages | null
+	pubType?: PubTypes
 	values?: (ValueBase & {
-		relatedPub?: NonGenericProcessedPub | null;
-		relatedPubId: PubsId | null;
-	})[];
-	relatedPubCounts?: number;
+		relatedPub?: NonGenericProcessedPub | null
+		relatedPubId: PubsId | null
+	})[]
+	relatedPubCounts?: number
 }
 
 export const pubTypeWithFieldsSchema = pubTypesSchema.extend({
 	fields: z.array(pubFieldsSchema.extend({ isTitle: z.boolean() })),
-});
+})
 
 export const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	id: pubsIdSchema,
@@ -457,7 +457,7 @@ export const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	stage: stagesSchema.nullish(),
 	pubType: pubTypeWithFieldsSchema.optional(),
 	relatedPubCounts: z.number().optional(),
-});
+})
 
 export const preferRepresentationHeaderSchema = z.object({
 	Prefer: z
@@ -467,7 +467,7 @@ export const preferRepresentationHeaderSchema = z.object({
 		)
 		.optional()
 		.default("return=minimal"),
-});
+})
 
 export const filterOperators = [
 	"$eq",
@@ -493,17 +493,17 @@ export const filterOperators = [
 	"$endsWith",
 	"$endsWithi",
 	"$jsonPath", // json path (maybe dangerous),
-] as const;
+] as const
 
-export type FilterOperator = (typeof filterOperators)[number];
+export type FilterOperator = (typeof filterOperators)[number]
 
-export const logicalOperators = ["$and", "$or", "$not"] as const;
+export const logicalOperators = ["$and", "$or", "$not"] as const
 
-export type LogicalOperator = (typeof logicalOperators)[number];
+export type LogicalOperator = (typeof logicalOperators)[number]
 
 export type BaseFilter = {
-	[O in FilterOperator]?: unknown;
-};
+	[O in FilterOperator]?: unknown
+}
 
 /**
  * at the slug level, you can do something like
@@ -537,10 +537,10 @@ export type BaseFilter = {
  * }
  */
 export type FieldLevelLogicalFilter = {
-	$and?: FieldLevelFilter | FieldLevelFilter[];
-	$or?: FieldLevelFilter | FieldLevelFilter[];
-	$not?: FieldLevelFilter;
-};
+	$and?: FieldLevelFilter | FieldLevelFilter[]
+	$or?: FieldLevelFilter | FieldLevelFilter[]
+	$not?: FieldLevelFilter
+}
 
 /**
  * At the top level, you can do something like
@@ -595,32 +595,32 @@ export type FieldLevelLogicalFilter = {
  *
  */
 export type TopLevelLogicalFilter = {
-	$and?: Filter[] | Filter;
-	$or?: Filter[] | Filter;
-	$not?: Filter;
-};
+	$and?: Filter[] | Filter
+	$or?: Filter[] | Filter
+	$not?: Filter
+}
 
 /**
  * & here, because you can mix and match field level operators and top level logical operators
  */
-export type FieldLevelFilter = BaseFilter & FieldLevelLogicalFilter;
+export type FieldLevelFilter = BaseFilter & FieldLevelLogicalFilter
 
 export type SlugKeyFilter = {
-	[slug: string]: FieldLevelFilter;
-};
+	[slug: string]: FieldLevelFilter
+}
 
 /**
  * | here, because you can only have either a slug key filter or a top level logical filter
  */
-export type Filter = SlugKeyFilter | TopLevelLogicalFilter;
+export type Filter = SlugKeyFilter | TopLevelLogicalFilter
 
-const coercedNumber = z.coerce.number();
-const coercedBoolean = z.enum(["true", "false"]).transform((val) => val === "true");
-const coercedDate = z.coerce.date();
+const coercedNumber = z.coerce.number()
+const coercedBoolean = z.enum(["true", "false"]).transform((val) => val === "true")
+const coercedDate = z.coerce.date()
 
-const allSchema = z.union([coercedNumber, coercedBoolean, coercedDate, z.string()]);
+const allSchema = z.union([coercedNumber, coercedBoolean, coercedDate, z.string()])
 
-const numberOrDateSchema = z.coerce.number().or(z.coerce.date());
+const numberOrDateSchema = z.coerce.number().or(z.coerce.date())
 
 export const baseFilterSchema = z
 	.object({
@@ -663,10 +663,10 @@ export const baseFilterSchema = z
 	})
 	// .passthrough()
 	.partial() satisfies z.ZodType<{
-	[K in FilterOperator]?: any;
-}>;
+	[K in FilterOperator]?: any
+}>
 
-const fieldSlugSchema = z.string();
+const fieldSlugSchema = z.string()
 // .regex(/^[a-zA-Z0-9_.:-]+$/, "At this level, you can only use field slugs");
 
 const baseFilterSchemaWithAndOr: z.ZodType<FieldLevelFilter> = z
@@ -685,11 +685,11 @@ const baseFilterSchemaWithAndOr: z.ZodType<FieldLevelFilter> = z
 				path: ctx.path,
 				code: z.ZodIssueCode.custom,
 				message: "Filter must have at least one operator (base filter)",
-			});
-			return false;
+			})
+			return false
 		}
-		return true;
-	});
+		return true
+	})
 
 export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
 	const schema = z
@@ -711,14 +711,14 @@ export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
 					path: ctx.path,
 					code: z.ZodIssueCode.custom,
 					message: "Filter must have at least one operator",
-				});
-				return false;
+				})
+				return false
 			}
-			return true;
-		});
+			return true
+		})
 
-	return schema;
-});
+	return schema
+})
 
 export const getPubQuerySchema = z.object({
 	depth: z
@@ -745,36 +745,36 @@ export const getPubQuerySchema = z.object({
 		.describe(
 			"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
 		),
-});
+})
 
 export type FTSReturn = {
-	id: PubsId;
-	createdAt: Date;
-	updatedAt: Date;
-	communityId: CommunitiesId;
-	title: string | null;
-	searchVector: string | null;
+	id: PubsId
+	createdAt: Date
+	updatedAt: Date
+	communityId: CommunitiesId
+	title: string | null
+	searchVector: string | null
 	stage: {
-		id: StagesId;
-		name: string;
-	} | null;
+		id: StagesId
+		name: string
+	} | null
 	pubType: {
-		id: PubTypesId;
-		createdAt: Date;
-		updatedAt: Date;
-		communityId: CommunitiesId;
-		name: string;
-		description: string | null;
-	};
-	titleHighlights: string;
+		id: PubTypesId
+		createdAt: Date
+		updatedAt: Date
+		communityId: CommunitiesId
+		name: string
+		description: string | null
+	}
+	titleHighlights: string
 	matchingValues: {
-		slug: string;
-		name: string;
-		value: Json;
-		isTitle: boolean;
-		highlights: string;
-	}[];
-};
+		slug: string
+		name: string
+		value: Json
+		isTitle: boolean
+		highlights: string
+	}[]
+}
 
 export const ftsReturnSchema = z.object({
 	id: pubsIdSchema,
@@ -801,7 +801,7 @@ export const ftsReturnSchema = z.object({
 			schemaName: coreSchemaTypeSchema,
 		})
 	),
-}) satisfies z.ZodType<FTSReturn>;
+}) satisfies z.ZodType<FTSReturn>
 
 export const zodErrorSchema = z.object({
 	name: z.string(),
@@ -814,4 +814,4 @@ export const zodErrorSchema = z.object({
 			message: z.string(),
 		})
 	),
-});
+})

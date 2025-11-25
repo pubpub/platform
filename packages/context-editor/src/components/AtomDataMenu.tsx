@@ -1,31 +1,31 @@
-import type { Node } from "prosemirror-model";
+import type { Node } from "prosemirror-model"
 
-import React from "react";
+import React from "react"
 
-import { Input } from "ui/input";
-import { Label } from "ui/label";
+import { Input } from "ui/input"
+import { Label } from "ui/label"
 
 type Props = {
-	node: Node;
-	onChange: (key: string, value: unknown) => void;
-};
+	node: Node
+	onChange: (key: string, value: unknown) => void
+}
 
 export const AtomDataMenu = (props: Props) => {
 	if (!props.node.attrs.data) {
-		return null;
+		return null
 	}
 
 	return (
 		<>
 			<div className="mt-8 text-sm">Atom Data</div>
 			{Object.keys(props.node.attrs.data).map((attrKey) => {
-				const key = `data-${attrKey}`;
+				const key = `data-${attrKey}`
 				const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-					props.onChange(attrKey, event.target.value);
-				};
+					props.onChange(attrKey, event.target.value)
+				}
 				return (
 					<div key={key}>
-						<Label className="text-xs font-normal" htmlFor={key}>
+						<Label className="font-normal text-xs" htmlFor={key}>
 							{attrKey}
 						</Label>
 						<Input
@@ -36,8 +36,8 @@ export const AtomDataMenu = (props: Props) => {
 							id={key}
 						/>
 					</div>
-				);
+				)
 			})}
 		</>
-	);
-};
+	)
+}

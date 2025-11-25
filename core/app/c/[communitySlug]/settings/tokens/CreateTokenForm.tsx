@@ -1,31 +1,32 @@
-"use client";
+"use client"
 
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Bell } from "lucide-react";
-import { useForm } from "react-hook-form";
+import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types"
+import type { CreateTokenFormSchema } from "./types"
 
-import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types";
-import { ApiAccessScope } from "db/public";
-import { Alert, AlertDescription, AlertTitle } from "ui/alert";
-import { CopyButton } from "ui/copy-button";
-import { DatePicker } from "ui/date-picker";
-import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { Separator } from "ui/separator";
-import { FormSubmitButton } from "ui/submit-button";
-import { cn } from "utils";
+import React from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Bell } from "lucide-react"
+import { useForm } from "react-hook-form"
 
-import type { CreateTokenFormSchema } from "./types";
-import { useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
-import { CreateTokenFormContext } from "./CreateTokenFormContext";
-import { PermissionField } from "./PermissionField";
-import { createTokenFormSchema } from "./types";
+import { ApiAccessScope } from "db/public"
+import { Alert, AlertDescription, AlertTitle } from "ui/alert"
+import { CopyButton } from "ui/copy-button"
+import { DatePicker } from "ui/date-picker"
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { Separator } from "ui/separator"
+import { FormSubmitButton } from "ui/submit-button"
+import { cn } from "utils"
+
+import { useServerAction } from "~/lib/serverActions"
+import * as actions from "./actions"
+import { CreateTokenFormContext } from "./CreateTokenFormContext"
+import { PermissionField } from "./PermissionField"
+import { createTokenFormSchema } from "./types"
 
 export type CreateTokenFormProps = {
-	onSuccess?: (token: string) => void;
-};
+	onSuccess?: (token: string) => void
+}
 
 export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 	const form = useForm<CreateTokenFormSchema>({
@@ -36,23 +37,23 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 			// default to 1 day from now, mostly to make testing easier
 			expiration: new Date(Date.now() + 1000 * 60 * 60 * 24),
 		},
-	});
+	})
 
-	const createToken = useServerAction(actions.createToken);
+	const createToken = useServerAction(actions.createToken)
 
 	const onSubmit = async (data: CreateTokenFormSchema) => {
-		const result = await createToken(data);
+		const result = await createToken(data)
 
 		if ("success" in result) {
-			form.setValue("token" as const, result.data.token);
-			onSuccess?.(result.data.token);
-			return;
+			form.setValue("token" as const, result.data.token)
+			onSuccess?.(result.data.token)
+			return
 		}
 
-		form.setError("root", { message: result.error });
-	};
+		form.setError("root", { message: result.error })
+	}
 	// this `as const` should not be necessary, not sure why it is
-	const token = form.watch("token");
+	const token = form.watch("token")
 
 	if (token) {
 		return (
@@ -73,7 +74,7 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 					</div>
 				</AlertDescription>
 			</Alert>
-		);
+		)
 	}
 
 	return (
@@ -144,18 +145,26 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 								</div>
 
 								{form.formState.errors?.permissions && (
+<<<<<<< HEAD
 									<div className="text-sm text-destructive">
+=======
+									<div className="text-red-500 text-sm">
+>>>>>>> main
 										<p>{form.formState.errors?.permissions?.root?.message}</p>
 									</div>
 								)}
 							</FormItem>
-						);
+						)
 					}}
 				/>
 				{form.formState.errors?.root && (
+<<<<<<< HEAD
 					<p className="text-sm text-destructive">
 						{form.formState.errors?.root?.message}
 					</p>
+=======
+					<p className="text-red-500 text-sm">{form.formState.errors?.root?.message}</p>
+>>>>>>> main
 				)}
 
 				<FormSubmitButton
@@ -167,8 +176,8 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 				/>
 			</form>
 		</Form>
-	);
-};
+	)
+}
 
 /**
  * Exported here instead of just importing CreateTokenFormContext.tsx
@@ -193,5 +202,5 @@ export const CreateTokenFormWithContext = ({
 		>
 			<CreateTokenForm onSuccess={onSuccess} />
 		</CreateTokenFormContext.Provider>
-	);
-};
+	)
+}

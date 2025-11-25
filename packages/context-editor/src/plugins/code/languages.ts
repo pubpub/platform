@@ -18,4 +18,4 @@ export const CodeBlockLanguages = [
 	"markdown",
 	"java",
 	"cpp",
-] as const;
+] as const

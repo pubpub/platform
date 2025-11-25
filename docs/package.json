@@ -8,8 +8,7 @@
 		"build": "next build",
 		"postbuild": "pagefind --site .next/server/app --output-path out/_pagefind",
 		"start": "serve ./out -p 3006",
-		"type-check": "tsc --noEmit",
-		"lint": "eslint"
+		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"next": "catalog:",
@@ -20,20 +19,16 @@
 		"react-dom": "catalog:react19"
 	},
 	"devDependencies": {
-		"@pubpub/eslint-config": "workspace:^",
-		"@pubpub/prettier-config": "workspace:^",
 		"@tailwindcss/postcss": "^4.1.12",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:react19",
 		"@types/react-dom": "catalog:react19",
 		"autoprefixer": "catalog:",
-		"eslint": "catalog:",
 		"postcss": "catalog:",
 		"postcss-import": "^16.1.1",
 		"serve": "^14.2.4",
 		"tailwindcss": "^4.1.12",
 		"tsconfig": "workspace:^",
 		"typescript": "catalog:"
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

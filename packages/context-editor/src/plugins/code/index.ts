@@ -7,19 +7,20 @@
  * * No theme
  * */
 
-import { redo, undo } from "prosemirror-history";
-import { Node, Schema } from "prosemirror-model";
-import { Plugin, PluginKey } from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
+import type { Node, Schema } from "prosemirror-model"
+import type { EditorView } from "prosemirror-view"
+import type { CodeBlockSettings, LanguageLoaders } from "./types"
 
-import type { CodeBlockSettings, LanguageLoaders } from "./types";
-import { codeMirrorBlockNodeView } from "./codeMirrorBlockNodeView";
-import { defaultSettings } from "./defaults";
-import languageLoaders from "./languageLoaders";
-import { CodeBlockLanguages } from "./languages";
-import { codeBlockArrowHandlers } from "./utils";
+import { redo, undo } from "prosemirror-history"
+import { Plugin, PluginKey } from "prosemirror-state"
 
-export const codeMirrorBlockKey = new PluginKey("codemirror-block");
+import { codeMirrorBlockNodeView } from "./codeMirrorBlockNodeView"
+import { defaultSettings } from "./defaults"
+import languageLoaders from "./languageLoaders"
+import { CodeBlockLanguages } from "./languages"
+import { codeBlockArrowHandlers } from "./utils"
+
+export const codeMirrorBlockKey = new PluginKey("codemirror-block")
 
 const codeMirrorBlockPlugin = (settings: CodeBlockSettings) => {
 	return new Plugin({
@@ -30,8 +31,8 @@ const codeMirrorBlockPlugin = (settings: CodeBlockSettings) => {
 				code_block: codeMirrorBlockNodeView(settings),
 			},
 		},
-	});
-};
+	})
+}
 
 export {
 	codeMirrorBlockNodeView,
@@ -42,7 +43,7 @@ export {
 	CodeBlockLanguages,
 	defaultSettings,
 	languageLoaders,
-};
+}
 
 const createSelect = (
 	settings: CodeBlockSettings,
@@ -51,34 +52,34 @@ const createSelect = (
 	view: EditorView,
 	getPos: (() => number) | boolean
 ) => {
-	if (!settings.languageLoaders) return () => {};
-	const wrapper = document.createElement("div");
-	wrapper.classList.add("codeblock-select-wrapper");
+	if (!settings.languageLoaders) return () => {}
+	const wrapper = document.createElement("div")
+	wrapper.classList.add("codeblock-select-wrapper")
 
-	const select = document.createElement("select");
-	const carets = document.createElement("span");
+	const select = document.createElement("select")
+	const carets = document.createElement("span")
 
-	wrapper.append(select);
-	wrapper.append(carets);
-	select.className = "codeblock-select";
-	const noneOption = document.createElement("option");
-	noneOption.value = "none";
-	noneOption.textContent = settings.languageNameMap?.none || "none";
-	select.append(noneOption);
+	wrapper.append(select)
+	wrapper.append(carets)
+	select.className = "codeblock-select"
+	const noneOption = document.createElement("option")
+	noneOption.value = "none"
+	noneOption.textContent = settings.languageNameMap?.none || "none"
+	select.append(noneOption)
 	Object.keys(languageLoaders)
 		.sort()
 		.forEach((lang) => {
-			if (settings.languageWhitelist && !settings.languageWhitelist.includes(lang)) return;
-			const option = document.createElement("option");
-			option.value = lang;
-			option.textContent = settings.languageNameMap?.[lang] || lang;
-			select.append(option);
-		});
-	select.value = node.attrs.lang || "none";
-	dom.prepend(wrapper);
+			if (settings.languageWhitelist && !settings.languageWhitelist.includes(lang)) return
+			const option = document.createElement("option")
+			option.value = lang
+			option.textContent = settings.languageNameMap?.[lang] || lang
+			select.append(option)
+		})
+	select.value = node.attrs.lang || "none"
+	dom.prepend(wrapper)
 	select.onchange = async (e) => {
-		if (!(e.target instanceof HTMLSelectElement)) return;
-		const lang = e.target.value === "none" ? null : e.target.value;
+		if (!(e.target instanceof HTMLSelectElement)) return
+		const lang = e.target.value === "none" ? null : e.target.value
 		if (typeof getPos === "function") {
 			view.dispatch(
 				view.state.tr.setNodeMarkup(
@@ -90,11 +91,11 @@ const createSelect = (
 					},
 					node.marks
 				)
-			);
+			)
 		}
-	};
-	return () => {};
-};
+	}
+	return () => {}
+}
 
 // Legacy has a bunch of plugin options—only using isReadOnly for now and not setting anywhere yet
 export default (schema: Schema, pluginsOptions: { isReadOnly?: boolean }) => {
@@ -108,7 +109,7 @@ export default (schema: Schema, pluginsOptions: { isReadOnly?: boolean }) => {
 				undo,
 				redo,
 			}),
-		];
+		]
 	}
-	return [];
-};
+	return []
+}

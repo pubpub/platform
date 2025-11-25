@@ -1,4 +1,4 @@
-import "server-only";
+import "server-only"
 
 import type { Automations, PubsId } from "db/public";
 import type { FullAutomation } from "db/types";
@@ -62,5 +62,5 @@ export const PubsRunAutomationsDropDownMenu = async ({
 				))}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}

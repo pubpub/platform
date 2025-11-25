@@ -1,22 +1,22 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
+import { useEffect } from "react"
 
-import { FieldSet } from "ui/field";
-import { FieldOutputMap } from "ui/outputMap";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { Textarea } from "ui/textarea";
+import { FieldSet } from "ui/field"
+import { FieldOutputMap } from "ui/outputMap"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { Textarea } from "ui/textarea"
 
-import { ActionField } from "../_lib/ActionField";
-import { useActionForm } from "../_lib/ActionForm";
+import { ActionField } from "../_lib/ActionField"
+import { useActionForm } from "../_lib/ActionForm"
 
 export default function HttpActionForm() {
-	const { form } = useActionForm();
-	const [method, response] = form.watch(["method", "response"]);
+	const { form } = useActionForm()
+	const [method, response] = form.watch(["method", "response"])
 
 	useEffect(() => {
-		form.setValue("outputMap", []);
-	}, [response]);
+		form.setValue("outputMap", [])
+	}, [form.setValue])
 
 	return (
 		<FieldSet>
@@ -84,7 +84,7 @@ export default function HttpActionForm() {
 								<SelectItem value="binary">Binary</SelectItem>
 							</SelectContent>
 						</Select>
-					);
+					)
 				}}
 			/>
 			<ActionField
@@ -98,5 +98,5 @@ export default function HttpActionForm() {
 				)}
 			/>
 		</FieldSet>
-	);
+	)
 }

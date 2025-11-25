@@ -1,14 +1,15 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
 	import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
+import { Action, CoreSchemaType, Event, MemberRole } from "db/public"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+import { mockServerCode } from "~/lib/__tests__/utils"
+import { createSeed } from "~/prisma/seed/createSeed"
 
-createForEachMockedTransaction();
+const { createForEachMockedTransaction } = await mockServerCode()
+
+createForEachMockedTransaction()
 
 const seed = createSeed({
 	community: {
@@ -135,14 +136,14 @@ const seed = createSeed({
 			stage: "Stage 1",
 		},
 	],
-});
+})
 
-let community: CommunitySeedOutput<typeof seed>;
+let community: CommunitySeedOutput<typeof seed>
 
 beforeAll(async () => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-	community = await seedCommunity(seed);
-});
+	const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+	community = await seedCommunity(seed)
+})
 
 describe("automations.db", () => {
 	it("should create an automation", async () => {
@@ -167,8 +168,8 @@ describe("automations.db", () => {
 			communityId: community.community.id,
 		});
 
-		expect(automation).toBeDefined();
-	});
+		expect(automation).toBeDefined()
+	})
 
 	it("should throw a RegularAutomationAlreadyExistsError if a regular automation already exists", async () => {
 		const {
@@ -188,8 +189,8 @@ describe("automations.db", () => {
 				],
 				communityId: community.community.id,
 			})
-		).rejects.toThrow(RegularAutomationAlreadyExistsError);
-	});
+		).rejects.toThrow(RegularAutomationAlreadyExistsError)
+	})
 
 	it("should throw a SequentialAutomationAlreadyExistsError if a sequential automation already exists", async () => {
 		const {
@@ -204,8 +205,8 @@ describe("automations.db", () => {
 				triggers: community.stages["Stage 1"].automations["1"].triggers,
 				communityId: community.community.id,
 			})
-		).rejects.toThrow(SequentialAutomationAlreadyExistsError);
-	});
+		).rejects.toThrow(SequentialAutomationAlreadyExistsError)
+	})
 
 	it("should throw a AutomationConfigError if the config is invalid", async () => {
 		const {
@@ -220,8 +221,8 @@ describe("automations.db", () => {
 				triggers: community.stages["Stage 1"].automations["1"].triggers,
 				communityId: community.community.id,
 			})
-		).rejects.toThrowError(AutomationConfigError);
-	});
+		).rejects.toThrowError(AutomationConfigError)
+	})
 
 	describe("cycle detection", () => {
 		it("should throw a AutomationCycleError if the automation is a cycle", async () => {
@@ -236,7 +237,7 @@ describe("automations.db", () => {
 					triggers: community.stages["Stage 1"].automations["3"].triggers,
 					communityId: community.community.id,
 				})
-			).rejects.toThrow(AutomationCycleError);
+			).rejects.toThrow(AutomationCycleError)
 
 			// should also happen for ActionFailed
 			await expect(
@@ -246,7 +247,7 @@ describe("automations.db", () => {
 					triggers: community.stages["Stage 1"].automations["3"].triggers,
 					communityId: community.community.id,
 				})
-			).rejects.toThrow(AutomationCycleError);
+			).rejects.toThrow(AutomationCycleError)
 
 			// just to check that if we have 2->1, 1->2 will create a cycle
 			await expect(
@@ -256,8 +257,8 @@ describe("automations.db", () => {
 					triggers: community.stages["Stage 1"].automations["2"].triggers,
 					communityId: community.community.id,
 				})
-			).rejects.toThrow(AutomationCycleError);
-		});
+			).rejects.toThrow(AutomationCycleError)
+		})
 		it("should not throw an error if the automation is not a cycle", async () => {
 			// 3 -> 1 is fine, bc we only have 3 -> 2 and 2 -> 1 thus far
 			const { upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
@@ -269,8 +270,8 @@ describe("automations.db", () => {
 					triggers: community.stages["Stage 1"].automations["1"].triggers,
 					communityId: community.community.id,
 				})
-			).resolves.not.toThrow();
-		});
+			).resolves.not.toThrow()
+		})
 
 		it("should throw a AutomationMaxDepthError if the automation would exceed the maximum stack depth", async () => {
 			const {
@@ -287,7 +288,7 @@ describe("automations.db", () => {
 					},
 					3
 				)
-			).rejects.toThrow(AutomationMaxDepthError);
-		});
-	});
-});
+			).rejects.toThrow(AutomationMaxDepthError)
+		})
+	})
+})

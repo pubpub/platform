@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation"
 
-import { Capabilities, MembershipType } from "db/public";
-import { Activity } from "ui/icon";
+import { Capabilities, MembershipType } from "db/public"
+import { Activity } from "ui/icon"
 
+<<<<<<< HEAD
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getAutomationRuns } from "~/lib/server/actions";
@@ -12,27 +13,35 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { ContentLayout } from "../../ContentLayout";
 import { ActionRunsTable } from "./ActionRunsTable";
 import { mapAutomationRunsForTable } from "./mapAutomationRunsForTable";
+=======
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { getActionRuns } from "~/lib/server/actions"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { ContentLayout } from "../../ContentLayout"
+import { ActionRunsTable } from "./ActionRunsTable"
+>>>>>>> main
 
 export const metadata: Metadata = {
 	title: "Action Log",
-};
+}
 
 export default async function Page(props: {
 	params: Promise<{
-		communitySlug: string;
-	}>;
+		communitySlug: string
+	}>
 }) {
-	const params = await props.params;
+	const params = await props.params
 
-	const { communitySlug } = params;
+	const { communitySlug } = params
 
 	const [{ user }, community] = await Promise.all([
 		getPageLoginData(),
 		findCommunityBySlug(communitySlug),
-	]);
+	])
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	const [canEditCommunity, automationRuns] = await Promise.all([
@@ -41,11 +50,16 @@ export default async function Page(props: {
 			{ type: MembershipType.community, communityId: community.id },
 			user.id
 		),
+<<<<<<< HEAD
 		getAutomationRuns(community.id).execute(),
 	]);
+=======
+		getActionRuns(community.id).execute(),
+	])
+>>>>>>> main
 
 	if (!canEditCommunity) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
 	const actionRuns = mapAutomationRunsForTable(automationRuns);
@@ -63,5 +77,5 @@ export default async function Page(props: {
 				<ActionRunsTable actionRuns={actionRuns} communitySlug={community.slug} />
 			</div>
 		</ContentLayout>
-	);
+	)
 }

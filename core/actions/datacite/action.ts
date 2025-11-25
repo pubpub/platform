@@ -1,9 +1,9 @@
-import * as z from "zod";
+import * as z from "zod"
 
-import { Action } from "db/public";
-import { Globe } from "ui/icon";
+import { Action } from "db/public"
+import { Globe } from "ui/icon"
 
-import { defineAction } from "../types";
+import { defineAction } from "../types"
 
 export const action = defineAction({
 	name: Action.datacite,
@@ -28,4 +28,4 @@ export const action = defineAction({
 	icon: Globe,
 	experimental: true,
 	superAdminOnly: true,
-});
+})

@@ -1,41 +1,41 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import Link from "next/link";
-import { notFound } from "next/navigation";
+import Link from "next/link"
+import { notFound } from "next/navigation"
 
-import { Button } from "ui/button";
-import { FlagTriangleRightIcon } from "ui/icon";
+import { Button } from "ui/button"
+import { FlagTriangleRightIcon } from "ui/icon"
 
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCanViewStagePage } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
-import { ContentLayout } from "../ContentLayout";
-import { StageList } from "./components/StageList";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCanViewStagePage } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
+import { ContentLayout } from "../ContentLayout"
+import { StageList } from "./components/StageList"
 
 export const metadata: Metadata = {
 	title: "Workflows",
-};
+}
 
-type Props = { params: Promise<{ communitySlug: string }>; searchParams: Record<string, unknown> };
+type Props = { params: Promise<{ communitySlug: string }>; searchParams: Record<string, unknown> }
 
 export default async function Page(props: Props) {
-	const searchParams = await props.searchParams;
-	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+	const searchParams = await props.searchParams
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!user) {
-		redirectToLogin();
+		redirectToLogin()
 	}
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
-	const userCanSeeStage = await userCanViewStagePage(user.id, community.id);
+	const userCanSeeStage = await userCanViewStagePage(user.id, community.id)
 
 	if (!userCanSeeStage) {
-		return await redirectToUnauthorized();
+		return await redirectToUnauthorized()
 	}
 
 	return (
@@ -71,5 +71,5 @@ export default async function Page(props: Props) {
 				/>
 			</div>
 		</ContentLayout>
-	);
+	)
 }

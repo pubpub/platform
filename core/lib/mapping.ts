@@ -1,4 +1,4 @@
-import type { Prettify } from "utils/types";
+import type { Prettify } from "utils/types"
 
 /**
  * Type-safe version of Object.entries()
@@ -14,13 +14,13 @@ export function entries<
 ): T extends T
 	? { [K in keyof T]-?: [K, KeepUndefined extends true ? T[K] : NonNullable<T[K]>] }[keyof T][]
 	: never {
-	const newObj = Object.entries(obj);
+	const newObj = Object.entries(obj)
 
 	if (keepUndefined) {
-		return newObj as any;
+		return newObj as any
 	}
 
-	return newObj.filter(([_, v]) => v !== undefined) as any;
+	return newObj.filter(([_, v]) => v !== undefined) as any
 }
 
 /**
@@ -30,7 +30,7 @@ export function entries<
 export function fromEntries<const T extends [PropertyKey, any][]>(
 	entries: T
 ): { [K in T[number][0]]: Extract<T[number], [K, any]>[1] } {
-	return Object.fromEntries(entries) as any;
+	return Object.fromEntries(entries) as any
 }
 
 type MapToEntries<
@@ -46,10 +46,10 @@ type MapToEntries<
 			[...C, C["length"]],
 			Prettify<
 				Buffer & {
-					[NewKey in M[C["length"]]]: T[C["length"]];
+					[NewKey in M[C["length"]]]: T[C["length"]]
 				}
 			>
-		>;
+		>
 
 export function mapToEntries<
 	const T extends readonly unknown[],
@@ -57,15 +57,15 @@ export function mapToEntries<
 	C extends any[] = [],
 	Buffer extends Record<string, any> = {},
 >(obj: T, mapping: M): T extends T ? MapToEntries<T, M, C, Buffer> : never {
-	const result: Record<string, any> = {};
+	const result: Record<string, any> = {}
 	for (let i = 0; i < Math.min(obj.length, mapping.length); i++) {
-		result[mapping[i]] = obj[i];
+		result[mapping[i]] = obj[i]
 	}
-	return result as any;
+	return result as any
 }
 
 export function keys<const T extends Record<string, any>>(
 	obj: T
 ): T extends T ? (keyof T)[] : never {
-	return Object.keys(obj) as any;
+	return Object.keys(obj) as any
 }

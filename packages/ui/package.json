@@ -146,10 +146,6 @@
 		"customRenderers"
 	],
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
-		"lint": "eslint **/*.tsx",
-		"lint:fix": "eslint --fix **/*.tsx",
 		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -221,10 +217,7 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@pubpub/eslint-config": "workspace:*",
-		"@pubpub/prettier-config": "workspace:*",
 		"@types/react": "catalog:react19",
-		"eslint": "catalog:",
 		"postcss": "catalog:",
 		"react": "catalog:react19",
 		"tailwindcss": "catalog:",
@@ -322,6 +315,5 @@
 			"customRenderers/confidence/confidence.tsx",
 			"customRenderers/fileUpload/fileUpload.tsx"
 		]
-	},
-	"prettier": "@pubpub/prettier-config"
+	}
 }

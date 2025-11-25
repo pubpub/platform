@@ -1,54 +1,51 @@
-import type { InitialConfigType } from "@lexical/react/LexicalComposer";
-import type { EditorState } from "lexical";
-import type { ControllerRenderProps } from "react-hook-form";
+import type { InitialConfigType } from "@lexical/react/LexicalComposer"
+import type { EditorState } from "lexical"
+import type { ControllerRenderProps } from "react-hook-form"
 
-import * as React from "react";
-import { $convertFromMarkdownString } from "@lexical/markdown";
-import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin";
-import { $getRoot } from "lexical";
+import * as React from "react"
+import { $convertFromMarkdownString } from "@lexical/markdown"
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin"
+import { LexicalComposer } from "@lexical/react/LexicalComposer"
+import { ContentEditable } from "@lexical/react/LexicalContentEditable"
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
+import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin"
+import { $getRoot } from "lexical"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import { JsonataNode } from "./JsonataNode";
-import { JsonataPlugin } from "./JsonataPlugin";
-import { SingleLinePlugin } from "./SingleLinePlugin";
+import { JsonataNode } from "./JsonataNode"
+import { JsonataPlugin } from "./JsonataPlugin"
+import { SingleLinePlugin } from "./SingleLinePlugin"
 
 const theme = {
 	token: "token",
 	jsonataToken: "jsonata-token",
-};
-
-function onError(error: unknown) {
-	// eslint-disable-next-line no-console
-	console.error(error);
 }
 
-const NODES = [JsonataNode];
+function onError(_error: unknown) {}
+
+const NODES = [JsonataNode]
 
 const makeSyntheticChangeEvent = (value: string) => {
 	return {
 		target: {
 			value,
 		},
-	};
-};
+	}
+}
 
 export type PlainTextWithTokensEditorProps = ControllerRenderProps<
 	Record<string, string>,
 	string
 > & {
-	multiLine?: boolean;
-	"aria-labelledby"?: string;
-};
+	multiLine?: boolean
+	"aria-labelledby"?: string
+}
 
 export const PlainTextWithTokensEditor = (props: PlainTextWithTokensEditorProps) => {
-	const initialValue = React.useMemo(() => props.value ?? "", []);
+	const initialValue = React.useMemo(() => props.value ?? "", [props.value])
 	const initialConfig = React.useMemo(() => {
 		return {
 			namespace: "LexicalEditor",
@@ -56,17 +53,17 @@ export const PlainTextWithTokensEditor = (props: PlainTextWithTokensEditorProps)
 			onError,
 			editorState: () => $convertFromMarkdownString(initialValue),
 			nodes: NODES,
-		} satisfies InitialConfigType;
-	}, [initialValue]);
+		} satisfies InitialConfigType
+	}, [initialValue])
 
 	const onChange = React.useCallback(
 		(editorState: EditorState) => {
 			editorState.read(() => {
-				props.onChange(makeSyntheticChangeEvent($getRoot().getTextContent()));
-			});
+				props.onChange(makeSyntheticChangeEvent($getRoot().getTextContent()))
+			})
 		},
 		[props.onChange]
-	);
+	)
 
 	return (
 		<LexicalComposer initialConfig={initialConfig}>
@@ -80,7 +77,7 @@ export const PlainTextWithTokensEditor = (props: PlainTextWithTokensEditorProps)
 							"prose prose-sm",
 							props.multiLine ? "min-h-[200px]" : "h-9",
 							// Copied from ui/src/input.tsx
-							"flex h-9 w-full items-center rounded-md border border-gray-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-gray-950 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:file:text-gray-50 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+							"flex h-9 w-full items-center rounded-md border border-gray-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:font-medium file:text-gray-950 file:text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:focus-visible:ring-gray-300 dark:placeholder:text-gray-400 dark:file:text-gray-50"
 						)}
 					/>
 				}
@@ -93,5 +90,5 @@ export const PlainTextWithTokensEditor = (props: PlainTextWithTokensEditorProps)
 			{!props.multiLine && <SingleLinePlugin />}
 			<JsonataPlugin />
 		</LexicalComposer>
-	);
-};
+	)
+}

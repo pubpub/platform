@@ -1,45 +1,45 @@
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
+import type { CoreSchemaType, PubFieldsId } from "db/public"
 
-import { useCallback } from "react";
-import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
+import { useCallback } from "react"
+import { SCHEMA_TYPES_WITH_ICONS } from "schemas"
 
-import type { CoreSchemaType, PubFieldsId } from "db/public";
-import { Checkbox } from "ui/checkbox";
-import { DataTableColumnHeader } from "ui/data-table";
-import { DropdownMenuItem } from "ui/dropdown-menu";
-import { Archive, CurlyBraces, History } from "ui/icon";
-import { toast } from "ui/use-toast";
+import { Checkbox } from "ui/checkbox"
+import { DataTableColumnHeader } from "ui/data-table"
+import { DropdownMenuItem } from "ui/dropdown-menu"
+import { Archive, CurlyBraces, History } from "ui/icon"
+import { toast } from "ui/use-toast"
 
-import { MenuItemButton, TableActionMenu } from "~/app/components/TableActionMenu";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
+import { MenuItemButton, TableActionMenu } from "~/app/components/TableActionMenu"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import * as actions from "./actions"
 
 export interface TableData {
-	id: PubFieldsId;
-	name: string;
-	schemaName: CoreSchemaType | null;
-	updated: Date;
-	isArchived: boolean;
-	slug: string;
-	isRelation: boolean;
+	id: PubFieldsId
+	name: string
+	schemaName: CoreSchemaType | null
+	updated: Date
+	isArchived: boolean
+	slug: string
+	isRelation: boolean
 }
 
 const ArchiveMenuItem = ({ field }: { field: TableData }) => {
-	const archiveField = useServerAction(actions.archiveField);
+	const archiveField = useServerAction(actions.archiveField)
 	const handleArchive = useCallback(async () => {
-		const result = await archiveField(field.id);
+		const result = await archiveField(field.id)
 		if (didSucceed(result)) {
-			toast({ title: `Archived ${field.name}` });
+			toast({ title: `Archived ${field.name}` })
 		}
-	}, [field.id]);
+	}, [field.id])
 	return (
 		<DropdownMenuItem asChild key={field.id}>
 			<MenuItemButton onClick={handleArchive} className="gap-2">
 				<Archive size={12} /> Archive
 			</MenuItemButton>
 		</DropdownMenuItem>
-	);
-};
+	)
+}
 
 export const getFieldTableColumns = () =>
 	[
@@ -70,18 +70,18 @@ export const getFieldTableColumns = () =>
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
 			accessorKey: "name",
 			cell: ({ row }) => {
-				const { schemaName, name } = row.original;
-				const Icon = schemaName ? SCHEMA_TYPES_WITH_ICONS[schemaName].icon : null;
+				const { schemaName, name } = row.original
+				const Icon = schemaName ? SCHEMA_TYPES_WITH_ICONS[schemaName].icon : null
 				return (
 					<div className="flex items-center gap-2">
 						{Icon ? (
-							<span className="absolute -ml-6">
+							<span className="-ml-6 absolute">
 								<Icon className="w-4" />
 							</span>
 						) : null}
 						<span>{row.original.name}</span>
 					</div>
-				);
+				)
 			},
 		},
 		{
@@ -100,7 +100,7 @@ export const getFieldTableColumns = () =>
 			accessorKey: "slug",
 			cell: ({ row }) => (
 				<div className="pr-10">
-					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-xs text-blue-400">
+					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-blue-400 text-xs">
 						{row.original.slug}
 					</span>
 				</div>
@@ -117,7 +117,7 @@ export const getFieldTableColumns = () =>
 			),
 			accessorKey: "updated",
 			cell: ({ row }) => {
-				return <div className="pr-10">{row.original.updated.toLocaleDateString()}</div>;
+				return <div className="pr-10">{row.original.updated.toLocaleDateString()}</div>
 			},
 		},
 		{
@@ -125,13 +125,13 @@ export const getFieldTableColumns = () =>
 			enableHiding: false,
 			cell: ({ row }) => {
 				if (row.original.isArchived) {
-					return;
+					return
 				}
 				return (
 					<TableActionMenu>
 						<ArchiveMenuItem field={row.original} />
 					</TableActionMenu>
-				);
+				)
 			},
 		},
-	] as const satisfies ColumnDef<TableData, unknown>[];
+	] as const satisfies ColumnDef<TableData, unknown>[]

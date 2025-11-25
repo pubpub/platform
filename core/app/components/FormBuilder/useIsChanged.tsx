@@ -1,4 +1,4 @@
-import { parseAsBoolean, useQueryState } from "nuqs";
+import { parseAsBoolean, useQueryState } from "nuqs"
 
 export const useIsChanged = () => {
 	const [isChanged, setIsChanged] = useQueryState(
@@ -7,7 +7,7 @@ export const useIsChanged = () => {
 			history: "replace",
 			scroll: false,
 		})
-	);
+	)
 
-	return [isChanged, setIsChanged] as const;
-};
+	return [isChanged, setIsChanged] as const
+}

@@ -1,11 +1,12 @@
-import { revalidateTag } from "next/cache";
+import type { CacheScope } from "./cacheTags"
 
-import { logger } from "logger";
+import { revalidateTag } from "next/cache"
 
-import type { CacheScope } from "./cacheTags";
-import { env } from "~/lib/env/env";
-import { createCommunityCacheTags } from "./cacheTags";
-import { getCommunitySlug } from "./getCommunitySlug";
+import { logger } from "logger"
+
+import { env } from "~/lib/env/env"
+import { createCommunityCacheTags } from "./cacheTags"
+import { getCommunitySlug } from "./getCommunitySlug"
 
 /**
  * Revalidates cache tags for a given community scope.
@@ -23,22 +24,22 @@ export const revalidateTagsForCommunity = async <S extends CacheScope>(
 	scope: S | S[],
 	communitySlug?: string | string[]
 ): Promise<string[]> => {
-	const slug = communitySlug ?? (await getCommunitySlug());
+	const slug = communitySlug ?? (await getCommunitySlug())
 
-	const scopes = Array.isArray(scope) ? scope : [scope];
+	const scopes = Array.isArray(scope) ? scope : [scope]
 
-	const slugs = Array.isArray(slug) ? slug : [slug];
+	const slugs = Array.isArray(slug) ? slug : [slug]
 
 	const tags = slugs.flatMap((slug) => {
-		const tags = createCommunityCacheTags(scopes, slug);
+		const tags = createCommunityCacheTags(scopes, slug)
 		return tags.map((tag) => {
-			revalidateTag(tag);
-			return tag;
-		});
-	});
+			revalidateTag(tag)
+			return tag
+		})
+	})
 	if (env.CACHE_LOG === "true") {
-		logger.debug(`MANUAL REVALIDATE: revalidating tags: ${tags.join(", ")}`);
+		logger.debug(`MANUAL REVALIDATE: revalidating tags: ${tags.join(", ")}`)
 	}
 
-	return tags;
-};
+	return tags
+}

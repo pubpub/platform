@@ -1,19 +1,18 @@
-import type { ControllerRenderProps } from "react-hook-form";
+import type { InputComponent } from "db/public"
+import type { ControllerRenderProps } from "react-hook-form"
+import type { ComponentConfigFormProps, ConfigFormData } from "./types"
 
-import { useEffect, useState } from "react";
-import { Pencil, PlusIcon, TrashIcon } from "lucide-react";
-import { useFormContext } from "react-hook-form";
+import { useEffect, useState } from "react"
+import { Pencil, PlusIcon, TrashIcon } from "lucide-react"
+import { useFormContext } from "react-hook-form"
 
-import type { InputComponent } from "db/public";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
-import { ColorCircle, ColorPicker } from "ui/color";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { cn } from "utils";
-
-import type { ComponentConfigFormProps, ConfigFormData } from "./types";
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { ColorCircle, ColorPicker } from "ui/color"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { cn } from "utils"
 
 export const FormBuilderColorPickerPopover = ({
 	color,
@@ -24,26 +23,23 @@ export const FormBuilderColorPickerPopover = ({
 	parentField,
 	idx,
 }: {
-	color: string;
-	label: string;
-	onChange: (value: { label: string; value: string }) => void;
-	presets?: { label: string; value: string }[];
-	presetsOnly?: boolean;
-	parentField: ControllerRenderProps<
-		ConfigFormData<InputComponent.colorPicker>,
-		"config.presets"
-	>;
-	idx: number;
+	color: string
+	label: string
+	onChange: (value: { label: string; value: string }) => void
+	presets?: { label: string; value: string }[]
+	presetsOnly?: boolean
+	parentField: ControllerRenderProps<ConfigFormData<InputComponent.colorPicker>, "config.presets">
+	idx: number
 }) => {
-	const [isEditingLabel, setIsEditingLabel] = useState(false);
+	const [isEditingLabel, setIsEditingLabel] = useState(false)
 
 	const saveLabelChange = (newLabel: string) => {
 		onChange({
 			label: newLabel,
 			value: color,
-		});
-		setIsEditingLabel(false);
-	};
+		})
+		setIsEditingLabel(false)
+	}
 
 	return (
 		<div className="group flex w-full min-w-0 items-center rounded-md border bg-white shadow-sm hover:bg-gray-100">
@@ -71,10 +67,10 @@ export const FormBuilderColorPickerPopover = ({
 						/>
 					) : (
 						<div className="flex max-w-full grow items-center justify-between gap-2">
-							<span className="max-w-40 truncate text-sm font-medium">
+							<span className="max-w-40 truncate font-medium text-sm">
 								{label || color}
 							</span>
-							<span className="font-mono text-xs text-gray-500">{color}</span>
+							<span className="font-mono text-gray-500 text-xs">{color}</span>
 						</div>
 					)}
 				</PopoverTrigger>
@@ -87,7 +83,7 @@ export const FormBuilderColorPickerPopover = ({
 							onChange({
 								label: label || newColor,
 								value: newColor,
-							});
+							})
 						}}
 					/>
 				</PopoverContent>
@@ -114,7 +110,7 @@ export const FormBuilderColorPickerPopover = ({
 					size="icon"
 					className="ml-1 h-7 w-7 p-0 hover:bg-gray-200 hover:text-destructive"
 					onClick={() => {
-						parentField.onChange(parentField.value?.filter((_, i) => i !== idx));
+						parentField.onChange(parentField.value?.filter((_, i) => i !== idx))
 					}}
 					aria-label={`Remove color preset ${label}`}
 				>
@@ -122,23 +118,23 @@ export const FormBuilderColorPickerPopover = ({
 				</Button>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
-export default (props: ComponentConfigFormProps<InputComponent.colorPicker>) => {
+export default (_props: ComponentConfigFormProps<InputComponent.colorPicker>) => {
 	// for some reason if i use `props.form` the watched values don't update when the form values change
-	const reactiveForm = useFormContext<ConfigFormData<InputComponent.colorPicker>>();
-	const presets = reactiveForm.watch("config.presets");
-	const presetsOnly = reactiveForm.watch("config.presetsOnly");
+	const reactiveForm = useFormContext<ConfigFormData<InputComponent.colorPicker>>()
+	const presets = reactiveForm.watch("config.presets")
+	const presetsOnly = reactiveForm.watch("config.presetsOnly")
 
-	const presetsOnlyEnabled = Boolean(presets?.length);
+	const presetsOnlyEnabled = Boolean(presets?.length)
 
 	// doesn't make sense to set presets only if there are no presets
 	useEffect(() => {
 		if (presetsOnly && !presetsOnlyEnabled) {
-			reactiveForm.setValue("config.presetsOnly", false);
+			reactiveForm.setValue("config.presetsOnly", false)
 		}
-	}, [presets, presetsOnly]);
+	}, [presetsOnly, presetsOnlyEnabled, reactiveForm.setValue])
 
 	return (
 		<>
@@ -183,7 +179,7 @@ export default (props: ComponentConfigFormProps<InputComponent.colorPicker>) => 
 				render={({ field }) => (
 					<FormItem className="flex flex-col gap-2">
 						<FormLabel>Color Presets</FormLabel>
-						{field.value?.map((preset, idx) => (
+						{field.value?.map((_preset, idx) => (
 							<FormField
 								key={idx}
 								control={reactiveForm.control}
@@ -196,7 +192,7 @@ export default (props: ComponentConfigFormProps<InputComponent.colorPicker>) => 
 										color={subField.value.value}
 										label={subField.value.label}
 										onChange={(value) => {
-											subField.onChange(value);
+											subField.onChange(value)
 										}}
 									/>
 								)}
@@ -208,11 +204,11 @@ export default (props: ComponentConfigFormProps<InputComponent.colorPicker>) => 
 							variant="outline"
 							className="mt-2"
 							onClick={() => {
-								const currentPresets = field.value ?? [];
+								const currentPresets = field.value ?? []
 								field.onChange([
 									...currentPresets,
 									{ label: "New preset", value: "#000000" },
-								]);
+								])
 							}}
 						>
 							<PlusIcon className="mr-2 h-4 w-4" />
@@ -253,5 +249,5 @@ export default (props: ComponentConfigFormProps<InputComponent.colorPicker>) => 
 				)}
 			/>
 		</>
-	);
-};
+	)
+}

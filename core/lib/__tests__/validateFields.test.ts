@@ -1,8 +1,8 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vitest"
 
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType } from "db/public"
 
-import { validatePubValuesBySchemaName } from "~/lib/server/validateFields";
+import { validatePubValuesBySchemaName } from "~/lib/server/validateFields"
 
 const JSON_EXAMPLE = {
 	content: [
@@ -17,7 +17,7 @@ const JSON_EXAMPLE = {
 		},
 	],
 	type: "doc",
-};
+}
 
 test.each([
 	{ value: 1, expected: false },
@@ -26,11 +26,11 @@ test.each([
 	// "" is a valid html value
 	{ value: "", expected: "" },
 ])("validating rich text field", ({ value, expected }) => {
-	const values = [{ slug: "community:richtext", value, schemaName: CoreSchemaType.RichText }];
-	const result = validatePubValuesBySchemaName(values);
+	const values = [{ slug: "community:richtext", value, schemaName: CoreSchemaType.RichText }]
+	const result = validatePubValuesBySchemaName(values)
 	if (expected !== false) {
-		expect(result.results[0].value).toStrictEqual(expected);
+		expect(result.results[0].value).toStrictEqual(expected)
 	} else {
-		expect(result.errors.length).toBeGreaterThan(0);
+		expect(result.errors.length).toBeGreaterThan(0)
 	}
-});
+})

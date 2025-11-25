@@ -1,6 +1,3 @@
-import { sql } from "kysely";
-import { describe, expect, it } from "vitest";
-
 import type {
 	ActionRunsId,
 	ApiAccessTokensId,
@@ -14,16 +11,16 @@ import {
 	isCheckContraintError,
 	isPostgresError,
 	parseForeignKeyConstraintError,
-} from "~/kysely/errors";
-import { mockServerCode } from "../__tests__/utils";
-import { createLastModifiedBy } from "../lastModifiedBy";
-import { findRanksBetween } from "../rank";
+} from "~/kysely/errors"
+import { mockServerCode } from "../__tests__/utils"
+import { createLastModifiedBy } from "../lastModifiedBy"
+import { findRanksBetween } from "../rank"
 
 const { testDb, createForEachMockedTransaction, createSingleMockedTransaction } =
-	await mockServerCode();
-const { getTrx, rollback, commit } = createForEachMockedTransaction(testDb);
+	await mockServerCode()
+const { getTrx, rollback, commit } = createForEachMockedTransaction(testDb)
 
-const { createSeed } = await import("~/prisma/seed/createSeed");
+const { createSeed } = await import("~/prisma/seed/createSeed")
 
 const pubTriggerTestSeed = createSeed({
 	community: {
@@ -50,7 +47,7 @@ const pubTriggerTestSeed = createSeed({
 		},
 	],
 	forms: {},
-});
+})
 
 // this is testing the trigger defined in prisma/migrations/20241126113759_add_pub_values_updated_at_trigger/migration.sql
 describe("updatedAt trigger", () => {
@@ -58,34 +55,34 @@ describe("updatedAt trigger", () => {
 		// we can't do this inside of a transaction and roll it back,
 		// bc the timestamp inside of one transaction will not change
 		// therefore we persist this to the db
-		const trx = testDb;
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
+		const trx = testDb
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx)
 
-		const pub = pubs[0];
+		const pub = pubs[0]
 
 		const compareUpdatedAt = async (updatedAtBefore: Date, message?: string) => {
 			const newPub = await trx
 				.selectFrom("pubs")
 				.select("updatedAt")
 				.where("id", "=", pub.id)
-				.executeTakeFirstOrThrow();
+				.executeTakeFirstOrThrow()
 
-			expect(newPub.updatedAt.getTime(), message).toBeGreaterThan(updatedAtBefore.getTime());
+			expect(newPub.updatedAt.getTime(), message).toBeGreaterThan(updatedAtBefore.getTime())
 
-			return newPub.updatedAt;
-		};
+			return newPub.updatedAt
+		}
 
 		const deleteResult = await trx
 			.deleteFrom("pub_values")
 			.where((eb) =>
 				eb.and([eb("pubId", "=", pub.id), eb("fieldId", "=", pubFields.Description.id)])
 			)
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
-		expect(deleteResult.numDeletedRows).toBe(BigInt(1));
+		expect(deleteResult.numDeletedRows).toBe(BigInt(1))
 
-		await compareUpdatedAt(pub.updatedAt, "Delete should update updatedAt");
+		await compareUpdatedAt(pub.updatedAt, "Delete should update updatedAt")
 
 		// update some pub value
 
@@ -97,17 +94,17 @@ describe("updatedAt trigger", () => {
 				value: JSON.stringify("description"),
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
-		expect(insertResult.numInsertedOrUpdatedRows).toBe(BigInt(1));
+		expect(insertResult.numInsertedOrUpdatedRows).toBe(BigInt(1))
 
 		const afterInsertUpdatedAt = await compareUpdatedAt(
 			pub.updatedAt,
 			"Insert should update updatedAt"
-		);
+		)
 
 		// making sure it's a non-title field to make sure the trigger is working as expected
-		const updateResult = await trx
+		const _updateResult = await trx
 			.updateTable("pub_values")
 			.set({
 				value: JSON.stringify("new description"),
@@ -116,12 +113,12 @@ describe("updatedAt trigger", () => {
 			.where((eb) =>
 				eb.and([eb("pubId", "=", pub.id), eb("fieldId", "=", pubFields.Description.id)])
 			)
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
 		const afterUpdateUpdatedAt = await compareUpdatedAt(
 			afterInsertUpdatedAt,
 			"Update should update updatedAt"
-		);
+		)
 
 		const insertOnConflict = await trx
 			.insertInto("pub_values")
@@ -142,16 +139,16 @@ describe("updatedAt trigger", () => {
 						lastModifiedBy: createLastModifiedBy("system"),
 					}))
 			)
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
-		expect(insertOnConflict.numInsertedOrUpdatedRows).toBe(BigInt(1));
+		expect(insertOnConflict.numInsertedOrUpdatedRows).toBe(BigInt(1))
 
-		const afterInsertOnConflictUpdatedAt = await compareUpdatedAt(
+		const _afterInsertOnConflictUpdatedAt = await compareUpdatedAt(
 			afterUpdateUpdatedAt,
 			"Insert on conflict should update updatedAt"
-		);
-	});
-});
+		)
+	})
+})
 
 const getPubTitle = async (pubId: PubsId, trx = testDb) => {
 	return (
@@ -160,13 +157,13 @@ const getPubTitle = async (pubId: PubsId, trx = testDb) => {
 			.select("title")
 			.where("id", "=", pubId)
 			.executeTakeFirstOrThrow()
-	).title;
-};
+	).title
+}
 
 describe("pub_values title trigger", () => {
 	it("should set a title on a pub when a pub is created with a title", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 
 		const { pubs } = await seedCommunity(
 			{
@@ -182,14 +179,14 @@ describe("pub_values title trigger", () => {
 			},
 			undefined,
 			trx
-		);
+		)
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("Test pub");
-	});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Test pub")
+	})
 
 	it("should not set a title on a pub when a pub is created without a title", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 
 		const { pubFields, pubs } = await seedCommunity(
 			{
@@ -205,17 +202,17 @@ describe("pub_values title trigger", () => {
 			},
 			undefined,
 			trx
-		);
+		)
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
-	});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe(null)
+	})
 
 	it("should update a title on a pub when a pubvalue is updated", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx)
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title")
 
 		const updatedPubValue = await trx
 			.updateTable("pub_values")
@@ -226,19 +223,19 @@ describe("pub_values title trigger", () => {
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
 			.returningAll()
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
-		expect(updatedPubValue).toBeDefined();
+		expect(updatedPubValue).toBeDefined()
 
-		expect(await getPubTitle(pubs[0].id, trx), "AA").toBe("new title");
-	});
+		expect(await getPubTitle(pubs[0].id, trx), "AA").toBe("new title")
+	})
 
 	it("can handle the highly unusual scenario where a title value is set to null", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx)
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title")
 
 		// this normally wouldn't be allowed due to validation, but we're just testing the trigger
 		await trx
@@ -249,14 +246,14 @@ describe("pub_values title trigger", () => {
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
-	});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe(null)
+	})
 
 	it("should set a title on a pub when a pubvalue is inserted", async () => {
-		const trx = testDb;
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const trx = testDb
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { pubFields, pubs } = await seedCommunity(
 			{
 				...pubTriggerTestSeed,
@@ -271,9 +268,9 @@ describe("pub_values title trigger", () => {
 			},
 			undefined,
 			trx
-		);
+		)
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
+		expect(await getPubTitle(pubs[0].id, trx)).toBe(null)
 
 		const insertResult = await trx
 			.insertInto("pub_values")
@@ -283,11 +280,11 @@ describe("pub_values title trigger", () => {
 				value: JSON.stringify("new title"),
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
-		expect(insertResult.numInsertedOrUpdatedRows).toBe(BigInt(1));
+		expect(insertResult.numInsertedOrUpdatedRows).toBe(BigInt(1))
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("new title");
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("new title")
 
 		const updateResult = await trx
 			.updateTable("pub_values")
@@ -297,22 +294,22 @@ describe("pub_values title trigger", () => {
 			})
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
-		expect(updateResult.numUpdatedRows).toBe(BigInt(1));
+		expect(updateResult.numUpdatedRows).toBe(BigInt(1))
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("newer title");
-	});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("newer title")
+	})
 
 	it("should not update a title on a pub when a non-title pubvalue is updated", async () => {
 		// we explictly don't want to use the rolled back transaction here
 		// for some, strange strange reason, this doesn't work then
 		// with the transaction rolled back
-		const trx = testDb;
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
+		const trx = testDb
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx)
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title")
 
 		await trx
 			.insertInto("pub_values")
@@ -331,42 +328,42 @@ describe("pub_values title trigger", () => {
 						lastModifiedBy: createLastModifiedBy("system"),
 					}))
 			)
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
-	});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title")
+	})
 
 	it("should delete a title on a pub when a pubvalue is deleted", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed);
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed)
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title")
 
-		const deletedPubValue = await trx
+		const _deletedPubValue = await trx
 			.deleteFrom("pub_values")
 			.where("pubId", "=", pubs[0].id)
 			.where("fieldId", "=", pubFields.Title.id)
 			.returningAll()
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
-	});
-});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe(null)
+	})
+})
 
 // when a pubType is updated, we need to update the title of all pubs in that pubType
 describe("pubType title change trigger", () => {
 	it("should update titles when a field is marked as title", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { pubFields, pubTypes, pubs } = await seedCommunity(
 			pubTriggerTestSeed,
 			undefined,
 			trx
-		);
+		)
 
-		expect(pubs[0].title).toBe("Some title");
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
+		expect(pubs[0].title).toBe("Some title")
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title")
 
 		// Change the title field from Title to Description
 		await trx
@@ -374,28 +371,28 @@ describe("pubType title change trigger", () => {
 			.set({ isTitle: false })
 			.where("A", "=", pubFields.Title.id)
 			.where("B", "=", pubTypes["Basic Pub"].id)
-			.execute();
+			.execute()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
+		expect(await getPubTitle(pubs[0].id, trx)).toBe(null)
 
 		await trx
 			.updateTable("_PubFieldToPubType")
 			.set({ isTitle: true })
 			.where("A", "=", pubFields.Description.id)
 			.where("B", "=", pubTypes["Basic Pub"].id)
-			.execute();
+			.execute()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some description");
-	});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some description")
+	})
 
 	it("should set title to null when no field is marked as title", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { pubFields, pubTypes, pubs } = await seedCommunity(
 			pubTriggerTestSeed,
 			undefined,
 			trx
-		);
+		)
 
 		// Remove title designation from the Title field
 		await trx
@@ -403,15 +400,15 @@ describe("pubType title change trigger", () => {
 			.set({ isTitle: false })
 			.where("A", "=", pubFields.Title.id)
 			.where("B", "=", pubTypes["Basic Pub"].id)
-			.execute();
+			.execute()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
-	});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe(null)
+	})
 
 	it("should update titles for all pubs in the pub type", async () => {
-		const trx = getTrx();
+		const trx = getTrx()
 
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { community, pubFields, pubTypes, pubs } = await seedCommunity({
 			...pubTriggerTestSeed,
 			pubs: [
@@ -430,10 +427,10 @@ describe("pubType title change trigger", () => {
 					},
 				},
 			],
-		});
+		})
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("First title");
-		expect(await getPubTitle(pubs[1].id, trx)).toBe("Second title");
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("First title")
+		expect(await getPubTitle(pubs[1].id, trx)).toBe("Second title")
 
 		// Change the title field from Title to Description
 		await trx
@@ -441,46 +438,46 @@ describe("pubType title change trigger", () => {
 			.set({ isTitle: false })
 			.where("A", "=", pubFields.Title.id)
 			.where("B", "=", pubTypes["Basic Pub"].id)
-			.execute();
+			.execute()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
-		expect(await getPubTitle(pubs[1].id, trx)).toBe(null);
+		expect(await getPubTitle(pubs[0].id, trx)).toBe(null)
+		expect(await getPubTitle(pubs[1].id, trx)).toBe(null)
 
 		await trx
 			.updateTable("_PubFieldToPubType")
 			.set({ isTitle: true })
 			.where("A", "=", pubFields.Description.id)
 			.where("B", "=", pubTypes["Basic Pub"].id)
-			.execute();
+			.execute()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("First description");
-		expect(await getPubTitle(pubs[1].id, trx)).toBe("Second description");
-	});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("First description")
+		expect(await getPubTitle(pubs[1].id, trx)).toBe("Second description")
+	})
 
 	it("should set title to null when a pubfield is removed from a pubtype", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { pubFields, pubTypes, pubs } = await seedCommunity(
 			pubTriggerTestSeed,
 			undefined,
 			trx
-		);
+		)
 
-		expect(pubs[0].title).toBe("Some title");
+		expect(pubs[0].title).toBe("Some title")
 
 		// Remove the Title field from the pubType
 		await trx
 			.deleteFrom("_PubFieldToPubType")
 			.where("A", "=", pubFields.Title.id)
 			.where("B", "=", pubTypes["Basic Pub"].id)
-			.execute();
+			.execute()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
-	});
+		expect(await getPubTitle(pubs[0].id, trx)).toBe(null)
+	})
 
 	it("should update title when a pubfield is added as a title", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { pubFields, pubTypes, pubs } = await seedCommunity(
 			{
 				...pubTriggerTestSeed,
@@ -508,14 +505,14 @@ describe("pubType title change trigger", () => {
 			},
 			undefined,
 			trx
-		);
+		)
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
+		expect(await getPubTitle(pubs[0].id, trx)).toBe(null)
 
 		const newRank = findRanksBetween({
 			numberOfRanks: 1,
 			start: Object.values(pubTypes["Basic Pub"].fields).at(-1)?.rank ?? "0",
-		});
+		})
 
 		await trx
 			.insertInto("_PubFieldToPubType")
@@ -525,15 +522,15 @@ describe("pubType title change trigger", () => {
 				isTitle: true,
 				rank: newRank[0],
 			})
-			.execute();
+			.execute()
 
-		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
+		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title")
 		expect(
 			await getPubTitle(pubs[1].id, trx),
 			"Inserts should not update titles of pubs without a title"
-		).toBe(null);
-	});
-});
+		).toBe(null)
+	})
+})
 
 const pubValuesHistoryTestSeed = createSeed({
 	community: {
@@ -562,18 +559,18 @@ const pubValuesHistoryTestSeed = createSeed({
 			},
 		},
 	],
-});
+})
 describe("pub_values_history trigger", () => {
 	describe("basic functioning", () => {
 		it("should create a pub_values_history row when a pubvalue is inserted", async () => {
-			const trx = getTrx();
+			const trx = getTrx()
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
 				trx
-			);
+			)
 
 			const insertResult = await trx
 				.insertInto("pub_values")
@@ -584,13 +581,13 @@ describe("pub_values_history trigger", () => {
 					lastModifiedBy: createLastModifiedBy("system"),
 				})
 				.returning("id")
-				.executeTakeFirstOrThrow();
+				.executeTakeFirstOrThrow()
 
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
 				.where("pubValueId", "=", insertResult.id)
-				.executeTakeFirstOrThrow();
+				.executeTakeFirstOrThrow()
 
 			expect(history).toMatchObject({
 				operationType: "insert",
@@ -603,38 +600,36 @@ describe("pub_values_history trigger", () => {
 				apiAccessTokenId: null,
 				actionRunId: null,
 				other: "system",
-			});
-		});
+			})
+		})
 
 		it("should create a pub_values_history row when a pubvalue is updated", async () => {
-			const trx = getTrx();
+			const trx = getTrx()
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
 				trx
-			);
+			)
 
-			const titlePubValueId = pubs[0].values.find(
-				(v) => v.fieldId === pubFields.Title.id
-			)?.id!;
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
-			const updateResult = await trx
+			const _updateResult = await trx
 				.updateTable("pub_values")
 				.set({
 					value: JSON.stringify("new title"),
 					lastModifiedBy: createLastModifiedBy("system"),
 				})
-				.where("id", "=", titlePubValueId)
-				.executeTakeFirstOrThrow();
+				.where("id", "=", titlePubValueId!)
+				.executeTakeFirstOrThrow()
 
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("pubValueId", "=", titlePubValueId)
+				.where("pubValueId", "=", titlePubValueId!)
 				.where("operationType", "=", OperationType.update)
-				.executeTakeFirstOrThrow();
+				.executeTakeFirstOrThrow()
 
 			expect(history).toMatchObject({
 				operationType: "update",
@@ -644,36 +639,34 @@ describe("pub_values_history trigger", () => {
 				newRowData: {
 					value: "new title",
 				},
-			});
-		});
+			})
+		})
 
 		it("should create an update pub_values_history row when a pubvalue is inserted on conflict", async () => {
-			const trx = getTrx();
+			const trx = getTrx()
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
 				trx
-			);
+			)
 
-			const titlePubValueId = pubs[0].values.find(
-				(v) => v.fieldId === pubFields.Title.id
-			)?.id!;
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 			const insertHistory = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("pubValueId", "=", titlePubValueId)
-				.execute();
+				.where("pubValueId", "=", titlePubValueId!)
+				.execute()
 
-			expect(insertHistory.length).toBe(1);
+			expect(insertHistory.length).toBe(1)
 			expect(insertHistory[0]).toMatchObject({
 				operationType: "insert",
 				oldRowData: null,
 				newRowData: {
 					value: "Some title",
 				},
-			});
+			})
 
 			const insertResult = await trx
 				.insertInto("pub_values")
@@ -693,15 +686,15 @@ describe("pub_values_history trigger", () => {
 							lastModifiedBy: createLastModifiedBy("system"),
 						}))
 				)
-				.executeTakeFirstOrThrow();
+				.executeTakeFirstOrThrow()
 
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
 				.where("pubValueId", "=", insertResult.id)
-				.execute();
+				.execute()
 
-			expect(history.length).toBe(2);
+			expect(history.length).toBe(2)
 			expect(history[1]).toMatchObject({
 				operationType: "update",
 				oldRowData: {
@@ -710,26 +703,24 @@ describe("pub_values_history trigger", () => {
 				newRowData: {
 					value: "new title",
 				},
-			});
-		});
-	});
+			})
+		})
+	})
 
 	describe("handling different types of lastModifiedBy", () => {
 		it("should allow setting lastModifiedBy to 'unknown' or 'system'", async () => {
-			const trx = getTrx();
+			const trx = getTrx()
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
 				trx
-			);
+			)
 
-			const titlePubValueId = pubs[0].values.find(
-				(v) => v.fieldId === pubFields.Title.id
-			)?.id!;
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
-			const basicModifiedsPromise = ["unknown", "system"] as const;
+			const basicModifiedsPromise = ["unknown", "system"] as const
 
 			for (const modifiedBy of basicModifiedsPromise) {
 				await expect(
@@ -739,23 +730,23 @@ describe("pub_values_history trigger", () => {
 							value: JSON.stringify(modifiedBy),
 							lastModifiedBy: createLastModifiedBy(modifiedBy),
 						})
-						.where("id", "=", titlePubValueId)
+						.where("id", "=", titlePubValueId!)
 						.returningAll()
 						.executeTakeFirstOrThrow()
-				).resolves.not.toThrow();
+				).resolves.not.toThrow()
 			}
 
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("pubValueId", "=", titlePubValueId)
-				.execute();
+				.where("pubValueId", "=", titlePubValueId!) // biome-ignore lint/style/noNonNullAssertion: <explanation>
+				.execute()
 
 			history.sort((a, b) =>
 				(a.newRowData?.value as string).localeCompare(b.newRowData?.value as string)
-			);
+			)
 
-			expect(history.length).toBe(3);
+			expect(history.length).toBe(3)
 
 			expect(history[1]).toMatchObject({
 				newRowData: {
@@ -763,7 +754,7 @@ describe("pub_values_history trigger", () => {
 				},
 				other: "system",
 				operationType: "update",
-			});
+			})
 			expect(history[2]).toMatchObject({
 				newRowData: {
 					value: "unknown",
@@ -773,11 +764,11 @@ describe("pub_values_history trigger", () => {
 				actionRunId: null,
 				apiAccessTokenId: null,
 				userId: null,
-			});
-		});
+			})
+		})
 
-		const tokenId = crypto.randomUUID();
-		const token = `${tokenId}.${crypto.randomUUID()}` as const;
+		const tokenId = crypto.randomUUID()
+		const token = `${tokenId}.${crypto.randomUUID()}` as const
 		const multiCommunityTestSeed = createSeed({
 			...pubValuesHistoryTestSeed,
 			users: {
@@ -808,10 +799,10 @@ describe("pub_values_history trigger", () => {
 					},
 				},
 			},
-		});
+		})
 
 		it("should allow setting lastModifiedBy to a user id, api-token, and actionRunId, and set them to null when removed", async () => {
-			const trx = getTrx();
+			const trx = getTrx()
 
 			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 			const { pubFields, pubs, users, stages} = await seedCommunity(
@@ -825,11 +816,9 @@ describe("pub_values_history trigger", () => {
 				},
 				undefined,
 				trx
-			);
+			)
 
-			const titlePubValueId = pubs[0].values.find(
-				(v) => v.fieldId === pubFields.Title.id
-			)?.id!;
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
 			const actionRun = await trx
 				.insertInto("action_runs")
@@ -842,7 +831,7 @@ describe("pub_values_history trigger", () => {
 					}),
 				})
 				.returningAll()
-				.executeTakeFirstOrThrow();
+				.executeTakeFirstOrThrow()
 
 			const perpetrators = [
 				{
@@ -866,28 +855,28 @@ describe("pub_values_history trigger", () => {
 					foreignKey: "actionRunId",
 					value: actionRun.id,
 				},
-			] as const;
+			] as const
 
-			let historyKeys: PubValuesHistoryId[] = [];
+			const historyKeys: PubValuesHistoryId[] = []
 			for (const perpetrator of perpetrators) {
-				const updateResult = await trx
+				const _updateResult = await trx
 					.updateTable("pub_values")
 					.set({
 						value: JSON.stringify(perpetrator.value),
 						lastModifiedBy: createLastModifiedBy(perpetrator.lastModifiedBy),
 					})
-					.where("id", "=", titlePubValueId)
-					.executeTakeFirstOrThrow();
+					.where("id", "=", titlePubValueId!)
+					.executeTakeFirstOrThrow()
 
 				const history = await trx
 					.selectFrom("pub_values_history")
 					.selectAll()
-					.where("pubValueId", "=", titlePubValueId)
+					.where("pubValueId", "=", titlePubValueId!)
 					.where("operationType", "=", OperationType.update)
 					.where(sql`"newRowData"->>'value'`, "=", perpetrator.value)
-					.executeTakeFirstOrThrow();
+					.executeTakeFirstOrThrow()
 
-				historyKeys.push(history.id);
+				historyKeys.push(history.id)
 
 				expect(history).toMatchObject({
 					operationType: "update",
@@ -895,37 +884,37 @@ describe("pub_values_history trigger", () => {
 						value: perpetrator.value,
 					},
 					[perpetrator.foreignKey]: perpetrator.value,
-				});
+				})
 			}
 
 			const removeApiToken = await trx
 				.deleteFrom("api_access_tokens")
 				.where("id", "=", tokenId as ApiAccessTokensId)
-				.executeTakeFirst();
-			expect(removeApiToken.numDeletedRows).toBe(BigInt(1));
+				.executeTakeFirst()
+			expect(removeApiToken.numDeletedRows).toBe(BigInt(1))
 
 			const removeActionRun = await trx
 				.deleteFrom("action_runs")
 				.where("id", "=", actionRun.id as ActionRunsId)
-				.executeTakeFirst();
-			expect(removeActionRun.numDeletedRows).toBe(BigInt(1));
+				.executeTakeFirst()
+			expect(removeActionRun.numDeletedRows).toBe(BigInt(1))
 
 			const removeUser = await trx
 				.deleteFrom("users")
 				.where("id", "=", users["user-1"].id)
-				.executeTakeFirst();
-			expect(removeUser.numDeletedRows).toBe(BigInt(1));
+				.executeTakeFirst()
+			expect(removeUser.numDeletedRows).toBe(BigInt(1))
 
 			const history = await trx
 				.selectFrom("pub_values_history")
 				.selectAll()
-				.where("pubValueId", "=", titlePubValueId)
+				.where("pubValueId", "=", titlePubValueId!)
 				.where("id", "in", historyKeys)
 				.orderBy("createdAt", "desc")
-				.execute();
+				.execute()
 
-			expect(history.length).toBe(3);
-			history.forEach((h) =>
+			expect(history.length).toBe(3)
+			history.forEach((h) => {
 				expect(
 					h,
 					"history perpetrators should be nulled if they are removed"
@@ -936,25 +925,23 @@ describe("pub_values_history trigger", () => {
 					apiAccessTokenId: null,
 					actionRunId: null,
 				})
-			);
-		});
+			})
+		})
 
 		const isModifiedByCheckConstraintError = (error: unknown) =>
-			isCheckContraintError(error) && error.constraint === "modified_by_type_check";
+			isCheckContraintError(error) && error.constraint === "modified_by_type_check"
 
 		it("should throw a constraint error if lastModifiedBy is not a valid uuid", async () => {
-			const trx = getTrx();
+			const trx = getTrx()
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
 				trx
-			);
+			)
 
-			const titlePubValueId = pubs[0].values.find(
-				(v) => v.fieldId === pubFields.Title.id
-			)?.id!;
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
 			try {
 				await trx
@@ -964,90 +951,87 @@ describe("pub_values_history trigger", () => {
 							userId: "not-a-user" as UsersId,
 						}),
 					})
-					.where("id", "=", titlePubValueId)
-					.executeTakeFirst();
+					.where("id", "=", titlePubValueId!)
+					.executeTakeFirst()
 			} catch (e) {
-				expect(isModifiedByCheckConstraintError(e)).toBe(true);
+				expect(isModifiedByCheckConstraintError(e)).toBe(true)
 			}
-		});
+		})
 
 		it("should throw a different error if it is a valid id, but not a valid foreign key", async () => {
-			const trx = getTrx();
+			const trx = getTrx()
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
 				trx
-			);
+			)
 
-			const titlePubValueId = pubs[0].values.find(
-				(v) => v.fieldId === pubFields.Title.id
-			)?.id!;
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)?.id
 
-			const randomUserId = crypto.randomUUID();
+			const randomUserId = crypto.randomUUID()
 			try {
 				await trx
 					.updateTable("pub_values")
 					.set({
 						lastModifiedBy: createLastModifiedBy({ userId: randomUserId as UsersId }),
 					})
-					.where("id", "=", titlePubValueId)
-					.executeTakeFirst();
+					.where("id", "=", titlePubValueId!)
+					.executeTakeFirst()
 			} catch (e) {
-				expect(isPostgresError(e)).toBe(true);
+				expect(isPostgresError(e)).toBe(true)
 				expect(parseForeignKeyConstraintError(e)).toMatchObject({
 					foreignKey: {
 						key: "userId",
 						value: randomUserId,
 						table: "users",
 					},
-				});
+				})
 			}
-		});
+		})
 
 		it("should set throw if you are updating a pub_value and the lastModifiedBy is not set", async () => {
-			const trx = getTrx();
+			const trx = getTrx()
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
 				trx
-			);
+			)
 
-			const titlePubValueId = pubs[0].values.find(
-				(v) => v.fieldId === pubFields.Title.id
-			)?.id!;
+			const titlePubValueId = pubs[0].values.find((v) => v.fieldId === pubFields.Title.id)!
+				.id!
 
 			try {
 				await trx
 					.updateTable("pub_values")
 					.set({ value: JSON.stringify("new title") })
 					.where("id", "=", titlePubValueId)
-					.executeTakeFirst();
+					.executeTakeFirst()
 
-				const history = await trx
+				const _history = await trx
 					.selectFrom("pub_values_history")
 					.selectAll()
 					.where("pubValueId", "=", titlePubValueId)
-					.execute();
+					.execute()
 
-				expect(true, "Incorrect state, this statement should throw").toBe(false);
+				expect(true, "Incorrect state, this statement should throw").toBe(false)
 			} catch (e) {
-				expect(e.message).toMatch("lastModifiedBy must be explicitly set in UPDATE");
+				expect(e.message).toMatch("lastModifiedBy must be explicitly set in UPDATE")
 			}
-		});
+		})
 
 		it("should throw if no lastModifiedBy is set during onConflict doUpdate", async () => {
-			const trx = getTrx();
+			const trx = getTrx()
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
 				trx
-			);
+			)
 
 			try {
 				await trx
@@ -1067,10 +1051,10 @@ describe("pub_values_history trigger", () => {
 								// not set heree!
 							}))
 					)
-					.executeTakeFirstOrThrow();
+					.executeTakeFirstOrThrow()
 			} catch (e) {
-				expect(e.message).toMatch("lastModifiedBy must be explicitly set in UPDATE");
+				expect(e.message).toMatch("lastModifiedBy must be explicitly set in UPDATE")
 			}
-		});
-	});
-});
+		})
+	})
+})

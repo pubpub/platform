@@ -1,38 +1,37 @@
-"use client";
+"use client"
 
-import type { FieldValues, UseFormReturn } from "react-hook-form";
+import type { PubFieldSchemaId, PubFieldsId } from "db/public"
+import type { FieldValues, UseFormReturn } from "react-hook-form"
 
-import React from "react";
-import { Accordion } from "@radix-ui/react-accordion";
-import { useFieldArray } from "react-hook-form";
+import React from "react"
+import { Accordion } from "@radix-ui/react-accordion"
+import { useFieldArray } from "react-hook-form"
 
-import type { PubFieldSchemaId, PubFieldsId } from "db/public";
-
-import { AccordionContent, AccordionItem, AccordionTrigger } from "../accordion";
-import { Button } from "../button";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form";
-import { ArrowRight, Info, Plus, Trash } from "../icon";
-import { Input } from "../input";
-import { usePubFieldContext } from "../pubFields";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select";
-import { Separator } from "../separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../tooltip";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "../accordion"
+import { Button } from "../button"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form"
+import { ArrowRight, Info, Plus, Trash } from "../icon"
+import { Input } from "../input"
+import { usePubFieldContext } from "../pubFields"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select"
+import { Separator } from "../separator"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../tooltip"
 
 type PubField = {
-	id: PubFieldsId;
-	name: string;
-	slug: string;
-	pubFieldSchemaId: PubFieldSchemaId | null;
-};
+	id: PubFieldsId
+	name: string
+	slug: string
+	pubFieldSchemaId: PubFieldSchemaId | null
+}
 
 const OutputMapField = ({
 	disabled,
 	unselectedPubFields,
 	fieldName,
 }: {
-	disabled?: boolean;
-	unselectedPubFields: PubField[];
-	fieldName: string;
+	disabled?: boolean
+	unselectedPubFields: PubField[]
+	fieldName: string
 }) => (
 	<TooltipProvider>
 		<div className="flex items-start gap-x-2 overflow-visible">
@@ -40,7 +39,7 @@ const OutputMapField = ({
 				name={`${fieldName}.responseField`}
 				render={({ field }) => (
 					<FormItem className="flex w-1/2 flex-col gap-y-1">
-						<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">
+						<FormLabel className="flex items-center gap-x-2 font-normal text-gray-700 text-sm">
 							<span>Response field</span>
 							<Tooltip>
 								<TooltipTrigger>
@@ -76,7 +75,7 @@ const OutputMapField = ({
 				render={({ field }) => {
 					return (
 						<FormItem className="flex w-1/2 flex-col gap-y-1">
-							<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">
+							<FormLabel className="flex items-center gap-x-2 font-normal text-gray-700 text-sm">
 								<span> Pub field</span>
 
 								<Tooltip>
@@ -121,48 +120,48 @@ const OutputMapField = ({
 								</Select>
 							</FormControl>
 						</FormItem>
-					);
+					)
 				}}
 			/>
 		</div>
 	</TooltipProvider>
-);
+)
 
 export const FieldOutputMap = <F extends string>({
 	disabled,
 	form,
 	fieldName,
 }: {
-	disabled?: boolean;
+	disabled?: boolean
 	form: UseFormReturn<
 		{
 			[K in F]: {
-				responseField: string;
-				pubField: string;
-			}[];
+				responseField: string
+				pubField: string
+			}[]
 		},
 		unknown,
 		FieldValues | undefined
-	>;
-	fieldName: F;
+	>
+	fieldName: F
 }) => {
-	const pubFields = Object.values(usePubFieldContext());
-	const values = form.watch();
+	const pubFields = Object.values(usePubFieldContext())
+	const values = form.watch()
 
 	const { fields, append, remove } = useFieldArray({
 		control: form.control,
 		// @ts-expect-error this is correct, but typescript isn't able to determine that the `F` in the fieldName is the same F as in the form
 		name: fieldName,
-	});
-	const itemName = "Output Map";
+	})
+	const itemName = "Output Map"
 
-	const [title] = itemName.split("|");
+	const [title] = itemName.split("|")
 
-	const alreadySelectedPubFields = values[fieldName] ?? [];
+	const alreadySelectedPubFields = values[fieldName] ?? []
 
 	const unselectedPubFields = pubFields.filter(
 		(pubField) => !alreadySelectedPubFields.some((field) => field.pubField === pubField.slug)
-	);
+	)
 
 	return (
 		<Accordion type="multiple" className="space-y-5 border-none" disabled={disabled}>
@@ -190,7 +189,7 @@ export const FieldOutputMap = <F extends string>({
 													fieldName={`outputMap.[${index}]`}
 												/>
 											</FormItem>
-										);
+										)
 									}}
 								/>
 								<div className="flex justify-end">
@@ -199,7 +198,7 @@ export const FieldOutputMap = <F extends string>({
 										size="icon"
 										type="button"
 										disabled={disabled}
-										className="hover:bg-zinc-300 hover:text-black focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-white dark:text-black dark:hover:bg-zinc-300 dark:hover:text-black dark:hover:ring-0 dark:hover:ring-offset-0 dark:focus-visible:ring-0 dark:focus-visible:ring-offset-0"
+										className="hover:bg-zinc-300 hover:text-black focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-white dark:text-black dark:focus-visible:ring-0 dark:focus-visible:ring-offset-0 dark:hover:bg-zinc-300 dark:hover:text-black dark:hover:ring-0 dark:hover:ring-offset-0"
 										onClick={() => remove(index)}
 									>
 										<Trash size="12" />
@@ -208,7 +207,7 @@ export const FieldOutputMap = <F extends string>({
 
 								<Separator />
 							</div>
-						);
+						)
 					})}
 					{fields.length !== pubFields.length && (
 						<Button
@@ -225,7 +224,7 @@ export const FieldOutputMap = <F extends string>({
 				</AccordionContent>
 			</AccordionItem>
 		</Accordion>
-	);
-};
+	)
+}
 
-export default FieldOutputMap;
+export default FieldOutputMap

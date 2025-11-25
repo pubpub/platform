@@ -1,18 +1,19 @@
-import { expect, test } from "@playwright/test";
+import type { UsersId } from "db/public"
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import type { UsersId } from "db/public";
-import { MemberRole } from "db/public";
+import { expect, test } from "@playwright/test"
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { LoginPage } from "./fixtures/login-page";
-import { PasswordResetPage } from "./fixtures/password-reset-page";
-import { inbucketClient } from "./helpers";
+import { MemberRole } from "db/public"
 
-test.describe.configure({ mode: "serial" });
+import { createSeed } from "~/prisma/seed/createSeed"
+import { seedCommunity } from "~/prisma/seed/seedCommunity"
+import { LoginPage } from "./fixtures/login-page"
+import { PasswordResetPage } from "./fixtures/password-reset-page"
+import { inbucketClient } from "./helpers"
 
-const id = crypto.randomUUID() as UsersId;
+test.describe.configure({ mode: "serial" })
+
+const id = crypto.randomUUID() as UsersId
 
 const seed = createSeed({
 	community: {
@@ -43,8 +44,8 @@ const seed = createSeed({
 			role: MemberRole.admin,
 		},
 	},
-});
-let community: CommunitySeedOutput<typeof seed>;
+})
+let community: CommunitySeedOutput<typeof seed>
 
 const seed2 = createSeed({
 	community: {
@@ -58,127 +59,127 @@ const seed2 = createSeed({
 			role: MemberRole.admin,
 		},
 	},
-});
-let community2: CommunitySeedOutput<typeof seed2>;
+})
+let _community2: CommunitySeedOutput<typeof seed2>
 
 test.beforeAll(async ({ browser }) => {
-	community = await seedCommunity(seed);
-	community2 = await seedCommunity(seed2);
-});
+	community = await seedCommunity(seed)
+	_community2 = await seedCommunity(seed2)
+})
 
 test.describe("general auth", () => {
 	test("Login with invalid credentials", async ({ page }) => {
-		const loginPage = new LoginPage(page);
-		await loginPage.goto();
-		await loginPage.login(community.users["user"].email, "incorrect-password");
-		await page.getByText("Incorrect email or password", { exact: true }).waitFor();
-	});
-});
+		const loginPage = new LoginPage(page)
+		await loginPage.goto()
+		await loginPage.login(community.users.user.email, "incorrect-password")
+		await page.getByText("Incorrect email or password", { exact: true }).waitFor()
+	})
+})
 
 test.describe("Auth with lucia", () => {
 	test("Login as a lucia user", async ({ page }) => {
-		const loginPage = new LoginPage(page);
-		await loginPage.goto();
-		await loginPage.loginAndWaitForNavigation(community.users.user.email, "password");
-	});
+		const loginPage = new LoginPage(page)
+		await loginPage.goto()
+		await loginPage.loginAndWaitForNavigation(community.users.user.email, "password")
+	})
 
 	test("Logout as a lucia user", async ({ page }) => {
-		const loginPage = new LoginPage(page);
-		await loginPage.goto();
-		await loginPage.loginAndWaitForNavigation(community.users["user2"].email, "password");
+		const loginPage = new LoginPage(page)
+		await loginPage.goto()
+		await loginPage.loginAndWaitForNavigation(community.users.user2.email, "password")
 
-		const cookies = await page.context().cookies();
-		expect(cookies.find((cookie) => cookie.name === "auth_session")).toBeTruthy();
+		const cookies = await page.context().cookies()
+		expect(cookies.find((cookie) => cookie.name === "auth_session")).toBeTruthy()
 		expect(
 			cookies.find((cookie) =>
 				["token", "refresh", "sb-access-token", "sb-refresh-token"].includes(cookie.name)
 			)
-		).toBeFalsy();
+		).toBeFalsy()
 
-		await page.getByTestId("user-menu-button").waitFor();
+		await page.getByTestId("user-menu-button").waitFor()
 
-		await page.getByTestId("user-menu-button").click();
-		await page.getByRole("button", { name: "Logout" }).click();
-		await page.waitForURL("/login");
+		await page.getByTestId("user-menu-button").click()
+		await page.getByRole("button", { name: "Logout" }).click()
+		await page.waitForURL("/login")
 
-		const cookiesAfterLogout = await page.context().cookies();
-		expect(cookiesAfterLogout.find((cookie) => cookie.name === "session")).toBeFalsy();
-	});
+		const cookiesAfterLogout = await page.context().cookies()
+		expect(cookiesAfterLogout.find((cookie) => cookie.name === "session")).toBeFalsy()
+	})
 
 	test("Password reset flow for lucia user", async ({ page }) => {
 		// through forgot form
-		const passwordResetPage = new PasswordResetPage(page);
-		await passwordResetPage.goTo();
-		const email = community.users["user3"].email;
-		const newPassword = "some-pubpub";
-		await passwordResetPage.sendResetEmail(email);
-		await passwordResetPage.goToUrlFromEmail(email);
-		await passwordResetPage.setNewPassword(newPassword);
-		await page.waitForURL("/login");
+		const passwordResetPage = new PasswordResetPage(page)
+		await passwordResetPage.goTo()
+		const email = community.users.user3.email
+		const newPassword = "some-pubpub"
+		await passwordResetPage.sendResetEmail(email)
+		await passwordResetPage.goToUrlFromEmail(email)
+		await passwordResetPage.setNewPassword(newPassword)
+		await page.waitForURL("/login")
 
 		// through settings
-		await page.getByPlaceholder("name@example.com").click();
-		await page.getByPlaceholder("name@example.com").fill(community.users["user3"].email);
-		await page.getByPlaceholder("name@example.com").press("Tab");
-		await page.getByLabel("Password").fill("some-pubpub");
-		await page.getByRole("button", { name: "Sign in" }).click();
+		await page.getByPlaceholder("name@example.com").click()
+		await page.getByPlaceholder("name@example.com").fill(community.users.user3.email)
+		await page.getByPlaceholder("name@example.com").press("Tab")
+		await page.getByLabel("Password").fill("some-pubpub")
+		await page.getByRole("button", { name: "Sign in" }).click()
 
-		await page.waitForURL(/\/c\/.*\/stages/);
-		await page.getByTestId("user-menu-button").click();
-		await page.getByRole("link", { name: "Settings" }).last().click();
-		await page.waitForURL("/settings");
-		await page.getByRole("button", { name: "Reset" }).click();
+		await page.waitForURL(/\/c\/.*\/stages/)
+		await page.getByTestId("user-menu-button").click()
+		await page.getByRole("link", { name: "Settings" }).last().click()
+		await page.waitForURL("/settings")
+		await page.getByRole("button", { name: "Reset" }).click()
 		await expect(
 			page.getByRole("status").filter({ hasText: "Password reset email sent" })
-		).toHaveCount(1);
+		).toHaveCount(1)
 
 		const message2 = await (
-			await inbucketClient.getMailbox(community.users["user3"].email.split("@")[0])
-		).getLatestMessage();
+			await inbucketClient.getMailbox(community.users.user3.email.split("@")[0])
+		).getLatestMessage()
 
-		const url2 = message2.message.body.text?.match(/http:\/\/.*reset/)?.[0];
-		await message2.delete();
+		const url2 = message2.message.body.text?.match(/http:\/\/.*reset/)?.[0]
+		await message2.delete()
 
 		if (!url2) {
-			throw new Error("No url found!");
+			throw new Error("No url found!")
 		}
 
-		await page.goto(url2);
+		await page.goto(url2)
 
-		await page.waitForURL("/reset");
+		await page.waitForURL("/reset")
 		// if it timesout here, the token is wrong
-		await page.getByRole("textbox").click({ timeout: 1000 });
-		await page.getByRole("textbox").fill("pubpub-some");
-		await page.getByRole("button", { name: "Set new password" }).click();
-		await page.getByPlaceholder("name@example.com").click();
-		await page.getByPlaceholder("name@example.com").fill(community.users["user3"].email);
-		await page.getByPlaceholder("name@example.com").press("Tab");
-		await page.getByLabel("Password").fill("pubpub-some");
-		await page.getByRole("button", { name: "Sign in" }).click();
+		await page.getByRole("textbox").click({ timeout: 1000 })
+		await page.getByRole("textbox").fill("pubpub-some")
+		await page.getByRole("button", { name: "Set new password" }).click()
+		await page.getByPlaceholder("name@example.com").click()
+		await page.getByPlaceholder("name@example.com").fill(community.users.user3.email)
+		await page.getByPlaceholder("name@example.com").press("Tab")
+		await page.getByLabel("Password").fill("pubpub-some")
+		await page.getByRole("button", { name: "Sign in" }).click()
 
-		await page.waitForURL(/\/c\/.*\/stages/);
-	});
-});
+		await page.waitForURL(/\/c\/.*\/stages/)
+	})
+})
 
 test("Last visited community is remembered", async ({ page }) => {
-	const testCommunity1Regex = new RegExp("/c/test-community-1");
-	const testCommunity2Regex = new RegExp("/c/test-community-2");
-	const loginPage = new LoginPage(page);
+	const testCommunity1Regex = /\/c\/test-community-1/
+	const testCommunity2Regex = /\/c\/test-community-2/
+	const loginPage = new LoginPage(page)
 
 	// Login and visit default community
-	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation(community.users["user4"].email, "password");
-	await expect(page).toHaveURL(testCommunity1Regex);
+	await loginPage.goto()
+	await loginPage.loginAndWaitForNavigation(community.users.user4.email, "password")
+	await expect(page).toHaveURL(testCommunity1Regex)
 
 	// Switch communities and logout
-	await page.getByRole("button", { name: "Select a community" }).click();
-	await page.getByRole("menuitem", { name: "Test Community 2" }).click();
-	await page.waitForURL(testCommunity2Regex);
-	await page.getByRole("button", { name: "User menu" }).click();
-	await page.getByRole("button", { name: "Logout" }).click();
-	await page.waitForURL("/login");
+	await page.getByRole("button", { name: "Select a community" }).click()
+	await page.getByRole("menuitem", { name: "Test Community 2" }).click()
+	await page.waitForURL(testCommunity2Regex)
+	await page.getByRole("button", { name: "User menu" }).click()
+	await page.getByRole("button", { name: "Logout" }).click()
+	await page.waitForURL("/login")
 
-	await loginPage.loginAndWaitForNavigation(community.users["user4"].email, "password");
-	await page.waitForTimeout(1000);
-	await expect(page).toHaveURL(testCommunity2Regex);
-});
+	await loginPage.loginAndWaitForNavigation(community.users.user4.email, "password")
+	await page.waitForTimeout(1000)
+	await expect(page).toHaveURL(testCommunity2Regex)
+})

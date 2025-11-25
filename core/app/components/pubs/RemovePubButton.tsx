@@ -1,23 +1,23 @@
-import type React from "react";
+import type React from "react"
+import type { ButtonProps } from "ui/button"
+import type { PubRemoveProps } from "./RemovePubFormClient"
 
-import type { ButtonProps } from "ui/button";
-import { Trash } from "ui/icon";
+import { Trash } from "ui/icon"
 
-import type { PubRemoveProps } from "./RemovePubFormClient";
-import { PathAwareDialog } from "../PathAwareDialog";
-import { PubRemove } from "./RemovePubForm";
+import { PathAwareDialog } from "../PathAwareDialog"
+import { PubRemove } from "./RemovePubForm"
 
 export type Props = PubRemoveProps & {
-	variant?: ButtonProps["variant"];
-	size?: ButtonProps["size"];
-	className?: string;
+	variant?: ButtonProps["variant"]
+	size?: ButtonProps["size"]
+	className?: string
 	/** Renders only the icon on the button */
-	iconOnly?: boolean;
+	iconOnly?: boolean
 	/** Default is "Remove" */
-	buttonText?: string;
+	buttonText?: string
 	/** Default is trash icon */
-	icon?: React.ReactElement;
-};
+	icon?: React.ReactElement
+}
 
 export const RemovePubButton = ({
 	pubId,
@@ -41,5 +41,5 @@ export const RemovePubButton = ({
 		>
 			<PubRemove pubId={pubId} redirectTo={redirectTo} />
 		</PathAwareDialog>
-	);
-};
+	)
+}

@@ -1,5 +1,7 @@
-import type { User } from "lucia";
+import type { StagesId } from "db/public"
+import type { User } from "lucia"
 
+<<<<<<< HEAD
 import { BookOpen, List, Users, Wand2 } from "lucide-react";
 
 import type { StagesId } from "db/public";
@@ -12,28 +14,40 @@ import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelPubs } from "./StagePanelPubs";
 import { StagePanelSheet } from "./StagePanelSheet";
 import { TabLink } from "./StagePanelTabLink";
+=======
+import { Tabs, TabsContent, TabsList } from "ui/tabs"
+
+import { getStage } from "~/lib/db/queries"
+import { StagePanelActions } from "./actionsTab/StagePanelActions"
+import { StagePanelAutomations } from "./actionsTab/StagePanelAutomations"
+import { StagePanelMembers } from "./StagePanelMembers"
+import { StagePanelOverview } from "./StagePanelOverview"
+import { StagePanelPubs } from "./StagePanelPubs"
+import { StagePanelSheet } from "./StagePanelSheet"
+import { TabLink } from "./StagePanelTabLink"
+>>>>>>> main
 
 type Props = {
-	stageId: StagesId | undefined;
-	searchParams: Record<string, string>;
-	user: User;
-};
+	stageId: StagesId | undefined
+	searchParams: Record<string, string>
+	user: User
+}
 
 export const StagePanel = async (props: Props) => {
-	let open = Boolean(props.stageId);
+	let open = Boolean(props.stageId)
 
 	if (!props.stageId) {
-		return null;
+		return null
 	}
 
 	if (props.stageId) {
-		const stage = await getStage(props.stageId, props.user.id).executeTakeFirst();
+		const stage = await getStage(props.stageId, props.user.id).executeTakeFirst()
 		if (stage === null) {
-			open = false;
+			open = false
 		}
 	}
 
-	const defaultTab = props.searchParams.tab || "overview";
+	const defaultTab = props.searchParams.tab || "overview"
 
 	return (
 		<StagePanelSheet open={open}>
@@ -71,5 +85,5 @@ export const StagePanel = async (props: Props) => {
 				</TabsContent>
 			</Tabs>
 		</StagePanelSheet>
-	);
-};
+	)
+}

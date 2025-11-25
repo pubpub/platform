@@ -1,36 +1,52 @@
+<<<<<<< HEAD
 import assert from "node:assert";
+=======
+import type { StagesId, UsersId } from "db/public"
+>>>>>>> main
 
-import { Suspense } from "react";
+import { Suspense } from "react"
+import assert from "node:assert"
 
+<<<<<<< HEAD
 import type { StagesId, UsersId } from "db/public";
 import { AutomationEvent } from "db/public";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "ui/card";
+=======
+import { Card, CardContent } from "ui/card"
+>>>>>>> main
 
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
 import {
 	userCanArchiveAllPubs,
 	userCanEditAllPubs,
 	userCanMoveAllPubs,
 	userCanRunActionsAllPubs,
 	userCanViewAllStages,
+<<<<<<< HEAD
 } from "~/lib/authorization/capabilities";
 import { getStage, getStageAutomations } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { StagePanelCardHeader } from "../editor/StagePanelCard";
+=======
+} from "~/lib/authorization/capabilities"
+import { getStage } from "~/lib/db/queries"
+import { getPubsWithRelatedValues } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
+>>>>>>> main
 
 type PropsInner = {
-	stageId: StagesId;
-	searchParams: Record<string, unknown>;
-	userId: UsersId;
-};
+	stageId: StagesId
+	searchParams: Record<string, unknown>
+	userId: UsersId
+}
 
 const StagePanelPubsInner = async (props: PropsInner) => {
-	const [community] = await Promise.all([findCommunityBySlug()]);
+	const [community] = await Promise.all([findCommunityBySlug()])
 
-	assert(community, "Community not found");
+	assert(community, "Community not found")
 
 	const [
 		stagePubs,
@@ -61,17 +77,23 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 		userCanRunActionsAllPubs(),
 		userCanMoveAllPubs(),
 		userCanViewAllStages(),
-	]);
+	])
 
 	if (!stage) {
-		throw new Error("Stage not found");
+		throw new Error("Stage not found")
 	}
 
 	return (
 		<Card>
+<<<<<<< HEAD
 			<StagePanelCardHeader>
 				<CardTitle>Pubs </CardTitle>
 				<CardAction>
+=======
+			<CardContent className="space-y-2 p-4">
+				<div className="flex flex-wrap items-center justify-between">
+					<h4 className="mb-2 font-semibold text-base">Pubs</h4>
+>>>>>>> main
 					<Suspense fallback={<SkeletonCard />}>
 						<CreatePubButton
 							stageId={props.stageId}
@@ -103,18 +125,18 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				</div>
 			</CardContent>
 		</Card>
-	);
-};
+	)
+}
 
 type Props = {
-	stageId?: StagesId;
-	searchParams: Record<string, unknown>;
-	userId: UsersId;
-};
+	stageId?: StagesId
+	searchParams: Record<string, unknown>
+	userId: UsersId
+}
 
 export const StagePanelPubs = async (props: Props) => {
 	if (props.stageId === undefined) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
 	return (
@@ -125,5 +147,5 @@ export const StagePanelPubs = async (props: Props) => {
 				userId={props.userId}
 			/>
 		</Suspense>
-	);
-};
+	)
+}

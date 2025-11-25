@@ -40,7 +40,7 @@ export const databaseTableNames = [
 	"stage_memberships",
 	"stages",
 	"users",
-] as const;
+] as const
 
 export const databaseTables = [
 	{
@@ -2607,4 +2607,4 @@ export const databaseTables = [
 			},
 		],
 	},
-];
+]

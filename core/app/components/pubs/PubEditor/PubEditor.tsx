@@ -1,54 +1,53 @@
-import { randomUUID } from "crypto";
-
-import type { User } from "lucia";
-
-import { notFound } from "next/navigation";
-
-import type { ProcessedPub } from "contracts";
-import type { Communities, CommunitiesId, FormsId, PubsId, PubTypesId, StagesId } from "db/public";
-import { Capabilities, CoreSchemaType, MembershipType } from "db/public";
-import { stagesDAO, StagesProvider, StagesSelectField } from "ui/stages";
-import { expect } from "utils";
-
+import type { ProcessedPub } from "contracts"
+import type { Communities, CommunitiesId, FormsId, PubsId, PubTypesId, StagesId } from "db/public"
+import type { User } from "lucia"
+import type { Form } from "~/lib/server/form"
+import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils"
 import type {
 	BasicPubFieldElement,
 	FormElements,
 	PubFieldElement,
 	PubFieldElementComponent,
-} from "../../forms/types";
-import type { Form } from "~/lib/server/form";
-import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
-import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan, userCanMoveAllPubs } from "~/lib/authorization/capabilities";
-import { transformRichTextValuesToProsemirror } from "~/lib/editor/serialize-server";
-import { getPubByForm, getPubTitle } from "~/lib/pubs";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm } from "~/lib/server/form";
-import { getPubsWithRelatedValues } from "~/lib/server/pub";
-import { getPubFields } from "~/lib/server/pubFields";
-import { getPubTypesForCommunity } from "~/lib/server/pubtype";
-import { getStages } from "~/lib/server/stages";
-import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
-import { FormElement } from "../../forms/FormElement";
-import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
-import { PubFieldFormElement } from "../../forms/PubFieldFormElement";
-import { hydrateMarkdownElements } from "../../forms/structural";
-import { PubFormProvider } from "../../providers/PubFormProvider";
-import { RELATED_PUB_SLUG } from "./constants";
-import { makeFormElementDefFromPubFields } from "./helpers";
-import { PubEditorWrapper } from "./PubEditorWrapper";
+} from "../../forms/types"
+
+import { notFound } from "next/navigation"
+import { randomUUID } from "node:crypto"
+
+import { Capabilities, CoreSchemaType, MembershipType } from "db/public"
+import { StagesProvider, StagesSelectField, stagesDAO } from "ui/stages"
+import { expect } from "utils"
+
+import { db } from "~/kysely/database"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan, userCanMoveAllPubs } from "~/lib/authorization/capabilities"
+import { transformRichTextValuesToProsemirror } from "~/lib/editor/serialize-server"
+import { getPubByForm, getPubTitle } from "~/lib/pubs"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getForm } from "~/lib/server/form"
+import { getPubsWithRelatedValues } from "~/lib/server/pub"
+import { getPubFields } from "~/lib/server/pubFields"
+import { getPubTypesForCommunity } from "~/lib/server/pubtype"
+import { getStages } from "~/lib/server/stages"
+import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext"
+import { FormElement } from "../../forms/FormElement"
+import { FormElementToggleProvider } from "../../forms/FormElementToggleContext"
+import { PubFieldFormElement } from "../../forms/PubFieldFormElement"
+import { hydrateMarkdownElements } from "../../forms/structural"
+import { PubFormProvider } from "../../providers/PubFormProvider"
+import { RELATED_PUB_SLUG } from "./constants"
+import { makeFormElementDefFromPubFields } from "./helpers"
+import { PubEditorWrapper } from "./PubEditorWrapper"
 
 const RelatedPubValueElement = ({
 	relatedPub,
 	fieldName,
 	element,
 }: {
-	relatedPub: ProcessedPub<{ withPubType: true }>;
-	fieldName: string;
-	element: BasicPubFieldElement;
+	relatedPub: ProcessedPub<{ withPubType: true }>
+	fieldName: string
+	element: BasicPubFieldElement
 }) => {
-	const label = element.label || element.slug;
+	const label = element.label || element.slug
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -72,20 +71,20 @@ const RelatedPubValueElement = ({
 			</div>
 			<hr />
 		</div>
-	);
-};
+	)
+}
 
 const getRelatedPubData = async ({
 	communityId,
 	relatedPubId,
 	slug,
 }: {
-	communityId: CommunitiesId;
-	relatedPubId: PubsId | undefined;
-	slug: string | undefined;
+	communityId: CommunitiesId
+	relatedPubId: PubsId | undefined
+	slug: string | undefined
 }) => {
 	if (!relatedPubId || !slug) {
-		return null;
+		return null
 	}
 	const [relatedPub, relatedPubFieldResult] = await Promise.all([
 		getPubsWithRelatedValues({ pubId: relatedPubId, communityId }, { withPubType: true }),
@@ -95,39 +94,39 @@ const getRelatedPubData = async ({
 		}).executeTakeFirstOrThrow(
 			() => new Error(`Could not find related field with slug ${slug}`)
 		),
-	]);
-	const relatedPubField = Object.values(relatedPubFieldResult.fields)[0];
+	])
+	const relatedPubField = Object.values(relatedPubFieldResult.fields)[0]
 
 	// TODO: should maybe get this from the source pub's form?
 	// otherwise this will always be the default component
-	const relatedPubElement = makeFormElementDefFromPubFields([relatedPubField])[0];
+	const relatedPubElement = makeFormElementDefFromPubFields([relatedPubField])[0]
 	return {
 		element: { ...relatedPubElement, slug: RELATED_PUB_SLUG },
 		relatedPub,
 		relatedPubField,
-	};
-};
+	}
+}
 
 const getPubEditorData = (
 	props: PubEditorProps & {
-		form: Form;
-		relatedPubData: Awaited<ReturnType<typeof getRelatedPubData>> | undefined;
-		user: User;
-		community: Communities;
-		canSeeExtraPubValues: boolean;
-		pubTypes: Awaited<ReturnType<typeof getPubTypesForCommunity>>;
+		form: Form
+		relatedPubData: Awaited<ReturnType<typeof getRelatedPubData>> | undefined
+		user: User
+		community: Communities
+		canSeeExtraPubValues: boolean
+		pubTypes: Awaited<ReturnType<typeof getPubTypesForCommunity>>
 	}
 ) => {
 	if (props.mode === "create") {
-		const pubFields = expect(props.pubTypes.find((pt) => pt.id === props.pubTypeId)).fields;
+		const pubFields = expect(props.pubTypes.find((pt) => pt.id === props.pubTypeId)).fields
 		const allSlugs = [
 			...props.form.elements.map((e) => e.slug),
 			props.relatedPubData ? props.relatedPubData.element.slug : undefined,
-		].filter((slug) => !!slug) as string[];
+		].filter((slug) => !!slug) as string[]
 
-		const currentStageId = props.stageId;
+		const currentStageId = props.stageId
 
-		const pubId = randomUUID() as PubsId;
+		const pubId = randomUUID() as PubsId
 
 		return {
 			mode: props.mode,
@@ -141,45 +140,45 @@ const getPubEditorData = (
 				values: [],
 				pubTypeId: props.pubTypeId,
 			},
-		};
+		}
 	}
 
 	// Create the pubId before inserting into the DB if one doesn't exist.
 	// FileUpload needs the pubId when uploading the file before the pub exists
-	const pubId = props.pub.id;
-	const pubFields = expect(props.pubTypes.find((pt) => pt.id === props.pub.pubTypeId)).fields;
+	const pubId = props.pub.id
+	const pubFields = expect(props.pubTypes.find((pt) => pt.id === props.pub.pubTypeId)).fields
 
 	const pubWithProsemirrorRichText = transformRichTextValuesToProsemirror(props.pub, {
 		toJson: true,
-	});
+	})
 
 	const pubPubFields = props.pub.values.map((v) => ({
 		id: v.fieldId,
 		name: v.fieldName,
 		slug: v.fieldSlug,
 		schemaName: v.schemaName,
-	}));
+	}))
 
 	// These are pub values that are only on the pub, but not on the form. We render them at the end of the form.
 	const pubOnlyElementDefinitions = makeFormElementDefFromPubFields(
 		pubPubFields.filter((pubField) => {
-			return !props.form.elements.find((e) => e.slug === pubField.slug);
+			return !props.form.elements.find((e) => e.slug === pubField.slug)
 		})
-	);
+	)
 
 	const allSlugs = [
 		...props.form.elements.map((e) => e.slug),
 		...pubOnlyElementDefinitions.map((e) => e.slug),
 		props.relatedPubData ? props.relatedPubData.element.slug : undefined,
-	].filter((slug) => !!slug) as string[];
+	].filter((slug) => !!slug) as string[]
 
-	const member = expect(props.user.memberships.find((m) => m.communityId === props.community.id));
+	const member = expect(props.user.memberships.find((m) => m.communityId === props.community.id))
 
 	const memberWithUser = {
 		...member,
 		id: member.id,
 		user: props.user,
-	};
+	}
 
 	const renderWithPubContext = {
 		communityId: props.community.id,
@@ -187,24 +186,24 @@ const getPubEditorData = (
 		communitySlug: props.community.slug,
 		pub: pubWithProsemirrorRichText as RenderWithPubContext["pub"],
 		trx: db,
-	} satisfies RenderWithPubContext;
+	} satisfies RenderWithPubContext
 
 	const currentStageId =
-		pubWithProsemirrorRichText?.stage?.id ?? ("stageId" in props ? props.stageId : undefined);
+		pubWithProsemirrorRichText?.stage?.id ?? ("stageId" in props ? props.stageId : undefined)
 
 	const pubForForm = getPubByForm({
 		pub: pubWithProsemirrorRichText,
 		form: props.form,
 		withExtraPubValues: props.canSeeExtraPubValues,
-	});
+	})
 
 	// For the Context, we want both the pubs from the initial pub query (which is limited)
 	// as well as the pubs related to this pub
 	const relatedPubs = pubWithProsemirrorRichText
 		? pubWithProsemirrorRichText.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : []))
-		: [];
+		: []
 
-	const pubsForContext = [...relatedPubs];
+	const pubsForContext = [...relatedPubs]
 
 	return {
 		mode: props.mode,
@@ -218,55 +217,55 @@ const getPubEditorData = (
 		pubFields,
 		allSlugs,
 		member,
-	};
-};
+	}
+}
 
 export type PubEditorProps = {
 	// searchParams: { relatedPubId?: PubsId; slug?: string; pubTypeId?: PubTypesId; form?: string };
-	htmlFormId?: string;
+	htmlFormId?: string
 	form: {
-		id: FormsId;
-		name: string;
-		slug: string;
-		isDefault: boolean;
-	};
+		id: FormsId
+		name: string
+		slug: string
+		isDefault: boolean
+	}
 } & (
 	| {
-			pubId: PubsId;
-			pubTypeId?: PubTypesId;
-			pub: ProcessedPub<{ withStage: true; withPubType: true }>;
-			mode: "edit";
-			stageId?: never;
+			pubId: PubsId
+			pubTypeId?: PubTypesId
+			pub: ProcessedPub<{ withStage: true; withPubType: true }>
+			mode: "edit"
+			stageId?: never
 	  }
 	| {
-			pubId?: never;
-			pub?: never;
-			mode: "create";
-			pubTypeId: PubTypesId;
+			pubId?: never
+			pub?: never
+			mode: "create"
+			pubTypeId: PubTypesId
 			/** Stage to create Pub in, if known */
-			stageId?: StagesId;
+			stageId?: StagesId
 	  }
 ) &
 	(
 		| {
 				/** The "parent" Pub which this Pub is created from using the "Create Related Pub" button */
-				relatedPubId: PubsId;
+				relatedPubId: PubsId
 				/** The field on the "parent" Pub which this Pub is created from using the "Create Related Pub" button */
-				relatedFieldSlug: string;
+				relatedFieldSlug: string
 		  }
 		| {
 				/** The "parent" Pub which this Pub is created from using the "Create Related Pub" button */
-				relatedPubId?: never;
+				relatedPubId?: never
 				/** The field on the "parent" Pub which this Pub is created from using the "Create Related Pub" button */
-				relatedFieldSlug?: never;
+				relatedFieldSlug?: never
 		  }
-	);
+	)
 
 export async function PubEditor(props: PubEditorProps) {
-	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!user || !community) {
-		notFound();
+		notFound()
 	}
 
 	const [pubTypes, relatedPubData, form, stages, canSeeExtraPubValues, canMovePub] =
@@ -298,7 +297,7 @@ export async function PubEditor(props: PubEditorProps) {
 						user.id
 					)
 				: await userCanMoveAllPubs(community.slug),
-		]);
+		])
 
 	const pubEditorData = getPubEditorData({
 		...props,
@@ -308,12 +307,12 @@ export async function PubEditor(props: PubEditorProps) {
 		canSeeExtraPubValues,
 		relatedPubData,
 		pubTypes,
-	});
+	})
 
 	await hydrateMarkdownElements({
 		elements: form.elements,
 		renderWithPubContext: pubEditorData.renderWithPubContext,
-	});
+	})
 
 	return (
 		<PubFormProvider
@@ -349,42 +348,37 @@ export async function PubEditor(props: PubEditorProps) {
 									: undefined
 							}
 						>
-							<>
-								{relatedPubData ? (
-									<RelatedPubValueElement
-										relatedPub={relatedPubData.relatedPub}
-										element={relatedPubData.element}
-										fieldName={relatedPubData.relatedPubField.name}
-									/>
-								) : null}
-								{canMovePub && (
-									<StagesSelectField fieldLabel="Stage" fieldName="stageId" />
-								)}
+							{relatedPubData ? (
+								<RelatedPubValueElement
+									relatedPub={relatedPubData.relatedPub}
+									element={relatedPubData.element}
+									fieldName={relatedPubData.relatedPubField.name}
+								/>
+							) : null}
+							{canMovePub && (
+								<StagesSelectField fieldLabel="Stage" fieldName="stageId" />
+							)}
 
-								{form.elements.map((e) => (
-									<FormElement
-										key={e.id}
-										pubId={pubEditorData.pubId}
-										element={e}
-										values={pubEditorData.pub?.values ?? []}
-									/>
-								))}
-								{pubEditorData.pubOnlyElementDefinitions &&
-									pubEditorData.pubOnlyElementDefinitions.map(
-										(formElementDef) => (
-											<FormElement
-												key={formElementDef.slug}
-												element={formElementDef as FormElements}
-												pubId={pubEditorData.pubId}
-												values={pubEditorData.pub?.values ?? []}
-											/>
-										)
-									)}
-							</>
+							{form.elements.map((e) => (
+								<FormElement
+									key={e.id}
+									pubId={pubEditorData.pubId}
+									element={e}
+									values={pubEditorData.pub?.values ?? []}
+								/>
+							))}
+							{pubEditorData.pubOnlyElementDefinitions?.map((formElementDef) => (
+								<FormElement
+									key={formElementDef.slug}
+									element={formElementDef as FormElements}
+									pubId={pubEditorData.pubId}
+									values={pubEditorData.pub?.values ?? []}
+								/>
+							))}
 						</PubEditorWrapper>
 					</ContextEditorContextProvider>
 				</FormElementToggleProvider>
 			</StagesProvider>
 		</PubFormProvider>
-	);
+	)
 }

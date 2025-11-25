@@ -1,18 +1,18 @@
-import type { Page, Response } from "@playwright/test";
+import type { Page, Response } from "@playwright/test"
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test"
 
-import { CoreSchemaType, MemberRole } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public"
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { LoginPage } from "./fixtures/login-page";
-import { PubDetailsPage } from "./fixtures/pub-details-page";
+import { createSeed } from "~/prisma/seed/createSeed"
+import { seedCommunity } from "~/prisma/seed/seedCommunity"
+import { LoginPage } from "./fixtures/login-page"
+import { PubDetailsPage } from "./fixtures/pub-details-page"
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial" })
 
-let page: Page;
+let page: Page
 const seed = createSeed({
 	community: { name: `test community`, slug: `test-community-slug` },
 	pubFields: {
@@ -59,23 +59,23 @@ const seed = createSeed({
 			},
 		},
 	],
-});
+})
 
-let community: CommunitySeedOutput<typeof seed>;
+let community: CommunitySeedOutput<typeof seed>
 
 test.beforeAll(async ({ browser }) => {
-	community = await seedCommunity(seed);
+	community = await seedCommunity(seed)
 
-	page = await browser.newPage();
+	page = await browser.newPage()
 
-	const loginPage = new LoginPage(page);
-	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
-});
+	const loginPage = new LoginPage(page)
+	await loginPage.goto()
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password")
+})
 
 test.afterAll(async () => {
-	await page.close();
-});
+	await page.close()
+})
 
 test.describe("Pub contributor capabilities", () => {
 	test("Can remove pub they have access to", async () => {
@@ -83,37 +83,37 @@ test.describe("Pub contributor capabilities", () => {
 			page,
 			community.community.slug,
 			community.pubs[0].id
-		);
-		await pubDetailsPage.goTo();
+		)
+		await pubDetailsPage.goTo()
 
 		// can see remove pub button
 		await expect(page.getByRole("button", { name: "Remove" })).toBeVisible({
 			timeout: 10_000,
-		});
+		})
 
 		// can remove pub
-		await pubDetailsPage.removePub();
+		await pubDetailsPage.removePub()
 
-		const requests: Response[] = [];
+		const requests: Response[] = []
 		page.on("request", async (request) => {
 			if (
 				!request
 					.url()
 					.includes(`/c/${community.community.slug}/pubs/${community.pubs[0].id}`)
 			) {
-				return;
+				return
 			}
 
-			const res = await request.response();
+			const res = await request.response()
 			if (res) {
-				requests.push(res);
+				requests.push(res)
 			}
-		});
+		})
 
 		// going back to pub details page should show 404
-		await pubDetailsPage.goTo(false);
+		await pubDetailsPage.goTo(false)
 
-		expect(requests).toHaveLength(1);
-		expect(requests[0].status()).toBe(404);
-	});
-});
+		expect(requests).toHaveLength(1)
+		expect(requests[0].status()).toBe(404)
+	})
+})

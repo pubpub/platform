@@ -1,42 +1,42 @@
-import { jsonArrayFrom } from "kysely/helpers/postgres";
-import QueryString from "qs";
-import { describe, expect, it } from "vitest";
+import type { Filter, ProcessedPub } from "contracts"
+import type { CommunitiesId, PubsId } from "db/public"
 
-import type { Filter, Json, ProcessedPub } from "contracts";
-import type { CommunitiesId, PubsId } from "db/public";
-import { filterSchema } from "contracts";
-import { CoreSchemaType } from "db/public";
-import { benchmark, logger } from "logger";
+import QueryString from "qs"
+import { describe, expect, it } from "vitest"
 
-import { createSeed } from "~/prisma/seed/createSeed";
-import { mockServerCode } from "../__tests__/utils";
-import { applyFieldLevelFilters, applyFilters } from "./pub-filters";
+import { filterSchema } from "contracts"
+import { CoreSchemaType } from "db/public"
+import { benchmark } from "logger"
 
-const { createForEachMockedTransaction, testDb } = await mockServerCode();
+import { createSeed } from "~/prisma/seed/createSeed"
+import { mockServerCode } from "../__tests__/utils"
+import { applyFilters } from "./pub-filters"
 
-const { getTrx, rollback } = createForEachMockedTransaction();
+const { createForEachMockedTransaction, testDb } = await mockServerCode()
 
-const communitySlug = `${new Date().toISOString()}:test-filter-pub`;
+const { getTrx, rollback } = createForEachMockedTransaction()
 
-const trueId = crypto.randomUUID() as PubsId;
-const vector3Id = crypto.randomUUID() as PubsId;
-const titleId = crypto.randomUUID() as PubsId;
-const title2Id = crypto.randomUUID() as PubsId;
-const anotherId = crypto.randomUUID() as PubsId;
-const number42Id = crypto.randomUUID() as PubsId;
-const number24Id = crypto.randomUUID() as PubsId;
-const number54Id = crypto.randomUUID() as PubsId;
-const arrayId = crypto.randomUUID() as PubsId;
-const numberArrayId = crypto.randomUUID() as PubsId;
-const numberArray2Id = crypto.randomUUID() as PubsId;
-const relationId = crypto.randomUUID() as PubsId;
-const testTitleId = crypto.randomUUID() as PubsId;
-const testCaseId = crypto.randomUUID() as PubsId;
-const specialCharsId = crypto.randomUUID() as PubsId;
-const arrayItem1Id = crypto.randomUUID() as PubsId;
-const importantDocId = crypto.randomUUID() as PubsId;
+const communitySlug = `${new Date().toISOString()}:test-filter-pub`
 
-const twenty99 = new Date("2099-01-01");
+const trueId = crypto.randomUUID() as PubsId
+const vector3Id = crypto.randomUUID() as PubsId
+const titleId = crypto.randomUUID() as PubsId
+const title2Id = crypto.randomUUID() as PubsId
+const anotherId = crypto.randomUUID() as PubsId
+const number42Id = crypto.randomUUID() as PubsId
+const number24Id = crypto.randomUUID() as PubsId
+const number54Id = crypto.randomUUID() as PubsId
+const arrayId = crypto.randomUUID() as PubsId
+const numberArrayId = crypto.randomUUID() as PubsId
+const numberArray2Id = crypto.randomUUID() as PubsId
+const relationId = crypto.randomUUID() as PubsId
+const testTitleId = crypto.randomUUID() as PubsId
+const testCaseId = crypto.randomUUID() as PubsId
+const specialCharsId = crypto.randomUUID() as PubsId
+const _arrayItem1Id = crypto.randomUUID() as PubsId
+const importantDocId = crypto.randomUUID() as PubsId
+
+const twenty99 = new Date("2099-01-01")
 
 const seed = createSeed({
 	community: {
@@ -211,12 +211,12 @@ const seed = createSeed({
 			},
 		},
 	],
-});
+})
 
 // let community: CommunitySeedOutput<typeof seed>;
 
 const seedCommunity = async (trx = testDb) => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+	const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 	const community = await seedCommunity(
 		seed,
 		{
@@ -224,26 +224,22 @@ const seedCommunity = async (trx = testDb) => {
 			randomSlug: false,
 		},
 		trx
-	);
+	)
 
 	// set the updatedAt for a pub to a weird date
-	const p = await trx
+	const _p = await trx
 		.updateTable("pubs")
 		.set({ createdAt: new Date("2024-01-01") })
 		.where("id", "=", trueId)
 		.returningAll()
-		.execute();
+		.execute()
 
-	await trx
-		.updateTable("pubs")
-		.set({ createdAt: twenty99 })
-		.where("id", "=", vector3Id)
-		.execute();
+	await trx.updateTable("pubs").set({ createdAt: twenty99 }).where("id", "=", vector3Id).execute()
 
-	return community;
-};
+	return community
+}
 
-const community = await seedCommunity();
+const community = await seedCommunity()
 
 // afterAll(async () => {
 // 	const { deleteCommunity } = await import("~/prisma/seed/deleteCommunity");
@@ -251,36 +247,36 @@ const community = await seedCommunity();
 // });
 
 const coolQuery = (filter: Filter) => {
-	const trx = getTrx();
+	const trx = getTrx()
 
 	const q = trx
 		.selectFrom("pubs")
 		.selectAll()
-		.where((eb) => applyFilters(eb, filter));
+		.where((eb) => applyFilters(eb, filter))
 
 	return {
 		q,
 		compiled: q.compile(),
-	};
-};
+	}
+}
 
 const validateFilter = async (communityId: CommunitiesId, filter: Filter, trx = getTrx()) => {
-	const { validateFilter: valFilter } = await import("./pub-filters-validate");
-	return valFilter(communityId, filter, trx);
-};
+	const { validateFilter: valFilter } = await import("./pub-filters-validate")
+	return valFilter(communityId, filter, trx)
+}
 
-const slug = (str: string) => `${communitySlug}:${str}`;
+const slug = (str: string) => `${communitySlug}:${str}`
 
 const unifiedTestCases: {
-	title: string;
-	filter: Filter;
-	querystring: string;
+	title: string
+	filter: Filter
+	querystring: string
 	/**
 	 * null here means to match snapshot
 	 */
-	sql: string | RegExp | (string | RegExp)[] | null;
-	parameters: (string | number | boolean)[];
-	foundIds: PubsId[] | ((pubs: ProcessedPub[]) => ProcessedPub[]);
+	sql: string | RegExp | (string | RegExp)[] | null
+	parameters: (string | number | boolean)[]
+	foundIds: PubsId[] | ((pubs: ProcessedPub[]) => ProcessedPub[])
 }[] = [
 	{
 		title: "simple equality",
@@ -806,7 +802,7 @@ const unifiedTestCases: {
 		parameters: [slug("number"), 42],
 		foundIds: (pubs) =>
 			pubs.filter((p) =>
-				p.values.some((v) => v.fieldSlug === slug("number") && v.value == 42)
+				p.values.some((v) => v.fieldSlug === slug("number") && v.value === 42)
 			),
 	},
 	{
@@ -1127,156 +1123,151 @@ const unifiedTestCases: {
 					)
 			),
 	},
-];
+]
 
 describe("SQL generation", () => {
-	it.concurrent.for(unifiedTestCases)(
-		"generates correct SQL for $title",
-		async ({ filter, sql, parameters }, { expect }) => {
-			const q = coolQuery(filter).compiled;
-			if (Array.isArray(sql)) {
-				sql.forEach((sqlSnippet) => {
-					expect(q.sql).toMatch(sqlSnippet);
-				});
-			} else if (sql === null) {
-				expect(q.sql).toMatchSnapshot();
-			} else {
-				expect(q.sql).toMatch(sql);
-			}
-			expect(q.parameters).toEqual(parameters);
+	it.concurrent.for(unifiedTestCases)("generates correct SQL for $title", async ({
+		filter,
+		sql,
+		parameters,
+	}, { expect }) => {
+		const q = coolQuery(filter).compiled
+		if (Array.isArray(sql)) {
+			sql.forEach((sqlSnippet) => {
+				expect(q.sql).toMatch(sqlSnippet)
+			})
+		} else if (sql === null) {
+			expect(q.sql).toMatchSnapshot()
+		} else {
+			expect(q.sql).toMatch(sql)
 		}
-	);
-});
+		expect(q.parameters).toEqual(parameters)
+	})
+})
 
 describe("querystring parsing", () => {
-	it.concurrent.for(unifiedTestCases)(
-		"correctly parses $title",
-		async ({ querystring, filter }, { expect }) => {
-			const trx = getTrx();
-			const parsed = QueryString.parse(querystring, {
-				depth: 10,
-			});
+	it.concurrent.for(unifiedTestCases)("correctly parses $title", async ({ querystring, filter }, {
+		expect,
+	}) => {
+		const trx = getTrx()
+		const parsed = QueryString.parse(querystring, {
+			depth: 10,
+		})
 
-			// this is a quick check to make sure the querystring is parsed as we think it should be
-			expect(
-				JSON.stringify(parsed.filters)
-					.replace(/([^\\])""/, "$1true")
-					.replace(/"/g, ""),
-				"Querystring filter should match the defined filter"
-			).toEqual(JSON.stringify(filter).replace(/"/g, ""));
+		// this is a quick check to make sure the querystring is parsed as we think it should be
+		expect(
+			JSON.stringify(parsed.filters)
+				.replace(/([^\\])""/, "$1true")
+				.replace(/"/g, ""),
+			"Querystring filter should match the defined filter"
+		).toEqual(JSON.stringify(filter).replace(/"/g, ""))
 
-			const validatedFilter = filterSchema.safeParse(parsed.filters);
+		const validatedFilter = filterSchema.safeParse(parsed.filters)
 
-			expect(validatedFilter.error).toBeUndefined();
-			expect(validatedFilter.success).toBe(true);
+		expect(validatedFilter.error).toBeUndefined()
+		expect(validatedFilter.success).toBe(true)
 
-			expect(validatedFilter.data).toEqual(filter);
+		expect(validatedFilter.data).toEqual(filter)
 
-			try {
-				const result = await validateFilter(
-					community.community.id,
-					validatedFilter.data!,
-					trx
-				);
-				expect(result).toBeDefined();
-			} catch (e) {
-				expect(e).toBeUndefined();
-			}
+		try {
+			const result = await validateFilter(community.community.id, validatedFilter.data!, trx)
+			expect(result).toBeDefined()
+		} catch (e) {
+			expect(e).toBeUndefined()
 		}
-	);
+	})
 
 	it("rejects empty filters", async () => {
-		const querystring = "";
-		const parsed = QueryString.parse(querystring);
-		const validatedFilter = filterSchema.safeParse(parsed);
+		const querystring = ""
+		const parsed = QueryString.parse(querystring)
+		const validatedFilter = filterSchema.safeParse(parsed)
 
-		expect(validatedFilter.success).toBe(false);
-	});
+		expect(validatedFilter.success).toBe(false)
+	})
 
 	it("rejects invalid operators", async () => {
-		const querystring = `filters[${slug("title")}][$invalid]=test`;
-		const parsed = QueryString.parse(querystring);
-		const validatedFilter = filterSchema.safeParse(parsed);
+		const querystring = `filters[${slug("title")}][$invalid]=test`
+		const parsed = QueryString.parse(querystring)
+		const validatedFilter = filterSchema.safeParse(parsed)
 
-		expect(validatedFilter.success).toBe(false);
-	});
+		expect(validatedFilter.success).toBe(false)
+	})
 
 	it("rejects invalid logical operators", async () => {
-		const querystring = `filters[$invalid][0][${slug("title")}][$eq]=test`;
-		const parsed = QueryString.parse(querystring);
-		const validatedFilter = filterSchema.safeParse(parsed);
+		const querystring = `filters[$invalid][0][${slug("title")}][$eq]=test`
+		const parsed = QueryString.parse(querystring)
+		const validatedFilter = filterSchema.safeParse(parsed)
 
-		expect(validatedFilter.success).toBe(false);
-	});
+		expect(validatedFilter.success).toBe(false)
+	})
 
 	it("handles malformed between operator", async () => {
-		const querystring = `filters[${slug("number")}][$between]=10`;
-		const parsed = QueryString.parse(querystring);
-		const validatedFilter = filterSchema.safeParse(parsed);
+		const querystring = `filters[${slug("number")}][$between]=10`
+		const parsed = QueryString.parse(querystring)
+		const validatedFilter = filterSchema.safeParse(parsed)
 
-		expect(validatedFilter.success).toBe(false);
-	});
+		expect(validatedFilter.success).toBe(false)
+	})
 
 	it("handles malformed array syntax", async () => {
-		const querystring = `filters[${slug("number")}][$in]=1,2,3`;
-		const parsed = QueryString.parse(querystring);
-		const validatedFilter = filterSchema.safeParse(parsed);
+		const querystring = `filters[${slug("number")}][$in]=1,2,3`
+		const parsed = QueryString.parse(querystring)
+		const validatedFilter = filterSchema.safeParse(parsed)
 
 		// This should fail because $in expects an array
-		expect(validatedFilter.success).toBe(false);
-	});
-});
+		expect(validatedFilter.success).toBe(false)
+	})
+})
 
 describe("filtering", async () => {
-	it.concurrent.for(unifiedTestCases)(
-		"filters by $title",
-		async ({ filter, foundIds, title }, { expect }) => {
-			const trx = getTrx();
+	it.concurrent.for(unifiedTestCases)("filters by $title", async ({ filter, foundIds, title }, {
+		expect,
+	}) => {
+		const trx = getTrx()
 
-			const { getPubsWithRelatedValues } = await import("~/lib/server/pub");
+		const { getPubsWithRelatedValues } = await import("~/lib/server/pub")
 
-			const pubs = await benchmark(`getPubsWithRelatedValues: ${title}`)(() =>
-				getPubsWithRelatedValues(
-					{
-						communityId: community.community.id,
-					},
-					{
-						trx,
-						filters: filter,
-					}
-				)
-			);
+		const pubs = await benchmark(`getPubsWithRelatedValues: ${title}`)(() =>
+			getPubsWithRelatedValues(
+				{
+					communityId: community.community.id,
+				},
+				{
+					trx,
+					filters: filter,
+				}
+			)
+		)
 
-			const expectedIds =
-				typeof foundIds === "function" ? foundIds(pubs).map((p) => p.id) : foundIds;
+		const expectedIds =
+			typeof foundIds === "function" ? foundIds(pubs).map((p) => p.id) : foundIds
 
-			expect(
-				pubs,
-				"Expected the same number of pubs to be returned as the number of specified foundIds"
-			).toHaveLength(expectedIds.length);
+		expect(
+			pubs,
+			"Expected the same number of pubs to be returned as the number of specified foundIds"
+		).toHaveLength(expectedIds.length)
 
-			if (pubs.length === 0) {
-				return;
-			}
-
-			const expectedIdsSet = new Set(expectedIds);
-
-			Array.from(expectedIdsSet).forEach((id) => {
-				const expectedPub = community.pubs.find((p) => p.id === id);
-				const foundPub = pubs.find((p) => p.id === id);
-				expect(
-					foundPub,
-					`Expected to find Pub with values  ${JSON.stringify(expectedPub?.values.map((v) => v.value))} but found pubs with values ${JSON.stringify(pubs.map((p) => p.values.map((v) => v.value)))}`
-				).toBeDefined();
-			});
+		if (pubs.length === 0) {
+			return
 		}
-	);
-});
+
+		const expectedIdsSet = new Set(expectedIds)
+
+		Array.from(expectedIdsSet).forEach((id) => {
+			const expectedPub = community.pubs.find((p) => p.id === id)
+			const foundPub = pubs.find((p) => p.id === id)
+			expect(
+				foundPub,
+				`Expected to find Pub with values  ${JSON.stringify(expectedPub?.values.map((v) => v.value))} but found pubs with values ${JSON.stringify(pubs.map((p) => p.values.map((v) => v.value)))}`
+			).toBeDefined()
+		})
+	})
+})
 
 const validationFailureCases: {
-	title: string;
-	filter: Filter;
-	message: string | RegExp;
+	title: string
+	filter: Filter
+	message: string | RegExp
 }[] = [
 	{
 		title: "invalid operators in number field",
@@ -1360,22 +1351,20 @@ const validationFailureCases: {
 		},
 		message: `Operators [$containsi, $endsWith] are not valid for ${communitySlug}:number of schema Number`,
 	},
-];
+]
 
 // specific validation failure modes
 describe("validation", () => {
-	it.concurrent.for(validationFailureCases)(
-		"rejects invalid filter: $title",
-		async ({ filter, message }, { expect }) => {
-			const trx = getTrx();
-			await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
-				message
-			);
-		}
-	);
+	it.concurrent.for(validationFailureCases)("rejects invalid filter: $title", async ({
+		filter,
+		message,
+	}, { expect }) => {
+		const trx = getTrx()
+		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(message)
+	})
 
 	it("allows valid operators in complex nested structures", async () => {
-		const trx = getTrx();
+		const trx = getTrx()
 		const filter = {
 			$or: [
 				{
@@ -1392,9 +1381,9 @@ describe("validation", () => {
 					],
 				},
 			],
-		};
+		}
 
-		const result = await validateFilter(community.community.id, filter, trx);
-		expect(result).toBeDefined();
-	});
-});
+		const result = await validateFilter(community.community.id, filter, trx)
+		expect(result).toBeDefined()
+	})
+})

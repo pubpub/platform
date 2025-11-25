@@ -11,10 +11,9 @@
 		"p:dev": "preconstruct dev",
 		"p:build": "turbo run turbo:p:build",
 		"turbo:p:build": "preconstruct build",
-		"format": "turbo run format --continue",
-		"format:fix": "turbo format:fix --continue",
-		"lint": "turbo lint --continue",
-		"lint:fix": "turbo lint:fix --continue",
+		"lint": "biome check --max-diagnostics=10000 --diagnostic-level=error",
+		"lint:ci": "biome ci --max-diagnostics=10000 --diagnostic-level=error",
+		"lint:fix": "biome check  --write --max-diagnostics=10000 --html-formatter-enabled=false --diagnostic-level=error",
 		"lint:ws": "pnpm dlx sherif@latest",
 		"test": "turbo test",
 		"test-run": "turbo test-run --continue",
@@ -42,29 +41,18 @@
 		"@babel/preset-env": "7.25.2",
 		"@babel/preset-react": "^7.27.1",
 		"@babel/preset-typescript": "^7.27.1",
+		"@biomejs/biome": "^2.3.6",
 		"@playwright/test": "catalog:",
 		"@preconstruct/cli": "^2.8.12",
-		"@pubpub/prettier-config": "workspace:*",
 		"@turbo/gen": "^2.5.6",
 		"concurrently": "^9.2.0",
 		"husky": "^8.0.3",
 		"lint-staged": "^13.3.0",
 		"pino-pretty": "^10.3.1",
-		"prettier": "catalog:",
 		"turbo": "^2.5.6"
 	},
-	"lint-staged": {
-		"*.{ts,tsx,js,jsx,scss,json,md}": [
-			"prettier --write"
-		],
-		"schema.prisma": [
-			"npx prisma format"
-		]
-	},
 	"preconstruct": {
-		"packages": [
-			"packages/*"
-		],
+		"packages": ["packages/*"],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,
@@ -72,7 +60,6 @@
 			"importsConditions": true
 		}
 	},
-	"prettier": "@pubpub/prettier-config",
 	"packageManager": "pnpm@9.10.0",
 	"prisma": {
 		"schema": "core/prisma/schema/"

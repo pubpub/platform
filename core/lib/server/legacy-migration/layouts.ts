@@ -1,63 +1,65 @@
-import { logger } from "logger";
+import type { LegacyStructure } from "./legacy-migration"
+import type { LayoutBlock } from "./schemas"
 
-import type { LegacyStructure } from "./legacy-migration";
-import type { LayoutBlock } from "./schemas";
-import { transformProsemirrorTree } from "./prosemirror";
+import { logger } from "logger"
+
+import { transformProsemirrorTree } from "./prosemirror"
 
 const processTextBlock = (block: LayoutBlock) => {
 	if (block.type === "text") {
-		return block.content.text?.content ?? [];
+		return block.content.text?.content ?? []
 	}
 
-	return [];
-};
+	return []
+}
 
 export const transformLayoutBlocks = (
-	parentId: string,
+	_parentId: string,
 	blocks: LayoutBlock[],
-	legacyStructure: LegacyStructure
+	_legacyStructure: LegacyStructure
 ) => {
 	const prosemirrorBody = {
 		type: "doc",
 		content: [] as any[],
-	};
+	}
 
 	for (const block of blocks) {
 		switch (block.type) {
 			case "text":
-				prosemirrorBody.content.push(...processTextBlock(block));
-				break;
+				prosemirrorBody.content.push(...processTextBlock(block))
+				break
 			case "collection-header":
 				//  TODO:
-				logger.warn("Collection header not yet implemented");
-				break;
+				logger.warn("Collection header not yet implemented")
+				break
 			case "pubs":
 				// TODO:
-				logger.warn("Pubs not yet implemented");
-				break;
+				logger.warn("Pubs not yet implemented")
+				break
 			case "html":
 				// TODO:
-				logger.warn("HTML block not yet implemented");
-				break;
+				logger.warn("HTML block not yet implemented")
+				break
 			case "submission-banner":
 				// TODO:
-				logger.warn("Submission banner not yet implemented");
-				break;
+				logger.warn("Submission banner not yet implemented")
+				break
 			case "banner":
 				// TODO:
-				logger.warn("Banner not yet implemented");
-				break;
+				logger.warn("Banner not yet implemented")
+				break
 			case "collections-pages":
 				// TODO:
-				logger.warn("Collections pages not yet implemented");
-				break;
-			default:
-				const exhaustiveCheck: never = block;
-				break;
+				logger.warn("Collections pages not yet implemented")
+				break
+			default: {
+				const _exhaustiveCheck: never = block
+				break
+			}
 		}
 	}
 
-	const { doc } = transformProsemirrorTree(prosemirrorBody);
+	const { doc } = transformProsemirrorTree(prosemirrorBody)
 
-	return doc;
-};
+	return doc
+}

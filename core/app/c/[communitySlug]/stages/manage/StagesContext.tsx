@@ -1,6 +1,8 @@
-"use client";
+"use client"
 
-import type { PropsWithChildren } from "react";
+import type { CommunitiesId, StagesId } from "db/public"
+import type { PropsWithChildren } from "react"
+import type { CommunityStage } from "~/lib/server/stages"
 
 import {
 	createContext,
@@ -10,24 +12,21 @@ import {
 	useEffect,
 	useOptimistic,
 	useState,
-} from "react";
+} from "react"
 
-import type { CommunitiesId, StagesId } from "db/public";
-
-import type { CommunityStage } from "~/lib/server/stages";
-import { useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
+import { useServerAction } from "~/lib/serverActions"
+import * as actions from "./actions"
 
 export type StagesContext = {
-	stages: CommunityStage[];
-	deleteStages: (stageIds: StagesId[]) => void;
-	createMoveConstraint: (sourceStageId: StagesId, destinationStageId: StagesId) => void;
-	deleteMoveConstraints: (moveConstraintIds: StagesId[]) => void;
-	deleteStagesAndMoveConstraints: (stageIds: StagesId[], moveConstraintIds: StagesId[]) => void;
-	createStage: () => void;
-	updateStageName: (stageId: StagesId, name: string) => void;
-	fetchStages: () => void;
-};
+	stages: CommunityStage[]
+	deleteStages: (stageIds: StagesId[]) => void
+	createMoveConstraint: (sourceStageId: StagesId, destinationStageId: StagesId) => void
+	deleteMoveConstraints: (moveConstraintIds: StagesId[]) => void
+	deleteStagesAndMoveConstraints: (stageIds: StagesId[], moveConstraintIds: StagesId[]) => void
+	createStage: () => void
+	updateStageName: (stageId: StagesId, name: string) => void
+	fetchStages: () => void
+}
 
 export const StagesContext = createContext<StagesContext>({
 	stages: [],
@@ -38,21 +37,21 @@ export const StagesContext = createContext<StagesContext>({
 	createStage: () => {},
 	updateStageName: () => {},
 	fetchStages: () => {},
-});
+})
 
 export type StagesProviderProps = PropsWithChildren<{
-	communityId: CommunitiesId;
-	stages: CommunityStage[];
-}>;
+	communityId: CommunitiesId
+	stages: CommunityStage[]
+}>
 
-export const useStages = () => useContext(StagesContext);
+export const useStages = () => useContext(StagesContext)
 
 type Action =
 	| { type: "stage_created"; newId: StagesId }
 	| { type: "stages_deleted"; stageIds: StagesId[] }
 	| { type: "move_constraint_created"; sourceStageId: StagesId; destinationStageId: StagesId }
 	| { type: "move_constraints_deleted"; moveConstraintIds: StagesId[] }
-	| { type: "stage_name_updated"; stageId: StagesId; name: string };
+	| { type: "stage_name_updated"; stageId: StagesId; name: string }
 
 const makeOptimisticStage = (communityId: CommunitiesId, newId: StagesId): CommunityStage => ({
 	id: newId,
@@ -66,17 +65,17 @@ const makeOptimisticStage = (communityId: CommunitiesId, newId: StagesId): Commu
 	pubsCount: 0,
 	memberCount: 0,
 	actionInstancesCount: 0,
-});
+})
 
 const makeOptimisitcStagesReducer =
 	(communityId: CommunitiesId) =>
 	(state: CommunityStage[], action: Action): CommunityStage[] => {
 		switch (action.type) {
 			case "stage_created": {
-				return [...state, makeOptimisticStage(communityId, action.newId)];
+				return [...state, makeOptimisticStage(communityId, action.newId)]
 			}
 			case "stages_deleted":
-				return state.filter((stage) => !action.stageIds.includes(stage.id));
+				return state.filter((stage) => !action.stageIds.includes(stage.id))
 			case "move_constraint_created":
 				return state.map((stage) => {
 					if (stage.id === action.sourceStageId) {
@@ -90,7 +89,7 @@ const makeOptimisitcStagesReducer =
 										.name,
 								},
 							],
-						};
+						}
 					}
 					if (stage.id === action.destinationStageId) {
 						return {
@@ -102,10 +101,10 @@ const makeOptimisitcStagesReducer =
 									name: state.find((s) => s.id === action.sourceStageId)!.name,
 								},
 							],
-						};
+						}
 					}
-					return stage;
-				});
+					return stage
+				})
 			case "move_constraints_deleted":
 				return state.map((stage) => {
 					return {
@@ -124,41 +123,41 @@ const makeOptimisitcStagesReducer =
 										mc.id === source && stage.id === destination
 								)
 						),
-					};
-				});
+					}
+				})
 			case "stage_name_updated":
 				return state.map((stage) => {
 					if (stage.id === action.stageId) {
 						return {
 							...stage,
 							name: action.name,
-						};
+						}
 					}
-					return stage;
-				});
+					return stage
+				})
 		}
-	};
+	}
 
 type DeleteBatch = {
-	stageIds: StagesId[];
-	moveConstraintIds: StagesId[];
-};
+	stageIds: StagesId[]
+	moveConstraintIds: StagesId[]
+}
 
 export const StagesManageProvider = (props: StagesProviderProps) => {
-	const runCreateStage = useServerAction(actions.createStage);
+	const runCreateStage = useServerAction(actions.createStage)
 	const runDeleteStagesAndMoveConstraints = useServerAction(
 		actions.deleteStagesAndMoveConstraints
-	);
-	const runCreateMoveConstraint = useServerAction(actions.createMoveConstraint);
-	const runUpdateStageName = useServerAction(actions.updateStageName);
+	)
+	const runCreateMoveConstraint = useServerAction(actions.createMoveConstraint)
+	const runUpdateStageName = useServerAction(actions.updateStageName)
 	const [stages, dispatch] = useOptimistic(
 		props.stages,
 		makeOptimisitcStagesReducer(props.communityId)
-	);
+	)
 	const [deleteBatch, setDeleteBatch] = useState({
 		stageIds: [],
 		moveConstraintIds: [],
-	} as DeleteBatch);
+	} as DeleteBatch)
 
 	const createStage = useCallback(async () => {
 		/**
@@ -171,22 +170,22 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 		 * This solves a problem where the position of the server-returned stage
 		 * would be different from the position of the client-returned stage.
 		 */
-		const newId = crypto.randomUUID() as StagesId;
+		const newId = crypto.randomUUID() as StagesId
 		startTransition(() => {
-			dispatch({ type: "stage_created", newId });
-		});
-		runCreateStage(props.communityId, newId);
-	}, [dispatch, props.communityId, runCreateStage]);
+			dispatch({ type: "stage_created", newId })
+		})
+		runCreateStage(props.communityId, newId)
+	}, [dispatch, props.communityId, runCreateStage])
 
 	const deleteStages = useCallback(
 		async (stageIds: StagesId[]) => {
 			startTransition(() => {
-				dispatch({ type: "stages_deleted", stageIds });
-			});
-			setDeleteBatch((prev) => ({ ...prev, stageIds: [...prev.stageIds, ...stageIds] }));
+				dispatch({ type: "stages_deleted", stageIds })
+			})
+			setDeleteBatch((prev) => ({ ...prev, stageIds: [...prev.stageIds, ...stageIds] }))
 		},
-		[dispatch, props.communityId]
-	);
+		[dispatch]
+	)
 
 	const deleteStagesAndMoveConstraints = useCallback(
 		(stageIds: StagesId[], moveConstraintIds: StagesId[]) => {
@@ -195,21 +194,21 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 					dispatch({
 						type: "stages_deleted",
 						stageIds,
-					});
-				});
+					})
+				})
 			}
 			if (moveConstraintIds.length > 0) {
 				startTransition(() => {
 					dispatch({
 						type: "move_constraints_deleted",
 						moveConstraintIds,
-					});
-				});
+					})
+				})
 			}
-			runDeleteStagesAndMoveConstraints(stageIds, moveConstraintIds);
+			runDeleteStagesAndMoveConstraints(stageIds, moveConstraintIds)
 		},
-		[dispatch, props.communityId, runDeleteStagesAndMoveConstraints]
-	);
+		[dispatch, runDeleteStagesAndMoveConstraints]
+	)
 
 	const createMoveConstraint = useCallback(
 		async (sourceStageId: StagesId, destinationStageId: StagesId) => {
@@ -218,12 +217,12 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 					type: "move_constraint_created",
 					sourceStageId,
 					destinationStageId,
-				});
-			});
-			runCreateMoveConstraint(sourceStageId, destinationStageId);
+				})
+			})
+			runCreateMoveConstraint(sourceStageId, destinationStageId)
 		},
-		[dispatch, props.communityId, runCreateMoveConstraint]
-	);
+		[dispatch, runCreateMoveConstraint]
+	)
 
 	const deleteMoveConstraints = useCallback(
 		async (moveConstraintIds: StagesId[]) => {
@@ -231,15 +230,15 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 				dispatch({
 					type: "move_constraints_deleted",
 					moveConstraintIds,
-				});
-			});
+				})
+			})
 			setDeleteBatch((prev) => ({
 				...prev,
 				moveConstraintIds: [...prev.moveConstraintIds, ...moveConstraintIds],
-			}));
+			}))
 		},
-		[dispatch, props.communityId]
-	);
+		[dispatch]
+	)
 
 	const updateStageName = useCallback(
 		async (stageId: StagesId, name: string) => {
@@ -248,24 +247,24 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 					type: "stage_name_updated",
 					stageId,
 					name,
-				});
-			});
-			runUpdateStageName(stageId, name);
+				})
+			})
+			runUpdateStageName(stageId, name)
 		},
-		[dispatch, props.communityId, runUpdateStageName]
-	);
+		[dispatch, runUpdateStageName]
+	)
 
 	const fetchStages = useCallback(() => {
-		actions.revalidateStages();
-	}, [props.communityId]);
+		actions.revalidateStages()
+	}, [])
 
 	useEffect(() => {
-		const { stageIds, moveConstraintIds } = deleteBatch;
+		const { stageIds, moveConstraintIds } = deleteBatch
 		if (stageIds.length > 0 || moveConstraintIds.length > 0) {
-			deleteStagesAndMoveConstraints(stageIds, moveConstraintIds);
-			setDeleteBatch({ stageIds: [], moveConstraintIds: [] });
+			deleteStagesAndMoveConstraints(stageIds, moveConstraintIds)
+			setDeleteBatch({ stageIds: [], moveConstraintIds: [] })
 		}
-	}, [deleteBatch]);
+	}, [deleteBatch, deleteStagesAndMoveConstraints])
 
 	const value = {
 		stages,
@@ -276,6 +275,6 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 		createStage,
 		updateStageName,
 		fetchStages,
-	} satisfies StagesContext;
-	return <StagesContext.Provider value={value}>{props.children}</StagesContext.Provider>;
-};
+	} satisfies StagesContext
+	return <StagesContext.Provider value={value}>{props.children}</StagesContext.Provider>
+}

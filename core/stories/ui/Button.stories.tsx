@@ -1,12 +1,11 @@
 // Adapted from https://github.com/shadcn-ui/ui/blob/94ee191d989cf93246f2feaca68b1fdb24c18940/apps/www/registry/stories/button.stories.tsx
 
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 
-import React from "react";
-import { fn } from "storybook/test";
+import { fn } from "storybook/test"
 
-import { Button } from "ui/button";
-import { Loader2, Mail } from "ui/icon";
+import { Button } from "ui/button"
+import { Loader2, Mail } from "ui/icon"
 
 const meta: Meta<typeof Button> = {
 	title: "Button",
@@ -14,34 +13,34 @@ const meta: Meta<typeof Button> = {
 	tags: ["autodocs"],
 	argTypes: {},
 	args: { children: "Button", onClick: fn() },
-};
-export default meta;
+}
+export default meta
 
-type Story = StoryObj<typeof Button>;
+type Story = StoryObj<typeof Button>
 
 export const Base: Story = {
 	args: { children: "Button" },
-};
+}
 export const Outline: Story = {
 	args: {
 		variant: "outline",
 	},
-};
+}
 export const Ghost: Story = {
 	args: {
 		variant: "ghost",
 	},
-};
+}
 export const Secondary: Story = {
 	args: {
 		variant: "secondary",
 	},
-};
+}
 export const Link: Story = {
 	args: {
 		variant: "link",
 	},
-};
+}
 export const Loading: Story = {
 	render: (args) => (
 		<Button {...args}>
@@ -52,7 +51,7 @@ export const Loading: Story = {
 	args: {
 		variant: "outline",
 	},
-};
+}
 export const WithIcon: Story = {
 	render: (args) => (
 		<Button {...args}>
@@ -62,4 +61,4 @@ export const WithIcon: Story = {
 	args: {
 		variant: "secondary",
 	},
-};
+}

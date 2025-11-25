@@ -1,21 +1,21 @@
-import React from "react";
-import { useFormContext } from "react-hook-form";
+import React from "react"
+import { useFormContext } from "react-hook-form"
 
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { Switch } from "ui/switch";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { Switch } from "ui/switch"
 
 export const MenuInputField = ({
 	name,
 	label: labelProp,
 	right,
 }: {
-	name: string;
-	label?: string;
-	right?: (value: string) => React.ReactNode;
+	name: string
+	label?: string
+	right?: (value: string) => React.ReactNode
 }) => {
-	const label = labelProp ?? name;
-	const form = useFormContext();
+	const label = labelProp ?? name
+	const form = useFormContext()
 	return (
 		<FormField
 			name={name}
@@ -38,22 +38,22 @@ export const MenuInputField = ({
 						</div>
 						<FormMessage />
 					</FormItem>
-				);
+				)
 			}}
 		/>
-	);
-};
+	)
+}
 
 type MenuSwitchFieldProps = {
-	name: string;
-	label?: string;
-	value?: boolean;
-	onChange?: (value: boolean) => void;
-};
+	name: string
+	label?: string
+	value?: boolean
+	onChange?: (value: boolean) => void
+}
 
 export const MenuSwitchField = (props: MenuSwitchFieldProps) => {
-	const label = props.label ?? props.name;
-	const form = useFormContext();
+	const label = props.label ?? props.name
+	const form = useFormContext()
 	return (
 		<FormField
 			name={props.name}
@@ -73,8 +73,8 @@ export const MenuSwitchField = (props: MenuSwitchFieldProps) => {
 						</FormControl>
 						<FormMessage />
 					</FormItem>
-				);
+				)
 			}}
 		/>
-	);
-};
+	)
+}

@@ -25,14 +25,14 @@ export const INPUT_COMPONENTS = {
 	stringWithTokens: InputWithTokens,
 	fieldName: PubFieldSelectInput,
 	stage: StagesSelect,
-};
+}
 
 /**
  * Define handlers for specific Zod types.
  * You can expand this object to support more types.
  */
 export const DEFAULT_ZOD_HANDLERS: {
-	[key: string]: keyof typeof INPUT_COMPONENTS;
+	[key: string]: keyof typeof INPUT_COMPONENTS
 } = {
 	ZodBoolean: "checkbox",
 	ZodDate: "date",
@@ -43,4 +43,4 @@ export const DEFAULT_ZOD_HANDLERS: {
 	StringWithTokens: "stringWithTokens",
 	FieldName: "fieldName",
 	Stage: "stage",
-};
+}

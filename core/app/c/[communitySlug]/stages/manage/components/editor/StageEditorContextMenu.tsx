@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react"
 
 import {
 	ContextMenu,
@@ -9,14 +9,14 @@ import {
 	ContextMenuSeparator,
 	ContextMenuShortcut,
 	ContextMenuTrigger,
-} from "ui/context-menu";
+} from "ui/context-menu"
 
-import { useStages } from "../../StagesContext";
-import { useStageEditor } from "./StageEditorContext";
+import { useStages } from "../../StagesContext"
+import { useStageEditor } from "./StageEditorContext"
 
 export const StageEditorContextMenu = (props: PropsWithChildren) => {
-	const { createStage } = useStages();
-	const { deleteSelection, hasSelection } = useStageEditor();
+	const { createStage } = useStages()
+	const { deleteSelection, hasSelection } = useStageEditor()
 
 	return (
 		<ContextMenu>
@@ -32,5 +32,5 @@ export const StageEditorContextMenu = (props: PropsWithChildren) => {
 				</ContextMenuItem>
 			</ContextMenuContent>
 		</ContextMenu>
-	);
-};
+	)
+}

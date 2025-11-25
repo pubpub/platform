@@ -3,9 +3,9 @@ import { useWatch } from "react-hook-form";
 import { InputWithTokens, MarkdownEditor } from "ui/editors";
 import { FieldSet } from "ui/field";
 
-import { ActionField } from "../_lib/ActionField";
-import { useActionForm } from "../_lib/ActionForm";
-import MemberSelectClientFetch from "./DynamicSelectFetch";
+import { ActionField } from "../_lib/ActionField"
+import { useActionForm } from "../_lib/ActionForm"
+import MemberSelectClientFetch from "./DynamicSelectFetch"
 
 export default function EmailActionForm() {
 	// const a = useMemo(() => <RecipientAndMemberFields />, []);
@@ -41,7 +41,7 @@ export default function EmailActionForm() {
 				)}
 			/>
 		</FieldSet>
-	);
+	)
 }
 
 function RecipientAndMemberFields() {

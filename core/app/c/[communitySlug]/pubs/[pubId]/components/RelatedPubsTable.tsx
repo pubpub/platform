@@ -1,33 +1,33 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
-import type { ReactNode } from "react";
+import type { ColumnDef } from "@tanstack/react-table"
+import type { ProcessedPubWithForm } from "contracts"
+import type { PubTypes, Stages } from "db/public"
+import type { ReactNode } from "react"
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useMemo, useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
-import type { ProcessedPubWithForm } from "contracts";
-import type { PubTypes, Stages } from "db/public";
-import { Badge } from "ui/badge";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
-import { DataTableColumnHeader } from "ui/data-table";
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { DataTableColumnHeader } from "ui/data-table"
 
-import { DataTable } from "~/app/components/DataTable/DataTable";
-import { dateFormatOptions } from "~/lib/dates";
-import { getPubTitle } from "~/lib/pubs";
+import { DataTable } from "~/app/components/DataTable/DataTable"
+import { dateFormatOptions } from "~/lib/dates"
+import { getPubTitle } from "~/lib/pubs"
 
 type RelatedPubTableColumnDef = ColumnDef<
 	ProcessedPubWithForm<{
-		withRelatedPubs: true;
-		withStage: true;
-		withPubType: true;
-		withMembers: true;
-		withStageActionInstances: true;
+		withRelatedPubs: true
+		withStage: true
+		withPubType: true
+		withMembers: true
+		withStageActionInstances: true
 	}>,
 	unknown
->;
+>
 
 const getRelatedPubsColumns = (
 	relatedPubActionsDropdowns: Record<string, ReactNode>,
@@ -61,34 +61,34 @@ const getRelatedPubsColumns = (
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
 			accessorKey: "title",
 			cell: function TitleHeader({ row }) {
-				const pathname = usePathname();
-				const path = pathname.split("/").slice(0, 4).join("/");
-				const title = getPubTitle(row.original);
+				const pathname = usePathname()
+				const path = pathname.split("/").slice(0, 4).join("/")
+				const title = getPubTitle(row.original)
 				return (
 					<Link className="block truncate underline" href={`${path}/${row.original.id}`}>
 						{title}
 					</Link>
-				);
+				)
 			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Pub Type" />,
 			accessorKey: "pubType",
 			cell: ({ getValue }) => {
-				const pubTypeName = getValue<PubTypes>().name;
-				return <Badge variant="outline">{pubTypeName}</Badge>;
+				const pubTypeName = getValue<PubTypes>().name
+				return <Badge variant="outline">{pubTypeName}</Badge>
 			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
 			accessorKey: "stage",
 			cell: ({ getValue }) => {
-				const stageName = getValue<Stages>()?.name;
+				const stageName = getValue<Stages>()?.name
 				return stageName ? (
 					<Badge variant="outline">{stageName}</Badge>
 				) : (
 					<span className="text-muted-foreground">None</span>
-				);
+				)
 			},
 		},
 		{
@@ -108,106 +108,106 @@ const getRelatedPubsColumns = (
 						),
 						accessorKey: "stage.actions",
 						cell: ({ row }) => {
-							return relatedPubActionsDropdowns[row.original.id];
+							return relatedPubActionsDropdowns[row.original.id]
 						},
 					} satisfies RelatedPubTableColumnDef,
 				]
 			: []),
-	] as const satisfies RelatedPubTableColumnDef[];
-};
+	] as const satisfies RelatedPubTableColumnDef[]
+}
 
 const Table = ({
 	pubs,
 	relatedPubActionsDropdowns,
 }: {
 	pubs: ProcessedPubWithForm<{
-		withRelatedPubs: true;
-		withStage: true;
-		withPubType: true;
-		withMembers: true;
-		withStageActionInstances: true;
-	}>[];
-	relatedPubActionsDropdowns: Record<string, ReactNode>;
+		withRelatedPubs: true
+		withStage: true
+		withPubType: true
+		withMembers: true
+		withStageActionInstances: true
+	}>[]
+	relatedPubActionsDropdowns: Record<string, ReactNode>
 }) => {
 	const canRunActions = useMemo(() => {
-		return Object.keys(relatedPubActionsDropdowns).length > 0;
-	}, [relatedPubActionsDropdowns]);
+		return Object.keys(relatedPubActionsDropdowns).length > 0
+	}, [relatedPubActionsDropdowns])
 
-	const columns = getRelatedPubsColumns(relatedPubActionsDropdowns, canRunActions);
+	const columns = getRelatedPubsColumns(relatedPubActionsDropdowns, canRunActions)
 
-	return <DataTable columns={columns} data={pubs} hidePaginationWhenSinglePage />;
-};
+	return <DataTable columns={columns} data={pubs} hidePaginationWhenSinglePage />
+}
 
 export const RelatedPubsTable = ({
 	pub,
 	relatedPubActionsDropdowns,
 }: {
 	pub: ProcessedPubWithForm<{
-		withRelatedPubs: true;
-		withStage: true;
-		withPubType: true;
-		withMembers: true;
-		withStageActionInstances: true;
-	}>;
-	relatedPubActionsDropdowns: Record<string, ReactNode>;
+		withRelatedPubs: true
+		withStage: true
+		withPubType: true
+		withMembers: true
+		withStageActionInstances: true
+	}>
+	relatedPubActionsDropdowns: Record<string, ReactNode>
 }) => {
 	const groupedBySlug = useMemo(() => {
 		const grouped: Record<
 			string,
 			{
 				pub: ProcessedPubWithForm<{
-					withRelatedPubs: true;
-					withStage: true;
-					withPubType: true;
-					withMembers: true;
-					withStageActionInstances: true;
-				}>;
-				fieldName: string;
+					withRelatedPubs: true
+					withStage: true
+					withPubType: true
+					withMembers: true
+					withStageActionInstances: true
+				}>
+				fieldName: string
 			}[]
-		> = {};
+		> = {}
 		for (const value of pub.values) {
-			const { relatedPub, fieldSlug, fieldName } = value;
+			const { relatedPub, fieldSlug, fieldName } = value
 			if (relatedPub) {
 				if (!grouped[fieldSlug]) {
-					grouped[fieldSlug] = [];
+					grouped[fieldSlug] = []
 				}
-				grouped[fieldSlug].push({ pub: relatedPub, fieldName });
+				grouped[fieldSlug].push({ pub: relatedPub, fieldName })
 			}
 		}
-		return grouped;
-	}, [pub]);
+		return grouped
+	}, [pub])
 
 	const fields = Object.entries(groupedBySlug).map(([slug, value]) => ({
 		slug,
 		name: value[0].fieldName,
 		count: value.length,
-	}));
+	}))
 
-	const defaultSelected = fields[0]?.slug;
-	const [selected, setSelected] = useState(defaultSelected);
-	const actualSelected = selected || defaultSelected; // for some reason on form switch `selected` gets set to undefined
+	const defaultSelected = fields[0]?.slug
+	const [selected, setSelected] = useState(defaultSelected)
+	const actualSelected = selected || defaultSelected // for some reason on form switch `selected` gets set to undefined
 
 	if (fields.length === 0) {
-		return <Table pubs={[]} relatedPubActionsDropdowns={{}} />;
+		return <Table pubs={[]} relatedPubActionsDropdowns={{}} />
 	}
 
 	return (
 		<div>
 			<div className="flex items-center gap-2">
 				{fields.map((field) => {
-					const isSelected = actualSelected === field.slug;
+					const isSelected = actualSelected === field.slug
 					return (
 						<Button
 							key={field.slug}
 							onClick={() => {
-								setSelected(field.slug);
+								setSelected(field.slug)
 							}}
 							variant={isSelected ? "default" : "ghost"}
 						>
 							{field.name}
 							<span className="ml-2 font-mono text-xs">{field.count}</span>
 						</Button>
-					);
+					)
 				})}
 			</div>
 			<Table
@@ -215,5 +215,5 @@ export const RelatedPubsTable = ({
 				relatedPubActionsDropdowns={relatedPubActionsDropdowns}
 			/>
 		</div>
-	);
-};
+	)
+}

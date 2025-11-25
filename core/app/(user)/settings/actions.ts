@@ -1,33 +1,30 @@
-"use server";
+"use server"
 
-import type { z } from "zod";
+import type { UsersId } from "db/public"
+import type { z } from "zod"
+import type { userInfoFormSchema } from "./UserInfoForm"
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache"
 
-import type { UsersId } from "db/public";
-
-import type { userInfoFormSchema } from "./UserInfoForm";
-import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { defineServerAction } from "~/lib/server/defineServerAction";
-import { updateUser } from "~/lib/server/user";
+import { getLoginData } from "~/lib/authentication/loginData"
+import { defineServerAction } from "~/lib/server/defineServerAction"
+import { updateUser } from "~/lib/server/user"
 
 export const updateUserInfo = defineServerAction(async function updateUserInfo({
 	data,
 }: {
-	data: z.infer<typeof userInfoFormSchema>;
+	data: z.infer<typeof userInfoFormSchema>
 }) {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 	if (!user) {
-		return { error: "You must be logged in to update your user information" };
+		return { error: "You must be logged in to update your user information" }
 	}
 
 	if (user.id !== data.id && !user.isSuperAdmin) {
-		return { error: "You must be the user to update their information" };
+		return { error: "You must be the user to update their information" }
 	}
 
-	const { firstName, lastName, email, avatar } = data;
+	const { firstName, lastName, email, avatar } = data
 	try {
 		await updateUser({
 			id: data.id as UsersId,
@@ -35,11 +32,11 @@ export const updateUserInfo = defineServerAction(async function updateUserInfo({
 			lastName,
 			email,
 			avatar,
-		});
+		})
 
-		revalidatePath("/settings");
-		return { success: true };
+		revalidatePath("/settings")
+		return { success: true }
 	} catch (error) {
-		return { error: error.message };
+		return { error: error.message }
 	}
-});
+})

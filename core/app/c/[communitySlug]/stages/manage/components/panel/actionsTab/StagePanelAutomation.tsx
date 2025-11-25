@@ -22,12 +22,12 @@ type Props = {
 };
 
 export const StagePanelAutomation = (props: Props) => {
-	const { automation } = props;
+	const { automation } = props
 
 	const [, setEditingAutomationId] = useQueryState(
 		"automation-id",
 		parseAsString.withDefault("new-automation")
-	);
+	)
 
 	const onEditClick = useCallback(() => {
 		setEditingAutomationId(automation.id);

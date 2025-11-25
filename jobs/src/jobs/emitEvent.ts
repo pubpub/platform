@@ -7,10 +7,11 @@ import type {
 } from "db/types";
 import type { logger } from "logger";
 
-import type { InternalClient } from "../clients";
-import { defineJob } from "../defineJob";
+import { Event } from "db/public"
 
-type Logger = typeof logger;
+import { defineJob } from "../defineJob"
+
+type Logger = typeof logger
 
 const handleRunAutomation = async (
 	client: InternalClient,
@@ -57,7 +58,7 @@ const handleRunAutomation = async (
 			error: e,
 		});
 	}
-};
+}
 
 const handleScheduleDelayedAutomation = async (
 	client: InternalClient,
@@ -195,14 +196,14 @@ const handleCancelScheduledAutomation = async (
 
 export const emitEvent = defineJob(
 	async (client: InternalClient, payload: EmitEventPayload, eventLogger, job) => {
-		eventLogger.info({ msg: "Starting emitEvent", payload });
+		eventLogger.info({ msg: "Starting emitEvent", payload })
 
 		if (!payload?.community?.slug) {
 			eventLogger.error({
 				msg: "No community slug found in payload",
 				job,
-			});
-			return;
+			})
+			return
 		}
 
 		// route based on event type
@@ -226,4 +227,4 @@ export const emitEvent = defineJob(
 				});
 		}
 	}
-);
+)

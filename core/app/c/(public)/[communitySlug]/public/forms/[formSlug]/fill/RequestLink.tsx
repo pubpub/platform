@@ -1,40 +1,41 @@
-"use client";
+"use client"
 
-import { useCallback } from "react";
+import type { PubsId } from "db/public"
 
-import type { PubsId } from "db/public";
-import { Button } from "ui/button";
-import { Mail } from "ui/icon";
-import { toast } from "ui/use-toast";
+import { useCallback } from "react"
 
-import * as actions from "~/app/components/forms/actions";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { useServerAction } from "~/lib/serverActions";
+import { Button } from "ui/button"
+import { Mail } from "ui/icon"
+import { toast } from "ui/use-toast"
+
+import * as actions from "~/app/components/forms/actions"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { useServerAction } from "~/lib/serverActions"
 
 export const RequestLink = ({
 	formSlug,
 	token,
 	pubId,
 }: {
-	formSlug: string;
-	token: string;
-	pubId?: PubsId;
+	formSlug: string
+	token: string
+	pubId?: PubsId
 }) => {
-	const sendNewFormLink = useServerAction(actions.sendNewFormLink);
-	const { id: communityId } = useCommunity();
+	const sendNewFormLink = useServerAction(actions.sendNewFormLink)
+	const { id: communityId } = useCommunity()
 
 	const requestLink = useCallback(async () => {
-		const link = await sendNewFormLink({ slug: formSlug, token, pubId, communityId });
+		const link = await sendNewFormLink({ slug: formSlug, token, pubId, communityId })
 
-		if (link && link.error) {
-			return;
+		if (link?.error) {
+			return
 		}
 
 		toast({
 			title: "Link sent",
 			description: "Successfully requested new link",
-		});
-	}, [token, formSlug, pubId, communityId]);
+		})
+	}, [token, formSlug, pubId, communityId])
 
 	return (
 		<Button
@@ -44,5 +45,5 @@ export const RequestLink = ({
 		>
 			<Mail size={16} className="mr-1" strokeWidth={1} /> Request New Link
 		</Button>
-	);
-};
+	)
+}

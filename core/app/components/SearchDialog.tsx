@@ -1,9 +1,11 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { useDebounce } from "use-debounce";
+import type { fullTextSearch } from "~/lib/server/pub"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
+import { useDebounce } from "use-debounce"
 
 import {
 	Command,
@@ -13,26 +15,25 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
-} from "ui/command";
-import { useKeyboardShortcut } from "ui/hooks";
-import { AlertCircle, Loader2 } from "ui/icon";
+} from "ui/command"
+import { useKeyboardShortcut } from "ui/hooks"
+import { AlertCircle, Loader2 } from "ui/icon"
 
-import type { fullTextSearch } from "~/lib/server/pub";
-import { client } from "~/lib/api";
-import { getPubTitle } from "~/lib/pubs";
-import { useCommunity } from "./providers/CommunityProvider";
+import { client } from "~/lib/api"
+import { getPubTitle } from "~/lib/pubs"
+import { useCommunity } from "./providers/CommunityProvider"
 
 interface SearchDialogProps {
-	defaultOpen?: boolean;
-	onOpenChange?: (open: boolean) => void;
-	onPubSelect?: (pub: any) => void;
+	defaultOpen?: boolean
+	onOpenChange?: (open: boolean) => void
+	onPubSelect?: (pub: any) => void
 }
 
 export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchDialogProps) {
-	const [open, setOpen] = useState(defaultOpen);
-	const [query, setQuery] = useState("");
-	const [debouncedQuery] = useDebounce(query, 300);
-	const community = useCommunity();
+	const [open, setOpen] = useState(defaultOpen)
+	const [query, setQuery] = useState("")
+	const [debouncedQuery] = useDebounce(query, 300)
+	const community = useCommunity()
 
 	const {
 		data: results = { status: 400, body: [] },
@@ -49,18 +50,18 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 		enabled: debouncedQuery.length > 0,
 		placeholderData: (prev, prevQuery) => {
 			if (prevQuery?.state.error || prevQuery?.state.data?.status !== 200) {
-				return prevQuery?.state.data;
+				return prevQuery?.state.data
 			}
-			return prev;
+			return prev
 		},
-	});
+	})
 
 	useKeyboardShortcut("Mod+k", () => {
-		onOpenChange?.(true);
-		setOpen(true);
-	});
+		onOpenChange?.(true)
+		setOpen(true)
+	})
 
-	const router = useRouter();
+	const router = useRouter()
 
 	return (
 		<CommandDialog
@@ -90,12 +91,12 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 									<CommandItem
 										key={pub.id}
 										onSelect={() => {
-											router.push(`/c/${community.slug}/pubs/${pub.id}`);
-											setOpen(false);
+											router.push(`/c/${community.slug}/pubs/${pub.id}`)
+											setOpen(false)
 										}}
 										className="flex flex-col items-start gap-1 py-3"
 									>
-										<div className="flex gap-2 text-xs font-medium text-gray-700">
+										<div className="flex gap-2 font-medium text-gray-700 text-xs">
 											<span>{pub.pubType.name}</span>
 											{pub.stage && (
 												<>
@@ -105,7 +106,7 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 											)}
 										</div>
 										<div
-											className="text-sm font-medium"
+											className="font-medium text-sm"
 											dangerouslySetInnerHTML={{
 												__html: pub.titleHighlights || getPubTitle(pub),
 											}}
@@ -117,7 +118,7 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 											.map((match, idx) => (
 												<div
 													key={idx}
-													className="flex gap-2 text-xs text-gray-500"
+													className="flex gap-2 text-gray-500 text-xs"
 												>
 													<span className="font-medium">
 														{match.name}:
@@ -137,5 +138,5 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 				</CommandList>
 			</Command>
 		</CommandDialog>
-	);
+	)
 }

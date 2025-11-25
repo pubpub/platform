@@ -1,34 +1,34 @@
-import type { Page } from "@playwright/test";
+import type { Page } from "@playwright/test"
 
-import { faker } from "@faker-js/faker";
+import { faker } from "@faker-js/faker"
 
-import { MemberRole } from "db/public";
+import { MemberRole } from "db/public"
 
-import { AddMemberDialog } from "./member-dialog";
+import { AddMemberDialog } from "./member-dialog"
 
 export class MembersPage {
-	private readonly communitySlug: string;
+	private readonly communitySlug: string
 
 	constructor(
 		public readonly page: Page,
 		communitySlug: string
 	) {
-		this.communitySlug = communitySlug;
+		this.communitySlug = communitySlug
 	}
 
 	async goto() {
-		await this.page.goto(`/c/${this.communitySlug}/members`);
+		await this.page.goto(`/c/${this.communitySlug}/members`)
 	}
 
 	async searchMembers(email: string) {
-		await this.page.getByPlaceholder("Search table by email").pressSequentially(email);
+		await this.page.getByPlaceholder("Search table by email").pressSequentially(email)
 	}
 
 	async openAddMemberDialog() {
-		await this.page.getByText(/Add Member/).click();
-		const addMemberDialog = this.page.getByRole("dialog", { name: "Add Member" });
-		await addMemberDialog.waitFor();
-		return new AddMemberDialog(this.page, addMemberDialog);
+		await this.page.getByText(/Add Member/).click()
+		const addMemberDialog = this.page.getByRole("dialog", { name: "Add Member" })
+		await addMemberDialog.waitFor()
+		return new AddMemberDialog(this.page, addMemberDialog)
 	}
 
 	async addNewUser(
@@ -40,11 +40,11 @@ export class MembersPage {
 			role = MemberRole.editor,
 			forms = [],
 		}: {
-			firstName: string;
-			lastName: string;
-			isSuperAdmin: boolean;
-			role: MemberRole;
-			forms: string[];
+			firstName: string
+			lastName: string
+			isSuperAdmin: boolean
+			role: MemberRole
+			forms: string[]
 		} = {
 			firstName: faker.person.firstName(),
 			lastName: faker.person.lastName(),
@@ -53,29 +53,29 @@ export class MembersPage {
 			forms: [],
 		}
 	) {
-		const addMemberDialog = await this.openAddMemberDialog();
+		const addMemberDialog = await this.openAddMemberDialog()
 		return await addMemberDialog.addNewUser(email, {
 			firstName,
 			lastName,
 			isSuperAdmin,
 			role,
 			forms,
-		});
+		})
 	}
 
 	/**
 	 * @param forms An array of form names to add to this membership
 	 */
 	async addExistingUser(email: string, role = MemberRole.editor, forms: string[] = []) {
-		const addMemberDialog = await this.openAddMemberDialog();
-		return await addMemberDialog.addExistingUser(email, role, forms);
+		const addMemberDialog = await this.openAddMemberDialog()
+		return await addMemberDialog.addExistingUser(email, role, forms)
 	}
 
 	async removeMember(email: string) {
-		await this.searchMembers(email);
-		await this.page.getByRole("button", { name: "Open menu", exact: true }).click();
-		await this.page.getByRole("button", { name: "Remove member", exact: true }).click();
-		await this.page.getByRole("button", { name: "Remove", exact: true }).click();
-		await this.page.getByText("Member successfully removed", { exact: true }).waitFor();
+		await this.searchMembers(email)
+		await this.page.getByRole("button", { name: "Open menu", exact: true }).click()
+		await this.page.getByRole("button", { name: "Remove member", exact: true }).click()
+		await this.page.getByRole("button", { name: "Remove", exact: true }).click()
+		await this.page.getByText("Member successfully removed", { exact: true }).waitFor()
 	}
 }

@@ -41,79 +41,79 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	PubFieldSchema: PubFieldSchemaTable;
+	PubFieldSchema: PubFieldSchemaTable
 
 	automation_runs: AutomationRunsTable;
 
 	membership_capabilities: MembershipCapabilitiesTable;
 
-	sessions: SessionsTable;
+	sessions: SessionsTable
 
-	move_constraint: MoveConstraintTable;
+	move_constraint: MoveConstraintTable
 
-	pub_values_history: PubValuesHistoryTable;
+	pub_values_history: PubValuesHistoryTable
 
-	api_access_tokens: ApiAccessTokensTable;
+	api_access_tokens: ApiAccessTokensTable
 
-	_MemberGroupToUser: MemberGroupToUserTable;
+	_MemberGroupToUser: MemberGroupToUserTable
 
-	_FormElementToPubType: FormElementToPubTypeTable;
+	_FormElementToPubType: FormElementToPubTypeTable
 
-	PubsInStages: PubsInStagesTable;
+	PubsInStages: PubsInStagesTable
 
-	stage_memberships: StageMembershipsTable;
+	stage_memberships: StageMembershipsTable
 
-	_prisma_migrations: PrismaMigrationsTable;
+	_prisma_migrations: PrismaMigrationsTable
 
-	auth_tokens: AuthTokensTable;
+	auth_tokens: AuthTokensTable
 
-	api_access_permissions: ApiAccessPermissionsTable;
+	api_access_permissions: ApiAccessPermissionsTable
 
-	api_access_logs: ApiAccessLogsTable;
+	api_access_logs: ApiAccessLogsTable
 
-	pub_types: PubTypesTable;
+	pub_types: PubTypesTable
 
 	automation_conditions: AutomationConditionsTable;
 
 	pub_fields: PubFieldsTable;
 
-	invites_history: InvitesHistoryTable;
+	invites_history: InvitesHistoryTable
 
-	communities: CommunitiesTable;
+	communities: CommunitiesTable
 
 	automation_triggers: AutomationTriggersTable;
 
 	users: UsersTable;
 
-	_PubFieldToPubType: PubFieldToPubTypeTable;
+	_PubFieldToPubType: PubFieldToPubTypeTable
 
-	pub_values: PubValuesTable;
+	pub_values: PubValuesTable
 
-	action_runs: ActionRunsTable;
+	action_runs: ActionRunsTable
 
-	invites: InvitesTable;
+	invites: InvitesTable
 
-	pubs: PubsTable;
+	pubs: PubsTable
 
-	action_config_defaults: ActionConfigDefaultsTable;
+	action_config_defaults: ActionConfigDefaultsTable
 
-	action_instances: ActionInstancesTable;
+	action_instances: ActionInstancesTable
 
-	community_memberships: CommunityMembershipsTable;
+	community_memberships: CommunityMembershipsTable
 
-	member_groups: MemberGroupsTable;
+	member_groups: MemberGroupsTable
 
-	pub_memberships: PubMembershipsTable;
+	pub_memberships: PubMembershipsTable
 
-	stages: StagesTable;
+	stages: StagesTable
 
 	automation_condition_blocks: AutomationConditionBlocksTable;
 
 	form_elements: FormElementsTable;
 
-	forms: FormsTable;
+	forms: FormsTable
 
-	automations: AutomationsTable;
+	automations: AutomationsTable
 
-	invite_forms: InviteFormsTable;
+	invite_forms: InviteFormsTable
 }

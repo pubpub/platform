@@ -1,6 +1,6 @@
-import { baseSchema } from "context-editor/schemas";
+import { baseSchema } from "context-editor/schemas"
 
-import { htmlToProsemirrorServer } from "~/lib/editor/serialize-server";
+import { htmlToProsemirrorServer } from "~/lib/editor/serialize-server"
 
 const unsupportedNodes = {
 	citation: "inline",
@@ -8,75 +8,75 @@ const unsupportedNodes = {
 	iframe: "block",
 	reference: "inline",
 	file: "block",
-} as const;
+} as const
 
 type OldImageNode = {
-	type: "image";
+	type: "image"
 	attrs: {
-		id: string;
-		url: string;
-		href: null | string;
-		size: number;
-		align: string;
-		altText: string;
-		caption: string;
-		hideLabel: boolean;
-		fullResolution: boolean;
-	};
-};
+		id: string
+		url: string
+		href: null | string
+		size: number
+		align: string
+		altText: string
+		caption: string
+		hideLabel: boolean
+		fullResolution: boolean
+	}
+}
 
-type Alignment = "left" | "center" | "right" | "block";
+type Alignment = "left" | "center" | "right" | "block"
 
 type NewImageNode = {
-	type: "image";
+	type: "image"
 	attrs: {
-		id: string | null;
-		class: string | null;
-		alt: string;
-		src: string;
-		linkTo: string;
-		credit: string | null; // TODO: should be rich text
-		license: string | null; // TODO: should be rich text
-		width: number;
-		align: Alignment;
-	};
-};
+		id: string | null
+		class: string | null
+		alt: string
+		src: string
+		linkTo: string
+		credit: string | null // TODO: should be rich text
+		license: string | null // TODO: should be rich text
+		width: number
+		align: Alignment
+	}
+}
 
 type SerializedNode = {
-	type: string;
-	attrs: Record<string, any>;
-	content?: (SerializedNode | SerializedText)[];
-};
+	type: string
+	attrs: Record<string, any>
+	content?: (SerializedNode | SerializedText)[]
+}
 
 type SerializedText = {
-	type: "text";
-	text: string;
-	marks?: SerializedMark[];
-};
+	type: "text"
+	text: string
+	marks?: SerializedMark[]
+}
 
 type SerializedMark = {
-	type: string;
-	attrs: Record<string, any>;
-};
+	type: string
+	attrs: Record<string, any>
+}
 
 interface OldEquationNode {
-	type: string;
+	type: string
 	attrs: {
-		id: string;
-		html: string;
-		value: string;
-		renderForPandoc: boolean;
-	};
+		id: string
+		html: string
+		value: string
+		renderForPandoc: boolean
+	}
 }
 
 const nodeReplacements = {
 	image: (node: OldImageNode) => {
-		const caption = node.attrs.caption;
+		const caption = node.attrs.caption
 
-		const captionNode = caption ? htmlToProsemirrorServer(caption) : null;
+		const captionNode = caption ? htmlToProsemirrorServer(caption) : null
 
 		// contents of the first node (which is a `p`)
-		const captionContent = captionNode?.content?.content?.[0]?.content;
+		const captionContent = captionNode?.content?.content?.[0]?.content
 		// console.log(captionContent);
 
 		const newNode = {
@@ -113,9 +113,9 @@ const nodeReplacements = {
 						]
 					: []),
 			],
-		} as const;
+		} as const
 
-		return newNode;
+		return newNode
 	},
 	equation: (node: OldEquationNode) => {
 		return {
@@ -130,22 +130,22 @@ const nodeReplacements = {
 					text: node.attrs.value,
 				},
 			],
-		};
+		}
 	},
 	// no empty table cells
 	table_cell: (node: SerializedNode) => {
 		if (node.content?.length && node.content.length > 0) {
-			return node;
+			return node
 		}
 		return {
 			...node,
 			content: [{ type: "paragraph", content: [] }],
-		};
+		}
 	},
 	// no empty table headers
 	table_header: (node: SerializedNode) => {
 		if (node.content?.length && node.content.length > 0) {
-			return node;
+			return node
 		}
 		return {
 			...node,
@@ -155,7 +155,7 @@ const nodeReplacements = {
 					content: [],
 				},
 			],
-		};
+		}
 	},
 	table: (node: SerializedNode) => {
 		return {
@@ -165,15 +165,15 @@ const nodeReplacements = {
 				class: null,
 			},
 			content: [node],
-		};
+		}
 	},
-} as const;
+} as const
 
 export const transformProsemirrorTree = (doc: any) => {
 	// helper to check if node is supported
 	const isNodeSupported = (node: any) => {
-		return node && node.type && baseSchema.nodes[node.type];
-	};
+		return node?.type && baseSchema.nodes[node.type]
+	}
 
 	// create replacement nodes based on whether original was inline or block
 	const createReplacementNode = (node: any) => {
@@ -181,24 +181,24 @@ export const transformProsemirrorTree = (doc: any) => {
 		const isInline =
 			(node.type in unsupportedNodes &&
 				unsupportedNodes[node.type as keyof typeof unsupportedNodes] === "inline") ||
-			(node.marks && node.marks.length > 0);
+			(node.marks && node.marks.length > 0)
 
 		const base = {
 			type: isInline ? "text" : "paragraph",
 		} as {
-			type: "text" | "paragraph";
-			text?: string;
-			marks?: { type: string }[];
+			type: "text" | "paragraph"
+			text?: string
+			marks?: { type: string }[]
 			content?: {
-				type: "text";
-				text: string;
-				marks?: { type: string }[];
-			}[];
-		};
+				type: "text"
+				text: string
+				marks?: { type: string }[]
+			}[]
+		}
 
 		if (isInline) {
-			base.text = `!unsupported node '${node.type}'!`;
-			base.marks = [{ type: "strong" }];
+			base.text = `!unsupported node '${node.type}'!`
+			base.marks = [{ type: "strong" }]
 		} else {
 			base.content = [
 				{
@@ -206,20 +206,20 @@ export const transformProsemirrorTree = (doc: any) => {
 					marks: [{ type: "strong" }],
 					text: `!unsupported node '${node.type}'!`,
 				},
-			];
+			]
 		}
 
-		return base;
-	};
+		return base
+	}
 
-	let nextParagraphIsAbstract = false;
-	let abstract: Node | undefined;
+	let nextParagraphIsAbstract = false
+	let abstract: Node | undefined
 
 	// mutably walk and transform the tree
 	// TODO: fix these anys
 	const visitNode = (node: any, depth: number[] = [0]) => {
 		if (!node) {
-			return null;
+			return null
 		}
 
 		if (
@@ -229,8 +229,8 @@ export const transformProsemirrorTree = (doc: any) => {
 			node.content?.[0]?.text === "Abstract" &&
 			node.content?.length === 1
 		) {
-			nextParagraphIsAbstract = true;
-			return null; // delete the heading
+			nextParagraphIsAbstract = true
+			return null // delete the heading
 		}
 
 		// handle content array
@@ -238,47 +238,47 @@ export const transformProsemirrorTree = (doc: any) => {
 			// filter out null values and transform remaining nodes
 			node.content = node.content
 				.map((child: any, i: number) => {
-					return visitNode(child, [...depth, i]);
+					return visitNode(child, [...depth, i])
 				})
-				.filter(Boolean); // remove null values
+				.filter(Boolean) // remove null values
 
 			// if content array is empty after filtering, delete the node itself
 			if (node.content.length === 0) {
-				return null;
+				return null
 			}
 		}
 
 		if (node.type in nodeReplacements) {
-			return nodeReplacements[node.type as keyof typeof nodeReplacements](node);
+			return nodeReplacements[node.type as keyof typeof nodeReplacements](node)
 		}
 
 		if (!isNodeSupported(node)) {
-			return createReplacementNode(node);
+			return createReplacementNode(node)
 		}
 
 		// handle marks array if present
 		if (node.marks && Array.isArray(node.marks)) {
-			node.marks = node.marks.filter((mark: any) => baseSchema.marks[mark.type]);
+			node.marks = node.marks.filter((mark: any) => baseSchema.marks[mark.type])
 		}
 
 		if (nextParagraphIsAbstract && node.type === "paragraph") {
-			nextParagraphIsAbstract = false;
+			nextParagraphIsAbstract = false
 			if (node.type === "paragraph") {
-				abstract = structuredClone(node);
-				return null; // delete the paragraph after saving it
+				abstract = structuredClone(node)
+				return null // delete the paragraph after saving it
 			}
 		}
 
-		return node;
-	};
+		return node
+	}
 
 	// start walking from root
-	const result = visitNode(doc);
+	const result = visitNode(doc)
 
 	return {
 		doc: result,
 		interestingNodes: {
 			abstract,
 		},
-	};
-};
+	}
+}

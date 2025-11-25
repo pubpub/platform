@@ -1,46 +1,46 @@
-"use client";
+"use client"
 
-import { useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import type { Communities } from "db/public"
 
-import type { Communities } from "db/public";
-import { MemberRole } from "db/public";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
-import { Form } from "ui/form";
-import { FormSubmitButton } from "ui/submit-button";
-import { toast } from "ui/use-toast";
+import { useCallback } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useForm } from "react-hook-form"
 
-import { publicJoinCommunity } from "~/lib/authentication/actions";
-import { useServerAction } from "~/lib/serverActions";
+import { MemberRole } from "db/public"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card"
+import { Form } from "ui/form"
+import { FormSubmitButton } from "ui/submit-button"
+import { toast } from "ui/use-toast"
+
+import { publicJoinCommunity } from "~/lib/authentication/actions"
+import { useServerAction } from "~/lib/serverActions"
 
 export const JoinCommunityForm = ({
 	community,
 	role = MemberRole.contributor,
 	redirectTo,
 }: {
-	community: Communities;
-	role?: MemberRole;
-	redirectTo?: string;
+	community: Communities
+	role?: MemberRole
+	redirectTo?: string
 }) => {
-	const form = useForm();
-	const runJoin = useServerAction(publicJoinCommunity);
-	const router = useRouter();
-	const searchParams = useSearchParams();
+	const form = useForm()
+	const runJoin = useServerAction(publicJoinCommunity)
+	const router = useRouter()
+	const searchParams = useSearchParams()
 
-	const redirectPath = redirectTo ?? searchParams.get("redirectTo") ?? `/c/${community.slug}`;
+	const redirectPath = redirectTo ?? searchParams.get("redirectTo") ?? `/c/${community.slug}`
 
 	const onSubmit = useCallback(async () => {
-		const result = await runJoin();
+		const result = await runJoin()
 		if ("success" in result) {
 			toast({
 				title: "Success",
 				description: result.report,
-			});
-			router.push(redirectPath);
+			})
+			router.push(redirectPath)
 		}
-	}, [redirectPath, runJoin]);
+	}, [redirectPath, runJoin, router.push])
 
 	return (
 		<Form {...form}>
@@ -66,5 +66,5 @@ export const JoinCommunityForm = ({
 				</Card>
 			</form>
 		</Form>
-	);
-};
+	)
+}

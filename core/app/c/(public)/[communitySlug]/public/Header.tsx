@@ -1,15 +1,15 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
-import { Button } from "ui/button";
+import { Button } from "ui/button"
 
-import { CopyCurrentUrlButton } from "~/app/components/CopyCurrentUrlButton";
-import { Logo } from "~/app/components/Logo";
-import { HEADER_HEIGHT } from "~/lib/ui";
+import { CopyCurrentUrlButton } from "~/app/components/CopyCurrentUrlButton"
+import { Logo } from "~/app/components/Logo"
+import { HEADER_HEIGHT } from "~/lib/ui"
 
 export const Header = ({ children }: { children: ReactNode }) => {
 	return (
 		<div
-			className="border-color-gray-100 sticky top-0 z-10 flex items-center gap-2 border-b bg-gray-50 py-5"
+			className="sticky top-0 z-10 flex items-center gap-2 border-color-gray-100 border-b bg-gray-50 py-5"
 			style={{ height: `${HEADER_HEIGHT}px` }}
 		>
 			<div className="ml-4 flex-1">
@@ -24,5 +24,5 @@ export const Header = ({ children }: { children: ReactNode }) => {
 				</Button>
 			</div>
 		</div>
-	);
-};
+	)
+}

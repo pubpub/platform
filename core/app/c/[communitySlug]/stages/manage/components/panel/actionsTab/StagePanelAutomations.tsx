@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import type { CommunitiesId, StagesId, UsersId } from "db/public"
 
 import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
@@ -13,9 +13,9 @@ import { StagePanelAutomation } from "./StagePanelAutomation";
 import { StagePanelAutomationForm } from "./StagePanelAutomationForm";
 
 type PropsInner = {
-	stageId: StagesId;
-	userId: UsersId;
-};
+	stageId: StagesId
+	userId: UsersId
+}
 
 const StagePanelAutomationsInner = async (props: PropsInner) => {
 	const [stage, automations] = await Promise.all([
@@ -24,7 +24,7 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 	]);
 
 	if (!stage) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
 	return (
@@ -64,22 +64,22 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 				</ItemGroup>
 			</CardContent>
 		</Card>
-	);
-};
+	)
+}
 
 type Props = {
-	stageId?: StagesId;
-	userId: UsersId;
-};
+	stageId?: StagesId
+	userId: UsersId
+}
 
 export const StagePanelAutomations = async (props: Props) => {
 	if (props.stageId === undefined) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
 			<StagePanelAutomationsInner stageId={props.stageId} userId={props.userId} />
 		</Suspense>
-	);
-};
+	)
+}

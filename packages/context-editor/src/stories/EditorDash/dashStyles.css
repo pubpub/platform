@@ -275,9 +275,9 @@
 		background-color: #f7f7f7;
 		box-shadow: -5px 10px 10px rgba(0, 0, 0, 0.3);
 		p {
-			font-size: 14px !important;
+			font-size: 14px;
 			line-height: 1.1;
-			margin-bottom: 0 !important;
+			margin-bottom: 0;
 		}
 	}
 	.spin {
@@ -294,7 +294,7 @@
 		}
 	}
 	.red {
-		color: #b93131 !important;
+		color: #b93131;
 	}
 	.large {
 		font-size: 8em;

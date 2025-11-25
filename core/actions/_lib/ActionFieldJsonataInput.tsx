@@ -1,36 +1,36 @@
-import type { ControllerRenderProps, FieldValues } from "react-hook-form";
+import type { ControllerRenderProps, FieldValues } from "react-hook-form"
 
-import { Textarea } from "ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { Textarea } from "ui/textarea"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
-import { extractJsonata, wrapInJsonata } from "./schemaWithJsonFields";
+import { extractJsonata, wrapInJsonata } from "./schemaWithJsonFields"
 
 export type InputState =
 	| {
-			state: "jsonata";
-			jsonValue: string;
-			normalValue: string;
+			state: "jsonata"
+			jsonValue: string
+			normalValue: string
 	  }
 	| {
-			state: "normal";
-			normalValue: string;
-			jsonValue: string;
-	  };
+			state: "normal"
+			normalValue: string
+			jsonValue: string
+	  }
 
 export function ActionFieldJsonataInput(props: {
-	field: ControllerRenderProps<FieldValues, any>;
-	isDefaultField: boolean;
-	actionAccepts: readonly string[];
-	"aria-labelledby": string;
+	field: ControllerRenderProps<FieldValues, any>
+	isDefaultField: boolean
+	actionAccepts: readonly string[]
+	"aria-labelledby": string
 }) {
-	const { field, actionAccepts } = props;
+	const { field, actionAccepts } = props
 
-	const isDefaultField = field.value === undefined;
+	const isDefaultField = field.value === undefined
 
 	return (
 		<div className="relative">
-			<div className="absolute right-0 top-0 z-10">
-				<span className="flex items-center gap-1 rounded-bl-sm rounded-tr-sm border-b border-l border-amber-400 bg-amber-100 px-1.5 py-1.5 text-xs font-medium text-amber-800">
+			<div className="absolute top-0 right-0 z-10">
+				<span className="flex items-center gap-1 rounded-tr-sm rounded-bl-sm border-amber-400 border-b border-l bg-amber-100 px-1.5 py-1.5 font-medium text-amber-800 text-xs">
 					<Tooltip delayDuration={500}>
 						<TooltipTrigger className="underline decoration-dashed">
 							JSONata
@@ -62,16 +62,16 @@ export function ActionFieldJsonataInput(props: {
 			</div>
 			<Textarea
 				aria-labelledby={props["aria-labelledby"]}
-				className="border-amber-400 bg-amber-50/10 font-mono font-medium text-gray-900 focus:border-amber-400 focus-visible:ring-amber-400"
+				className="border-amber-400 bg-amber-50/10 font-medium font-mono text-gray-900 focus:border-amber-400 focus-visible:ring-amber-400"
 				placeholder={isDefaultField ? "(use default)" : undefined}
 				{...field}
 				id={field.name}
 				value={field.value ? extractJsonata(field.value) : ""}
 				onChange={(e) => {
-					const wrappedValue = wrapInJsonata(e.target.value);
-					field.onChange(wrappedValue);
+					const wrappedValue = wrapInJsonata(e.target.value)
+					field.onChange(wrappedValue)
 				}}
 			/>
 		</div>
-	);
+	)
 }

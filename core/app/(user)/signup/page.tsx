@@ -1,20 +1,20 @@
-import { AuthTokenType } from "db/public";
+import { AuthTokenType } from "db/public"
 
-import { SignupForm } from "~/app/components/Signup/SignupForm";
-import { legacySignup } from "~/lib/authentication/actions";
-import { getLoginData } from "~/lib/authentication/loginData";
+import { SignupForm } from "~/app/components/Signup/SignupForm"
+import { legacySignup } from "~/lib/authentication/actions"
+import { getLoginData } from "~/lib/authentication/loginData"
 
 export default async function Page({
 	searchParams,
 }: {
 	searchParams: Promise<{
-		redirectTo: string;
-	}>;
+		redirectTo: string
+	}>
 }) {
-	const { redirectTo } = await searchParams;
+	const { redirectTo } = await searchParams
 	const { user, session } = await getLoginData({
 		allowedSessions: [AuthTokenType.signup],
-	});
+	})
 
 	if (!session || !user) {
 		return (
@@ -22,9 +22,9 @@ export default async function Page({
 				You are not allowed to signup for an account, or the link that you clicked is
 				invalid or expired. Please try again
 			</div>
-		);
+		)
 	}
-	const signupAction = legacySignup.bind(null, user.id);
+	const signupAction = legacySignup.bind(null, user.id)
 
 	return (
 		<div className="m-auto max-w-lg">
@@ -38,5 +38,5 @@ export default async function Page({
 				signupAction={signupAction}
 			/>
 		</div>
-	);
+	)
 }

@@ -1,12 +1,12 @@
 // @ts-check
 
-import type { NextConfig, normalizeConfig } from "next/dist/server/config";
+import type { NextConfig, normalizeConfig } from "next/dist/server/config"
 
-import { PHASE_PRODUCTION_BUILD } from "next/dist/shared/lib/constants.js";
-import withPreconstruct from "@preconstruct/next";
-import { withSentryConfig } from "@sentry/nextjs";
+import { PHASE_PRODUCTION_BUILD } from "next/dist/shared/lib/constants.js"
+import withPreconstruct from "@preconstruct/next"
+import { withSentryConfig } from "@sentry/nextjs"
 
-import { env } from "./lib/env/env";
+import { env } from "./lib/env/env"
 
 // import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
@@ -63,16 +63,16 @@ const nextConfig: NextConfig = {
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
-	webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
+	webpack: (config, { dev, isServer }) => {
 		if (config.cache && !dev) {
 			config.cache = Object.freeze({
 				type: "memory",
-			});
+			})
 		}
 		if (isServer) {
-			config.ignoreWarnings = [{ module: /opentelemetry/ }];
+			config.ignoreWarnings = [{ module: /opentelemetry/ }]
 		}
-		return config;
+		return config
 	},
 	async headers() {
 		// otherwise SSE doesn't work
@@ -87,9 +87,9 @@ const nextConfig: NextConfig = {
 					},
 				],
 			},
-		];
+		]
 	},
-};
+}
 
 const modifiedConfig = withPreconstruct(
 	withSentryConfig(nextConfig, {
@@ -121,22 +121,20 @@ const modifiedConfig = withPreconstruct(
 			deleteSourcemapsAfterUpload: true,
 		},
 	})
-);
+)
 
-const config: typeof normalizeConfig = async (phase, { defaultConfig }) => {
+const config: typeof normalizeConfig = async (phase) => {
 	if (!env.SENTRY_AUTH_TOKEN) {
-		console.warn("⚠️ SENTRY_AUTH_TOKEN is not set");
 	}
 
 	if (phase === PHASE_PRODUCTION_BUILD && env.CI) {
 		if (!env.SENTRY_AUTH_TOKEN) {
 			throw new Error(
 				"SENTRY_AUTH_TOKEN is required for production builds in CI in order to upload source maps to sentry"
-			);
+			)
 		}
-		console.log("✅ SENTRY_AUTH_TOKEN is successfully set");
 	}
-	return modifiedConfig;
-};
+	return modifiedConfig
+}
 
-export default config;
+export default config

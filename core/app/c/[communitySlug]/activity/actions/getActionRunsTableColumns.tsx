@@ -1,9 +1,14 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
+import type { Json } from "contracts"
+import type { ActionInstances, PubsId, Stages } from "db/public"
+import type { Writeable, XOR } from "utils/types"
+import type { PubTitleProps } from "~/lib/pubs"
 
-import Link from "next/link";
+import Link from "next/link"
 
+<<<<<<< HEAD
 import type { Json } from "contracts";
 import type { ActionInstances, PubsId, Stages } from "db/public";
 import type { Writeable, XOR } from "utils/types";
@@ -12,12 +17,18 @@ import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon";
+=======
+import { Event } from "db/public"
+import { Badge } from "ui/badge"
+import { DataTableColumnHeader } from "ui/data-table"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
+>>>>>>> main
 
-import type { PubTitleProps } from "~/lib/pubs";
-import { PubTitle } from "~/app/components/PubTitle";
-import { getPubTitle } from "~/lib/pubs";
+import { PubTitle } from "~/app/components/PubTitle"
+import { getPubTitle } from "~/lib/pubs"
 
 export type ActionRun = {
+<<<<<<< HEAD
 	id: string;
 	createdAt: Date;
 	automation: { id: string; name: string; icon: IconConfig | null } | null;
@@ -29,17 +40,29 @@ export type ActionRun = {
 	| {
 			event: AutomationEvent;
 			user: null;
+=======
+	id: string
+	createdAt: Date
+	actionInstance: { name: string; action: string } | null
+	sourceActionInstance: { name: string; action: string } | null
+	stage: { id: string; name: string } | null
+	result: unknown
+} & (
+	| {
+			event: Event
+			user: null
+>>>>>>> main
 	  }
 	| {
-			event: null;
+			event: null
 			user: {
-				id: string;
-				firstName: string | null;
-				lastName: string | null;
-			};
+				id: string
+				firstName: string | null
+				lastName: string | null
+			}
 	  }
 ) &
-	XOR<{ pub: PubTitleProps & { id: PubsId } }, { json: Json }>;
+	XOR<{ pub: PubTitleProps & { id: PubsId } }, { json: Json }>
 
 export const getActionRunsTableColumns = (communitySlug: string) => {
 	const cols = [
@@ -47,6 +70,7 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Automation" />,
 			accessorKey: "automation",
 			cell: ({ getValue }) => {
+<<<<<<< HEAD
 				const automation = getValue<ActionRun["automation"]>();
 				if (!automation) {
 					return "Unknown";
@@ -57,17 +81,22 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 						<span>{automation.name}</span>
 					</div>
 				);
+=======
+				const actionInstance = getValue<ActionRun["actionInstance"]>()
+				return actionInstance ? actionInstance.name : "Unknown"
+>>>>>>> main
 			},
 		} satisfies ColumnDef<ActionRun, ActionInstances>,
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Initiator" />,
 			accessorKey: "event",
 			cell: ({ getValue, row }) => {
-				const user = row.original.user;
+				const user = row.original.user
 				if (user) {
-					return `${user.firstName} ${user.lastName}`;
+					return `${user.firstName} ${user.lastName}`
 				}
 				switch (getValue()) {
+<<<<<<< HEAD
 					case AutomationEvent.automationFailed:
 						return `Automation (${row.original.sourceActionInstance?.name} failed)`;
 					case AutomationEvent.automationSucceeded:
@@ -80,6 +109,20 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 						return "Automation (Pub in stage for duration)";
 					case AutomationEvent.webhook:
 						return "Automation (Webhook)";
+=======
+					case Event.actionFailed:
+						return `Automation (${row.original.sourceActionInstance?.name} failed)`
+					case Event.actionSucceeded:
+						return `Automation (${row.original.sourceActionInstance?.name} succeeded)`
+					case Event.pubEnteredStage:
+						return "Automation (Pub entered stage)"
+					case Event.pubLeftStage:
+						return "Automation (Pub exited stage)"
+					case Event.pubInStageForDuration:
+						return "Automation (Pub in stage for duration)"
+					case Event.webhook:
+						return "Automation (Webhook)"
+>>>>>>> main
 				}
 			},
 		} satisfies ColumnDef<ActionRun, Event>,
@@ -87,8 +130,8 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
 			accessorKey: "stage",
 			cell: ({ getValue }) => {
-				const stage = getValue<ActionRun["stage"]>();
-				return stage ? stage.name : "Unknown";
+				const stage = getValue<ActionRun["stage"]>()
+				return stage ? stage.name : "Unknown"
 			},
 		} satisfies ColumnDef<ActionRun, Stages>,
 		{
@@ -108,7 +151,7 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 					<pre>
 						<code>{JSON.stringify(row.original.json, null, 2)}</code>
 					</pre>
-				);
+				)
 			},
 		} satisfies ColumnDef<ActionRun, string>,
 		{
@@ -119,24 +162,24 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
 			accessorKey: "status",
 			cell: ({ row, getValue }) => {
-				let badge: React.ReactNode;
+				let badge: React.ReactNode
 				switch (getValue()) {
 					case "success":
-						badge = <Badge>success</Badge>;
-						break;
+						badge = <Badge>success</Badge>
+						break
 					case "failure":
-						badge = <Badge variant="destructive">failure</Badge>;
-						break;
+						badge = <Badge variant="destructive">failure</Badge>
+						break
 					case "scheduled":
 						badge = (
 							<Badge variant="default" className="bg-orange-500">
 								scheduled
 							</Badge>
-						);
-						break;
+						)
+						break
 					default:
-						badge = <Badge variant="outline">unknown</Badge>;
-						break;
+						badge = <Badge variant="outline">unknown</Badge>
+						break
 				}
 				return (
 					<HoverCard>
@@ -147,10 +190,10 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 							</pre>
 						</HoverCardContent>
 					</HoverCard>
-				);
+				)
 			},
 		} satisfies ColumnDef<ActionRun, string>,
-	] as const; // satisfies ColumnDef<ActionRun, unknown>[];
+	] as const // satisfies ColumnDef<ActionRun, unknown>[];
 
-	return cols as Writeable<typeof cols>;
-};
+	return cols as Writeable<typeof cols>
+}

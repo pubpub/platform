@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import type React from "react";
 import type { PropsWithChildren } from "react";
@@ -26,8 +26,8 @@ import { isJsonTemplate } from "./schemaWithJsonFields";
 
 // checks if value contains template syntax {{ }}
 const hasTemplateSyntax = (value: unknown): boolean => {
-	return typeof value === "string" && value.includes("{{");
-};
+	return typeof value === "string" && value.includes("{{")
+}
 
 const ActionFieldJsonInput = dynamic(
 	() => import("./ActionFieldJsonataInput").then((mod) => mod.ActionFieldJsonataInput),
@@ -35,7 +35,7 @@ const ActionFieldJsonInput = dynamic(
 		ssr: false,
 		loading: () => <Skeleton className="h-10 w-full" />,
 	}
-);
+)
 
 const ActionFieldJsonTestPanel = dynamic(
 	() => import("./ActionFieldJsonataTestPanel").then((mod) => mod.ActionFieldJsonataTestPanel),
@@ -43,12 +43,12 @@ const ActionFieldJsonTestPanel = dynamic(
 		ssr: false,
 		loading: () => <Skeleton className="h-32 w-full" />,
 	}
-);
+)
 
 type ActionFieldProps = PropsWithChildren<{
-	name: string;
-	label?: string;
-	render?: ControllerProps<any>["render"];
+	name: string
+	label?: string
+	render?: ControllerProps<any>["render"]
 	/* id for the label */
 	labelId?: HTMLFormElement["id"];
 	description?: string;

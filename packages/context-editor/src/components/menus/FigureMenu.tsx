@@ -1,45 +1,46 @@
-import type { Node } from "prosemirror-model";
-import type { EditorView } from "prosemirror-view";
+import type { Node } from "prosemirror-model"
+import type { EditorView } from "prosemirror-view"
 
-import React, { useMemo } from "react";
-import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
-import { useForm } from "react-hook-form";
+import * as React from "react"
+import { useMemo } from "react"
+import { useEditorEventCallback } from "@handlewithcare/react-prosemirror"
+import { useForm } from "react-hook-form"
 
-import { Form } from "ui/form";
+import { Form } from "ui/form"
 
-import { toggleFigureNode } from "../../commands/figures";
-import { MenuSwitchField } from "./MenuFields";
+import { toggleFigureNode } from "../../commands/figures"
+import { MenuSwitchField } from "./MenuFields"
 
 type LinkMenuProps = {
-	node: Node;
-	nodePos: number;
-	onChange: (attrs: Record<string, unknown>) => void;
-};
+	node: Node
+	nodePos: number
+	onChange: (attrs: Record<string, unknown>) => void
+}
 
 export const FigureMenu = (props: LinkMenuProps) => {
 	const childNodeTypes = useMemo(() => {
-		const set = new Set<string>();
+		const set = new Set<string>()
 		for (const child of props.node.children) {
-			set.add(child.type.name);
+			set.add(child.type.name)
 		}
-		return set;
-	}, [props.node]);
+		return set
+	}, [props.node])
 
 	const makeNodeToggle = (name: "title" | "figcaption" | "credit" | "license") => {
 		return (view: EditorView) => {
 			if (props.nodePos === null) {
-				return;
+				return
 			}
-			toggleFigureNode(view.state, view.dispatch)(props.nodePos, name);
-		};
-	};
+			toggleFigureNode(view.state, view.dispatch)(props.nodePos, name)
+		}
+	}
 
-	const toggleTitle = useEditorEventCallback(makeNodeToggle("title"));
-	const toggleCaption = useEditorEventCallback(makeNodeToggle("figcaption"));
-	const toggleCredit = useEditorEventCallback(makeNodeToggle("credit"));
-	const toggleLicense = useEditorEventCallback(makeNodeToggle("license"));
+	const toggleTitle = useEditorEventCallback(makeNodeToggle("title"))
+	const toggleCaption = useEditorEventCallback(makeNodeToggle("figcaption"))
+	const toggleCredit = useEditorEventCallback(makeNodeToggle("credit"))
+	const toggleLicense = useEditorEventCallback(makeNodeToggle("license"))
 
-	const form = useForm();
+	const form = useForm()
 
 	return (
 		<Form {...form}>
@@ -74,5 +75,5 @@ export const FigureMenu = (props: LinkMenuProps) => {
 				)}
 			</form>
 		</Form>
-	);
-};
+	)
+}

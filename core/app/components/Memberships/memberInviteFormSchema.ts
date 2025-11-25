@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from "zod"
 
-import { formsIdSchema, MemberRole } from "db/public";
+import { formsIdSchema, MemberRole } from "db/public"
 
 export const memberInviteFormSchema = z.object({
 	email: z.string().email({
@@ -11,9 +11,9 @@ export const memberInviteFormSchema = z.object({
 	lastName: z.string().optional(),
 	isSuperAdmin: z.boolean().default(false).optional(),
 	forms: z.array(formsIdSchema).default([]),
-});
+})
 
 export const memberEditFormSchema = z.object({
 	role: z.nativeEnum(MemberRole).default(MemberRole.editor),
 	forms: z.array(formsIdSchema).default([]),
-});
+})

@@ -1,10 +1,12 @@
-import type { Metadata } from "next";
+import type { CommunitiesId, PubsId } from "db/public"
+import type { Metadata } from "next"
 
-import { cache } from "react";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { BookOpen, Eye } from "lucide-react";
+import { cache } from "react"
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { BookOpen, Eye } from "lucide-react"
 
+<<<<<<< HEAD
 import type { CommunitiesId, PubsId } from "db/public";
 import { AutomationEvent, Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
@@ -22,11 +24,30 @@ import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { RemovePubButton } from "~/app/components/pubs/RemovePubButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
+=======
+import { Capabilities, MembershipType } from "db/public"
+import { Button } from "ui/button"
+import { Pencil } from "ui/icon"
+import { PubFieldProvider } from "ui/pubFields"
+import { StagesProvider, stagesDAO } from "ui/stages"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { tryCatch } from "utils/try-catch"
+
+import Move from "~/app/c/[communitySlug]/stages/components/Move"
+import { MembersList } from "~/app/components//Memberships/MembersList"
+import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher"
+import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import { RemovePubButton } from "~/app/components/pubs/RemovePubButton"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+>>>>>>> main
 import {
 	getAuthorizedUpdateForms,
 	getAuthorizedViewForms,
 	userCan,
 	userCanRunActionsAllPubs,
+<<<<<<< HEAD
 } from "~/lib/authorization/capabilities";
 import { getStageAutomations } from "~/lib/db/queries";
 import { constructRedirectToPubEditPage } from "~/lib/links";
@@ -39,14 +60,28 @@ import { redirectToPubDetailPage, redirectToUnauthorized } from "~/lib/server/na
 import { getPubFields } from "~/lib/server/pubFields";
 import { getStages } from "~/lib/server/stages";
 import { ContentLayout } from "../../ContentLayout";
+=======
+} from "~/lib/authorization/capabilities"
+import { getStageActions } from "~/lib/db/queries"
+import { constructRedirectToPubEditPage } from "~/lib/links"
+import { getPubByForm, getPubTitle } from "~/lib/pubs"
+import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getForm } from "~/lib/server/form"
+import { resolveFormAccess } from "~/lib/server/form-access"
+import { redirectToPubDetailPage, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
+import { getPubFields } from "~/lib/server/pubFields"
+import { getStages } from "~/lib/server/stages"
+import { ContentLayout } from "../../ContentLayout"
+>>>>>>> main
 import {
 	addPubMember,
 	addUserWithPubMembership,
 	removePubMember,
 	setPubMemberRole,
-} from "./actions";
-import { PubValues } from "./components/PubValues";
-import { RelatedPubsTableWrapper } from "./components/RelatedPubsTableWrapper";
+} from "./actions"
+import { PubValues } from "./components/PubValues"
+import { RelatedPubsTableWrapper } from "./components/RelatedPubsTableWrapper"
 
 const getPubsWithRelatedValuesCached = cache(async (pubId: PubsId, communityId: CommunitiesId) => {
 	const [error, pub] = await tryCatch(
@@ -64,74 +99,82 @@ const getPubsWithRelatedValuesCached = cache(async (pubId: PubsId, communityId: 
 				depth: 3,
 			}
 		)
-	);
+	)
 	if (error && !(error instanceof NotFoundError)) {
-		throw error;
+		throw error
 	}
 
-	return pub;
-});
+	return pub
+})
 
 export async function generateMetadata(props: {
-	params: Promise<{ pubId: PubsId; communitySlug: string }>;
+	params: Promise<{ pubId: PubsId; communitySlug: string }>
 }): Promise<Metadata> {
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
-	const params = await props.params;
+	const params = await props.params
 
-	const { pubId } = params;
+	const { pubId } = params
 
 	// TODO: replace this with the same function as the one which is used in the page to take advantage of request deduplication using `React.cache`
 
-	const pub = await getPubsWithRelatedValuesCached(pubId, community.id);
+	const pub = await getPubsWithRelatedValuesCached(pubId, community.id)
 
 	if (!pub) {
-		return { title: "Pub Not Found" };
+		return { title: "Pub Not Found" }
 	}
 
-	const title = getPubTitle(pub);
+	const title = getPubTitle(pub)
 
-	return { title };
+	return { title }
 }
 
 export default async function Page(props: {
-	params: Promise<{ pubId: PubsId; communitySlug: string }>;
-	searchParams: Promise<Record<string, string>>;
+	params: Promise<{ pubId: PubsId; communitySlug: string }>
+	searchParams: Promise<Record<string, string>>
 }) {
-	const { form: formSlug } = await props.searchParams;
-	const params = await props.params;
-	const { pubId, communitySlug } = params;
+	const { form: formSlug } = await props.searchParams
+	const params = await props.params
+	const { pubId, communitySlug } = params
 
-	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!pubId || !communitySlug) {
-		return notFound();
+		return notFound()
 	}
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	const communityStagesPromise = getStages({
 		communityId: community.id,
 		userId: user.id,
+<<<<<<< HEAD
 		 
 	}, {withAutomations: "full"}).execute();
+=======
+	}).execute()
+>>>>>>> main
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
 	// This is safe because we've already explicitly checked authorization for the root pub
-	const pubPromise = getPubsWithRelatedValuesCached(pubId, community.id);
+	const pubPromise = getPubsWithRelatedValuesCached(pubId, community.id)
 
+<<<<<<< HEAD
+=======
+	const actionsPromise = getStageActions({ pubId: pubId }).execute()
+>>>>>>> main
 
 	// if a specific form is provided, we use the slug
 	// otherwise, we get the default form for the pub type of the current pub
 	const getFormProps = formSlug
 		? { communityId: community.id, slug: formSlug }
-		: { communityId: community.id, pubId };
+		: { communityId: community.id, pubId }
 
 	// surely this can be done in fewer queries
 	const [
@@ -168,10 +211,10 @@ export default async function Page(props: {
 		),
 		getForm(getFormProps).executeTakeFirst(),
 		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
-	]);
+	])
 
 	if (!pub) {
-		notFound();
+		notFound()
 	}
 
 	// ensure user has access to at least one view form, and resolve the current form
@@ -184,10 +227,10 @@ export default async function Page(props: {
 		availableForms: availableViewForms,
 		requestedFormSlug: formSlug,
 		communitySlug,
-	});
+	})
 
 	if (!hasAccessToAnyViewForm) {
-		return await redirectToUnauthorized();
+		return await redirectToUnauthorized()
 	}
 
 	if (!hasAccessToCurrentViewForm) {
@@ -195,29 +238,29 @@ export default async function Page(props: {
 			pubId,
 			communitySlug,
 			formSlug: viewFormToRedirectTo.slug,
-		});
+		})
 	}
 
 	if (!form) {
-		return null;
+		return null
 	}
 
 	if (!availableViewForms.length) {
-		return null;
+		return null
 	}
 
-	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
-	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub);
+	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation)
+	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub)
 
-	const { stage } = pub;
-	const pubByForm = getPubByForm({ pub, form, withExtraPubValues });
+	const { stage } = pub
+	const pubByForm = getPubByForm({ pub, form, withExtraPubValues })
 
 	const { hasAccessToAnyForm: hasAccessToAnyEditForm, canonicalForm: editFormToRedirectTo } =
 		resolveFormAccess({
 			availableForms: availableUpdateForms,
 			requestedFormSlug: formSlug,
 			communitySlug,
-		});
+		})
 
 
 	return (
@@ -238,7 +281,7 @@ export default async function Page(props: {
 								{getPubTitle(pub)}
 							</TooltipContent>
 						</Tooltip>
-						<div className="flex items-center gap-1 text-sm text-muted-foreground">
+						<div className="flex items-center gap-1 text-muted-foreground text-sm">
 							<span className="font-semibold">{pub.pubType.name}</span>•
 							<FormSwitcher
 								defaultFormSlug={defaultViewForm?.slug}
@@ -288,7 +331,7 @@ export default async function Page(props: {
 							<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
 								{pub.stage ? (
 									<div>
-										<div className="mb-1 text-lg font-bold">Current Stage</div>
+										<div className="mb-1 font-bold text-lg">Current Stage</div>
 										<div
 											className="ml-4 flex items-center gap-2 font-medium"
 											data-testid="current-stage"
@@ -303,8 +346,13 @@ export default async function Page(props: {
 									</div>
 								) : null}
 								<div>
+<<<<<<< HEAD
 									<div className="mb-1 text-lg font-bold">Actions</div>
 									{pub.stage?.automations && pub.stage?.automations.length > 0 && stage && canRunActions ? (
+=======
+									<div className="mb-1 font-bold text-lg">Actions</div>
+									{actions && actions.length > 0 && stage && canRunActions ? (
+>>>>>>> main
 										<div className="ml-4">
 											<PubsRunAutomationsDropDownMenu
 												canOverrideAutomationConditions={canOverrideAutomationConditions}
@@ -323,7 +371,7 @@ export default async function Page(props: {
 
 								<div className="flex flex-col gap-y-4">
 									<div className="mb-2 flex justify-between">
-										<span className="text-lg font-bold">Members</span>
+										<span className="font-bold text-lg">Members</span>
 										{canAddMember && (
 											<AddMemberDialog
 												addMember={addPubMember.bind(null, pubId)}
@@ -354,7 +402,7 @@ export default async function Page(props: {
 						</div>
 						{(pubTypeHasRelatedPubs || pubHasRelatedPubs) && (
 							<div className="flex flex-col gap-2" data-testid="related-pubs">
-								<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
+								<h2 className="mb-2 font-bold text-xl">Related Pubs</h2>
 								{canCreateRelatedPub && (
 									<CreatePubButton
 										text="Add Related Pub"
@@ -374,5 +422,5 @@ export default async function Page(props: {
 				</PubFieldProvider>
 			</StagesProvider>
 		</ContentLayout>
-	);
+	)
 }

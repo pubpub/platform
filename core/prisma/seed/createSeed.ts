@@ -1,5 +1,4 @@
-import type { CommunitiesId } from "db/public";
-
+import type { CommunitiesId } from "db/public"
 import type {
 	ApiTokenInitializer,
 	FormInitializer,
@@ -7,11 +6,11 @@ import type {
 	PubFieldsInitializer,
 	PubInitializer,
 	PubTypeInitializer,
-	seedCommunity,
 	StageConnectionsInitializer,
 	StagesInitializer,
+	seedCommunity,
 	UsersInitializer,
-} from "./seedCommunity";
+} from "./seedCommunity"
 
 /**
  * Convenience method in case you want to define the input of `seedCommunity` before actually calling it
@@ -28,23 +27,23 @@ export const createSeed = <
 	const II extends InviteInitializer<PF, PT, U, S, F>,
 >(props: {
 	community: {
-		id?: CommunitiesId;
-		name: string;
-		slug: string;
-		avatar?: string;
-	};
-	pubFields?: PF;
-	pubTypes?: PT;
-	users?: U;
-	stages?: S;
-	stageConnections?: SC;
-	pubs?: PI;
-	forms?: F;
-	apiTokens?: AI;
-	invites?: II;
-}) => props;
+		id?: CommunitiesId
+		name: string
+		slug: string
+		avatar?: string
+	}
+	pubFields?: PF
+	pubTypes?: PT
+	users?: U
+	stages?: S
+	stageConnections?: SC
+	pubs?: PI
+	forms?: F
+	apiTokens?: AI
+	invites?: II
+}) => props
 
-export type Seed = Parameters<typeof createSeed>[0];
+export type Seed = Parameters<typeof createSeed>[0]
 
 export type CommunitySeedOutput<S extends Record<string, any>> = Awaited<
 	ReturnType<
@@ -60,4 +59,4 @@ export type CommunitySeedOutput<S extends Record<string, any>> = Awaited<
 			NonNullable<S["invites"]>
 		>
 	>
->;
+>

@@ -1,31 +1,31 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
 
-import Link from "next/link";
+import Link from "next/link"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
-import { DataTableColumnHeader } from "ui/data-table";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { DataTableColumnHeader } from "ui/data-table"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { MoreVertical } from "ui/icon";
+} from "ui/dropdown-menu"
+import { MoreVertical } from "ui/icon"
 
-import { RemoveCommunityButton } from "./RemoveCommunityButton";
+import { RemoveCommunityButton } from "./RemoveCommunityButton"
 
 export type TableCommunity = {
-	id: string;
-	name: string;
-	slug: string;
-	avatar: string | null;
-	created: Date;
-};
+	id: string
+	name: string
+	slug: string
+	avatar: string | null
+	created: Date
+}
 
 export const getCommunityTableColumns = () =>
 	[
@@ -56,13 +56,13 @@ export const getCommunityTableColumns = () =>
 			header: "",
 			accessorKey: "avatar",
 			cell: ({ row, getValue }) => {
-				const name = row.getValue("name") as string;
+				const name = row.getValue("name") as string
 				return (
 					<Avatar className="h-8 w-8">
 						<AvatarImage src={(getValue() as string) ?? undefined} alt={`${name}`} />
 						<AvatarFallback>{name[0]}</AvatarFallback>
 					</Avatar>
-				);
+				)
 			},
 		},
 		{
@@ -101,7 +101,7 @@ export const getCommunityTableColumns = () =>
 							</div>
 						</DropdownMenuContent>
 					</DropdownMenu>
-				);
+				)
 			},
 		},
-	] as const satisfies ColumnDef<TableCommunity, unknown>[];
+	] as const satisfies ColumnDef<TableCommunity, unknown>[]

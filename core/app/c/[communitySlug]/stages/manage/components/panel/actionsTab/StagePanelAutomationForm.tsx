@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import type { ParserBuilder } from "nuqs";
 import type {
@@ -119,13 +119,13 @@ const AutomationSelector = ({
 								<div className="flex flex-row items-center gap-x-2">
 									<span>{automation.name}</span>
 									{isDisabled && (
-										<span className="text-xs text-gray-400">
+										<span className="text-gray-400 text-xs">
 											(self-reference not allowed)
 										</span>
 									)}
 								</div>
 							</SelectItem>
-						);
+						)
 					})}
 				</SelectContent>
 			</Select>

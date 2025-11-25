@@ -3,7 +3,7 @@
 
 import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
 
-import { z } from "zod";
+import { z } from "zod"
 
 import type { BaseActionInstanceConfig } from "../types";
 import type { Action } from "./Action";
@@ -12,34 +12,34 @@ import { actionSchema } from "./Action";
 import { automationsIdSchema } from "./Automations";
 
 /** Identifier type for public.action_instances */
-export type ActionInstancesId = string & { __brand: "ActionInstancesId" };
+export type ActionInstancesId = string & { __brand: "ActionInstancesId" }
 
 /** Represents the table public.action_instances */
 export interface ActionInstancesTable {
-	id: ColumnType<ActionInstancesId, ActionInstancesId | undefined, ActionInstancesId>;
+	id: ColumnType<ActionInstancesId, ActionInstancesId | undefined, ActionInstancesId>
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	config: ColumnType<
 		BaseActionInstanceConfig | null,
 		BaseActionInstanceConfig | null,
 		BaseActionInstanceConfig | null
-	>;
+	>
 
 	action: ColumnType<Action, Action, Action>;
 
 	automationId: ColumnType<AutomationsId, AutomationsId, AutomationsId>;
 }
 
-export type ActionInstances = Selectable<ActionInstancesTable>;
+export type ActionInstances = Selectable<ActionInstancesTable>
 
-export type NewActionInstances = Insertable<ActionInstancesTable>;
+export type NewActionInstances = Insertable<ActionInstancesTable>
 
-export type ActionInstancesUpdate = Updateable<ActionInstancesTable>;
+export type ActionInstancesUpdate = Updateable<ActionInstancesTable>
 
-export const actionInstancesIdSchema = z.string().uuid() as unknown as z.Schema<ActionInstancesId>;
+export const actionInstancesIdSchema = z.string().uuid() as unknown as z.Schema<ActionInstancesId>
 
 export const actionInstancesSchema = z.object({
 	id: actionInstancesIdSchema,

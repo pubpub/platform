@@ -1,5 +1,3 @@
-import { createNextHandler } from "@ts-rest/serverless/next";
-
 import type {
 	AutomationsId,
 	CommunitiesId,
@@ -7,8 +5,11 @@ import type {
 	PubsId,
 	PubTypesId,
 	StagesId,
-} from "db/public";
-import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
+} from "db/public"
+
+import { createNextHandler } from "@ts-rest/serverless/next"
+
+import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts"
 import {
 	ApiAccessScope,
 	ApiAccessType,
@@ -17,18 +18,28 @@ import {
 	ElementType,
 	InputComponent,
 	MembershipType,
-} from "db/public";
-import { logger } from "logger";
+} from "db/public"
+import { logger } from "logger"
 
+<<<<<<< HEAD
 import { runAutomation } from "~/actions/_lib/runAutomation";
+=======
+import { scheduleActionInstances } from "~/actions/api/server"
+>>>>>>> main
 import {
 	checkAuthorization,
 	getAuthorization,
 	parseQueryWithQsMiddleware,
 	shouldReturnRepresentation,
+<<<<<<< HEAD
 } from "~/lib/authentication/api";
 import { userHasAccessToForm } from "~/lib/authorization/capabilities";
 import { getAutomation, getStage } from "~/lib/db/queries";
+=======
+} from "~/lib/authentication/api"
+import { userHasAccessToForm } from "~/lib/authorization/capabilities"
+import { getStage } from "~/lib/db/queries"
+>>>>>>> main
 import {
 	BadRequestError,
 	createPubRecursiveNew,
@@ -45,6 +56,7 @@ import {
 	tsRestHandleErrors,
 	updatePub,
 	upsertPubRelations,
+<<<<<<< HEAD
 } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
@@ -52,6 +64,16 @@ import { validateFilter } from "~/lib/server/pub-filters-validate";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
 import { getMember, getSuggestedUsers } from "~/lib/server/user";
+=======
+} from "~/lib/server"
+import { getAutomation } from "~/lib/server/automations"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getForm } from "~/lib/server/form"
+import { validateFilter } from "~/lib/server/pub-filters-validate"
+import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype"
+import { getStages } from "~/lib/server/stages"
+import { getMember, getSuggestedUsers } from "~/lib/server/user"
+>>>>>>> main
 
 const handler = createNextHandler(
 	siteApi,
@@ -59,7 +81,7 @@ const handler = createNextHandler(
 		auth: {
 			check: {
 				siteBuilder: async () => {
-					const { isSiteBuilderToken } = await getAuthorization();
+					const { isSiteBuilderToken } = await getAuthorization()
 
 					if (!isSiteBuilderToken) {
 						return {
@@ -69,7 +91,7 @@ const handler = createNextHandler(
 								code: "NON_SITE_BUILDER_TOKEN",
 								reason: "The supplied token is not a site builder token. Either something went wrong with the token generation or the token was intercepted by a third party.",
 							},
-						};
+						}
 					}
 
 					// TODO: enable again when you're less silly
@@ -100,7 +122,7 @@ const handler = createNextHandler(
 					return {
 						status: 200,
 						body: { ok: true },
-					};
+					}
 				},
 			},
 		},
@@ -109,14 +131,14 @@ const handler = createNextHandler(
 				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: true,
-				});
+				})
 
-				const pubs = await fullTextSearch(query.query, community.id, user.id);
+				const pubs = await fullTextSearch(query.query, community.id, user.id)
 
 				return {
 					status: 200,
 					body: pubs,
-				};
+				}
 			},
 
 			get: async ({ params, query }) => {
@@ -126,7 +148,7 @@ const handler = createNextHandler(
 						capability: Capabilities.viewPub,
 						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
 					},
-				});
+				})
 
 				const pub = await getPubsWithRelatedValues(
 					{
@@ -135,10 +157,10 @@ const handler = createNextHandler(
 						userId: user.id,
 					},
 					query
-				);
+				)
 
 				if (typeof authorization === "object") {
-					const allowedStages = authorization.stages;
+					const allowedStages = authorization.stages
 					if (
 						pub.stageId &&
 						allowedStages &&
@@ -147,10 +169,10 @@ const handler = createNextHandler(
 					) {
 						throw new ForbiddenError(
 							`You are not authorized to view this pub in stage ${pub.stageId}`
-						);
+						)
 					}
 
-					const allowedPubTypes = authorization.pubTypes;
+					const allowedPubTypes = authorization.pubTypes
 					if (
 						allowedPubTypes &&
 						allowedPubTypes.length > 0 &&
@@ -158,33 +180,33 @@ const handler = createNextHandler(
 					) {
 						throw new ForbiddenError(
 							`You are not authorized to view this pub in pub type ${pub.pubTypeId}`
-						);
+						)
 					}
 				}
 
 				return {
 					status: 200,
 					body: pub,
-				};
+				}
 			},
 			getMany: async ({ query }, { responseHeaders }) => {
 				const { user, community, authorization } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: "community-member",
-				});
+				})
 
 				const allowedPubTypes =
-					typeof authorization === "object" ? authorization.pubTypes : undefined;
+					typeof authorization === "object" ? authorization.pubTypes : undefined
 				const allowedStages =
-					typeof authorization === "object" ? authorization.stages : undefined;
+					typeof authorization === "object" ? authorization.stages : undefined
 
-				let { pubTypeId, stageId, pubIds, filters, ...rest } = query ?? {};
+				const { pubTypeId, stageId, pubIds, filters, ...rest } = query ?? {}
 
 				if (query?.filters) {
 					try {
-						await validateFilter(community.id, query.filters);
+						await validateFilter(community.id, query.filters)
 					} catch (e) {
-						throw new BadRequestError(e.message);
+						throw new BadRequestError(e.message)
 					}
 				}
 
@@ -210,22 +232,22 @@ const handler = createNextHandler(
 						pubTypeId: pubTypeId,
 						stageId: stageId,
 					}),
-				]);
+				])
 
 				// TODO: this does not account for permissions
-				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
+				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`)
 
 				return {
 					status: 200,
 					body: pubs,
-				};
+				}
 			},
 			create: async ({ body }) => {
 				const { authorization, community, lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					// TODO: refactor so we call userCanCreatePub here
 					cookies: false,
-				});
+				})
 
 				if (
 					authorization &&
@@ -234,42 +256,42 @@ const handler = createNextHandler(
 				) {
 					throw new ForbiddenError(
 						`You are not authorized to create a pub in stage ${body.stageId}`
-					);
+					)
 				}
 
 				const createdPub = await createPubRecursiveNew({
 					communityId: community?.id,
 					body,
 					lastModifiedBy,
-				});
+				})
 
-				const returnRepresentation = shouldReturnRepresentation();
+				const returnRepresentation = shouldReturnRepresentation()
 
 				if (!returnRepresentation) {
 					return {
 						status: 204,
-					};
+					}
 				}
 
 				return {
 					status: 201,
 					body: createdPub,
-				};
+				}
 			},
 			update: async ({ params, body }) => {
 				const { user, community, lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					// TODO: refactor so we call userCanEditPub here
 					cookies: false,
-				});
+				})
 
 				const { exists } = await doesPubExist(
 					params.pubId as PubsId,
 					community.id as CommunitiesId
-				);
+				)
 
 				if (!exists) {
-					throw new NotFoundError(`Pub ${params.pubId} not found`);
+					throw new NotFoundError(`Pub ${params.pubId} not found`)
 				}
 
 				await updatePub({
@@ -278,26 +300,26 @@ const handler = createNextHandler(
 					communityId: community.id,
 					continueOnValidationError: false,
 					lastModifiedBy,
-				});
+				})
 
-				const returnRepresentation = shouldReturnRepresentation();
+				const returnRepresentation = shouldReturnRepresentation()
 
 				if (!returnRepresentation) {
 					return {
 						status: 204,
-					};
+					}
 				}
 
 				const pub = await getPubsWithRelatedValues({
 					pubId: params.pubId as PubsId,
 					communityId: community.id,
 					userId: user.id,
-				});
+				})
 
 				return {
 					status: 200,
 					body: pub,
-				};
+				}
 			},
 			archive: async ({ params }) => {
 				const { lastModifiedBy, community } = await checkAuthorization({
@@ -306,24 +328,24 @@ const handler = createNextHandler(
 						capability: Capabilities.deletePub,
 						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
 					},
-				});
+				})
 
 				const result = await deletePub({
 					pubId: params.pubId as PubsId,
 					communityId: community.id,
 					lastModifiedBy,
-				});
+				})
 
 				if (result?.numDeletedRows !== BigInt(1)) {
 					return {
 						status: 404,
 						body: "Pub not found",
-					};
+					}
 				}
 
 				return {
 					status: 204,
-				};
+				}
 			},
 			relations: {
 				remove: async ({ params, body }) => {
@@ -333,36 +355,36 @@ const handler = createNextHandler(
 							capability: Capabilities.deletePub,
 							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
 						},
-					});
+					})
 
 					const { exists } = await doesPubExist(
 						params.pubId as PubsId,
 						community.id as CommunitiesId
-					);
+					)
 
 					if (!exists) {
-						throw new NotFoundError(`Pub ${params.pubId} not found`);
+						throw new NotFoundError(`Pub ${params.pubId} not found`)
 					}
 
 					const { all, some } = Object.entries(body).reduce(
 						(acc, [fieldSlug, pubIds]) => {
 							if (pubIds === "*") {
-								acc.all.push(fieldSlug);
+								acc.all.push(fieldSlug)
 							} else {
 								acc.some.push(
 									...pubIds.map((relatedPubId) => ({
 										slug: fieldSlug,
 										relatedPubId,
 									}))
-								);
+								)
 							}
-							return acc;
+							return acc
 						},
 						{
 							all: [] as string[],
 							some: [] as { slug: string; relatedPubId: PubsId }[],
 						}
-					);
+					)
 
 					const [removedAllSettled, removedSomeSettled] = await Promise.allSettled([
 						removeAllPubRelationsBySlugs({
@@ -377,7 +399,7 @@ const handler = createNextHandler(
 							communityId: community.id,
 							lastModifiedBy,
 						}),
-					]);
+					])
 
 					if (
 						removedAllSettled.status === "rejected" ||
@@ -392,27 +414,27 @@ const handler = createNextHandler(
 										? removedSomeSettled.reason
 										: ""
 							}`,
-						};
+						}
 					}
 
-					const returnRepresentation = shouldReturnRepresentation();
+					const returnRepresentation = shouldReturnRepresentation()
 
 					if (!returnRepresentation) {
 						return {
 							status: 204,
-						};
+						}
 					}
 
 					const pub = await getPubsWithRelatedValues({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
 						userId: user.id,
-					});
+					})
 
 					return {
 						status: 200,
 						body: pub,
-					};
+					}
 				},
 				update: async ({ params, body }) => {
 					const { user, community, lastModifiedBy } = await checkAuthorization({
@@ -421,46 +443,46 @@ const handler = createNextHandler(
 							capability: Capabilities.deletePub,
 							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
 						},
-					});
+					})
 
 					const { exists } = await doesPubExist(
 						params.pubId as PubsId,
 						community.id as CommunitiesId
-					);
+					)
 
 					if (!exists) {
-						throw new NotFoundError(`Pub ${params.pubId} not found`);
+						throw new NotFoundError(`Pub ${params.pubId} not found`)
 					}
 
 					const relations = Object.entries(body).flatMap(([slug, data]) =>
 						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
-					);
+					)
 
 					await upsertPubRelations({
 						pubId: params.pubId as PubsId,
 						relations,
 						communityId: community.id,
 						lastModifiedBy,
-					});
+					})
 
-					const returnRepresentation = shouldReturnRepresentation();
+					const returnRepresentation = shouldReturnRepresentation()
 
 					if (!returnRepresentation) {
 						return {
 							status: 204,
-						};
+						}
 					}
 
 					const pub = await getPubsWithRelatedValues({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
 						userId: user.id,
-					});
+					})
 
 					return {
 						status: 200,
 						body: pub,
-					};
+					}
 				},
 				replace: async ({ params, body }) => {
 					const { user, community, lastModifiedBy } = await checkAuthorization({
@@ -469,45 +491,45 @@ const handler = createNextHandler(
 							capability: Capabilities.deletePub,
 							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
 						},
-					});
+					})
 
 					const { exists } = await doesPubExist(
 						params.pubId as PubsId,
 						community.id as CommunitiesId
-					);
+					)
 
 					if (!exists) {
-						throw new NotFoundError(`Pub ${params.pubId} not found`);
+						throw new NotFoundError(`Pub ${params.pubId} not found`)
 					}
 					const relations = Object.entries(body).flatMap(([slug, data]) =>
 						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
-					);
+					)
 
 					await replacePubRelationsBySlug({
 						pubId: params.pubId as PubsId,
 						relations,
 						communityId: community.id,
 						lastModifiedBy,
-					});
+					})
 
-					const returnRepresentation = shouldReturnRepresentation();
+					const returnRepresentation = shouldReturnRepresentation()
 
 					if (!returnRepresentation) {
 						return {
 							status: 204,
-						};
+						}
 					}
 
 					const pub = await getPubsWithRelatedValues({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
 						userId: user.id,
-					});
+					})
 
 					return {
 						status: 200,
 						body: pub,
-					};
+					}
 				},
 			},
 		},
@@ -517,36 +539,36 @@ const handler = createNextHandler(
 					token: { scope: ApiAccessScope.pubType, type: ApiAccessType.read },
 					// TODO: figure out capability her
 					cookies: false,
-				});
+				})
 
 				const pubType = await getPubType(
 					req.params.pubTypeId as PubTypesId
-				).executeTakeFirst();
+				).executeTakeFirst()
 
 				if (!pubType) {
-					throw new NotFoundError(`No pub type found for id ${req.params.pubTypeId}`);
+					throw new NotFoundError(`No pub type found for id ${req.params.pubTypeId}`)
 				}
 
 				return {
 					status: 200,
 					body: pubType,
-				};
+				}
 			},
 			getMany: async (req) => {
 				const { community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pubType, type: ApiAccessType.read },
 					// TODO: figure out capability here
 					cookies: false,
-				});
+				})
 
 				const pubTypes = await getPubTypesForCommunity(
 					community.id as CommunitiesId,
 					req.query
-				);
+				)
 				return {
 					status: 200,
 					body: pubTypes,
-				};
+				}
 			},
 		},
 		stages: {
@@ -560,34 +582,34 @@ const handler = createNextHandler(
 							stageId: req.params.stageId as StagesId,
 						},
 					},
-				});
+				})
 				const stage = await getStage(
 					req.params.stageId as StagesId,
 					user.id
-				).executeTakeFirst();
+				).executeTakeFirst()
 				if (!stage) {
-					throw new NotFoundError("No stage found");
+					throw new NotFoundError("No stage found")
 				}
 
 				return {
 					status: 200,
 					body: stage,
-				};
+				}
 			},
 			getMany: async () => {
 				const { community, user } = await checkAuthorization({
 					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
 					cookies: false,
-				});
+				})
 
 				const stages = await getStages({
 					communityId: community.id,
 					userId: user.id,
-				}).execute();
+				}).execute()
 				return {
 					status: 200,
 					body: stages,
-				};
+				}
 			},
 		},
 		users: {
@@ -595,7 +617,7 @@ const handler = createNextHandler(
 				const { community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
 					cookies: true,
-				});
+				})
 
 				const users = await getSuggestedUsers({
 					communityId: req.query.communityId,
@@ -605,11 +627,11 @@ const handler = createNextHandler(
 						lastName: req.query.name,
 					},
 					limit: req.query.limit,
-				}).execute();
+				}).execute()
 				return {
 					status: 200,
 					body: users,
-				};
+				}
 			},
 		},
 		members: {
@@ -617,17 +639,17 @@ const handler = createNextHandler(
 				const { community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
 					cookies: true,
-				});
-				const memberId = req.params.memberId as CommunityMembershipsId;
-				const user = await getMember(memberId).executeTakeFirst();
+				})
+				const memberId = req.params.memberId as CommunityMembershipsId
+				const user = await getMember(memberId).executeTakeFirst()
 				if (!user) {
-					throw new NotFoundError("No member found");
+					throw new NotFoundError("No member found")
 				}
 
 				return {
 					status: 200,
 					body: user,
-				};
+				}
 			},
 		},
 		forms: {
@@ -635,15 +657,15 @@ const handler = createNextHandler(
 				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: "community-member",
-				});
+				})
 
-				let { pubTypeId, stageId, pubIds, filters, currentPubId, ...rest } = query ?? {};
+				const { pubTypeId, stageId, pubIds, filters, currentPubId, ...rest } = query ?? {}
 
 				if (query?.filters) {
 					try {
-						await validateFilter(community.id, query.filters);
+						await validateFilter(community.id, query.filters)
 					} catch (e) {
-						throw new BadRequestError(e.message);
+						throw new BadRequestError(e.message)
 					}
 				}
 
@@ -658,18 +680,18 @@ const handler = createNextHandler(
 						formSlug: params.formSlug,
 						pubId: currentPubId,
 					}),
-				]);
+				])
 
 				if (!form) {
-					throw new NotFoundError();
+					throw new NotFoundError()
 				}
 
 				if (!userCanAccessForm) {
-					throw new ForbiddenError();
+					throw new ForbiddenError()
 				}
 
 				// check if user has access to the form
-				const field = form.elements.find((e) => e.slug === params.fieldSlug);
+				const field = form.elements.find((e) => e.slug === params.fieldSlug)
 
 				if (
 					!field ||
@@ -679,15 +701,15 @@ const handler = createNextHandler(
 				) {
 					throw new NotFoundError(
 						`Field ${params.fieldSlug} not found on form ${params.formSlug}`
-					);
+					)
 				}
 
-				const formFieldPubTypes = field.relatedPubTypes;
+				const formFieldPubTypes = field.relatedPubTypes
 
 				if (formFieldPubTypes.length === 0) {
 					throw new BadRequestError(
 						`Field ${params.fieldSlug} on form ${params.formSlug} does not allow any pub types`
-					);
+					)
 				}
 
 				const [pubs, pubCount] = await Promise.all([
@@ -710,45 +732,50 @@ const handler = createNextHandler(
 						pubTypeId: pubTypeId,
 						stageId: stageId,
 					}),
-				]);
+				])
 
 				// TODO: this does not account for permissions
-				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
+				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`)
 
 				return {
 					status: 200,
 					body: pubs,
-				};
+				}
 			},
 		},
 		webhook: async ({ params, body }) => {
-			const community = await findCommunityBySlug();
+			const community = await findCommunityBySlug()
 			// const { community } = await checkAuthorization({
 			// 	token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
 			// 	cookies: true,
 			// });
 			if (!community) {
-				throw new NotFoundError(`Community not found`);
+				throw new NotFoundError(`Community not found`)
 			}
 
-			const automationId = params.automationId as AutomationsId;
+			const automationId = params.automationId as AutomationsId
 
+<<<<<<< HEAD
 			const automation = await getAutomation(automationId);
+=======
+			const automation = await getAutomation(automationId, community.id).executeTakeFirst()
+>>>>>>> main
 
 			if (!automation) {
-				throw new NotFoundError(`Automation ${automationId} not found`);
+				throw new NotFoundError(`Automation ${automationId} not found`)
 			}
 
 			if (!body) {
 				throw new BadRequestError(
 					"Body is required for webhook, send an empty one if needed"
-				);
+				)
 			}
 
 			try {
 				await runAutomation({
 					automationId,
 					json: body,
+<<<<<<< HEAD
 					trigger: {
 						event: AutomationEvent.webhook,
 						config: null,
@@ -757,17 +784,21 @@ const handler = createNextHandler(
 					communityId: community.id as CommunitiesId,
 					stack: [],
 				});
+=======
+					config: automation.config?.actionConfig,
+				})
+>>>>>>> main
 
 				return {
 					status: 201,
 					body: undefined,
-				};
+				}
 			} catch (e) {
-				logger.error(e);
+				logger.error(e)
 				return {
 					status: 500,
 					body: `Something went wrong when triggering webhook. ${e.message}`,
-				};
+				}
 			}
 		},
 	},
@@ -781,7 +812,7 @@ const handler = createNextHandler(
 		},
 		requestMiddleware: [parseQueryWithQsMiddleware],
 	}
-);
+)
 
 export {
 	handler as DELETE,
@@ -790,4 +821,4 @@ export {
 	handler as PATCH,
 	handler as POST,
 	handler as PUT,
-};
+}

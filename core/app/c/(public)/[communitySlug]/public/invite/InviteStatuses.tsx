@@ -1,31 +1,28 @@
-import type { User } from "lucia";
+import type { InviteService } from "~/lib/server/invites/InviteService"
 
-import Link from "next/link";
-import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import Link from "next/link"
+import { AlertCircle, CheckCircle, XCircle } from "lucide-react"
 
-import { InviteStatus } from "db/public";
-import { Button } from "ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { Button } from "ui/button"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card"
 
-import { InviteService } from "~/lib/server/invites/InviteService";
-import { constructCommunitySignupLink } from "~/lib/server/navigation/redirects";
-import { WrongUserLoggedIn } from "./WrongUserLoggedIn";
+import { WrongUserLoggedIn } from "./WrongUserLoggedIn"
 
 type InvalidInviteProps = {
-	message: string;
-	description?: string;
-	variant?: "error" | "success" | "warning";
+	message: string
+	description?: string
+	variant?: "error" | "success" | "warning"
 	redirectTo?: {
-		label: string;
-		href: string;
-	};
-};
+		label: string
+		href: string
+	}
+}
 
 const defaultProps = {
 	message: "Invalid invite",
 	description: "The invite you are trying to use is invalid.",
 	variant: "error",
-} as const satisfies InvalidInviteProps;
+} as const satisfies InvalidInviteProps
 
 const styles = {
 	success: {
@@ -43,18 +40,18 @@ const styles = {
 		text: "text-destructive",
 		icon: XCircle,
 	},
-};
+}
 
 export const InviteStatusCard = (inputProps: InvalidInviteProps) => {
 	const props = {
 		...defaultProps,
 		...inputProps,
-	};
+	}
 
-	const IconComponent = styles[props.variant].icon;
+	const IconComponent = styles[props.variant].icon
 
-	const bgColor = styles[props.variant].bg;
-	const textColor = styles[props.variant].text;
+	const bgColor = styles[props.variant].bg
+	const textColor = styles[props.variant].text
 
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background">
@@ -65,7 +62,7 @@ export const InviteStatusCard = (inputProps: InvalidInviteProps) => {
 					>
 						<IconComponent className={`h-10 w-10 ${textColor}`} />
 					</div>
-					<CardTitle className="mt-4 text-center text-2xl font-bold">
+					<CardTitle className="mt-4 text-center font-bold text-2xl">
 						{props.message}
 					</CardTitle>
 				</CardHeader>
@@ -87,8 +84,8 @@ export const InviteStatusCard = (inputProps: InvalidInviteProps) => {
 				</CardFooter>
 			</Card>
 		</div>
-	);
-};
+	)
+}
 
 // switch (error.status) {
 // 	case InviteStatus.completed:
@@ -111,43 +108,43 @@ export const InvalidInviteError = ({
 	error,
 	redirectTo,
 }: {
-	error: InviteService.InviteError;
-	redirectTo?: string;
+	error: InviteService.InviteError
+	redirectTo?: string
 }) => {
 	switch (error.code) {
 		case "NOT_FOUND":
-			return <NoInviteFound />;
+			return <NoInviteFound />
 		case "INVALID_TOKEN":
-			return <InviteStatusCard message="This invite link is invalid." />;
+			return <InviteStatusCard message="This invite link is invalid." />
 		case "EXPIRED":
-			return <InviteStatusCard message="This invite has expired." />;
+			return <InviteStatusCard message="This invite has expired." />
 		case "REJECTED":
 			return (
 				<InviteStatusCard
 					message="You have already rejected this invite."
 					description="Please contact the sender if you'd like to be invited again."
 				/>
-			);
+			)
 		case "REVOKED":
 			return (
 				<InviteStatusCard
 					message="This invite has been revoked."
 					description="Please contact the sender if you'd like to be invited again."
 				/>
-			);
+			)
 		case "NOT_READY":
 			return (
 				<InviteStatusCard
 					message="This invite is not ready for use."
 					description="Please contact the sender about this issue."
 				/>
-			);
+			)
 		case "NOT_FOR_USER":
-			return <WrongUserLoggedIn />;
+			return <WrongUserLoggedIn />
 		default:
-			return <InviteStatusCard message="There was a problem with this invite." />;
+			return <InviteStatusCard message="There was a problem with this invite." />
 	}
-};
+}
 
 export const NoInviteFound = () => {
 	return (
@@ -157,7 +154,7 @@ export const NoInviteFound = () => {
 					<div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
 						<AlertCircle className="h-10 w-10 text-destructive" />
 					</div>
-					<CardTitle className="mt-4 text-center text-2xl font-bold">
+					<CardTitle className="mt-4 text-center font-bold text-2xl">
 						No Invite Found
 					</CardTitle>
 				</CardHeader>
@@ -175,5 +172,5 @@ export const NoInviteFound = () => {
 				</CardFooter>
 			</Card>
 		</div>
-	);
-};
+	)
+}

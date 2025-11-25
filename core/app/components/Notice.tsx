@@ -1,12 +1,12 @@
-import { Alert, AlertDescription, AlertTitle } from "ui/alert";
-import { AlertCircle } from "ui/icon";
-import { cn } from "utils";
+import { Alert, AlertDescription, AlertTitle } from "ui/alert"
+import { AlertCircle } from "ui/icon"
+import { cn } from "utils"
 
 export type NoticeParams = {
-	type: "error" | "notice";
-	title: string;
-	body?: string;
-};
+	type: "error" | "notice"
+	title: string
+	body?: string
+}
 
 export const Notice = ({
 	type,
@@ -14,7 +14,7 @@ export const Notice = ({
 	body,
 	className,
 }: {
-	className?: string;
+	className?: string
 } & NoticeParams) => (
 	<Alert
 		variant={type === "error" ? "destructive" : "default"}
@@ -29,4 +29,4 @@ export const Notice = ({
 		<AlertTitle className={cn("font-semibold", !body && "mb-0")}>{title}</AlertTitle>
 		{body && <AlertDescription>{body}</AlertDescription>}
 	</Alert>
-);
+)

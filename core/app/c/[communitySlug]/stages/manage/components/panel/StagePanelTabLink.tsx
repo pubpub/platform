@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import { parseAsString, useQueryState } from "nuqs";
+import { parseAsString, useQueryState } from "nuqs"
 
 import { TabsTrigger } from "ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
-import { capitalize } from "~/lib/string";
+import { capitalize } from "~/lib/string"
 
 export function TabLink({ tab, children }: { tab: string; children: React.ReactNode }) {
 	const [, setTabQueryState] = useQueryState("tab", parseAsString);

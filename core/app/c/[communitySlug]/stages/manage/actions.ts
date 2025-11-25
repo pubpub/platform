@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 "use server";
+=======
+"use server"
+>>>>>>> main
 
 import type {
 	Action,
@@ -8,6 +12,7 @@ import type {
 	FormsId,
 	StagesId,
 	UsersId,
+<<<<<<< HEAD
 } from "db/public";
 import type { MemberRole } from "db/public";
 import { Capabilities, MembershipType, stagesIdSchema } from "db/public";
@@ -19,15 +24,32 @@ import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { ApiError } from "~/lib/server";
+=======
+} from "db/public"
+import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm"
+
+import { captureException } from "@sentry/nextjs"
+
+import { Capabilities, Event, type MemberRole, MembershipType, stagesIdSchema } from "db/public"
+import { logger } from "logger"
+
+import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance"
+import { db } from "~/kysely/database"
+import { isUniqueConstraintError } from "~/kysely/errors"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { ApiError } from "~/lib/server"
+>>>>>>> main
 import {
 	createActionInstance,
 	removeActionInstance,
 	updateActionInstance,
-} from "~/lib/server/actions";
+} from "~/lib/server/actions"
 import {
 	AutomationError,
 	duplicateAutomation as duplicateAutomationDb,
 	removeAutomation,
+<<<<<<< HEAD
 	upsertAutomationWithCycleCheck,
 } from "~/lib/server/automations";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
@@ -35,34 +57,42 @@ import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { insertStageMemberships } from "~/lib/server/member";
+=======
+} from "~/lib/server/automations"
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
+import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { defineServerAction } from "~/lib/server/defineServerAction"
+import { insertStageMemberships } from "~/lib/server/member"
+>>>>>>> main
 import {
 	createMoveConstraint as createMoveConstraintDb,
 	createStage as createStageDb,
 	removeStages,
 	updateStage,
-} from "~/lib/server/stages";
-import { createUserWithMemberships } from "~/lib/server/user";
+} from "~/lib/server/stages"
+import { createUserWithMemberships } from "~/lib/server/user"
 
 async function deleteMoveConstraints(moveConstraintIds: StagesId[]) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	const authorized = await userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	await autoRevalidate(
@@ -70,31 +100,31 @@ async function deleteMoveConstraints(moveConstraintIds: StagesId[]) {
 			.deleteFrom("move_constraint")
 			.where("move_constraint.destinationId", "in", moveConstraintIds)
 			.returningAll()
-	).execute();
+	).execute()
 }
 
 export const createStage = defineServerAction(async function createStage(
 	communityId: CommunitiesId,
 	id: StagesId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
 	const authorized = await userCan(
 		Capabilities.createStage,
 		{ type: MembershipType.community, communityId },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
-	const validatedId = stagesIdSchema.parse(id);
+	const validatedId = stagesIdSchema.parse(id)
 
 	try {
 		await createStageDb({
@@ -102,302 +132,307 @@ export const createStage = defineServerAction(async function createStage(
 			name: "Untitled Stage",
 			order: "aa",
 			communityId,
-		}).executeTakeFirstOrThrow();
+		}).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to create stage",
 			cause: error,
-		};
+		}
 	}
-});
+})
 
 export const deleteStage = defineServerAction(async function deleteStage(stageId: StagesId) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
 	const authorized = await userCan(
 		Capabilities.deleteStage,
 		{ type: MembershipType.stage, stageId },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
-		await removeStages([stageId]).executeTakeFirstOrThrow();
+		await removeStages([stageId]).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to delete stage",
 			cause: error,
-		};
+		}
 	} finally {
-		await revalidateTagsForCommunity(["stages", "PubsInStages"]);
+		await revalidateTagsForCommunity(["stages", "PubsInStages"])
 	}
-});
+})
 
 export const createMoveConstraint = defineServerAction(async function createMoveConstraint(
 	sourceStageId: StagesId,
 	destinationStageId: StagesId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	const authorized = await userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
 		await createMoveConstraintDb({
 			stageId: sourceStageId,
 			destinationId: destinationStageId,
-		}).executeTakeFirstOrThrow();
+		}).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to connect stages",
 			cause: error,
-		};
+		}
 	} finally {
-		await revalidateTagsForCommunity(["move_constraint"]);
+		await revalidateTagsForCommunity(["move_constraint"])
 	}
-});
+})
 
 export const deleteStagesAndMoveConstraints = defineServerAction(
 	async function deleteStagesAndMoveConstraints(
 		stageIds: StagesId[],
 		moveConstraintIds: StagesId[]
 	) {
-		const loginData = await getLoginData();
+		const loginData = await getLoginData()
 		if (!loginData || !loginData.user) {
-			return ApiError.NOT_LOGGED_IN;
+			return ApiError.NOT_LOGGED_IN
 		}
-		const community = await findCommunityBySlug();
+		const community = await findCommunityBySlug()
 
 		if (!community) {
-			return ApiError.COMMUNITY_NOT_FOUND;
+			return ApiError.COMMUNITY_NOT_FOUND
 		}
 
 		const authorized = await userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
 			loginData.user.id
-		);
+		)
 
 		if (!authorized) {
-			return ApiError.UNAUTHORIZED;
+			return ApiError.UNAUTHORIZED
 		}
 
 		try {
 			// Delete move constraints prior to deleting stages to prevent foreign
 			// key constraint violations.
 			if (moveConstraintIds.length > 0) {
-				await deleteMoveConstraints(moveConstraintIds);
+				await deleteMoveConstraints(moveConstraintIds)
 			}
 			if (stageIds.length > 0) {
-				await removeStages(stageIds).executeTakeFirstOrThrow();
+				await removeStages(stageIds).executeTakeFirstOrThrow()
 			}
 		} catch (error) {
 			return {
 				error: "Failed to delete stages and/or connections",
 				cause: error,
-			};
+			}
 		} finally {
-			await revalidateTagsForCommunity(["move_constraint"]);
+			await revalidateTagsForCommunity(["move_constraint"])
 		}
 	}
-);
+)
 
 export const updateStageName = defineServerAction(async function updateStageName(
 	stageId: StagesId,
 	name: string
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 	try {
 		await updateStage(stageId, {
 			name,
-		}).executeTakeFirstOrThrow();
+		}).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to update stage name",
 			cause: error,
-		};
+		}
 	} finally {
-		await revalidateTagsForCommunity(["stages"]);
+		await revalidateTagsForCommunity(["stages"])
 	}
-});
+})
 
 export const revalidateStages = defineServerAction(async function revalidateStages() {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	await revalidateTagsForCommunity(["stages", "PubsInStages"]);
-});
+	await revalidateTagsForCommunity(["stages", "PubsInStages"])
+})
 
 export const addAction = defineServerAction(async function addAction(
 	stageId: StagesId,
 	actionName: Action
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 	try {
 		await createActionInstance({
 			name: actionName,
 			action: actionName,
 			stageId,
-		}).executeTakeFirstOrThrow();
+		}).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to add action",
 			cause: error,
-		};
+		}
 	}
-});
+})
 
 export const updateAction = defineServerAction(async function updateAction(
 	actionInstanceId: ActionInstancesId,
 	stageId: StagesId,
 	props:
 		| {
-				config: Record<string, any>;
-				name?: undefined;
+				config: Record<string, any>
+				name?: undefined
 		  }
 		| { name: string; config?: undefined }
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	await updateActionInstance(actionInstanceId, {
 		config: props.config,
 		name: props.name,
-	}).executeTakeFirstOrThrow();
+	}).executeTakeFirstOrThrow()
 
 	return {
 		success: true,
 		report: "Action updated",
-	};
-});
+	}
+})
 
 export const deleteAction = defineServerAction(async function deleteAction(
 	actionId: ActionInstancesId,
 	stageId: StagesId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
-		await removeActionInstance(actionId).executeTakeFirstOrThrow();
+		await removeActionInstance(actionId).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to delete action",
 			cause: error,
-		};
+		}
 	} finally {
-		await revalidateTagsForCommunity(["action_instances"]);
+		await revalidateTagsForCommunity(["action_instances"])
 	}
-});
+})
 
 export const addOrUpdateAutomation = defineServerAction(async function addOrUpdateAutomation({
 	stageId,
 	automationId,
 	data,
 }: {
-	stageId: StagesId;
-	automationId?: AutomationsId;
-	data: CreateAutomationsSchema;
+	stageId: StagesId
+	automationId?: AutomationsId
+	data: CreateAutomationsSchema
 }) {
+<<<<<<< HEAD
 	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 	if (!community) {
 		return ApiError.COMMUNITY_NOT_FOUND;
 	}
+=======
+	const loginData = await getLoginData()
+>>>>>>> main
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
+<<<<<<< HEAD
 		await upsertAutomationWithCycleCheck({
 			id: automationId,
 			name: data.name,
@@ -419,62 +454,128 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			],
 			condition: data.condition,
 		});
+=======
+		await createOrUpdateAutomationWithCycleCheck({
+			automationId,
+			actionInstanceId: data.actionInstanceId as ActionInstancesId,
+			event: data.event,
+			config: {
+				actionConfig: data.actionConfig ?? null,
+				automationConfig:
+					"automationConfig" in data && data.automationConfig
+						? data.automationConfig
+						: null,
+			},
+			sourceActionInstanceId:
+				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
+		})
+>>>>>>> main
 	} catch (error) {
-		logger.error(error);
+		logger.error(error)
 		if (error instanceof AutomationError) {
 			return {
 				title: automationId ? "Error updating automation" : "Error creating automation",
 				error: error.message,
 				cause: error,
-			};
+			}
 		}
 
 		return {
 			error: automationId ? "Failed to update automation" : "Failed to create automation",
 			cause: error,
+<<<<<<< HEAD
 		};
+=======
+		}
+	} finally {
+>>>>>>> main
 	}
-});
+})
 
 export const deleteAutomation = defineServerAction(async function deleteAutomation(
 	automationId: AutomationsId,
 	stageId: StagesId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
 		const _deletedAutomation = await autoRevalidate(
 			removeAutomation(automationId).qb.returningAll()
-		).executeTakeFirstOrThrow();
+		).executeTakeFirstOrThrow()
 
+<<<<<<< HEAD
 		return {
 			success: true,
 			report: "Automation deleted",
 		};
+=======
+		if (!deletedAutomation) {
+			return {
+				error: "Failed to delete automation",
+				cause: `Automation with id ${automationId} not found`,
+			}
+		}
+
+		if (deletedAutomation.event !== Event.pubInStageForDuration) {
+			return
+		}
+
+		const actionInstance = await getActionInstance(
+			deletedAutomation.actionInstanceId
+		).executeTakeFirst()
+
+		if (!actionInstance) {
+			// something is wrong here
+			captureException(
+				new Error(
+					`Action instance not found for automation ${automationId} while trying to unschedule jobs`
+				)
+			)
+			return
+		}
+
+		const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst()
+		if (!pubsInStage) {
+			// we don't need to unschedule any jobs, as there are no pubs this automation could have been applied to
+			return
+		}
+
+		logger.debug(`Unscheduling jobs for automation ${automationId}`)
+		await Promise.all(
+			pubsInStage.pubIds.map(async (pubInStageId) =>
+				unscheduleAction({
+					actionInstanceId: actionInstance.id,
+					pubId: pubInStageId,
+					stageId: actionInstance.stageId,
+					event: Event.pubInStageForDuration,
+				})
+			)
+		)
+>>>>>>> main
 	} catch (error) {
-		logger.error(error);
+		logger.error(error)
 		return {
 			error: "Failed to delete automation",
 			cause: error,
-		};
+		}
 	} finally {
 		// 		revalidateTag(`community-stages_${communityId}`);
 		// 		revalidateTag(`community-action-runs_${communityId}`);
 	}
-});
+})
 
 export const duplicateAutomation = defineServerAction(async function duplicateAutomation(
 	automationId: AutomationsId,
@@ -510,9 +611,9 @@ export const removeStageMember = defineServerAction(async function removeStageMe
 	userId: UsersId,
 	stageId: StagesId
 ) {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 	if (!user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 	if (
 		!(await userCan(
@@ -524,15 +625,15 @@ export const removeStageMember = defineServerAction(async function removeStageMe
 		return {
 			title: "Unauthorized",
 			error: "You are not authorized to remove a stage member",
-		};
+		}
 	}
 	await autoRevalidate(
 		db
 			.deleteFrom("stage_memberships")
 			.where("stage_memberships.stageId", "=", stageId)
 			.where("stage_memberships.userId", "=", userId)
-	).execute();
-});
+	).execute()
+})
 
 export const addStageMember = defineServerAction(async function addStageMember(
 	stageId: StagesId,
@@ -541,15 +642,15 @@ export const addStageMember = defineServerAction(async function addStageMember(
 		role,
 		forms,
 	}: {
-		userId: UsersId;
-		role: MemberRole;
-		forms: FormsId[];
+		userId: UsersId
+		role: MemberRole
+		forms: FormsId[]
 	}
 ) {
 	try {
-		const { user } = await getLoginData();
+		const { user } = await getLoginData()
 		if (!user) {
-			return ApiError.NOT_LOGGED_IN;
+			return ApiError.NOT_LOGGED_IN
 		}
 		if (
 			!(await userCan(
@@ -561,30 +662,30 @@ export const addStageMember = defineServerAction(async function addStageMember(
 			return {
 				title: "Unauthorized",
 				error: "You are not authorized to add a stage member",
-			};
+			}
 		}
 
-		await insertStageMemberships({ userId, stageId, role, forms }).execute();
+		await insertStageMemberships({ userId, stageId, role, forms }).execute()
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			return {
 				title: "Failed to add member",
 				error: "User is already a member of this stage",
-			};
+			}
 		}
 	}
-});
+})
 
 export const addUserWithStageMembership = defineServerAction(
 	async function addUserWithStageMembership(
 		stageId: StagesId,
 		data: {
-			firstName: string;
-			lastName?: string | null;
-			email: string;
-			role: MemberRole;
-			isSuperAdmin?: boolean;
-			forms: FormsId[];
+			firstName: string
+			lastName?: string | null
+			email: string
+			role: MemberRole
+			isSuperAdmin?: boolean
+			forms: FormsId[]
 		}
 	) {
 		await createUserWithMemberships({
@@ -595,18 +696,18 @@ export const addUserWithStageMembership = defineServerAction(
 				type: MembershipType.stage,
 				forms: data.forms,
 			},
-		});
+		})
 	}
-);
+)
 
 export const setStageMemberRole = defineServerAction(async function setStageMemberRole(
 	stageId: StagesId,
 	role: MemberRole,
 	userId: UsersId
 ) {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 	if (!user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 	if (
 		!(await userCan(
@@ -618,7 +719,7 @@ export const setStageMemberRole = defineServerAction(async function setStageMemb
 		return {
 			title: "Unauthorized",
 			error: "You are not authorized to set a stage member's role",
-		};
+		}
 	}
 	await autoRevalidate(
 		db
@@ -626,5 +727,5 @@ export const setStageMemberRole = defineServerAction(async function setStageMemb
 			.where("stageId", "=", stageId)
 			.where("userId", "=", userId)
 			.set({ role })
-	).execute();
-});
+	).execute()
+})

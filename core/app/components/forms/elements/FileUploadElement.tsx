@@ -1,25 +1,25 @@
-"use client";
+"use client"
 
-import type { ControllerRenderProps } from "react-hook-form";
-import type { InputTypeForCoreSchemaType } from "schemas";
+import type { CoreSchemaType, InputComponent, PubsId } from "db/public"
+import type { ControllerRenderProps } from "react-hook-form"
+import type { InputTypeForCoreSchemaType } from "schemas"
+import type { ElementProps } from "../types"
 
-import { useCallback } from "react";
-import dynamic from "next/dynamic";
-import { Value } from "@sinclair/typebox/value";
-import { useFormContext } from "react-hook-form";
-import { fileUploadConfigSchema } from "schemas";
+import { useCallback } from "react"
+import dynamic from "next/dynamic"
+import { Value } from "@sinclair/typebox/value"
+import { useFormContext } from "react-hook-form"
+import { fileUploadConfigSchema } from "schemas"
 
-import type { CoreSchemaType, InputComponent, PubsId } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Skeleton } from "ui/skeleton";
-import { toast } from "ui/use-toast";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Skeleton } from "ui/skeleton"
+import { toast } from "ui/use-toast"
 
-import type { ElementProps } from "../types";
-import { isClientException, useServerAction } from "~/lib/serverActions";
-import { usePubForm } from "../../providers/PubFormProvider";
-import { deleteFile, upload } from "../actions";
-import { FileUploadPreview } from "../FileUpload";
-import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { isClientException, useServerAction } from "~/lib/serverActions"
+import { usePubForm } from "../../providers/PubFormProvider"
+import { deleteFile, upload } from "../actions"
+import { FileUploadPreview } from "../FileUpload"
+import { useFormElementToggleContext } from "../FormElementToggleContext"
 
 const FileUpload = dynamic(
 	async () => import("ui/customRenderers/fileUpload/fileUpload").then((mod) => mod.FileUpload),
@@ -28,11 +28,11 @@ const FileUpload = dynamic(
 		// TODO: make sure this is the same height as the file upload, otherwise looks ugly
 		loading: () => <Skeleton className="h-[182px] w-full" />,
 	}
-);
+)
 
 type FormValues = {
-	[slug: string]: InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>;
-};
+	[slug: string]: InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>
+}
 
 export const FileUploadElement = ({
 	pubId,
@@ -40,18 +40,18 @@ export const FileUploadElement = ({
 	label,
 	config,
 }: ElementProps<InputComponent.fileUpload> & { pubId?: PubsId }) => {
-	const runUpload = useServerAction(upload);
+	const runUpload = useServerAction(upload)
 	const signedUploadUrl = (fileName: string) => {
-		return runUpload(fileName, pubId);
-	};
-	const runDelete = useServerAction(deleteFile);
-	const { form, mode } = usePubForm();
+		return runUpload(fileName, pubId)
+	}
+	const runDelete = useServerAction(deleteFile)
+	const { form, mode } = usePubForm()
 
-	const { control, getValues, setValue } = useFormContext<FormValues>();
+	const { control, getValues, setValue } = useFormContext<FormValues>()
 
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
-	const files = getValues()[slug];
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(slug)
+	const _files = getValues()[slug]
 
 	const handleDeleteFile = useCallback(
 		async (
@@ -61,30 +61,30 @@ export const FileUploadElement = ({
 			const modeObj =
 				mode === "edit"
 					? ({ mode: "edit", pubId: pubId! } as const)
-					: ({ mode: "create" } as const);
+					: ({ mode: "create" } as const)
 			const res = await runDelete({
 				fileUrl: file.fileUploadUrl,
 				formSlug: form.slug,
 				fieldSlug: slug,
 				...modeObj,
-			});
+			})
 
 			if (isClientException(res)) {
-				return;
+				return
 			}
 
-			field.onChange(field.value.filter((f) => f.fileName !== file.fileName));
+			field.onChange(field.value.filter((f) => f.fileName !== file.fileName))
 			toast({
 				title: "Successfully removed file",
 				variant: "success",
 				description: res?.report,
-			});
+			})
 		},
-		[runDelete, slug, pubId, setValue, files]
-	);
+		[runDelete, slug, pubId, form.slug, mode]
+	)
 
 	if (!Value.Check(fileUploadConfigSchema, config)) {
-		return null;
+		return null
 	}
 
 	return (
@@ -111,8 +111,8 @@ export const FileUploadElement = ({
 														(f2) => f2.fileName === f.fileName
 													)
 											),
-										];
-										field.onChange(newFiles);
+										]
+										field.onChange(newFiles)
 									}}
 									id={slug}
 								/>
@@ -126,9 +126,9 @@ export const FileUploadElement = ({
 							) : null}
 							<FormMessage />
 						</FormItem>
-					);
+					)
 				}}
 			/>
 		</div>
-	);
-};
+	)
+}

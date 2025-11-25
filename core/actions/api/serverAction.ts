@@ -1,4 +1,4 @@
-"use server";
+"use server"
 
 import type { ActionInstancesId, UsersId } from "db/public";
 import { AutomationEvent, Capabilities, MembershipType } from "db/public";
@@ -19,7 +19,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		};
 	}
 ): Promise<ActionInstanceRunResult> {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 
 	if (!user) {
 		return {
@@ -36,7 +36,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 			)
 		: // FIXME: (!!!!!) this is a hack to allow actions to be run without a pubId
 			// we should instead check whether the user can run the action on the stage
-			true;
+			true
 
 	if (!canRunAction) {
 		return {
@@ -45,7 +45,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		};
 	}
 
-	const { json: _, pubId: __, ...rest } = args;
+	const { json: _, pubId: __, ...rest } = args
 
 	const result = await runAutomation({
 		...rest,

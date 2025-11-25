@@ -1,11 +1,11 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
-import React from "react";
+import * as React from "react"
 
-import { BookDashed, Plus } from "ui/icon";
-import { cn } from "utils";
+import { BookDashed, Plus } from "ui/icon"
+import { cn } from "utils"
 
-import { Button } from "./button";
+import { Button } from "./button"
 
 export const MultiBlock = ({
 	title,
@@ -14,16 +14,16 @@ export const MultiBlock = ({
 	compact,
 	onAdd,
 }: {
-	title: string;
-	children?: ReactNode;
-	disabled?: boolean;
-	compact?: boolean;
-	onAdd: () => void;
+	title: string
+	children?: ReactNode
+	disabled?: boolean
+	compact?: boolean
+	onAdd: () => void
 }) => {
 	return (
 		<div
 			className={cn(
-				"flex w-full flex-col gap-4 rounded border border-dashed border-gray-300 p-1",
+				"flex w-full flex-col gap-4 rounded border border-gray-300 border-dashed p-1",
 				{
 					"bg-gray-50": disabled,
 					"p-3": !compact,
@@ -63,7 +63,7 @@ export const MultiBlock = ({
 				</>
 			) : null}
 		</div>
-	);
-};
+	)
+}
 
-MultiBlock.displayName = "MultiBlock";
+MultiBlock.displayName = "MultiBlock"

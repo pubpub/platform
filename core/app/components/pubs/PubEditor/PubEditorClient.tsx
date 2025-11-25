@@ -1,47 +1,47 @@
-"use client";
+"use client"
 
-import type { Static } from "@sinclair/typebox";
-import type { ReactNode } from "react";
-import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
-
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
-import isEqualWith from "lodash.isequalwith";
-import partition from "lodash.partition";
-import { useForm } from "react-hook-form";
-import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
-
-import type { JsonValue, ProcessedPubWithForm } from "contracts";
-import type { PubsId, StagesId } from "db/public";
-import type { DefinitelyHas } from "utils/types";
-import { CoreSchemaType, ElementType } from "db/public";
-import { Form } from "ui/form";
-import { useUnsavedChangesWarning } from "ui/hooks";
-import { cn } from "utils";
-
-import type { ContextEditorGetters } from "~/app/components/ContextEditor/ContextEditorContext";
-import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
+import type { Static } from "@sinclair/typebox"
+import type { JsonValue, ProcessedPubWithForm } from "contracts"
+import type { PubsId, StagesId } from "db/public"
+import type React from "react"
+import type { ReactNode } from "react"
+import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form"
+import type { DefinitelyHas } from "utils/types"
+import type { ContextEditorGetters } from "~/app/components/ContextEditor/ContextEditorContext"
+import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext"
 import type {
 	BasicFormElements,
 	FormElements,
 	HydratedRelatedFieldValue,
 	RelatedFieldValue,
 	SingleFormValues,
-} from "~/app/components/forms/types";
-import { useContextEditorContext } from "~/app/components/ContextEditor/ContextEditorContext";
-import { EvilContextEditorSymbol } from "~/app/components/forms/elements/ContextEditorElement";
-import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
-import { isRelatedValue } from "~/app/components/forms/types";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import * as actions from "~/app/components/pubs/PubEditor/actions";
-import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
-import { serializeProseMirrorDoc } from "~/lib/fields/richText";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { RELATED_PUB_SLUG } from "./constants";
+} from "~/app/components/forms/types"
 
-const SAVE_WAIT_MS = 5000;
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { typeboxResolver } from "@hookform/resolvers/typebox"
+import { Type } from "@sinclair/typebox"
+import isEqualWith from "lodash.isequalwith"
+import partition from "lodash.partition"
+import { useForm } from "react-hook-form"
+import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas"
+
+import { CoreSchemaType, ElementType } from "db/public"
+import { Form } from "ui/form"
+import { useUnsavedChangesWarning } from "ui/hooks"
+import { cn } from "utils"
+
+import { useContextEditorContext } from "~/app/components/ContextEditor/ContextEditorContext"
+import { EvilContextEditorSymbol } from "~/app/components/forms/elements/ContextEditorElement"
+import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext"
+import { isRelatedValue } from "~/app/components/forms/types"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import * as actions from "~/app/components/pubs/PubEditor/actions"
+import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons"
+import { serializeProseMirrorDoc } from "~/lib/fields/richText"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+
+const SAVE_WAIT_MS = 5000
 
 const preparePayload = ({
 	formElements,
@@ -53,66 +53,66 @@ const preparePayload = ({
 	contextEditorGetters,
 	deleted,
 }: {
-	formElements: BasicFormElements[];
-	formValues: FieldValues;
-	formState: FormState<FieldValues>;
-	toggleContext: FormElementToggleContext;
+	formElements: BasicFormElements[]
+	formValues: FieldValues
+	formState: FormState<FieldValues>
+	toggleContext: FormElementToggleContext
 	defaultValues: Record<
 		string,
 		HydratedRelatedFieldValue | SingleFormValues | undefined | StagesId
-	>;
-	arrayDefaults: Record<string, HydratedRelatedFieldValue>;
-	contextEditorGetters: ContextEditorGetters;
-	deleted: Static<typeof deletedValuesSchema>;
+	>
+	arrayDefaults: Record<string, HydratedRelatedFieldValue>
+	contextEditorGetters: ContextEditorGetters
+	deleted: Static<typeof deletedValuesSchema>
 }) => {
-	const valuesPayload: Record<string, HydratedRelatedFieldValue[] | JsonValue | Date> = {};
+	const valuesPayload: Record<string, HydratedRelatedFieldValue[] | JsonValue | Date> = {}
 	// Since we send deleted related pubs via `deleted`, remove them from the actual `pubValues` payload
-	const deletedRelatedFieldSlugs = deleted.map((d) => d.slug);
+	const deletedRelatedFieldSlugs = deleted.map((d) => d.slug)
 	const formElementsWithoutDeletedRelatedFields = formElements.filter(
 		(fe) => !deletedRelatedFieldSlugs.find((s) => s === fe.slug)
-	);
+	)
 	for (const { slug, schemaName } of formElementsWithoutDeletedRelatedFields) {
 		if (!slug) {
-			continue;
+			continue
 		}
 
 		if (!toggleContext.isEnabled(slug)) {
-			continue;
+			continue
 		}
 
 		if (isEqualWith(formValues[slug], defaultValues[slug])) {
-			continue;
+			continue
 		}
 
-		const val = formValues[slug];
+		const val = formValues[slug]
 
 		// we manually retrieve the value from the context editor here instead of having RHF set it
 		// bc this is much faster for very large documents
 		if (schemaName === CoreSchemaType.RichText && val === EvilContextEditorSymbol) {
-			const getter = contextEditorGetters[slug];
+			const getter = contextEditorGetters[slug]
 			if (!getter) {
-				throw new Error(`No getter found for slug ${slug}`);
+				throw new Error(`No getter found for slug ${slug}`)
 			}
-			const value = getter.current?.getCurrentState();
+			const value = getter.current?.getCurrentState()
 
-			valuesPayload[slug] = value && serializeProseMirrorDoc(value.doc);
-			continue;
+			valuesPayload[slug] = value && serializeProseMirrorDoc(value.doc)
+			continue
 		}
 
 		if (!Array.isArray(val)) {
-			valuesPayload[slug] = val;
-			continue;
+			valuesPayload[slug] = val
+			continue
 		}
 
 		const filteredVal = val.filter((v: RelatedFieldValue) => {
-			const isNew = !v.valueId;
-			const isChanged = v.valueId && !isEqualWith(arrayDefaults[v.valueId], v);
-			return isNew || isChanged;
-		});
-		valuesPayload[slug] = filteredVal;
+			const isNew = !v.valueId
+			const isChanged = v.valueId && !isEqualWith(arrayDefaults[v.valueId], v)
+			return isNew || isChanged
+		})
+		valuesPayload[slug] = filteredVal
 	}
-	return valuesPayload;
-};
+	return valuesPayload
+}
 
 /**
  * Set all default values
@@ -122,27 +122,27 @@ const buildDefaultValues = (
 	elements: BasicFormElements[],
 	pubValues: ProcessedPubWithForm["values"]
 ) => {
-	const defaultValues: FieldValues = { deleted: [] };
+	const defaultValues: FieldValues = { deleted: [] }
 	// Build a record of the default values for array elements (related pubs) keyed by pub_values.id
 	// for dirty checking in preparePayload
-	const arrayDefaults: Record<string, HydratedRelatedFieldValue> = {};
+	const arrayDefaults: Record<string, HydratedRelatedFieldValue> = {}
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
-			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;
+			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value
 
 			defaultValues[element.slug] =
-				pubValue ?? getDefaultValueByCoreSchemaType(element.schemaName);
+				pubValue ?? getDefaultValueByCoreSchemaType(element.schemaName)
 			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
-				defaultValues[element.slug] = new Date(pubValue as string);
+				defaultValues[element.slug] = new Date(pubValue as string)
 			}
 
 			// There can be multiple relations for a single slug
 			if (element.isRelation) {
-				const relatedPubValues = pubValues.filter((v) => v.fieldSlug === element.slug);
-				defaultValues[element.slug] = [];
+				const relatedPubValues = pubValues.filter((v) => v.fieldSlug === element.slug)
+				defaultValues[element.slug] = []
 				relatedPubValues.forEach((pv) => {
 					if (!isRelatedValue(pv) || pv.id === null) {
-						return;
+						return
 					}
 					const relatedVal = {
 						value:
@@ -153,31 +153,31 @@ const buildDefaultValues = (
 						relatedPubId: pv.relatedPubId,
 						rank: pv.rank,
 						valueId: pv.id,
-					};
-					defaultValues[element.slug].push(relatedVal);
-					arrayDefaults[pv.id] = relatedVal;
-				});
+					}
+					defaultValues[element.slug].push(relatedVal)
+					arrayDefaults[pv.id] = relatedVal
+				})
 			}
 		}
 	}
-	return { defaultValues, arrayDefaults };
-};
+	return { defaultValues, arrayDefaults }
+}
 
 const deletedValuesSchema = Type.Array(
 	Type.Object({
 		slug: Type.String(),
 		relatedPubId: Type.Unsafe<PubsId>(Type.String()),
 	})
-);
+)
 
 const staticSchema = {
 	deleted: deletedValuesSchema,
 	stageId: Type.Optional(Type.Union([Type.Unsafe<StagesId>(Type.String()), Type.Null()])),
-};
+}
 
 type StaticSchema = {
-	[Property in keyof typeof staticSchema]: Static<(typeof staticSchema)[Property]>;
-};
+	[Property in keyof typeof staticSchema]: Static<(typeof staticSchema)[Property]>
+}
 
 const createSchemaFromElements = (
 	elements: BasicFormElements[],
@@ -193,18 +193,18 @@ const createSchemaFromElements = (
 				)
 				.map(({ slug, schemaName, config, isRelation }) => {
 					if (!schemaName) {
-						return [slug, undefined];
+						return [slug, undefined]
 					}
 
-					let schema = getJsonSchemaByCoreSchemaType(schemaName, config);
+					let schema = getJsonSchemaByCoreSchemaType(schemaName, config)
 					if (!schema) {
-						return [slug, undefined];
+						return [slug, undefined]
 					}
 
 					if (schemaName === CoreSchemaType.RichText) {
 						// TODO: find a better solution for this
 						// @ts-expect-error Cant assign any to the schema, but it's fine
-						schema = Type.Any();
+						schema = Type.Any()
 					}
 
 					// Allow fields to be empty or optional. Special case for empty strings,
@@ -215,7 +215,7 @@ const createSchemaFromElements = (
 							? Type.Union([schema, Type.Literal("")], {
 									error: schema.error ?? "Invalid value",
 								})
-							: Type.Optional(schema);
+							: Type.Optional(schema)
 
 					if (isRelation) {
 						return [
@@ -230,60 +230,60 @@ const createSchemaFromElements = (
 								),
 								{ error: "array error" }
 							),
-						];
+						]
 					}
-					return [slug, schemaAllowEmpty];
+					return [slug, schemaAllowEmpty]
 				})
 		),
 		...staticSchema,
-	});
-};
+	})
+}
 
 const isSubmitEvent = (
 	e?: React.BaseSyntheticEvent
 ): e is React.BaseSyntheticEvent<DefinitelyHas<SubmitEvent, "submitter">> => {
-	return !!e && "submitter" in e.nativeEvent && !!e.nativeEvent.submitter;
-};
+	return !!e && "submitter" in e.nativeEvent && !!e.nativeEvent.submitter
+}
 
 const getButtonConfig = ({
 	evt,
 	withButtonElements,
 	buttonElements,
 }: {
-	evt: React.BaseSyntheticEvent | undefined;
-	withButtonElements?: boolean;
-	buttonElements: FormElements[];
+	evt: React.BaseSyntheticEvent | undefined
+	withButtonElements?: boolean
+	buttonElements: FormElements[]
 }) => {
 	if (!withButtonElements) {
-		return { stageId: undefined, submitButtonId: undefined };
+		return { stageId: undefined, submitButtonId: undefined }
 	}
-	const submitButtonId = isSubmitEvent(evt) ? evt.nativeEvent.submitter.id : undefined;
+	const submitButtonId = isSubmitEvent(evt) ? evt.nativeEvent.submitter.id : undefined
 	const submitButtonConfig = submitButtonId
 		? buttonElements.find((b) => b.id === submitButtonId)
-		: undefined;
-	const stageId = submitButtonConfig?.stageId ?? undefined;
-	return { stageId, submitButtonId: submitButtonId };
-};
+		: undefined
+	const stageId = submitButtonConfig?.stageId ?? undefined
+	return { stageId, submitButtonId: submitButtonId }
+}
 
 export interface PubEditorClientProps {
-	elements: BasicFormElements[];
-	children: ReactNode;
-	mode: "edit" | "create";
-	pub: Pick<ProcessedPubWithForm, "id" | "values" | "pubTypeId">;
-	onSuccess: (args: { submitButtonId?: string; isAutoSave: boolean }) => void;
-	stageId?: StagesId;
+	elements: BasicFormElements[]
+	children: ReactNode
+	mode: "edit" | "create"
+	pub: Pick<ProcessedPubWithForm, "id" | "values" | "pubTypeId">
+	onSuccess: (args: { submitButtonId?: string; isAutoSave: boolean }) => void
+	stageId?: StagesId
 	/** Slug of the Form this editor is using */
-	formSlug: string;
+	formSlug: string
 	/** ID for the HTML form */
-	htmlFormId?: string;
-	className?: string;
-	withAutoSave?: boolean;
-	withButtonElements?: boolean;
-	isExternalForm?: boolean;
+	htmlFormId?: string
+	className?: string
+	withAutoSave?: boolean
+	withButtonElements?: boolean
+	isExternalForm?: boolean
 	relatedPub?: {
-		relatedPubId: PubsId;
-		relatedFieldSlug: string;
-	};
+		relatedPubId: PubsId
+		relatedFieldSlug: string
+	}
 }
 
 export const PubEditorClient = ({
@@ -300,32 +300,32 @@ export const PubEditorClient = ({
 	relatedPub,
 	onSuccess,
 }: PubEditorClientProps) => {
-	const router = useRouter();
-	const pathname = usePathname();
-	const community = useCommunity();
-	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
-	const runUpdatePub = useServerAction(actions.updatePub);
-	const runCreatePub = useServerAction(actions.createPubRecursive);
+	const _router = useRouter()
+	const _pathname = usePathname()
+	const community = useCommunity()
+	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>()
+	const runUpdatePub = useServerAction(actions.updatePub)
+	const runCreatePub = useServerAction(actions.createPubRecursive)
 	// Cache pubId
-	const [pubId, _] = useState<PubsId>(pub.id as PubsId);
+	const [pubId, _] = useState<PubsId>(pub.id as PubsId)
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => e.type === ElementType.button),
 		[elements]
-	);
-	const toggleContext = useFormElementToggleContext();
+	)
+	const toggleContext = useFormElementToggleContext()
 
 	const schema = useMemo(
 		() => createSchemaFromElements(formElements, toggleContext),
 		[formElements, toggleContext]
-	);
+	)
 
 	const [defaultValues, arrayDefaults] = useMemo(() => {
-		const { defaultValues, arrayDefaults } = buildDefaultValues(formElements, pub.values);
-		return [{ ...defaultValues, stageId }, arrayDefaults];
-	}, [formElements, stageId, schema]);
+		const { defaultValues, arrayDefaults } = buildDefaultValues(formElements, pub.values)
+		return [{ ...defaultValues, stageId }, arrayDefaults]
+	}, [formElements, stageId, pub.values])
 
-	const resolver = useMemo(() => typeboxResolver(schema), [formElements, toggleContext]);
+	const resolver = useMemo(() => typeboxResolver(schema), [schema])
 
 	const formInstance = useForm<
 		Static<ReturnType<typeof createSchemaFromElements>> & StaticSchema
@@ -334,9 +334,9 @@ export const PubEditorClient = ({
 		defaultValues,
 		shouldFocusError: false,
 		reValidateMode: "onBlur",
-	});
+	})
 
-	const { contextEditorGetters } = useContextEditorContext();
+	const { contextEditorGetters } = useContextEditorContext()
 
 	const handleSubmit = useCallback(
 		async (
@@ -344,7 +344,7 @@ export const PubEditorClient = ({
 			evt: React.BaseSyntheticEvent | undefined,
 			autoSave = false
 		) => {
-			const { stageId: stageIdFromForm, relatedPubValue, deleted, ...newValues } = formValues;
+			const { stageId: stageIdFromForm, relatedPubValue, deleted, ...newValues } = formValues
 
 			const pubValues = preparePayload({
 				formElements,
@@ -355,18 +355,20 @@ export const PubEditorClient = ({
 				arrayDefaults,
 				contextEditorGetters,
 				deleted,
-			});
+			})
 
 			const { stageId: stageIdFromButtonConfig, submitButtonId } = getButtonConfig({
 				evt,
 				withButtonElements,
 				buttonElements,
-			});
+			})
 
-			const newStageId = stageIdFromButtonConfig ?? stageIdFromForm ?? undefined;
-			const stageIdChanged = newStageId !== stageId;
+			const newStageId = stageIdFromButtonConfig ?? stageIdFromForm ?? undefined
+			const stageIdChanged = newStageId !== stageId
 
-			let result;
+			let result:
+				| Awaited<ReturnType<typeof runUpdatePub>>
+				| Awaited<ReturnType<typeof runCreatePub>>
 			if (mode === "edit") {
 				result = await runUpdatePub({
 					pubId: pubId,
@@ -375,7 +377,7 @@ export const PubEditorClient = ({
 					formSlug,
 					continueOnValidationError: autoSave,
 					deleted,
-				});
+				})
 			} else {
 				result = await runCreatePub({
 					formSlug,
@@ -392,7 +394,7 @@ export const PubEditorClient = ({
 						pubId: relatedPub.relatedPubId,
 						value: relatedPubValue,
 					},
-				});
+				})
 			}
 			if (didSucceed(result)) {
 				// Reset dirty state to prevent the unsaved changes warning from
@@ -401,16 +403,14 @@ export const PubEditorClient = ({
 				formInstance.reset({
 					...formValues,
 					stageId: newStageId ?? stageId,
-				});
+				})
 
-				onSuccess({ isAutoSave: autoSave, submitButtonId });
+				onSuccess({ isAutoSave: autoSave, submitButtonId })
 			}
 		},
 		[
 			formElements,
 			formInstance.formState,
-			router,
-			pathname,
 			runUpdatePub,
 			pub,
 			community.id,
@@ -422,39 +422,47 @@ export const PubEditorClient = ({
 			defaultValues,
 			arrayDefaults,
 			stageId,
+			contextEditorGetters, // Reset dirty state to prevent the unsaved changes warning from
+			// blocking navigation.
+			// See https://stackoverflow.com/questions/63953501/react-hook-form-resetting-isdirty-without-clearing-form
+			formInstance.reset,
+			formSlug,
+			mode,
+			onSuccess,
+			runCreatePub,
 		]
-	);
+	)
 
 	// Re-validate the form when fields are toggled on/off.
 	useEffect(() => {
-		formInstance.trigger(Object.keys(formInstance.formState.errors));
-	}, [formInstance, toggleContext]);
+		formInstance.trigger(Object.keys(formInstance.formState.errors))
+	}, [formInstance])
 
-	useUnsavedChangesWarning(formInstance.formState.isDirty);
+	useUnsavedChangesWarning(formInstance.formState.isDirty)
 
-	const isSubmitting = formInstance.formState.isSubmitting;
+	const isSubmitting = formInstance.formState.isSubmitting
 
 	const handleAutoSave = useCallback(
 		(values: FieldValues & StaticSchema, evt: React.BaseSyntheticEvent | undefined) => {
 			if (saveTimer) {
-				clearTimeout(saveTimer);
+				clearTimeout(saveTimer)
 			}
 			const newTimer = setTimeout(async () => {
 				// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 				// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
-				handleSubmit(values, evt, true);
-			}, SAVE_WAIT_MS);
-			setSaveTimer(newTimer);
+				handleSubmit(values, evt, true)
+			}, SAVE_WAIT_MS)
+			setSaveTimer(newTimer)
 		},
-		[formElements, saveTimer, handleSubmit]
-	);
+		[saveTimer, handleSubmit]
+	)
 
 	const handleAutoSaveOnError: SubmitErrorHandler<FieldValues & StaticSchema> = (errors) => {
 		const validFields = Object.fromEntries(
-			Object.entries(formInstance.getValues()).filter(([name, value]) => !(name in errors))
-		) as FieldValues & StaticSchema;
-		handleAutoSave(validFields, undefined);
-	};
+			Object.entries(formInstance.getValues()).filter(([name, _value]) => !(name in errors))
+		) as FieldValues & StaticSchema
+		handleAutoSave(validFields, undefined)
+	}
 
 	return (
 		<Form {...formInstance}>
@@ -481,5 +489,5 @@ export const PubEditorClient = ({
 				) : null}
 			</form>
 		</Form>
-	);
-};
+	)
+}

@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
+import type { ButtonProps } from "ui/button"
 
 import { forwardRef } from "react";
 import { MoreHorizontal, MoreVertical } from "lucide-react";
 
-import type { ButtonProps } from "ui/button";
-import { Button } from "ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu"
+import { cn } from "utils"
 
 /**
  * reusable ellipsis dropdown menu component that works well on mobile
@@ -56,11 +56,11 @@ export const EllipsisMenuButton = forwardRef<HTMLButtonElement, ButtonProps>(
 			>
 				{children}
 			</Button>
-		);
+		)
 	}
-);
+)
 
-EllipsisMenuButton.displayName = "EllipsisMenuButton";
+EllipsisMenuButton.displayName = "EllipsisMenuButton"
 
 export const EllipsisMenu = ({
 	children,
@@ -103,5 +103,5 @@ export const EllipsisMenu = ({
 				{children}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}

@@ -1,7 +1,7 @@
-import { rehype } from "rehype";
-import { expect, test } from "vitest";
+import { rehype } from "rehype"
+import { expect, test } from "vitest"
 
-import { logger } from "logger";
+import { logger } from "logger"
 
 import {
 	appendFigureAttributes,
@@ -31,19 +31,19 @@ import {
 	structureTables,
 	structureVideos,
 	tableToObjectArray,
-} from "./gdocPlugins";
+} from "./gdocPlugins"
 
-export const trimAll = (html: string | void): string => {
+export const trimAll = (html: string | undefined): string => {
 	if (!html) {
-		return "";
+		return ""
 	}
-	return html.replace(/[\n\t]+/g, "").trim();
-};
+	return html.replace(/[\n\t]+/g, "").trim()
+}
 
 test("Convert basic table", async () => {
 	const inputNode = JSON.parse(
 		'{"type":"element","tagName":"table","children":[{"type":"element","tagName":"tbody","children":[{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"text"},{"type":"element","tagName":"span","children":[{"type":"text","value":"Id"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Content"}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Blockquote"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"ntw1zivowk6"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Share your thoughts!"}]}]},{"type":"element","tagName":"p","children":[{"type":"element","tagName":"u","children":[{"type":"element","tagName":"b","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.pubpub.org"},"children":[{"type":"text","value":"Watch a video tutorial"}]}]}]},{"type":"element","tagName":"span","children":[{"type":"text","value":" on making a PubPub account and commenting."}]}]}]}]}]}]}'
-	);
+	)
 	const expectedOutput = [
 		{
 			id: "ntw1zivowk6",
@@ -51,17 +51,17 @@ test("Convert basic table", async () => {
 			content:
 				"Share your thoughts!Watch a video tutorial on making a PubPub account and commenting.",
 		},
-	];
+	]
 
-	const result = tableToObjectArray(inputNode);
+	const result = tableToObjectArray(inputNode)
 
-	expect(result).toStrictEqual(expectedOutput);
-});
+	expect(result).toStrictEqual(expectedOutput)
+})
 
 test("Convert double table", async () => {
 	const inputNode = JSON.parse(
 		'{"type":"element","tagName":"table","children":[{"type":"element","tagName":"tbody","children":[{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"text"},{"type":"element","tagName":"span","children":[{"type":"text","value":"Id"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Alt Text"}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Blockquote"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"ntw1zivowk6"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Share your thoughts!"}]}]},{"type":"element","tagName":"p","children":[{"type":"element","tagName":"u","children":[{"type":"element","tagName":"b","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.pubpub.org"},"children":[{"type":"text","value":"Watch a video tutorial"}]}]}]},{"type":"element","tagName":"span","children":[{"type":"text","value":" on making a PubPub account and commenting."}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"123"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"abc"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"okay"}]}]}]}]}]}]}'
-	);
+	)
 	const expectedOutput = [
 		{
 			id: "ntw1zivowk6",
@@ -74,17 +74,17 @@ test("Convert double table", async () => {
 			id: "abc",
 			alttext: "okay",
 		},
-	];
+	]
 
-	const result = tableToObjectArray(inputNode);
+	const result = tableToObjectArray(inputNode)
 
-	expect(result).toStrictEqual(expectedOutput);
-});
+	expect(result).toStrictEqual(expectedOutput)
+})
 
 test("Convert vert table", async () => {
 	const inputNode = JSON.parse(
 		'{"type":"element","tagName":"table","properties":{},"children":[{"type":"element","tagName":"tbody","properties":{},"children":[{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Image"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Id"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"n8r4ihxcrly"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Source"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"https://resize-v3.pubpub.org/123"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Alt Text"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"b","properties":{},"children":[{"type":"text","value":"123"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Align"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"text","value":"full"}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Size"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"text","value":"50"}]}]}]}]}]}'
-	);
+	)
 	const expectedOutput = [
 		{
 			type: "image",
@@ -94,80 +94,83 @@ test("Convert vert table", async () => {
 			align: "full",
 			size: "50",
 		},
-	];
+	]
 
-	const result = tableToObjectArray(inputNode);
+	const result = tableToObjectArray(inputNode)
 
-	expect(result).toStrictEqual(expectedOutput);
-});
+	expect(result).toStrictEqual(expectedOutput)
+})
 
 test("Convert link-source table", async () => {
 	const inputNode = JSON.parse(
 		'{"type":"element","tagName":"table","children":[{"type":"element","tagName":"tbody","children":[{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"text"},{"type":"element","tagName":"span","children":[{"type":"text","value":"Source"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Static Image"}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Video"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.image-url.com"},"children":[{"type":"text","value":"image-filename.png"}]}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.fallback-url.com"},"children":[{"type":"text","value":"fallback-filename.png"}]}]}]}]}]}]}]}'
-	);
+	)
 	const expectedOutput = [
 		{
 			source: "https://www.image-url.com",
 			type: "video",
 			staticimage: "https://www.fallback-url.com",
 		},
-	];
+	]
 
-	const result = tableToObjectArray(inputNode);
+	const result = tableToObjectArray(inputNode)
 
-	expect(result).toStrictEqual(expectedOutput);
-});
+	expect(result).toStrictEqual(expectedOutput)
+})
 
 test("Do Nothing", async () => {
 	const inputHtml =
-		'<html><head><script src="blah.js"></script><style>.blah{}</style></head><body><div>Content</div></body></html>';
+		'<html><head><script src="blah.js"></script><style>.blah{}</style></head><body><div>Content</div></body></html>'
 	const expectedOutputHtml =
-		'<html><head><script src="blah.js"></script><style>.blah{}</style></head><body><div>Content</div></body></html>';
+		'<html><head><script src="blah.js"></script><style>.blah{}</style></head><body><div>Content</div></body></html>'
 
 	const result = await rehype()
 		.use(basic)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Formatting", async () => {
 	const inputHtml =
-		'<html><head></head><body><div>Content <span style="font-weight: 700">Spatial imaging data</span></div></body></html>';
+		'<html><head></head><body><div>Content <span style="font-weight: 700">Spatial imaging data</span></div></body></html>'
 	const expectedOutputHtml =
-		"<html><head></head><body><div>Content <b>Spatial imaging data</b></div></body></html>";
+		"<html><head></head><body><div>Content <b>Spatial imaging data</b></div></body></html>"
 
 	const result = await rehype()
 		.use(structureFormatting)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Remove Verbose Attributes", async () => {
 	const inputHtml =
-		'<html><head><title>Okay</title><script></script></head><body><div>Content <span class="dog" style="font-weight: 700">Spatial imaging data</span></div></body></html>';
+		'<html><head><title>Okay</title><script></script></head><body><div>Content <span class="dog" style="font-weight: 700">Spatial imaging data</span></div></body></html>'
 	const expectedOutputHtml =
-		"<html><head><title>Okay</title></head><body><div>Content <span>Spatial imaging data</span></div></body></html>";
+		"<html><head><title>Okay</title></head><body><div>Content <span>Spatial imaging data</span></div></body></html>"
 
 	const result = await rehype()
 		.use(removeVerboseFormatting)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Images", async () => {
 	const inputHtml = `
@@ -198,7 +201,7 @@ test("Structure Images", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -214,18 +217,19 @@ test("Structure Images", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureImages)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 test("Structure Images - Vert Table", async () => {
 	const inputHtml = `
 		<html>
@@ -265,7 +269,7 @@ test("Structure Images - Vert Table", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -281,18 +285,19 @@ test("Structure Images - Vert Table", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureImages)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 test("Structure Images - DoubleVert Table", async () => {
 	const inputHtml = `
 		<html>
@@ -339,7 +344,7 @@ test("Structure Images - DoubleVert Table", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -359,18 +364,19 @@ test("Structure Images - DoubleVert Table", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureImages)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Videos", async () => {
 	const inputHtml = `
@@ -423,7 +429,7 @@ test("Structure Videos", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -454,18 +460,19 @@ test("Structure Videos", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureVideos)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Audio", async () => {
 	const inputHtml = `
@@ -514,7 +521,7 @@ test("Structure Audio", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -543,18 +550,19 @@ test("Structure Audio", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureAudio)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Files", async () => {
 	const inputHtml = `
@@ -581,7 +589,7 @@ test("Structure Files", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -600,18 +608,19 @@ test("Structure Files", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureFiles)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Iframes", async () => {
 	const inputHtml = `
@@ -644,7 +653,7 @@ test("Structure Iframes", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -660,18 +669,19 @@ test("Structure Iframes", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureIframes)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure BlockMath", async () => {
 	const inputHtml = `
@@ -696,7 +706,7 @@ test("Structure BlockMath", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `<html>
 		<head></head>
 		<body>
@@ -705,18 +715,19 @@ test("Structure BlockMath", async () => {
 				<figcaption><p><span>With a caption. </span><b>Bold</b></p></figcaption>
 			</figure>
 		</body>
-	</html>`;
+	</html>`
 
 	const result = await rehype()
 		.use(structureBlockMath)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure InlineMath", async () => {
 	const inputHtml = `
@@ -728,7 +739,7 @@ test("Structure InlineMath", async () => {
 				<p>Now consider two different genes, $A$ and $B$, with variation in allelic state across a population of diploid organisms. One gene $A$ has two alleles $A$ and $a$, resulting in three allelic states, </p>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -738,18 +749,19 @@ test("Structure InlineMath", async () => {
 				<p>Now consider two different genes, <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> and <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span></span>, with variation in allelic state across a population of diploid organisms. One gene <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> has two alleles <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> and <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">a</span></span></span></span></span>, resulting in three allelic states, </p>
 			</body>
 		</html>
-		`;
+		`
 
 	const result = await rehype()
 		.use(structureInlineMath)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Blockquote", async () => {
 	const inputHtml = `
@@ -772,7 +784,7 @@ test("Structure Blockquote", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -785,18 +797,19 @@ test("Structure Blockquote", async () => {
 				</blockquote>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureBlockquote)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Code Block", async () => {
 	const inputHtml = `
@@ -821,7 +834,7 @@ test("Structure Code Block", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -836,18 +849,19 @@ test("Structure Code Block", async () => {
 				</pre>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureCodeBlock)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure InlineCode", async () => {
 	const inputHtml = `
@@ -858,7 +872,7 @@ test("Structure InlineCode", async () => {
 				<p>Should also work as long as styling doesn't <b>change throughout, such as \`z= 25x + 2\` and <i>so</i> on.</b></p>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -867,18 +881,19 @@ test("Structure InlineCode", async () => {
 				<p>Should also work as long as styling doesn't <b>change throughout, such as <code>z= 25x + 2</code> and <i>so</i> on.</b></p>
 			</body>
 		</html>
-		`;
+		`
 
 	const result = await rehype()
 		.use(structureInlineCode)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Anchors", async () => {
 	const inputHtml = `
@@ -900,7 +915,7 @@ test("Structure Anchors", async () => {
 				<h1>Here is my text</h1>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -909,18 +924,19 @@ test("Structure Anchors", async () => {
 				<h1>Here is my text</h1>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureAnchors)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 // test("Structure References", async () => {
 // 	const inputHtml = `
@@ -1025,7 +1041,7 @@ test("cleanUnusedSpans", async () => {
 				<p><span>What?</span></p>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `<html>
 			<head></head>
 			<body>
@@ -1033,18 +1049,19 @@ test("cleanUnusedSpans", async () => {
 				<p>What?</p>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(cleanUnusedSpans)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Footnotes", async () => {
 	const inputHtml = `
@@ -1082,22 +1099,23 @@ test("Structure Footnotes", async () => {
 				</table>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `<html><head></head><body><div>
 			<p>Here is some text <a data-type="footnote" data-value="<div><p><span>Hi there, this is my footnote!</span></p></div>" data-structured-value="">[2]</a>, <a data-type="footnote" data-value="<div><p><span></span></p></div>" data-structured-value="https://doi.org/10.57844/arcadia-0zvp-xz86">[1]</a>, {ref38}
 			</p>
-		</div></body></html>`;
+		</div></body></html>`
 
 	const result = await rehype()
 		.use(structureFootnotes)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("removeGoogleLinkForwards", async () => {
 	const inputHtml = `
@@ -1121,7 +1139,7 @@ test("removeGoogleLinkForwards", async () => {
 			</body>
 		</html>
 
-	`;
+	`
 	const expectedOutputHtml = `<html>
 			<head></head>
 			<body>
@@ -1138,18 +1156,19 @@ test("removeGoogleLinkForwards", async () => {
 				<p>Another <a href="https://local.pubpub/#n84lvlagdc2">Figure 1</a>.</p>
 				<sup> about the Icebox and the different reasons we ice projects.</sup>
 			</body>
-		</html>`;
+		</html>`
 
 	const result = await rehype()
 		.use(removeGoogleLinkForwards)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("processLocalLinks", async () => {
 	const inputHtml = `
@@ -1171,7 +1190,7 @@ test("processLocalLinks", async () => {
 			</body>
 		</html>
 
-	`;
+	`
 	const expectedOutputHtml = `<html>
 			<head></head>
 			<body>
@@ -1188,18 +1207,19 @@ test("processLocalLinks", async () => {
 				<p>Another <a href="#n84lvlagdc2">Figure 1</a>.</p>
 				<sup> about the Icebox and the different reasons we ice projects.</sup>
 			</body>
-		</html>`;
+		</html>`
 
 	const result = await rehype()
 		.use(processLocalLinks)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("removeEmptyFigCaption", async () => {
 	const inputHtml = `
@@ -1215,7 +1235,7 @@ test("removeEmptyFigCaption", async () => {
 			</body>
 		</html>
 
-	`;
+	`
 	const expectedOutputHtml = `<html>
 			<head></head>
 			<body>
@@ -1223,18 +1243,19 @@ test("removeEmptyFigCaption", async () => {
 					<img alt="123" src="https://resize-v3.pubpub.org/123">
 				</figure>
 			</body>
-		</html>`;
+		</html>`
 
 	const result = await rehype()
 		.use(removeEmptyFigCaption)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("formatLists", async () => {
 	const inputHtml = `
@@ -1259,7 +1280,7 @@ test("formatLists", async () => {
 				</ul>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -1290,18 +1311,19 @@ test("formatLists", async () => {
 				</ul>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(formatLists)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("removeDescriptions", async () => {
 	const inputHtml = `
@@ -1320,24 +1342,25 @@ test("removeDescriptions", async () => {
 			</body>
 		</html>
 
-	`;
+	`
 	const expectedOutputHtml = `<html>
 			<head></head>
 			<body>
 				<p>Hello</p>
 			</body>
-		</html>`;
+		</html>`
 
 	const result = await rehype()
 		.use(removeDescription)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("getDescription", async () => {
 	const inputHtml = `
@@ -1356,13 +1379,13 @@ test("getDescription", async () => {
 			</body>
 		</html>
 
-	`;
-	const expectedOutputHtml = `We previously released a draft genome assembly for the lone star tick, <i>A. americanum. </i>We've now predicted genes from this assembly to use for downstream functional characterization and comparative genomics efforts.`;
+	`
+	const expectedOutputHtml = `We previously released a draft genome assembly for the lone star tick, <i>A. americanum. </i>We've now predicted genes from this assembly to use for downstream functional characterization and comparative genomics efforts.`
 
-	const result = getDescription(inputHtml);
+	const result = getDescription(inputHtml)
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("formatFigureReferences", async () => {
 	const inputHtml = `
@@ -1435,7 +1458,7 @@ test("formatFigureReferences", async () => {
 			</body>
 		</html>
 
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -1462,7 +1485,7 @@ test("formatFigureReferences", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(formatFigureReferences)
@@ -1473,11 +1496,12 @@ test("formatFigureReferences", async () => {
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("formatFigureReferencesWithParens", async () => {
 	const inputHtml = `
@@ -1550,7 +1574,7 @@ test("formatFigureReferencesWithParens", async () => {
 			</body>
 		</html>
 
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -1577,7 +1601,7 @@ test("formatFigureReferencesWithParens", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(formatFigureReferences)
@@ -1588,11 +1612,12 @@ test("formatFigureReferencesWithParens", async () => {
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("formatFigureReferencesWithStartOfLine", async () => {
 	const inputHtml = `
@@ -1665,7 +1690,7 @@ test("formatFigureReferencesWithStartOfLine", async () => {
 			</body>
 		</html>
 
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -1692,7 +1717,7 @@ test("formatFigureReferencesWithStartOfLine", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(formatFigureReferences)
@@ -1703,11 +1728,12 @@ test("formatFigureReferencesWithStartOfLine", async () => {
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("formatFigureReferencesWithEndOfLine", async () => {
 	const inputHtml = `
@@ -1780,7 +1806,7 @@ test("formatFigureReferencesWithEndOfLine", async () => {
 			</body>
 		</html>
 
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -1807,7 +1833,7 @@ test("formatFigureReferencesWithEndOfLine", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(formatFigureReferences)
@@ -1818,11 +1844,12 @@ test("formatFigureReferencesWithEndOfLine", async () => {
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("appendFigureAttributes", async () => {
 	const inputHtml = `
@@ -1899,7 +1926,7 @@ test("appendFigureAttributes", async () => {
 			</body>
 		</html>
 
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -1929,7 +1956,7 @@ test("appendFigureAttributes", async () => {
 				</figure>
 			</body>
 		</html>
-	`;
+	`
 
 	const result = await rehype()
 		.use(structureVideos)
@@ -1940,11 +1967,12 @@ test("appendFigureAttributes", async () => {
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})
 
 test("Structure Tables", async () => {
 	const inputHtml = `
@@ -1979,7 +2007,7 @@ test("Structure Tables", async () => {
 				<p>Now consider two different genes, $A$ and $B$, with variation in allelic state across a population of diploid organisms. One gene $A$ has two alleles $A$ and $a$, resulting in three allelic states, </p>
 			</body>
 		</html>
-	`;
+	`
 	const expectedOutputHtml = `
 		<html>
 			<head></head>
@@ -2005,15 +2033,16 @@ test("Structure Tables", async () => {
 				<p>Now consider two different genes, $A$ and $B$, with variation in allelic state across a population of diploid organisms. One gene $A$ has two alleles $A$ and $a$, resulting in three allelic states, </p>
 			</body>
 		</html>
-		`;
+		`
 
 	const result = await rehype()
 		.use(structureTables)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
-			logger.error(error);
-		});
+			logger.error(error)
+			return undefined
+		})
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml))
+})

@@ -1,23 +1,29 @@
-"use client";
+"use client"
 
+<<<<<<< HEAD
 import { memo, useCallback, useMemo, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
+=======
+import type { Communities, CommunityMembershipsId } from "db/public"
+import type { Option } from "ui/autocomplete"
+import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types"
+>>>>>>> main
 
-import type { Communities, CommunityMembershipsId } from "db/public";
-import type { Option } from "ui/autocomplete";
-import { MemberRole } from "db/public";
-import { AutoComplete } from "ui/autocomplete";
-import { UserCheck } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { expect } from "utils";
+import { useCallback, useMemo, useState } from "react"
+import { useDebouncedCallback } from "use-debounce"
 
-import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
-import { addMember } from "~/app/c/[communitySlug]/members/actions";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { useFormElementToggleContext } from "../forms/FormElementToggleContext";
-import { UserAvatar } from "../UserAvatar";
-import { MemberSelectAddUserButton } from "./MemberSelectAddUserButton";
-import { isMemberSelectUserWithMembership } from "./types";
+import { MemberRole } from "db/public"
+import { AutoComplete } from "ui/autocomplete"
+import { UserCheck } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
+import { expect } from "utils"
+
+import { addMember } from "~/app/c/[communitySlug]/members/actions"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { useFormElementToggleContext } from "../forms/FormElementToggleContext"
+import { UserAvatar } from "../UserAvatar"
+import { MemberSelectAddUserButton } from "./MemberSelectAddUserButton"
+import { isMemberSelectUserWithMembership } from "./types"
 
 const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 	value: user.id,
@@ -29,7 +35,7 @@ const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 					<span>
 						{user.firstName} {user.lastName}
 					</span>
-					<address className="text-xs not-italic text-muted-foreground">
+					<address className="text-muted-foreground text-xs not-italic">
 						{user.email}
 					</address>
 				</div>
@@ -42,17 +48,17 @@ const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 			</div>
 		</TooltipProvider>
 	),
-});
+})
 
 type Props = {
-	community: Communities;
-	name: string;
-	member?: MemberSelectUserWithMembership;
-	users: MemberSelectUser[];
-	onChangeSearch: (search: string) => void;
-	onChangeValue: (value: CommunityMembershipsId | undefined) => void;
-	onUserAdded: () => void;
-};
+	community: Communities
+	name: string
+	member?: MemberSelectUserWithMembership
+	users: MemberSelectUser[]
+	onChangeSearch: (search: string) => void
+	onChangeValue: (value: CommunityMembershipsId | undefined) => void
+	onUserAdded: () => void
+}
 
 export const MemberSelectClient = memo(
 	function MemberSelectClient({

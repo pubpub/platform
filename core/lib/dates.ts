@@ -1,3 +1,5 @@
+import type { AutomationConfig, PubInStageForDuration } from "~/actions/_lib/automations"
+
 import {
 	addDays,
 	addHours,
@@ -19,49 +21,49 @@ export const addDuration = (
 		| { duration: number; interval: "second" },
 	date = new Date()
 ) => {
-	const now = new Date(date);
+	const now = new Date(date)
 
 	switch (duration.interval) {
 		// this is only used in tests/seeds
 		case "second":
 			return addSeconds(now, duration.duration);
 		case "minute":
-			return addMinutes(now, duration.duration);
+			return addMinutes(now, duration.duration)
 		case "hour":
-			return addHours(now, duration.duration);
+			return addHours(now, duration.duration)
 		case "day":
-			return addDays(now, duration.duration);
+			return addDays(now, duration.duration)
 		case "week":
-			return addWeeks(now, duration.duration);
+			return addWeeks(now, duration.duration)
 		case "month":
-			return addMonths(now, duration.duration);
+			return addMonths(now, duration.duration)
 		case "year":
-			return addYears(now, duration.duration);
+			return addYears(now, duration.duration)
 		default:
-			throw new Error("Invalid interval");
+			throw new Error("Invalid interval")
 	}
-};
+}
 
 /**
  * Format a date object as ex: "3:24 PM"
  */
 export const formatDateAsTime = (date = new Date()) => {
-	return format(date, "h:mm aa");
-};
+	return format(date, "h:mm aa")
+}
 
 export const formatDateAsMonthDayYear = (date: Date) => {
-	return date.toLocaleString("default", { month: "short", day: "numeric", year: "numeric" });
-};
+	return date.toLocaleString("default", { month: "short", day: "numeric", year: "numeric" })
+}
 
 /** Format a date as ex: "Apr 28, 2025" OR if it is less than a week away, as "4 days ago" */
 export const formatDateAsPossiblyDistance = (date: Date) => {
-	const now = new Date();
-	const daysDiff = differenceInDays(now, date);
+	const now = new Date()
+	const daysDiff = differenceInDays(now, date)
 	if (daysDiff <= 7) {
-		return formatDistanceToNow(date, { addSuffix: true });
+		return formatDistanceToNow(date, { addSuffix: true })
 	}
-	return formatDateAsMonthDayYear(date);
-};
+	return formatDateAsMonthDayYear(date)
+}
 
 // Used for createdAt in pub tables
 export const dateFormatOptions = {
@@ -70,4 +72,4 @@ export const dateFormatOptions = {
 	year: "numeric",
 	hour: "2-digit",
 	minute: "2-digit",
-} satisfies Intl.DateTimeFormatOptions;
+} satisfies Intl.DateTimeFormatOptions
