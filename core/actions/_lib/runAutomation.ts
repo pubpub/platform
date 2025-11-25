@@ -1,11 +1,5 @@
-import type { Kysely } from "kysely";
-import type { ZodError } from "zod";
-
-import { captureException } from "@sentry/nextjs";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
-
-import type { ProcessedPub } from "contracts";
-import type { Database } from "db/Database";
+import type { ProcessedPub } from "contracts"
+import type { Database } from "db/Database"
 import type {
 	ActionInstancesId,
 	ActionRunsId,
@@ -17,103 +11,107 @@ import type {
 	PubsId,
 	StagesId,
 	UsersId,
-} from "db/public";
-import type { BaseActionInstanceConfig, Json } from "db/types";
-import { ActionRunStatus } from "db/public";
-import { logger } from "logger";
-import { expect } from "utils";
-import { tryCatch } from "utils/try-catch";
+} from "db/public"
+import type { BaseActionInstanceConfig, FullAutomation, Json } from "db/types"
+import type { Kysely } from "kysely"
+import type { ZodError } from "zod"
+import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions"
+import type { run as logRun } from "../log/run"
+import type { ActionSuccess } from "../types"
 
-import type { run as logRun } from "../log/run";
-import type { ActionSuccess } from "../types";
-import type { FullAutomation } from "db/types"
-import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
-import type { AutoReturnType } from "~/lib/types";
-import { db } from "~/kysely/database";
-import { getAutomation } from "~/lib/db/queries";
-import { env } from "~/lib/env/env";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { ApiError, getPubsWithRelatedValues } from "~/lib/server";
-import { getActionConfigDefaults, getAutomationRunById } from "~/lib/server/actions";
-import { MAX_STACK_DEPTH } from "~/lib/server/automations";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { getCommunity } from "~/lib/server/community";
-import { isClientExceptionOptions } from "~/lib/serverActions";
-import { getActionByName } from "../api";
-import { ActionConfigBuilder } from "./ActionConfigBuilder";
-import { evaluateConditions } from "./evaluateConditions";
-import { getActionRunByName } from "./getRuns";
-import { createPubProxy } from "./pubProxy";
+import { captureException } from "@sentry/nextjs"
+import { jsonArrayFrom } from "kysely/helpers/postgres"
+
+import { ActionRunStatus } from "db/public"
+import { logger } from "logger"
+import { expect } from "utils"
+import { tryCatch } from "utils/try-catch"
+
+import { db } from "~/kysely/database"
+import { getAutomation } from "~/lib/db/queries"
+import { env } from "~/lib/env/env"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { ApiError, getPubsWithRelatedValues } from "~/lib/server"
+import { getActionConfigDefaults, getAutomationRunById } from "~/lib/server/actions"
+import { MAX_STACK_DEPTH } from "~/lib/server/automations"
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
+import { getCommunity } from "~/lib/server/community"
+import { isClientExceptionOptions } from "~/lib/serverActions"
+import { getActionByName } from "../api"
+import { ActionConfigBuilder } from "./ActionConfigBuilder"
+import { evaluateConditions } from "./evaluateConditions"
+import { getActionRunByName } from "./getRuns"
+import { createPubProxy } from "./pubProxy"
 
 export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions | ActionSuccess) & {
 	// stack: ActionRunsId[];
-	config: BaseActionInstanceConfig;
-};
+	config: BaseActionInstanceConfig
+}
 
 export type RunAutomationArgs = {
-	automationId: AutomationsId;
-	scheduledAutomationRunId?: AutomationRunsId;
+	automationId: AutomationsId
+	scheduledAutomationRunId?: AutomationRunsId
 	trigger: {
-		event: AutomationEvent;
-		config: Record<string, unknown> | null;
+		event: AutomationEvent
+		config: Record<string, unknown> | null
 	}
 	// overrides when running manually
 	manualActionInstancesOverrideArgs: {
-		[actionInstanceId: ActionInstancesId]: Record<string, unknown> | null;
-	} | null;
-	userId?: UsersId;
-	stack: AutomationRunsId[];
-	communityId: CommunitiesId;
-	pubId?: PubsId;
-	json?: Json;
-};
+		[actionInstanceId: ActionInstancesId]: Record<string, unknown> | null
+	} | null
+	userId?: UsersId
+	stack: AutomationRunsId[]
+	communityId: CommunitiesId
+	pubId?: PubsId
+	json?: Json
+}
 
 export type RunActionInstanceArgs = {
-	automation: FullAutomation;
-	community: Communities;
-	actionInstance: FullAutomation["actionInstances"][number];
+	automation: FullAutomation
+	community: Communities
+	actionInstance: FullAutomation["actionInstances"][number]
 	/**
 	 * extra params passed to the action instance
 	 * these are provided when running the action manually
 	 */
-	manualActionInstanceOverrideArgs: Record<string, unknown> | null;
+	manualActionInstanceOverrideArgs: Record<string, unknown> | null
 	// stack: ActionRunsId[];
-	actionRunId: ActionRunsId;
+	actionRunId: ActionRunsId
 	pub:
 		| ProcessedPub<{
-				withPubType: true;
-				withRelatedPubs: true;
-				withStage: true;
-				withValues: true;
+				withPubType: true
+				withRelatedPubs: true
+				withStage: true
+				withValues: true
 		  }>
-		| undefined;
-	json: Json | undefined;
-	stageId: StagesId;
-	userId?: UsersId;
-};
+		| undefined
+	json: Json | undefined
+	stageId: StagesId
+	userId?: UsersId
+}
 
 /**
  * run a singular action instance on an automation
  */
 const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionInstanceRunResult> => {
-	const action = getActionByName(args.actionInstance.action);
-	const pub = args.pub;
+	const action = getActionByName(args.actionInstance.action)
+	const pub = args.pub
 
 	const [actionRun, actionDefaults] = await Promise.all([
 		getActionRunByName(args.actionInstance.action),
 		getActionConfigDefaults(args.community.id, args.actionInstance.action).executeTakeFirst(),
-	]);
+	])
 
 	if (!args.json && !pub) {
 		logger.error("No input found", {
 			actionInstance: args.actionInstance,
 			pub,
 			json: args.json,
-		});
+		})
 		return {
 			error: "No input found",
 			config: args.actionInstance.config as BaseActionInstanceConfig,
-		};
+		}
 	}
 
 	if (!actionRun || !action) {
@@ -121,23 +119,23 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			actionInstance: args.actionInstance,
 			actionRun,
 			action,
-		});
+		})
 		return {
 			error: "Action not found",
 			config: args.actionInstance.config as BaseActionInstanceConfig,
-		};
+		}
 	}
 
 	const actionConfigBuilder = new ActionConfigBuilder(args.actionInstance.action)
 		.withConfig(args.actionInstance.config as Record<string, any>)
 		.withOverrides(args.manualActionInstanceOverrideArgs ?? {})
 		.withDefaults(actionDefaults?.config as Record<string, any>)
-		.validate();
-	const mergedConfig = actionConfigBuilder.getMergedConfig();
+		.validate()
+	const mergedConfig = actionConfigBuilder.getMergedConfig()
 	const actionForInterpolation = {
 		...args.actionInstance,
 		config: mergedConfig,
-	};
+	}
 
 	const interpolationData = pub
 		? {
@@ -145,11 +143,11 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 
 				action: actionForInterpolation,
 			}
-		: { json: args.json, action: actionForInterpolation };
+		: { json: args.json, action: actionForInterpolation }
 
-	const interpolated = await actionConfigBuilder.interpolate(interpolationData);
+	const interpolated = await actionConfigBuilder.interpolate(interpolationData)
 
-	const result = interpolated.validate().getResult();
+	const result = interpolated.validate().getResult()
 
 	if (!result.success) {
 		logger.error("Invalid action configuration", {
@@ -157,10 +155,10 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			error: result.error.message,
 			code: result.error.code,
 			cause: result.error.zodError,
-		});
+		})
 
-		const failConfig = interpolated.getResult();
-		const resultConfig = failConfig.success ? failConfig.config : args.actionInstance.config;
+		const failConfig = interpolated.getResult()
+		const resultConfig = failConfig.success ? failConfig.config : args.actionInstance.config
 
 		return {
 			title: "Invalid action configuration",
@@ -168,14 +166,14 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			cause: result.error.zodError as ZodError<any>,
 			issues: result.error.zodError?.issues,
 			config: resultConfig,
-		};
+		}
 	}
 
-	const config = result.config;
+	const config = result.config
 
 	const lastModifiedBy = createLastModifiedBy({
 		actionRunId: args.actionRunId,
-	});
+	})
 
 	try {
 		// just hard cast it to one option so we at least have some typesafety
@@ -189,26 +187,26 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			actionRunId: args.actionRunId,
 			userId: args.userId,
 			automation: args.automation,
-		});
+		})
 
-		return { ...result, config };
+		return { ...result, config }
 	} catch (error) {
-		captureException(error);
-		logger.error(error);
+		captureException(error)
+		logger.error(error)
 
 		return {
 			title: "Failed to run action",
 			error: error.message,
 			config: config,
-		};
+		}
 	}
-};
+}
 
 export async function runAutomation(args: RunAutomationArgs, trx = db) {
 	if (args.stack.length > MAX_STACK_DEPTH) {
 		throw new Error(
 			`Action instance stack depth of ${args.stack.length} exceeds the maximum allowed depth of ${MAX_STACK_DEPTH}`
-		);
+		)
 	}
 
 	const [pub, automation, community] = await Promise.all([
@@ -226,13 +224,13 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 			: null,
 		getAutomation(args.automationId),
 		getCommunity(args.communityId),
-	]);
+	])
 
 	if (!automation) {
 		return {
 			error: "Automation not found",
 			stack: args.stack,
-		};
+		}
 	}
 
 	if (
@@ -240,45 +238,43 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 			env.FLAGS?.get("disabled-actions").includes(ai.action)
 		)
 	) {
-		return { ...ApiError.FEATURE_DISABLED, stack: args.stack };
+		return { ...ApiError.FEATURE_DISABLED, stack: args.stack }
 	}
 
 	if (!community) {
 		return {
 			error: "Community not found",
 			stack: args.stack,
-		};
+		}
 	}
 	// check if we need to evaluate conditions at execution time
 	if (automation?.condition) {
 		const automationTiming = (automation as any).conditionEvaluationTiming as
 			| string
 			| null
-			| undefined;
+			| undefined
 		const shouldEvaluateNow =
 			automationTiming === "onExecution" ||
 			automationTiming === "both" ||
 			// if no timing is set, default to evaluating at execution time for backwards compatibility
-			!automationTiming;
+			!automationTiming
 
 		if (shouldEvaluateNow) {
 			const input = pub
 				? { pub: createPubProxy(pub, community?.slug) }
-				: { json: args.json ?? ({} as Json) };
+				: { json: args.json ?? ({} as Json) }
 			const [error, evaluationResult] = await tryCatch(
 				evaluateConditions(automation.condition, input)
-			);
+			)
 
 			if (error) {
 				if (args.scheduledAutomationRunId) {
 					const existingAutomationRun = await getAutomationRunById(
 						args.communityId,
 						args.scheduledAutomationRunId
-					).executeTakeFirstOrThrow();
+					).executeTakeFirstOrThrow()
 					if (!existingAutomationRun) {
-						throw new Error(
-							`Automation run ${args.scheduledAutomationRunId} not found`
-						);
+						throw new Error(`Automation run ${args.scheduledAutomationRunId} not found`)
 					}
 
 					await insertAutomationRun(trx, {
@@ -300,13 +296,13 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 						scheduledAutomationRunId: args.scheduledAutomationRunId,
 						trigger: args.trigger,
 						userId: "userId" in args ? args.userId : undefined,
-					});
+					})
 				}
 
 				return {
 					error: error.message,
 					stack: args.stack,
-				};
+				}
 			}
 
 			if (!evaluationResult.passed) {
@@ -316,22 +312,22 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 					condition: automation.condition,
 					failureReason: evaluationResult.failureReason,
 					failureMessages: evaluationResult.flatMessages,
-				});
+				})
 				return {
 					title: "Automation condition not met",
 					error: evaluationResult.flatMessages.map((m) => m.message).join(", "),
 					stack: args.stack,
-				};
+				}
 			}
 
 			logger.debug("Automation condition met at execution time", {
 				automationId: automation.id,
 				conditionEvaluationTiming: automationTiming,
-			});
+			})
 		}
 	}
 
-	const isActionUserInitiated = "userId" in args;
+	const isActionUserInitiated = "userId" in args
 
 	// we need to first create the action run,
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
@@ -351,15 +347,15 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 		scheduledAutomationRunId: args.scheduledAutomationRunId,
 		trigger: args.trigger,
 		userId: isActionUserInitiated ? args.userId : undefined,
-	});
+	})
 
 	const results = await Promise.all(
 		automation.actionInstances.map(async (ai) => {
 			const correcspondingActionRun = automationRun.actionRuns.find(
 				(ar) => ar.actionInstanceId === ai.id
-			);
+			)
 			if (!correcspondingActionRun) {
-				throw new Error(`Action run not found for action instance ${ai.id}`);
+				throw new Error(`Action run not found for action instance ${ai.id}`)
 			}
 			const result = await runActionInstance({
 				...args,
@@ -372,11 +368,11 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 				json: args.json,
 				pub: pub ?? undefined,
 				automation,
-			});
+			})
 
 			const status = isClientExceptionOptions(result)
 				? ActionRunStatus.failure
-				: ActionRunStatus.success;
+				: ActionRunStatus.success
 
 			logger[status === ActionRunStatus.failure ? "error" : "info"]({
 				msg: "Automation run finished",
@@ -384,10 +380,10 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 				actionInstanceId: ai.id,
 				status,
 				result,
-			});
-			return { status, result, actionInstance: ai };
+			})
+			return { status, result, actionInstance: ai }
 		})
-	);
+	)
 
 	const finalAutomationRun = await insertAutomationRun(trx, {
 		automationId: args.automationId,
@@ -404,7 +400,7 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 		stack: args.stack,
 		scheduledAutomationRunId: automationRun.id,
 		userId: isActionUserInitiated ? args.userId : undefined,
-	});
+	})
 
 	// // update the action run with the result
 	// await autoRevalidate(
@@ -419,14 +415,14 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 	// 		)
 	// );
 
-	const success = results.every((r) => r.status === ActionRunStatus.success);
+	const success = results.every((r) => r.status === ActionRunStatus.success)
 
 	return {
 		success,
 		title: success ? "Automation run finished" : "Automation run failed",
 		stack: [...args.stack, finalAutomationRun.id],
 		report: results?.[0]?.result,
-	};
+	}
 }
 
 // export const runAutomationById = async (
@@ -550,24 +546,24 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 export async function insertAutomationRun(
 	trx: Kysely<Database>,
 	args: {
-		automationId: AutomationsId;
+		automationId: AutomationsId
 		actionRuns: {
-			id?: ActionRunsId;
-			actionInstanceId: ActionInstancesId;
-			config: BaseActionInstanceConfig;
-			result: Record<string, unknown>;
-			status: ActionRunStatus;
-		}[];
-		pubId?: PubsId;
-		json?: Json;
+			id?: ActionRunsId
+			actionInstanceId: ActionInstancesId
+			config: BaseActionInstanceConfig
+			result: Record<string, unknown>
+			status: ActionRunStatus
+		}[]
+		pubId?: PubsId
+		json?: Json
 		trigger: {
-			event: AutomationEvent;
-			config: Record<string, unknown> | null;
-		};
-		communityId: CommunitiesId;
-		stack: AutomationRunsId[];
-		scheduledAutomationRunId?: AutomationRunsId;
-		userId?: UsersId;
+			event: AutomationEvent
+			config: Record<string, unknown> | null
+		}
+		communityId: CommunitiesId
+		stack: AutomationRunsId[]
+		scheduledAutomationRunId?: AutomationRunsId
+		userId?: UsersId
 	}
 ) {
 	const automatonRun = await autoRevalidate(
@@ -633,7 +629,7 @@ export async function insertAutomationRun(
 						.whereRef("actionRuns.automationRunId", "=", "automationRun.id")
 				).as("actionRuns")
 			)
-	).executeTakeFirstOrThrow();
+	).executeTakeFirstOrThrow()
 
-	return automatonRun;
+	return automatonRun
 }

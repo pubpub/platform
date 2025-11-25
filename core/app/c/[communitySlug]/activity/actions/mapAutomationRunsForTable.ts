@@ -1,13 +1,13 @@
-import type { ActionRun } from "./getActionRunsTableColumns";
-import type { getAutomationRuns } from "~/lib/server/actions";
-import type { AutoReturnType } from "~/lib/types";
+import type { getAutomationRuns } from "~/lib/server/actions"
+import type { AutoReturnType } from "~/lib/types"
+import type { ActionRun } from "./getActionRunsTableColumns"
 
 export const mapAutomationRunsForTable = (
 	automationRuns: AutoReturnType<typeof getAutomationRuns>["execute"]
 ): ActionRun[] => {
 	return automationRuns.flatMap((automationRun) => {
 		if (!automationRun.actionRuns || automationRun.actionRuns.length === 0) {
-			return [];
+			return []
 		}
 
 		return automationRun.actionRuns.map((actionRun) => ({
@@ -33,6 +33,6 @@ export const mapAutomationRunsForTable = (
 				: undefined,
 			json: undefined,
 			status: actionRun.status,
-		})) as ActionRun[];
-	});
-};
+		})) as ActionRun[]
+	})
+}

@@ -35,38 +35,39 @@ import type {
 	Invite,
 	NewInviteInput,
 	permissionsSchema,
-} from "db/types";
-import type { MaybeHas } from "utils/types";
-import {
-	Action as ActionName,
-	AutomationConditionBlockType,
-	CoreSchemaType,
-	ElementType,
-	InputComponent,
-	MemberRole,
-	StructuralFormElement,
-} from "db/public";
-import { newInviteSchema } from "db/types";
-import { logger } from "logger";
-import { expect } from "utils";
+} from "db/types"
+import type { MaybeHas } from "utils/types"
+import type { actions } from "~/actions/api"
+import type { ConditionBlockFormValue } from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock"
 
-import type { actions } from "~/actions/api";
-import type { ConditionBlockFormValue } from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock";
-import { db } from "~/kysely/database";
-import { createPasswordHash } from "~/lib/authentication/password";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { findRanksBetween } from "~/lib/rank";
-import { createPubRecursiveNew } from "~/lib/server";
+import {
+	type Action as ActionName,
+	type AutomationConditionBlockType,
+	type CoreSchemaType,
+	type ElementType,
+	type InputComponent,
+	MemberRole,
+	type StructuralFormElement,
+} from "db/public"
+import { newInviteSchema } from "db/types"
+import { logger } from "logger"
+import { expect } from "utils"
+
+import { db } from "~/kysely/database"
+import { createPasswordHash } from "~/lib/authentication/password"
+import { getAutomationBase } from "~/lib/db/queries"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { findRanksBetween } from "~/lib/rank"
+import { createPubRecursiveNew } from "~/lib/server"
 import {
 	allPermissions,
 	createApiAccessToken,
 	createSiteBuilderToken,
-} from "~/lib/server/apiAccessTokens";
-import { insertForm } from "~/lib/server/form";
-import { InviteService } from "~/lib/server/invites/InviteService";
-import { generateToken } from "~/lib/server/token";
-import { slugifyString } from "~/lib/string";
-import { getAutomation, getAutomationBase } from "~/lib/db/queries";
+} from "~/lib/server/apiAccessTokens"
+import { insertForm } from "~/lib/server/form"
+import { InviteService } from "~/lib/server/invites/InviteService"
+import { generateToken } from "~/lib/server/token"
+import { slugifyString } from "~/lib/string"
 
 export type PubFieldsInitializer = Record<
 	string,
@@ -121,43 +122,43 @@ export type UsersInitializer = Record<
 
 export type AutomationInitializer = {
 	[AutomationName in string]: {
-		id?: AutomationsId;
-		sourceAutomation?: AutomationName;
-		timing?: ConditionEvaluationTiming;
+		id?: AutomationsId
+		sourceAutomation?: AutomationName
+		timing?: ConditionEvaluationTiming
 		condition?: {
-			type: AutomationConditionBlockType;
-			items: ConditionItemInput[];
-		};
+			type: AutomationConditionBlockType
+			items: ConditionItemInput[]
+		}
 		triggers: {
-			event: AutomationEvent;
-			config: unknown;
-			sourceAutomation?: AutomationName;
-		}[];
+			event: AutomationEvent
+			config: unknown
+			sourceAutomation?: AutomationName
+		}[]
 		actions: {
 			[A in ActionName]: {
 				/**
 				 * @default randomUUID
 				 */
-				id?: ActionInstancesId;
-				action: A;
-				name?: string;
-				config: (typeof actions)[A]["config"]["schema"]["_input"];
-			};
-		}[keyof typeof actions][];
-	};
-};
+				id?: ActionInstancesId
+				action: A
+				name?: string
+				config: (typeof actions)[A]["config"]["schema"]["_input"]
+			}
+		}[keyof typeof actions][]
+	}
+}
 
 type ConditionItemInput =
 	| {
-			kind: "condition";
-			type: "jsonata";
-			expression: string;
+			kind: "condition"
+			type: "jsonata"
+			expression: string
 	  }
 	| {
-			kind: "block";
-			type: AutomationConditionBlockType;
-			items: ConditionItemInput[];
-	  };
+			kind: "block"
+			type: AutomationConditionBlockType
+			items: ConditionItemInput[]
+	  }
 
 /**
  * Map of stagename to list of permissions
@@ -170,9 +171,9 @@ export type StagesInitializer<
 	{
 		id?: StagesId
 		members?: {
-			[M in keyof U]?: MemberRole;
-		};
-		automations?: A;
+			[M in keyof U]?: MemberRole
+		}
+		automations?: A
 		// automations?: {
 		// }[];
 	}
@@ -550,23 +551,23 @@ type StagesWithPermissionsAndActionsAndAutomationsByName<
 	StagePermissions,
 > = {
 	[K in keyof S]: Omit<Stages, "name"> & { name: K } & {
-		permissions: StagePermissions;
+		permissions: StagePermissions
 	} & ("automations" extends keyof S[K]
 			? {
 					automations: {
 						[KK in keyof S[K]["automations"]]: Automations & {
-							actionInstances: ActionInstances[];
-							triggers: AutomationTriggers[];
+							actionInstances: ActionInstances[]
+							triggers: AutomationTriggers[]
 							conditionBlocks?: Array<{
-								id: string;
-								type: AutomationConditionBlockType;
-								items: any[];
-							}>;
-						};
-					};
+								id: string
+								type: AutomationConditionBlockType
+								items: any[]
+							}>
+						}
+					}
 				}
-			: {});
-};
+			: {})
+}
 
 type FormsByName<F extends FormInitializer<any, any, any, any>> = {
 	[K in keyof F]: Omit<Forms, "name" | "pubType" | ""> & { name: K } & {
@@ -1329,12 +1330,12 @@ export async function seedCommunity<
 		createdForms.map((form) => [form.name, form])
 	) as unknown as FormsByName<F>
 
-	const { upsertAutomation } = await import("~/lib/server/automations");
+	const { upsertAutomation } = await import("~/lib/server/automations")
 
-	const initialCreatedAutomations: Automations[] = [];
+	const initialCreatedAutomations: Automations[] = []
 	for (const stage of consolidatedStages) {
 		if (!stage.automations) {
-			continue;
+			continue
 		}
 
 		for (const [automationName, automation] of Object.entries(stage.automations)) {
@@ -1375,22 +1376,30 @@ export async function seedCommunity<
 						: undefined,
 				},
 				trx
-			);
-			initialCreatedAutomations.push(createdAutomation);
+			)
+			initialCreatedAutomations.push(createdAutomation)
 		}
 	}
 
-	const createdAutomations = initialCreatedAutomations.length ? await getAutomationBase().where("automations.id", "in", initialCreatedAutomations.map((automation) => automation.id)).execute() : [];
+	const createdAutomations = initialCreatedAutomations.length
+		? await getAutomationBase()
+				.where(
+					"automations.id",
+					"in",
+					initialCreatedAutomations.map((automation) => automation.id)
+				)
+				.execute()
+		: []
 
 	logger.info(
 		`${createdCommunity.name}: Successfully created ${createdAutomations.length} automations`
-	);
+	)
 
 	const fullStages = Object.fromEntries(
 		consolidatedStages.map((stage) => {
 			const automationsForStage = createdAutomations.filter(
 				(automation) => automation.stageId === stage.id
-			);
+			)
 			return [
 				stage.name,
 				{
@@ -1407,7 +1416,7 @@ export async function seedCommunity<
 		typeof stageMemberships
 	>
 
-	const apiTokens = Object.entries(props.apiTokens ?? {});
+	const apiTokens = Object.entries(props.apiTokens ?? {})
 	const createdApiTokens = Object.fromEntries(
 		await Promise.all([
 			["site-builder", await createSiteBuilderToken(communityId, trx)],
@@ -1556,7 +1565,9 @@ export async function seedCommunity<
 		stages: fullStages,
 		stageConnections: stageConnectionsList,
 		pubs: createdPubs,
-		automations: Object.fromEntries(createdAutomations.map((automation) => [automation.name, automation])),
+		automations: Object.fromEntries(
+			createdAutomations.map((automation) => [automation.name, automation])
+		),
 		forms: formsByName,
 		apiTokens: createdApiTokens,
 		invites: createdInvites,

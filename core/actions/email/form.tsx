@@ -1,7 +1,7 @@
-import { useWatch } from "react-hook-form";
+import { useWatch } from "react-hook-form"
 
-import { InputWithTokens, MarkdownEditor } from "ui/editors";
-import { FieldSet } from "ui/field";
+import { InputWithTokens, MarkdownEditor } from "ui/editors"
+import { FieldSet } from "ui/field"
 
 import { ActionField } from "../_lib/ActionField"
 import { useActionForm } from "../_lib/ActionForm"
@@ -45,16 +45,16 @@ export default function EmailActionForm() {
 }
 
 function RecipientAndMemberFields() {
-	const { form, path } = useActionForm();
-	const fullPath = path || "";
+	const { form, path } = useActionForm()
+	const fullPath = path || ""
 	const recipientMember = useWatch({
 		control: form.control,
 		name: fullPath ? `${fullPath}.recipientMember` : "recipientMember",
-	});
+	})
 	const recipientEmail = useWatch({
 		control: form.control,
 		name: fullPath ? `${fullPath}.recipientEmail` : "recipientEmail",
-	});
+	})
 
 	return (
 		<>
@@ -74,5 +74,5 @@ function RecipientAndMemberFields() {
 				/>
 			)}
 		</>
-	);
+	)
 }

@@ -1,22 +1,20 @@
 "use server"
 
-import type { ActionInstancesId, UsersId } from "db/public";
-import { AutomationEvent, Capabilities, MembershipType } from "db/public";
+import type { ActionInstancesId, UsersId } from "db/public"
+import type { ActionInstanceRunResult, RunAutomationArgs } from "../_lib/runAutomation"
 
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { defineServerAction } from "~/lib/server/defineServerAction";
-import type {
-	ActionInstanceRunResult,
-	RunAutomationArgs
-} from "../_lib/runAutomation";
-import { runAutomation } from "../_lib/runAutomation";
+import { AutomationEvent, Capabilities, MembershipType } from "db/public"
+
+import { getLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { defineServerAction } from "~/lib/server/defineServerAction"
+import { runAutomation } from "../_lib/runAutomation"
 
 export const runAutomationManual = defineServerAction(async function runActionInstance(
-	args: Omit<RunAutomationArgs, "userId" | 'trigger'> & {
+	args: Omit<RunAutomationArgs, "userId" | "trigger"> & {
 		manualActionInstancesOverrideArgs: {
-			[actionInstanceId: ActionInstancesId]: Record<string, unknown>;
-		};
+			[actionInstanceId: ActionInstancesId]: Record<string, unknown>
+		}
 	}
 ): Promise<ActionInstanceRunResult> {
 	const { user } = await getLoginData()
@@ -25,7 +23,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		return {
 			error: "Not logged in",
 			config: {},
-		};
+		}
 	}
 
 	const canRunAction = args.pubId
@@ -42,7 +40,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		return {
 			error: "Not authorized to run action",
 			config: {},
-		};
+		}
 	}
 
 	const { json: _, pubId: __, ...rest } = args
@@ -60,12 +58,12 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 			event: AutomationEvent.manual,
 			config: null,
 		},
-	});
+	})
 
 	return {
 		...result,
 		success: result.success ?? false,
 		title: result.title,
 		...(result.report?.[0]?.result ? { report: result.report?.[0]?.result } : {}),
-	};
-});
+	}
+})

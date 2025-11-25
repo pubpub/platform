@@ -4,8 +4,8 @@ import type { Action } from "~/actions/types"
 
 import { useCallback, useState } from "react"
 
-import { Badge } from "ui/badge";
-import { Button } from "ui/button";
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -16,8 +16,8 @@ import {
 } from "ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
-import { actions } from "~/actions/api";
-import { useServerAction } from "~/lib/serverActions";
+import { actions } from "~/actions/api"
+import { useServerAction } from "~/lib/serverActions"
 
 type ActionCellProps = {
 	action: Action
@@ -68,20 +68,20 @@ const ActionCell = (props: ActionCellProps) => {
 }
 
 type Props = {
-	onAdd: (actionName: Action["name"]) => Promise<unknown>;
-	isSuperAdmin?: boolean | null;
-};
+	onAdd: (actionName: Action["name"]) => Promise<unknown>
+	isSuperAdmin?: boolean | null
+}
 
 export const StagePanelActionCreator = (props: Props) => {
-	const runOnAdd = useServerAction(props.onAdd);
-	const [isOpen, setIsOpen] = useState(false);
+	const runOnAdd = useServerAction(props.onAdd)
+	const [isOpen, setIsOpen] = useState(false)
 	const onActionSelect = useCallback(
 		async (action: Action) => {
-			setIsOpen(false);
-			runOnAdd(action.name);
+			setIsOpen(false)
+			runOnAdd(action.name)
 		},
 		[props.onAdd, runOnAdd]
-	);
+	)
 	const onOpenChange = useCallback((open: boolean) => {
 		setIsOpen(open)
 	}, [])
@@ -113,5 +113,5 @@ export const StagePanelActionCreator = (props: Props) => {
 				</DialogContent>
 			</Dialog>
 		</div>
-	);
-};
+	)
+}

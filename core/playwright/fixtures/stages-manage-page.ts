@@ -1,12 +1,9 @@
 import type { Page } from "@playwright/test"
-import type { Action, Event, StagesId } from "db/public"
+import type { Action, AutomationEvent, StagesId } from "db/public"
 
 import { test } from "@playwright/test"
 
-import type { AutomationEvent, StagesId } from "db/public";
-import type { Action } from "db/public";
-
-import { slugifyString } from "~/lib/string";
+import { slugifyString } from "~/lib/string"
 
 export class StagesManagePage {
 	private readonly communitySlug: string
@@ -92,15 +89,9 @@ export class StagesManagePage {
 	async addAutomation(
 		stageName: string,
 		automation: {
-<<<<<<< HEAD
-			event: AutomationEvent;
-			actionInstanceName: string;
-			sourceActionInstanceName?: string;
-=======
-			event: Event
+			event: AutomationEvent
 			actionInstanceName: string
 			sourceActionInstanceName?: string
->>>>>>> main
 		}
 	) {
 		await this.openStagePanelTab(stageName, "Actions")

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest"
 
 import {
 	Action,
@@ -6,18 +6,18 @@ import {
 	AutomationEvent,
 	CoreSchemaType,
 	MemberRole,
-} from "db/public";
+} from "db/public"
 
-import { mockServerCode } from "~/lib/__tests__/utils";
+import { mockServerCode } from "~/lib/__tests__/utils"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode()
 
-const { getTrx } = createForEachMockedTransaction();
+const { getTrx } = createForEachMockedTransaction()
 
 describe("evaluateConditions", () => {
 	test("evaluates AND block correctly", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const _trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { stages } = await seedCommunity({
 			community: {
 				name: "test",
@@ -74,35 +74,33 @@ describe("evaluateConditions", () => {
 					email: "john@example.com",
 				},
 			},
-		});
+		})
 
-		const { getAutomation } = await import("~/lib/db/queries");
-		const { evaluateConditions } = await import("./evaluateConditions");
+		const { getAutomation } = await import("~/lib/db/queries")
+		const { evaluateConditions } = await import("./evaluateConditions")
 
-		const automation = await getAutomation(
-			stages["Stage 1"].automations["Test Automation"].id
-		);
+		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id)
 		if (!automation) {
-			throw new Error("Automation not found");
+			throw new Error("Automation not found")
 		}
-		const condition = automation.condition!;
+		const condition = automation.condition!
 
 		const resultTrue = await evaluateConditions(condition, {
 			pub: { title: "test", status: "published" },
 			status: "published",
-		});
-		expect(resultTrue.passed).toBe(true);
+		})
+		expect(resultTrue.passed).toBe(true)
 
 		const resultFalse = await evaluateConditions(condition, {
 			pub: { title: "test", status: "draft" },
 			status: "draft",
-		});
-		expect(resultFalse.passed).toBe(false);
-	});
+		})
+		expect(resultFalse.passed).toBe(false)
+	})
 
 	test("evaluates OR block correctly", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const _trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { stages } = await seedCommunity({
 			community: {
 				name: "test",
@@ -159,32 +157,32 @@ describe("evaluateConditions", () => {
 					email: "john@example.com",
 				},
 			},
-		});
+		})
 
-		const { getAutomation } = await import("~/lib/db/queries");
-		const { evaluateConditions } = await import("./evaluateConditions");
+		const { getAutomation } = await import("~/lib/db/queries")
+		const { evaluateConditions } = await import("./evaluateConditions")
 
-		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id);
+		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id)
 		if (!automation) {
-			throw new Error("Automation not found");
+			throw new Error("Automation not found")
 		}
-		const condition = automation.condition!;
+		const condition = automation.condition!
 
-		const resultDraft = await evaluateConditions(condition, { pub: { status: "draft" } });
-		expect(resultDraft.passed).toBe(true);
+		const resultDraft = await evaluateConditions(condition, { pub: { status: "draft" } })
+		expect(resultDraft.passed).toBe(true)
 
 		const resultPublished = await evaluateConditions(condition, {
 			pub: { status: "published" },
-		});
-		expect(resultPublished.passed).toBe(true);
+		})
+		expect(resultPublished.passed).toBe(true)
 
-		const resultArchived = await evaluateConditions(condition, { pub: { status: "archived" } });
-		expect(resultArchived.passed).toBe(false);
-	});
+		const resultArchived = await evaluateConditions(condition, { pub: { status: "archived" } })
+		expect(resultArchived.passed).toBe(false)
+	})
 
 	test("evaluates NOT block correctly", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const _trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { stages } = await seedCommunity({
 			community: {
 				name: "test",
@@ -236,29 +234,29 @@ describe("evaluateConditions", () => {
 					email: "john@example.com",
 				},
 			},
-		});
+		})
 
-		const { getAutomation } = await import("~/lib/db/queries");
-		const { evaluateConditions } = await import("./evaluateConditions");
+		const { getAutomation } = await import("~/lib/db/queries")
+		const { evaluateConditions } = await import("./evaluateConditions")
 
-		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id);
+		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id)
 		if (!automation) {
-			throw new Error("Automation not found");
+			throw new Error("Automation not found")
 		}
-		const condition = automation.condition!;
+		const condition = automation.condition!
 
 		const resultPublished = await evaluateConditions(condition, {
 			pub: { status: "published" },
-		});
-		expect(resultPublished.passed).toBe(true);
+		})
+		expect(resultPublished.passed).toBe(true)
 
-		const resultArchived = await evaluateConditions(condition, { pub: { status: "archived" } });
-		expect(resultArchived.passed).toBe(false);
-	});
+		const resultArchived = await evaluateConditions(condition, { pub: { status: "archived" } })
+		expect(resultArchived.passed).toBe(false)
+	})
 
 	test("evaluates nested blocks correctly", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const _trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { stages } = await seedCommunity({
 			community: {
 				name: "test",
@@ -342,30 +340,30 @@ describe("evaluateConditions", () => {
 					email: "john@example.com",
 				},
 			},
-		});
+		})
 
-		const { getAutomation } = await import("~/lib/db/queries");
-		const { evaluateConditions } = await import("./evaluateConditions");
+		const { getAutomation } = await import("~/lib/db/queries")
+		const { evaluateConditions } = await import("./evaluateConditions")
 
-		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id);
+		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id)
 		if (!automation) {
-			throw new Error("Automation not found");
+			throw new Error("Automation not found")
 		}
-		const condition = automation.condition!;
+		const condition = automation.condition!
 
 		const resultTrue = await evaluateConditions(condition, {
 			pub: { title: "test", status: "draft", partial: "de" },
-		});
-		expect(resultTrue.passed).toBe(true);
+		})
+		expect(resultTrue.passed).toBe(true)
 
 		const resultFalseTitle = await evaluateConditions(condition, {
 			pub: { title: "other", status: "draft", partial: "me" },
-		});
-		expect(resultFalseTitle.passed).toBe(false);
+		})
+		expect(resultFalseTitle.passed).toBe(false)
 
 		const resultFalseStatus = await evaluateConditions(condition, {
 			pub: { title: "test", status: "archived", partial: "de" },
-		});
-		expect(resultFalseStatus.passed).toBe(false);
-	});
-});
+		})
+		expect(resultFalseStatus.passed).toBe(false)
+	})
+})

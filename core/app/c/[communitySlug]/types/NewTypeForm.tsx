@@ -2,7 +2,6 @@ import type { Static } from "@sinclair/typebox"
 import type { PubFieldsId, PubTypesId } from "db/public"
 import type { ReactNode } from "react"
 import type { FieldValues, UseFormReturn } from "react-hook-form"
-import type { PubFieldContext } from "ui/pubFields"
 
 import { useCallback, useMemo } from "react"
 import { typeboxResolver } from "@hookform/resolvers/typebox"
@@ -172,11 +171,7 @@ export const NewTypeForm = ({
 					/>
 					{props.mode === "create" && <FieldSelector pubFields={pubFields} form={form} />}
 					{form.formState.errors.root && (
-<<<<<<< HEAD
-						<div className="text-sm text-destructive">
-=======
-						<div className="text-red-500 text-sm">
->>>>>>> main
+						<div className="text-destructive text-sm">
 							{form.formState.errors.root.message}
 						</div>
 					)}

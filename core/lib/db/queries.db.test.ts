@@ -1,17 +1,23 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest"
 
-import { Action, AutomationConditionBlockType, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
+import {
+	Action,
+	AutomationConditionBlockType,
+	AutomationEvent,
+	CoreSchemaType,
+	MemberRole,
+} from "db/public"
 
-import { mockServerCode } from "~/lib/__tests__/utils";
+import { mockServerCode } from "~/lib/__tests__/utils"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode()
 
-const { getTrx } = createForEachMockedTransaction();
+const { getTrx } = createForEachMockedTransaction()
 
 describe("getStageAutomations", () => {
 	test("fetches automations with nested condition blocks", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const _trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { stages } = await seedCommunity({
 			community: {
 				name: "test",
@@ -83,7 +89,7 @@ describe("getStageAutomations", () => {
 									},
 								],
 							},
-						},	
+						},
 						"Another Automation": {
 							triggers: [
 								{
@@ -99,7 +105,6 @@ describe("getStageAutomations", () => {
 									},
 								},
 							],
-							
 						},
 					},
 				},
@@ -112,16 +117,16 @@ describe("getStageAutomations", () => {
 					email: "john@example.com",
 				},
 			},
-		});
+		})
 
-		const { getStageAutomations } = await import("./queries");
+		const { getStageAutomations } = await import("./queries")
 
 		const automations = await getStageAutomations(stages["Stage 1"].id)
 
-		expect(automations).toHaveLength(2);
+		expect(automations).toHaveLength(2)
 
-		const automationWithConditions = automations.find((a) => a.condition);
-		expect(automationWithConditions).toBeDefined();
+		const automationWithConditions = automations.find((a) => a.condition)
+		expect(automationWithConditions).toBeDefined()
 
 		expect(automationWithConditions!.condition).toMatchObject({
 			type: AutomationConditionBlockType.AND,
@@ -149,16 +154,18 @@ describe("getStageAutomations", () => {
 					],
 				},
 			],
-		});
+		})
 
-		const automationWithoutConditions = automations.find((a) => !a.condition);
-		expect(automationWithoutConditions).toBeDefined();
-		expect(automationWithoutConditions!.triggers[0].event).toBe(AutomationEvent.automationSucceeded);
-	});
+		const automationWithoutConditions = automations.find((a) => !a.condition)
+		expect(automationWithoutConditions).toBeDefined()
+		expect(automationWithoutConditions!.triggers[0].event).toBe(
+			AutomationEvent.automationSucceeded
+		)
+	})
 
 	test("fetches automations without conditions", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const _trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { stages } = await seedCommunity({
 			community: {
 				name: "test",
@@ -191,8 +198,9 @@ describe("getStageAutomations", () => {
 								},
 							],
 						},
+					},
 				},
-			}},
+			},
 			users: {
 				john: {
 					firstName: "John",
@@ -201,13 +209,13 @@ describe("getStageAutomations", () => {
 					email: "john@example.com",
 				},
 			},
-		});
+		})
 
-		const { getStageAutomations } = await import("./queries");
+		const { getStageAutomations } = await import("./queries")
 
-		const automations = await getStageAutomations(stages["Stage 1"].id);
+		const automations = await getStageAutomations(stages["Stage 1"].id)
 
-		expect(automations).toHaveLength(1);
-		expect(automations[0].condition).toBeNull();
-	});
-});
+		expect(automations).toHaveLength(1)
+		expect(automations[0].condition).toBeNull()
+	})
+})

@@ -1,70 +1,39 @@
 "use client"
 
-import type { ActionInstances, CommunitiesId, PubsId } from "db/public"
+import type { CommunitiesId, PubsId } from "db/public"
+import type { FullAutomation, IconConfig } from "db/types"
 import type { UseFormReturn } from "react-hook-form"
 
 import { Suspense, useCallback, useState } from "react"
 
-<<<<<<< HEAD:core/app/components/ActionUI/AutomationRunForm.tsx
-import type { CommunitiesId, PubsId } from "db/public";
-import type { FullAutomation } from "db/types";
-import type { IconConfig } from "ui/dynamic-icon";
-import { logger } from "logger";
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
-import { DynamicIcon } from "ui/dynamic-icon";
-import { Separator } from "ui/separator";
-import { TokenProvider } from "ui/tokens";
-import { toast } from "ui/use-toast";
-
-import { ActionForm } from "~/actions/_lib/ActionForm";
-import { getActionByName } from "~/actions/api";
-import { runAutomationManual } from "~/actions/api/serverAction";
-import { getActionFormComponent } from "~/actions/forms";
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { useCommunity } from "../providers/CommunityProvider";
-
-type Props = {
-	automation: FullAutomation;
-	pubId: PubsId;
-	canOverrideAutomationConditions: boolean;
-};
-
-export const AutomationRunForm = (props: Props) => {
-	const mainActionInstance = props.automation.actionInstances[0];
-	const action = getActionByName(mainActionInstance.action);
-	const ActionFormComponent = getActionFormComponent(action.name);
-	const community = useCommunity();
-	const runAutomation = useServerAction(runAutomationManual);
-=======
 import { logger } from "logger"
 import { Button } from "ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog"
+import { DynamicIcon } from "ui/dynamic-icon"
 import { Separator } from "ui/separator"
 import { TokenProvider } from "ui/tokens"
 import { toast } from "ui/use-toast"
 
 import { ActionForm } from "~/actions/_lib/ActionForm"
 import { getActionByName } from "~/actions/api"
-import { runActionInstance } from "~/actions/api/serverAction"
+import { runAutomationManual } from "~/actions/api/serverAction"
 import { getActionFormComponent } from "~/actions/forms"
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
-import { useServerAction } from "~/lib/serverActions"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
 import { useCommunity } from "../providers/CommunityProvider"
+import { SkeletonCard } from "../skeletons/SkeletonCard"
 
 type Props = {
-	actionInstance: ActionInstances
+	automation: FullAutomation
 	pubId: PubsId
-	defaultFields: string[]
+	canOverrideAutomationConditions: boolean
 }
 
-export const ActionRunForm = (props: Props) => {
-	const action = getActionByName(props.actionInstance.action)
+export const AutomationRunForm = (props: Props) => {
+	const mainActionInstance = props.automation.actionInstances[0]
+	const action = getActionByName(mainActionInstance.action)
 	const ActionFormComponent = getActionFormComponent(action.name)
 	const community = useCommunity()
-	const runAction = useServerAction(runActionInstance)
->>>>>>> main:core/app/components/ActionUI/ActionRunForm.tsx
+	const runAutomation = useServerAction(runAutomationManual)
 
 	const onSubmit = useCallback(
 		async (values: Record<string, unknown>, form: UseFormReturn<any>) => {
@@ -105,7 +74,6 @@ export const ActionRunForm = (props: Props) => {
 			})
 		},
 		[
-<<<<<<< HEAD:core/app/components/ActionUI/AutomationRunForm.tsx
 			runAutomation,
 			props.automation.id,
 			props.automation.name,
@@ -114,17 +82,7 @@ export const ActionRunForm = (props: Props) => {
 			community.id,
 			action.name,
 		]
-	);
-=======
-			runAction,
-			props.actionInstance.id,
-			props.pubId,
-			action.name,
-			community.id,
-			props.actionInstance.name,
-		]
 	)
->>>>>>> main:core/app/components/ActionUI/ActionRunForm.tsx
 
 	const [open, setOpen] = useState(false)
 
@@ -133,18 +91,13 @@ export const ActionRunForm = (props: Props) => {
 	}, [])
 
 	if (!action) {
-<<<<<<< HEAD:core/app/components/ActionUI/AutomationRunForm.tsx
 		logger.info(
-			`Invalid action name for automation ${props.automation.name}: ${mainActionInstance.action}`
-		);
-		return null;
-=======
-		logger.info(`Invalid action name ${props.actionInstance.action}`)
+			`Invalid action name for automation ${props.automation.name}: $mainActionInstance.action`
+		)
 		return null
->>>>>>> main:core/app/components/ActionUI/ActionRunForm.tsx
 	}
 
-	const automationIcon = props.automation.icon;
+	const automationIcon = props.automation.icon
 
 	return (
 		<TokenProvider tokens={action.tokens ?? {}}>

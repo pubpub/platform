@@ -1,23 +1,23 @@
-import type { LucideProps } from "lucide-react";
+import type { LucideProps } from "lucide-react"
 
-import React from "react";
+import React from "react"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import * as Icons from "./icon";
+import * as Icons from "./icon"
 
 export type IconConfig = {
-	name: IconName;
-	variant?: "solid" | "outline";
-	color?: string;
-};
+	name: IconName
+	variant?: "solid" | "outline"
+	color?: string
+}
 
 type DynamicIconProps = {
-	icon: IconConfig | null | undefined;
-	fallback?: Icons.LucideIcon;
-	size?: number | string;
-	className?: string;
-} & Omit<LucideProps, "size" | "color" | "className">;
+	icon: IconConfig | null | undefined
+	fallback?: Icons.LucideIcon
+	size?: number | string
+	className?: string
+} & Omit<LucideProps, "size" | "color" | "className">
 
 // biome-ignore format: don't format
 export const ICON_MAP = {
@@ -116,8 +116,8 @@ export const ICON_MAP = {
 	"x-circle": Icons.XCircle,
 } satisfies Record<string, Icons.LucideIcon>;
 
-export type IconName = keyof typeof ICON_MAP;
-export type IconMap = typeof ICON_MAP;
+export type IconName = keyof typeof ICON_MAP
+export type IconMap = typeof ICON_MAP
 
 export const DynamicIcon = ({
 	icon,
@@ -127,21 +127,21 @@ export const DynamicIcon = ({
 	...props
 }: DynamicIconProps) => {
 	if (!icon?.name) {
-		const FallbackIcon = fallback;
-		return <FallbackIcon size={size} className={cn(className)} {...props} />;
+		const FallbackIcon = fallback
+		return <FallbackIcon size={size} className={cn(className)} {...props} />
 	}
 
-	const IconComponent = ICON_MAP[icon.name];
+	const IconComponent = ICON_MAP[icon.name]
 
 	if (!IconComponent) {
-		const FallbackIcon = fallback;
+		const FallbackIcon = fallback
 		return (
 			<FallbackIcon
 				size={size}
 				className={cn(className, icon.variant === "solid" && "fill-current")}
 				{...props}
 			/>
-		);
+		)
 	}
 
 	return (
@@ -151,5 +151,5 @@ export const DynamicIcon = ({
 			style={icon.color ? { color: icon.color } : undefined}
 			{...props}
 		/>
-	);
-};
+	)
+}

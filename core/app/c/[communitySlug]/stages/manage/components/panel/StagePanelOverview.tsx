@@ -1,30 +1,17 @@
 import type { StagesId, UsersId } from "db/public"
 
-<<<<<<< HEAD
-import type { StagesId, UsersId } from "db/public";
-import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
-import { Separator } from "ui/separator";
-
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage } from "~/lib/db/queries";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { deleteStage, updateStageName } from "../../actions";
-import { StagePanelCardHeader } from "../editor/StagePanelCard";
-import { StageNameInput } from "./StageNameInput";
-import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement";
-=======
 import { Suspense } from "react"
 
-import { Card, CardContent } from "ui/card"
+import { Card, CardContent, CardTitle } from "ui/card"
 import { Separator } from "ui/separator"
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
 import { getStage } from "~/lib/db/queries"
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
 import { deleteStage, updateStageName } from "../../actions"
+import { StagePanelCardHeader } from "../editor/StagePanelCard"
 import { StageNameInput } from "./StageNameInput"
 import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement"
->>>>>>> main
 
 type PropsInner = {
 	stageId: StagesId

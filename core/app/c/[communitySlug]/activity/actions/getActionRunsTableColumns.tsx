@@ -4,62 +4,32 @@ import type { ColumnDef } from "@tanstack/react-table"
 import type { Json } from "contracts"
 import type { ActionInstances, PubsId, Stages } from "db/public"
 import type { Writeable, XOR } from "utils/types"
-import type { PubTitleProps } from "~/lib/pubs"
 
 import Link from "next/link"
+import { Badge } from "lucide-react"
 
-<<<<<<< HEAD
-import type { Json } from "contracts";
-import type { ActionInstances, PubsId, Stages } from "db/public";
-import type { Writeable, XOR } from "utils/types";
-import { AutomationEvent } from "db/public";
-import { Badge } from "ui/badge";
-import { DataTableColumnHeader } from "ui/data-table";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
-import { DynamicIcon, type IconConfig } from "ui/dynamic-icon";
-=======
-import { Event } from "db/public"
-import { Badge } from "ui/badge"
+import { AutomationEvent } from "db/public"
 import { DataTableColumnHeader } from "ui/data-table"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
->>>>>>> main
+import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
 
 import { PubTitle } from "~/app/components/PubTitle"
-import { getPubTitle } from "~/lib/pubs"
+import { getPubTitle, type PubTitleProps } from "~/lib/pubs"
 
 export type ActionRun = {
-<<<<<<< HEAD
-	id: string;
-	createdAt: Date;
-	automation: { id: string; name: string; icon: IconConfig | null } | null;
-	actionInstance: { name: string; action: string } | null;
-	sourceActionInstance: { name: string; action: string } | null;
-	stage: { id: string; name: string } | null;
-	result: unknown;
-} & (
-	| {
-			event: AutomationEvent;
-			user: null;
-=======
 	id: string
 	createdAt: Date
-	actionInstance: { name: string; action: string } | null
-	sourceActionInstance: { name: string; action: string } | null
-	stage: { id: string; name: string } | null
+	automation: { id: string; name: string; icon: IconConfig | null } | null
 	result: unknown
 } & (
 	| {
-			event: Event
+			event: AutomationEvent
 			user: null
->>>>>>> main
 	  }
 	| {
 			event: null
-			user: {
-				id: string
-				firstName: string | null
-				lastName: string | null
-			}
+			id: string
+			firstName: string | null
+			lastName: string | null
 	  }
 ) &
 	XOR<{ pub: PubTitleProps & { id: PubsId } }, { json: Json }>
@@ -70,21 +40,16 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Automation" />,
 			accessorKey: "automation",
 			cell: ({ getValue }) => {
-<<<<<<< HEAD
-				const automation = getValue<ActionRun["automation"]>();
+				const automation = getValue<ActionRun["automation"]>()
 				if (!automation) {
-					return "Unknown";
+					return "Unknown"
 				}
 				return (
 					<div className="flex items-center gap-2">
 						<DynamicIcon icon={automation.icon} size={14} />
 						<span>{automation.name}</span>
 					</div>
-				);
-=======
-				const actionInstance = getValue<ActionRun["actionInstance"]>()
-				return actionInstance ? actionInstance.name : "Unknown"
->>>>>>> main
+				)
 			},
 		} satisfies ColumnDef<ActionRun, ActionInstances>,
 		{
@@ -96,33 +61,18 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 					return `${user.firstName} ${user.lastName}`
 				}
 				switch (getValue()) {
-<<<<<<< HEAD
 					case AutomationEvent.automationFailed:
-						return `Automation (${row.original.sourceActionInstance?.name} failed)`;
-					case AutomationEvent.automationSucceeded:
-						return `Automation (${row.original.sourceActionInstance?.name} succeeded)`;
-					case AutomationEvent.pubEnteredStage:
-						return "Automation (Pub entered stage)";
-					case AutomationEvent.pubLeftStage:
-						return "Automation (Pub exited stage)";
-					case AutomationEvent.pubInStageForDuration:
-						return "Automation (Pub in stage for duration)";
-					case AutomationEvent.webhook:
-						return "Automation (Webhook)";
-=======
-					case Event.actionFailed:
 						return `Automation (${row.original.sourceActionInstance?.name} failed)`
-					case Event.actionSucceeded:
+					case AutomationEvent.automationSucceeded:
 						return `Automation (${row.original.sourceActionInstance?.name} succeeded)`
-					case Event.pubEnteredStage:
+					case AutomationEvent.pubEnteredStage:
 						return "Automation (Pub entered stage)"
-					case Event.pubLeftStage:
+					case AutomationEvent.pubLeftStage:
 						return "Automation (Pub exited stage)"
-					case Event.pubInStageForDuration:
+					case AutomationEvent.pubInStageForDuration:
 						return "Automation (Pub in stage for duration)"
-					case Event.webhook:
+					case AutomationEvent.webhook:
 						return "Automation (Webhook)"
->>>>>>> main
 				}
 			},
 		} satisfies ColumnDef<ActionRun, Event>,

@@ -1,7 +1,7 @@
-import type { UseFormReturn } from "react-hook-form";
-import type { K } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
+import type { ActionInstances, Automations, AutomationsId, Communities } from "db/public"
+import type { UseFormReturn } from "react-hook-form"
+import type { SequentialAutomationEvent } from "~/actions/types"
 
-import dynamic from "next/dynamic";
 import {
 	ArrowRightFromLine,
 	ArrowRightToLine,
@@ -10,19 +10,16 @@ import {
 	Globe,
 	Hand,
 	XCircle,
-} from "lucide-react";
-import { z } from "zod";
+} from "lucide-react"
+import { z } from "zod"
 
-import type { ActionInstances, Automations, AutomationsId, Communities } from "db/public";
-import { AutomationEvent } from "db/public";
-import { CopyButton } from "ui/copy-button";
-import { Skeleton } from "ui/skeleton";
+import { AutomationEvent } from "db/public"
+import { CopyButton } from "ui/copy-button"
 
-import type { SequentialAutomationEvent } from "~/actions/types";
-import { defineAutomation, sequentialAutomationEvents } from "~/actions/types";
+import { defineAutomation, sequentialAutomationEvents } from "~/actions/types"
 
-export const intervals = ["minute", "hour", "day", "week", "month", "year"] as const;
-export type Interval = (typeof intervals)[number];
+export const intervals = ["minute", "hour", "day", "week", "month", "year"] as const
+export type Interval = (typeof intervals)[number]
 
 export const pubInStageForDuration = defineAutomation({
 	event: AutomationEvent.pubInStageForDuration,
@@ -36,8 +33,8 @@ export const pubInStageForDuration = defineAutomation({
 		hydrated: ({ config: { duration, interval } }) =>
 			`a pub stays in this stage for ${duration} ${interval}s`,
 	},
-});
-export type PubInStageForDuration = typeof pubInStageForDuration;
+})
+export type PubInStageForDuration = typeof pubInStageForDuration
 
 export const pubLeftStage = defineAutomation({
 	event: AutomationEvent.pubLeftStage,
@@ -46,8 +43,8 @@ export const pubLeftStage = defineAutomation({
 		icon: ArrowRightFromLine,
 		base: "a pub leaves this stage",
 	},
-});
-export type PubLeftStage = typeof pubLeftStage;
+})
+export type PubLeftStage = typeof pubLeftStage
 
 export const pubEnteredStage = defineAutomation({
 	event: AutomationEvent.pubEnteredStage,
@@ -56,8 +53,8 @@ export const pubEnteredStage = defineAutomation({
 		icon: ArrowRightToLine,
 		base: "a pub enters this stage",
 	},
-});
-export type PubEnteredStage = typeof pubEnteredStage;
+})
+export type PubEnteredStage = typeof pubEnteredStage
 
 export const automationSucceeded = defineAutomation({
 	event: AutomationEvent.automationSucceeded,
@@ -67,8 +64,8 @@ export const automationSucceeded = defineAutomation({
 		base: "a specific automation succeeds",
 		// hydrated: ({ config }) => `${config.name} succeeds`,
 	},
-});
-export type AutomationSucceeded = typeof automationSucceeded;
+})
+export type AutomationSucceeded = typeof automationSucceeded
 
 export const automationFailed = defineAutomation({
 	event: AutomationEvent.automationFailed,
@@ -78,11 +75,11 @@ export const automationFailed = defineAutomation({
 		base: "a specific action fails",
 		// hydrated: ({ config }) => `${config.name} fails`,
 	},
-});
-export type AutomationFailed = typeof automationFailed;
+})
+export type AutomationFailed = typeof automationFailed
 
 export const constructWebhookUrl = (automationId: AutomationsId, communitySlug: string) =>
-	`/api/v0/c/${communitySlug}/site/webhook/${automationId}`;
+	`/api/v0/c/${communitySlug}/site/webhook/${automationId}`
 
 export const webhook = defineAutomation({
 	event: AutomationEvent.webhook,
@@ -110,8 +107,8 @@ export const webhook = defineAutomation({
 			</span>
 		),
 	},
-});
-export type Webhook = typeof webhook;
+})
+export type Webhook = typeof webhook
 
 export const manual = defineAutomation({
 	event: AutomationEvent.manual,
@@ -120,8 +117,8 @@ export const manual = defineAutomation({
 		icon: Hand,
 		base: "this automation is run manually",
 	},
-});
-export type Manual = typeof manual;
+})
+export type Manual = typeof manual
 
 export type Trigger =
 	| PubInStageForDuration
@@ -130,18 +127,18 @@ export type Trigger =
 	| AutomationSucceeded
 	| AutomationFailed
 	| Webhook
-	| Manual;
+	| Manual
 
 export type SchedulableEvent =
 	| AutomationEvent.pubInStageForDuration
 	| AutomationEvent.automationFailed
-	| AutomationEvent.automationSucceeded;
+	| AutomationEvent.automationSucceeded
 
 export type AutomationForEvent<E extends AutomationEvent> = E extends E
 	? Extract<Trigger, { event: AutomationEvent }>
-	: never;
+	: never
 
-export type SchedulableAutomation = AutomationForEvent<SchedulableEvent>;
+export type SchedulableAutomation = AutomationForEvent<SchedulableEvent>
 
 export type AutomationConfig<A extends Trigger = Trigger> = A extends A
 	? {
@@ -149,12 +146,12 @@ export type AutomationConfig<A extends Trigger = Trigger> = A extends A
 				? undefined extends RC
 					? null
 					: RC
-				: null;
-			actionConfig: Record<string, unknown> | null;
+				: null
+			actionConfig: Record<string, unknown> | null
 		}
-	: never;
+	: never
 
-export type AutomationConfigs = AutomationConfig | undefined;
+export type AutomationConfigs = AutomationConfig | undefined
 
 export const triggers = {
 	[pubInStageForDuration.event]: pubInStageForDuration,
@@ -164,48 +161,48 @@ export const triggers = {
 	[automationFailed.event]: automationFailed,
 	[webhook.event]: webhook,
 	[manual.event]: manual,
-} as const satisfies Record<AutomationEvent, any>;
+} as const satisfies Record<AutomationEvent, any>
 
 export const getTriggerByName = <T extends AutomationEvent>(name: T) => {
-	return triggers[name];
-};
+	return triggers[name]
+}
 
 export const isReferentialTrigger = (
 	automation: (typeof triggers)[keyof typeof triggers]
 ): automation is Extract<typeof automation, { event: SequentialAutomationEvent }> =>
-	sequentialAutomationEvents.includes(automation.event as any);
+	sequentialAutomationEvents.includes(automation.event as any)
 
 export const humanReadableEventBase = <T extends AutomationEvent>(
 	event: T,
 	community: Communities
 ) => {
-	const automation = getTriggerByName(event);
+	const automation = getTriggerByName(event)
 
 	if (typeof automation.display.base === "function") {
-		return automation.display.base({ community });
+		return automation.display.base({ community })
 	}
 
-	return automation.display.base;
-};
+	return automation.display.base
+}
 
 export const humanReadableEventHydrated = <T extends AutomationEvent>(
 	event: T,
 	community: Communities,
 	options: {
-		automation: Automations;
+		automation: Automations
 		config?: (typeof triggers)[T]["config"] extends undefined
 			? never
-			: z.infer<NonNullable<(typeof triggers)[T]["config"]>>;
-		sourceAction?: ActionInstances | null;
+			: z.infer<NonNullable<(typeof triggers)[T]["config"]>>
+		sourceAction?: ActionInstances | null
 	}
 ) => {
-	const automationConf = getTriggerByName(event);
+	const automationConf = getTriggerByName(event)
 	if (options.config && automationConf.config && automationConf.display.hydrated) {
 		return automationConf.display.hydrated({
 			automation: options.automation,
 			community,
 			config: options.config,
-		});
+		})
 	}
 	if (
 		options.sourceAction &&
@@ -216,7 +213,7 @@ export const humanReadableEventHydrated = <T extends AutomationEvent>(
 			automation: options.automation,
 			community,
 			config: options.sourceAction,
-		});
+		})
 	}
 
 	if (automationConf.display.hydrated && !automationConf.config) {
@@ -224,15 +221,15 @@ export const humanReadableEventHydrated = <T extends AutomationEvent>(
 			automation: options.automation,
 			community,
 			config: {} as any,
-		});
+		})
 	}
 
 	if (typeof automationConf.display.base === "function") {
-		return automationConf.display.base({ community });
+		return automationConf.display.base({ community })
 	}
 
-	return automationConf.display.base;
-};
+	return automationConf.display.base
+}
 
 export const humanReadableAutomation = <
 	A extends Automations & { triggers: { event: AutomationEvent }[] },
@@ -245,22 +242,22 @@ export const humanReadableAutomation = <
 		: z.infer<NonNullable<(typeof triggers)[keyof typeof triggers]["config"]>>,
 	sourceAction?: ActionInstances | null
 ) =>
-	`${instanceName} will run when ${humanReadableEventHydrated(automation.triggers[0].event, community, { automation: automation, config, sourceAction })}`;
+	`${instanceName} will run when ${humanReadableEventHydrated(automation.triggers[0].event, community, { automation: automation, config, sourceAction })}`
 
 export type TriggersWithConfig = {
-	[K in keyof typeof triggers]: undefined extends (typeof triggers)[K]["config"] ? never : K;
-}[keyof typeof triggers];
+	[K in keyof typeof triggers]: undefined extends (typeof triggers)[K]["config"] ? never : K
+}[keyof typeof triggers]
 
 export const isTriggerWithConfig = (trigger: AutomationEvent): trigger is TriggersWithConfig => {
-	return trigger in triggers && triggers[trigger].config !== undefined;
-};
+	return trigger in triggers && triggers[trigger].config !== undefined
+}
 
 export type AddionalConfigForm<T extends Trigger> = React.FC<{
 	form: UseFormReturn<{
 		triggers: {
-			event: NonNullable<T["event"]>;
-			config: z.infer<NonNullable<T["config"]>>;
-		}[];
-	}>;
-	idx: number;
-}>;
+			event: NonNullable<T["event"]>
+			config: z.infer<NonNullable<T["config"]>>
+		}[]
+	}>
+	idx: number
+}>

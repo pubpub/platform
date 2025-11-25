@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form"
 
-import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 
-import { ConditionBlock } from "./ConditionBlock";
+import { ConditionBlock } from "./ConditionBlock"
 
 type ConditionsBuilderProps = {
-	slug: string;
-};
+	slug: string
+}
 
 export const ConditionsBuilder = ({ slug }: ConditionsBuilderProps) => {
-	const { control, watch, formState } = useFormContext();
-	const hasConditions = watch(slug);
+	const { control, watch, formState } = useFormContext()
+	const hasConditions = watch(slug)
 
 	if (!hasConditions) {
-		return null;
+		return null
 	}
 
 	return (
@@ -35,5 +35,5 @@ export const ConditionsBuilder = ({ slug }: ConditionsBuilderProps) => {
 				</FormItem>
 			)}
 		/>
-	);
-};
+	)
+}

@@ -1,15 +1,16 @@
-import { Suspense, use, useMemo } from "react";
-import { XIcon } from "lucide-react";
+import type { IconConfig } from "ui/dynamic-icon"
 
-import type { IconConfig } from "ui/dynamic-icon";
-import { Button } from "ui/button";
-import { DynamicIcon } from "ui/dynamic-icon";
-import { FormLabel } from "ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { cn } from "utils";
+import { Suspense, use, useMemo } from "react"
+import { XIcon } from "lucide-react"
 
-import { ColorPickerPopover } from "~/app/components/forms/elements/ColorPickerElement";
-import { entries } from "~/lib/mapping";
+import { Button } from "ui/button"
+import { DynamicIcon } from "ui/dynamic-icon"
+import { FormLabel } from "ui/form"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { cn } from "utils"
+
+import { ColorPickerPopover } from "~/app/components/forms/elements/ColorPickerElement"
+import { entries } from "~/lib/mapping"
 
 const DEFAULT_ICON_COLOR_PRESETS = [
 	{ label: "Emerald", value: "#10b981" },
@@ -20,14 +21,14 @@ const DEFAULT_ICON_COLOR_PRESETS = [
 	{ label: "Sky", value: "#60a5fa" },
 	{ label: "Pink", value: "#f9a8d4" },
 	{ label: "Teal", value: "#2dd4bf" },
-];
+]
 
 export const IconPicker = ({
 	value,
 	onChange,
 }: {
-	value?: IconConfig;
-	onChange: (icon: IconConfig) => void;
+	value?: IconConfig
+	onChange: (icon: IconConfig) => void
 }) => {
 	return (
 		<Popover>
@@ -42,19 +43,19 @@ export const IconPicker = ({
 				</Suspense>
 			</PopoverContent>
 		</Popover>
-	);
-};
+	)
+}
 
-const IconMap = import("ui/dynamic-icon").then((mod) => mod.ICON_MAP);
+const IconMap = import("ui/dynamic-icon").then((mod) => mod.ICON_MAP)
 
 export const IconPickerContent = ({
 	value,
 	onChange,
 }: {
-	value?: IconConfig;
-	onChange: (icon: IconConfig) => void;
+	value?: IconConfig
+	onChange: (icon: IconConfig) => void
 }) => {
-	const iconMap = use(IconMap);
+	const iconMap = use(IconMap)
 
 	const icons = useMemo(
 		() => (
@@ -83,9 +84,9 @@ export const IconPickerContent = ({
 			</>
 		),
 		[iconMap, onChange, value?.color, value?.name, value?.variant]
-	);
+	)
 
-	if (!iconMap) return "No icons";
+	if (!iconMap) return "No icons"
 
 	return (
 		<div className="space-y-2">
@@ -98,7 +99,7 @@ export const IconPickerContent = ({
 							name: value?.name || "bot",
 							color,
 							variant: "outline",
-						});
+						})
 					}}
 					presets={DEFAULT_ICON_COLOR_PRESETS}
 				/>
@@ -122,5 +123,5 @@ export const IconPickerContent = ({
 			</div>
 			<div className="grid grid-cols-8 gap-1">{icons}</div>
 		</div>
-	);
-};
+	)
+}

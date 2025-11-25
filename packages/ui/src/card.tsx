@@ -12,7 +12,7 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
 			)}
 			{...props}
 		/>
-	);
+	)
 }
 
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
@@ -20,12 +20,12 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 		<div
 			data-slot="card-header"
 			className={cn(
-				"@container/card-header has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6",
+				"@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
 				className
 			)}
 			{...props}
 		/>
-	);
+	)
 }
 
 function CardTitle({ className, children, ...props }: React.ComponentProps<"div">) {
@@ -34,7 +34,7 @@ function CardTitle({ className, children, ...props }: React.ComponentProps<"div"
 			<div data-slot="card-title" className={cn("font-semibold leading-none", className)}>
 				<h2>{children}</h2>
 			</div>
-		);
+		)
 	}
 	return (
 		<div
@@ -44,17 +44,17 @@ function CardTitle({ className, children, ...props }: React.ComponentProps<"div"
 		>
 			{children}
 		</div>
-	);
+	)
 }
 
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="card-description"
-			className={cn("text-sm text-muted-foreground", className)}
+			className={cn("text-muted-foreground text-sm", className)}
 			{...props}
 		/>
-	);
+	)
 }
 
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {
@@ -67,21 +67,21 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
 			)}
 			{...props}
 		/>
-	);
+	)
 }
 
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
-	return <div data-slot="card-content" className={cn("px-6", className)} {...props} />;
+	return <div data-slot="card-content" className={cn("px-6", className)} {...props} />
 }
 
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="card-footer"
-			className={cn("[.border-t]:pt-6 flex items-center px-6", className)}
+			className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
 			{...props}
 		/>
-	);
+	)
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };
+export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent }

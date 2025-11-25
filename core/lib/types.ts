@@ -1,5 +1,3 @@
-import type { FieldError } from "react-hook-form";
-
 import type {
 	ActionInstances,
 	Communities,

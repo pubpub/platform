@@ -6,15 +6,9 @@ import { logger } from "logger"
 
 import { defineRun } from "../types"
 
-<<<<<<< HEAD
 export const run = defineRun<typeof action>(async ({ pub, config }) => {
-	const text = config.text;
-	const debounce = config.debounce;
-=======
-export const run = defineRun<typeof action>(async ({ actionInstance, pub, config }) => {
 	const text = config.text
 	const debounce = config.debounce
->>>>>>> main
 
 	logger.info({
 		msg: `Logging${text ? ` ${text}` : ""}`,

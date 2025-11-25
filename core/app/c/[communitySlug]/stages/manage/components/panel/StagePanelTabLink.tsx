@@ -2,13 +2,13 @@
 
 import { parseAsString, useQueryState } from "nuqs"
 
-import { TabsTrigger } from "ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { TabsTrigger } from "ui/tabs"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
 import { capitalize } from "~/lib/string"
 
 export function TabLink({ tab, children }: { tab: string; children: React.ReactNode }) {
-	const [, setTabQueryState] = useQueryState("tab", parseAsString);
+	const [, setTabQueryState] = useQueryState("tab", parseAsString)
 
 	return (
 		<Tooltip>
@@ -16,7 +16,7 @@ export function TabLink({ tab, children }: { tab: string; children: React.ReactN
 				<TabsTrigger
 					value={tab}
 					onClick={() => {
-						setTabQueryState(tab);
+						setTabQueryState(tab)
 					}}
 				>
 					{children}
@@ -25,5 +25,5 @@ export function TabLink({ tab, children }: { tab: string; children: React.ReactN
 			</TooltipTrigger>
 			<TooltipContent>{capitalize(tab)}</TooltipContent>
 		</Tooltip>
-	);
+	)
 }

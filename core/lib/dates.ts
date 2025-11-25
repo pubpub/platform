@@ -1,4 +1,4 @@
-import type { AutomationConfig, PubInStageForDuration } from "~/actions/_lib/automations"
+import type { AutomationConfig, PubInStageForDuration } from "~/actions/_lib/triggers"
 
 import {
 	addDays,
@@ -11,9 +11,7 @@ import {
 	differenceInDays,
 	format,
 	formatDistanceToNow,
-} from "date-fns";
-
-import type { AutomationConfig, PubInStageForDuration } from "~/actions/_lib/triggers";
+} from "date-fns"
 
 export const addDuration = (
 	duration:
@@ -26,7 +24,7 @@ export const addDuration = (
 	switch (duration.interval) {
 		// this is only used in tests/seeds
 		case "second":
-			return addSeconds(now, duration.duration);
+			return addSeconds(now, duration.duration)
 		case "minute":
 			return addMinutes(now, duration.duration)
 		case "hour":

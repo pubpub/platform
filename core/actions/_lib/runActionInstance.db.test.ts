@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-<<<<<<< HEAD
-import { Action, ActionRunStatus, AutomationEvent, CoreSchemaType } from "db/public";
-=======
-import { Action, ActionRunStatus, CoreSchemaType, Event } from "db/public"
->>>>>>> main
+import { Action, ActionRunStatus, AutomationEvent, CoreSchemaType } from "db/public"
 
 import { mockServerCode } from "~/lib/__tests__/utils"
 
@@ -106,17 +102,18 @@ const pubTriggerTestSeed = async () => {
 	})
 }
 
-describe("runActionInstance", () => {
-	it("should be able to successfully run the most simple action", async () => {
+describe("runAutomation", () => {
+	it("should be able to successfully run the most simple automation", async () => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
-		const { pubs, actions, community } = await seedCommunity(await pubTriggerTestSeed(), {
+		const { pubs, stages, community } = await seedCommunity(await pubTriggerTestSeed(), {
 			randomSlug: false,
 		})
-		const { runActionInstance } = await import("~/actions/_lib/runActionInstance")
+		const { runAutomation } = await import("~/actions/_lib/runAutomation")
 
-		const logActionInstance = actions.find((a) => a.action === Action.log)!
-		const result = await runActionInstance({
-			actionInstanceId: logActionInstance.id,
+		const logActionInstance = stages.Submission.automations["1"].actionInstances.find(
+			(a) => a.action === Action.log
+		)!
+		const result = await runAutomation({
 			pubId: pubs[0].id,
 			trigger: {
 				event: AutomationEvent.manual,
@@ -125,14 +122,15 @@ describe("runActionInstance", () => {
 			manualActionInstancesOverrideArgs: {},
 			communityId: community.id,
 			stack: [],
-			actionInstanceArgs: null,
+			automationId: stages.Submission.automations["1"].id,
 		})
 
 		expect(result).toMatchObject({
 			success: true,
 			report: {
-			report: "Logged out some data, check your console.",
-			data: {},
+				report: "Logged out some data, check your console.",
+				data: {},
+			},
 		})
 
 		const actionRuns = await getTrx()
@@ -151,72 +149,4 @@ describe("runActionInstance", () => {
 			data: {},
 		})
 	}, 10_000)
-
-	it.skip("should properly blame the action run if an action modifies a pub", async () => {
-		const trx = getTrx()
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
-		const { pubs, actions, community, pubFields } = await seedCommunity(
-			await pubTriggerTestSeed(),
-			{
-				randomSlug: false,
-			}
-		)
-		const { runActionInstance } = await import("~/actions/_lib/runActionInstance")
-
-		const googleDriveImportActionInstance = actions.find(
-			(a) => a.action === Action.googleDriveImport
-		)!
-
-		const fakeDocURL = "https://docs.google.com/document/d/1234567890"
-		const result = await runActionInstance({
-			actionInstanceId: googleDriveImportActionInstance.id,
-			pubId: pubs[0].id,
-			event: Event.pubEnteredStage,
-			actionInstanceArgs: {
-				outputField: `${community.slug}:title`,
-				docUrl: fakeDocURL,
-			},
-			communityId: community.id,
-			stack: [],
-		})
-
-		expect(result).toEqual({
-			success: true,
-			report: "Successfully imported",
-			data: {},
-		})
-
-		const actionRun = await trx
-			.selectFrom("action_runs")
-			.where("pubId", "=", pubs[0].id)
-			.where("actionInstanceId", "=", googleDriveImportActionInstance.id)
-			.selectAll()
-			.executeTakeFirstOrThrow()
-
-		expect(actionRun?.result).toEqual({
-			success: true,
-			report: "Successfully imported",
-			data: {},
-		})
-
-		const pubValuesAfterUpdate = await trx
-			.selectFrom("pub_values")
-			.where("pubId", "=", pubs[0].id)
-			.selectAll()
-			.execute()
-
-		expect(pubValuesAfterUpdate).toHaveLength(2)
-		const titleValue = pubValuesAfterUpdate.find((v) => v.fieldId === pubFields.Title.id)
-
-		expect(titleValue?.value).toEqual(fakeDocURL)
-
-		const pubValuesHistory = await trx
-			.selectFrom("pub_values_history")
-			.where("actionRunId", "=", actionRun.id)
-			.selectAll()
-			.execute()
-
-		expect(pubValuesHistory).toHaveLength(1)
-		expect(pubValuesHistory[0].newRowData?.value).toEqual(fakeDocURL)
-	})
 })

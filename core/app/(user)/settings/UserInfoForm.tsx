@@ -72,11 +72,7 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 									<Button
 										type="button"
 										variant="ghost"
-<<<<<<< HEAD
-										className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 p-0 text-destructive group-hover:text-destructive"
-=======
-										className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 h-full w-full p-0 text-red-500 group-hover:text-red-500"
->>>>>>> main
+										className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 h-full w-full p-0 text-destructive group-hover:text-destructive"
 										onClick={() => {
 											form.setValue("avatar", "")
 										}}

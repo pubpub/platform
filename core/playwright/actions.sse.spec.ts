@@ -3,7 +3,7 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
 import test, { expect } from "@playwright/test"
 
-import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
+import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public"
 
 import { createSeed } from "~/prisma/seed/createSeed"
 import { seedCommunity } from "~/prisma/seed/seedCommunity"
@@ -112,7 +112,7 @@ test.describe("Actions SSE", () => {
 
 		const updateCircle = page2.getByTestId(
 			`automation-${community.stages.Test.automations["Log 1"].id}-update-circle`
-		);
+		)
 		await test.step("check that other tab sees the update", async () => {
 			await expect(page2.getByText("Log 1")).toBeVisible()
 
@@ -123,7 +123,7 @@ test.describe("Actions SSE", () => {
 
 		const staleIndicator = page2.getByTestId(
 			`automation-${community.stages.Test.automations["Log 1"].id}-update-circle-stale`
-		);
+		)
 
 		let timestamp1: string
 		let report1: string

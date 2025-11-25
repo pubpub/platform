@@ -217,7 +217,7 @@ describe("seedCommunity", () => {
 					}),
 				]),
 			},
-		});
+		})
 
 		expect(seededCommunity.users, "users").toMatchObject({
 			hih: {},

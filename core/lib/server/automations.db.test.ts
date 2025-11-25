@@ -1,8 +1,6 @@
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-	import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
-
-import { Action, CoreSchemaType, Event, MemberRole } from "db/public"
+import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public"
 
 import { mockServerCode } from "~/lib/__tests__/utils"
 import { createSeed } from "~/prisma/seed/createSeed"
@@ -56,15 +54,13 @@ const seed = createSeed({
 					config: {},
 				},
 			},
-			automations: 
-				{
-					"1": {
+			automations: {
+				"1": {
 					triggers: [
 						{
 							event: AutomationEvent.automationSucceeded,
 							sourceAutomation: "2",
 							config: {},
-
 						},
 					],
 					actions: [
@@ -75,7 +71,7 @@ const seed = createSeed({
 					],
 				},
 
-					"2": {
+				"2": {
 					triggers: [
 						{
 							event: AutomationEvent.automationSucceeded,
@@ -90,18 +86,19 @@ const seed = createSeed({
 						},
 					],
 				},
-					"3": {
+				"3": {
 					triggers: [
 						{
 							event: AutomationEvent.pubInStageForDuration,
-					config: {
-							duration: 1000,
-							interval: "s",
-						}},
+							config: {
+								duration: 1000,
+								interval: "s",
+							},
+						},
 						{
 							event: AutomationEvent.pubLeftStage,
-							config: {}
-					}
+							config: {},
+						},
 					],
 					actions: [
 						{
@@ -110,7 +107,7 @@ const seed = createSeed({
 						},
 					],
 				},
-					"4": {
+				"4": {
 					triggers: [
 						{
 							event: AutomationEvent.manual,
@@ -125,7 +122,8 @@ const seed = createSeed({
 						},
 					],
 				},
-		}},
+			},
+		},
 	},
 	pubs: [
 		{
@@ -148,9 +146,8 @@ beforeAll(async () => {
 describe("automations.db", () => {
 	it("should create an automation", async () => {
 		const { upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
-			await import("./automations");
+			await import("./automations")
 		const automation = await createOrUpdateAutomationWithCycleCheck({
-
 			name: "1",
 			actionInstances: [
 				{
@@ -166,7 +163,7 @@ describe("automations.db", () => {
 				},
 			],
 			communityId: community.community.id,
-		});
+		})
 
 		expect(automation).toBeDefined()
 	})
@@ -175,7 +172,7 @@ describe("automations.db", () => {
 		const {
 			upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
 			RegularAutomationAlreadyExistsError,
-		} = await import("./automations");
+		} = await import("./automations")
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
 				id: community.stages["Stage 1"].automations["3"].id,
@@ -196,7 +193,7 @@ describe("automations.db", () => {
 		const {
 			upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
 			SequentialAutomationAlreadyExistsError,
-		} = await import("./automations");
+		} = await import("./automations")
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
 				id: community.stages["Stage 1"].automations["1"].id,
@@ -212,7 +209,7 @@ describe("automations.db", () => {
 		const {
 			upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
 			AutomationConfigError,
-		} = await import("./automations");
+		} = await import("./automations")
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
 				id: community.stages["Stage 1"].automations["1"].id,
@@ -229,7 +226,7 @@ describe("automations.db", () => {
 			const {
 				upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
 				AutomationCycleError,
-			} = await import("./automations");
+			} = await import("./automations")
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					name: "3",
@@ -262,7 +259,7 @@ describe("automations.db", () => {
 		it("should not throw an error if the automation is not a cycle", async () => {
 			// 3 -> 1 is fine, bc we only have 3 -> 2 and 2 -> 1 thus far
 			const { upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
-				await import("./automations");
+				await import("./automations")
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					name: "1",
@@ -277,7 +274,7 @@ describe("automations.db", () => {
 			const {
 				upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
 				AutomationMaxDepthError,
-			} = await import("./automations");
+			} = await import("./automations")
 			await expect(
 				createOrUpdateAutomationWithCycleCheck(
 					{

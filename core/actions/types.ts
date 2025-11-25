@@ -1,13 +1,6 @@
-<<<<<<< HEAD
-import type React from "react";
-import type * as z from "zod";
-
-import type { Json, ProcessedPub } from "contracts";
-=======
-import type { Json, ProcessedPub } from "contracts"
->>>>>>> main
+import type { Prettify } from "@ts-rest/core"
+import type { ProcessedPub } from "contracts"
 import type {
-	ActionInstances,
 	Action as ActionName,
 	ActionRunsId,
 	Automations,
@@ -15,67 +8,22 @@ import type {
 	CommunitiesId,
 	StagesId,
 	UsersId,
-<<<<<<< HEAD
-} from "db/public";
-import type { LastModifiedBy } from "db/types";
-import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
-import type * as Icons from "ui/icon";
-import type { Prettify, XOR } from "utils/types";
-import { AutomationEvent } from "db/public";
-
-import type { FullAutomation } from "db/types";
-import type { ClientExceptionOptions } from "~/lib/serverActions";
-=======
 } from "db/public"
-import type { LastModifiedBy } from "db/types"
+import type { FullAutomation, Json, LastModifiedBy } from "db/types"
+import type React from "react"
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form"
 import type * as Icons from "ui/icon"
-import type { Prettify, XOR } from "utils/types"
-import type * as z from "zod"
+import type { XOR } from "utils/types"
+import type z from "zod"
 import type { ClientExceptionOptions } from "~/lib/serverActions"
 
-import { Event } from "db/public"
->>>>>>> main
+import { AutomationEvent } from "db/public"
 
 export type ActionPub = ProcessedPub<{
 	withPubType: true
 	withRelatedPubs: undefined
 }>
 
-<<<<<<< HEAD
-export type RunProps<T extends Action> =
-	T extends Action<infer C, any, infer Acc extends ActionRunAccepts[]>
-		? Prettify<
-				{
-					config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
-					stageId: StagesId;
-					communityId: CommunitiesId;
-					/**
-					 * The lastModifiedBy field, to be used when you are
-					 * creating/modifying pubs
-					 * Will likely look like: `action-run:<action-run-id>
-					 */
-					lastModifiedBy: LastModifiedBy;
-					actionRunId: ActionRunsId;
-					/**
-					 * The user ID of the user who initiated the action, if any
-					 */
-					userId?: UsersId;
-					automation: FullAutomation;
-				} &
-					// if both are accepted, it's one or the other.
-					// if only one's accepted, it's only that one
-					("pub" | "json" extends Acc[number]
-						? XOR<{ pub: ActionPub }, { json: Json }>
-						: ("pub" extends Acc[number]
-								? {
-										pub: ActionPub;
-									}
-								: { pub?: never }) &
-								("json" extends Acc[number] ? { json: Json } : { json?: never }))
-			>
-		: never;
-=======
 export type RunProps<T extends Action> = T extends Action<
 	infer C,
 	any,
@@ -97,7 +45,7 @@ export type RunProps<T extends Action> = T extends Action<
 				 * The user ID of the user who initiated the action, if any
 				 */
 				userId?: UsersId
-				actionInstance: ActionInstances
+				automation: FullAutomation
 			} & ("pub" | "json" extends Acc[number] // if only one's accepted, it's only that one // if both are accepted, it's one or the other.
 				? XOR<{ pub: ActionPub }, { json: Json }>
 				: ("pub" extends Acc[number]
@@ -108,7 +56,6 @@ export type RunProps<T extends Action> = T extends Action<
 						("json" extends Acc[number] ? { json: Json } : { json?: never }))
 		>
 	: never
->>>>>>> main
 
 export type ConfigProps<C> = {
 	config: C
@@ -190,54 +137,30 @@ export const defineRun = <T extends Action = Action>(
 
 export type Run = ReturnType<typeof defineRun>
 
-<<<<<<< HEAD
 export const sequentialAutomationEvents = [
 	AutomationEvent.automationSucceeded,
 	AutomationEvent.automationFailed,
-] as const;
-export type SequentialAutomationEvent = (typeof sequentialAutomationEvents)[number];
+] as const
+export type SequentialAutomationEvent = (typeof sequentialAutomationEvents)[number]
 
 export const isSequentialAutomationEvent = (
 	event: AutomationEvent
-): event is SequentialAutomationEvent => sequentialAutomationEvents.includes(event as any);
+): event is SequentialAutomationEvent => sequentialAutomationEvents.includes(event as any)
 
-export const schedulableAutomationEvents = [AutomationEvent.pubInStageForDuration] as const;
-export type SchedulableAutomationEvent = (typeof schedulableAutomationEvents)[number];
+export const schedulableAutomationEvents = [AutomationEvent.pubInStageForDuration] as const
+export type SchedulableAutomationEvent = (typeof schedulableAutomationEvents)[number]
 
 export const isSchedulableAutomationEvent = (
 	event: AutomationEvent
-): event is SchedulableAutomationEvent => schedulableAutomationEvents.includes(event as any);
-=======
-export const sequentialAutomationEvents = [Event.actionSucceeded, Event.actionFailed] as const
-export type SequentialAutomationEvent = (typeof sequentialAutomationEvents)[number]
-
-export const isSequentialAutomationEvent = (event: Event): event is SequentialAutomationEvent =>
-	sequentialAutomationEvents.includes(event as any)
-
-export const schedulableAutomationEvents = [
-	Event.pubInStageForDuration,
-	Event.actionFailed,
-	Event.actionSucceeded,
-] as const
-export type SchedulableAutomationEvent = (typeof schedulableAutomationEvents)[number]
-
-export const isSchedulableAutomationEvent = (event: Event): event is SchedulableAutomationEvent =>
-	schedulableAutomationEvents.includes(event as any)
->>>>>>> main
+): event is SchedulableAutomationEvent => schedulableAutomationEvents.includes(event as any)
 
 export type EventAutomationOptionsBase<
 	E extends AutomationEvent,
 	AC extends Record<string, any> | undefined = undefined,
 > = {
-<<<<<<< HEAD
-	event: E;
-	canBeRunAfterAddingAutomation?: boolean;
-	config: undefined extends AC ? undefined : z.ZodType<AC>;
-=======
 	event: E
 	canBeRunAfterAddingAutomation?: boolean
-	additionalConfig?: AC extends Record<string, any> ? z.ZodType<AC> : undefined
->>>>>>> main
+	config: undefined extends AC ? undefined : z.ZodType<AC>
 	/**
 	 * The display name options for this event
 	 */
@@ -246,21 +169,12 @@ export type EventAutomationOptionsBase<
 		/**
 		 * The base display name for this automation, shown e.g. when selecting the event for a automation
 		 */
-		base: React.ReactNode | ((options: { community: Communities }) => React.ReactNode)
+		base: React.ReactNode | ((community: Communities) => React.ReactNode)
 		/**
 		 * String to use when viewing the automation on the stage.
 		 * Useful if you want to show some configuration or automation-specific information
 		 */
-		hydrated?: (
-			options: {
-				automation: Automations
-				community: Communities
-			} & (AC extends Record<string, any>
-				? { config: AC }
-				: E extends SequentialAutomationEvent
-					? { config: ActionInstances }
-					: {})
-		) => React.ReactNode
+		hydrated?: (automation: Automations, community: Communities) => React.ReactNode
 	}
 }
 
@@ -271,11 +185,7 @@ export const defineAutomation = <
 	options: EventAutomationOptionsBase<E, AC>
 ) => options
 
-<<<<<<< HEAD
-export type { AutomationConfig, AutomationConfigs } from "./_lib/triggers";
-=======
-export type { AutomationConfig, AutomationConfigs } from "./_lib/automations"
->>>>>>> main
+export type { AutomationConfig, AutomationConfigs } from "./_lib/triggers"
 
 export type ConfigOf<T extends Action> = T extends Action<infer C, any, any> ? z.infer<C> : never
 

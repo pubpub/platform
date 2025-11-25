@@ -1,11 +1,12 @@
-import { Controller } from "react-hook-form";
+import type { AddionalConfigForm, pubInStageForDuration } from "../triggers"
 
-import { Field, FieldError, FieldGroup, FieldLabel } from "ui/field";
-import { Input } from "ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { Controller } from "react-hook-form"
 
-import type { AddionalConfigForm, pubInStageForDuration } from "../triggers";
-import { intervals } from "../triggers";
+import { Field, FieldError, FieldGroup, FieldLabel } from "ui/field"
+import { Input } from "ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+
+import { intervals } from "../triggers"
 
 export const PubInStageForDurationConfigForm: AddionalConfigForm<typeof pubInStageForDuration> = (
 	props
@@ -26,7 +27,7 @@ export const PubInStageForDurationConfigForm: AddionalConfigForm<typeof pubInSta
 									className="shrink grow-0 gap-1"
 									data-invalid={p.fieldState.invalid}
 								>
-									<FieldLabel className="text-xs text-gray-700">
+									<FieldLabel className="text-gray-700 text-xs">
 										Duration
 									</FieldLabel>
 									<Input
@@ -57,7 +58,7 @@ export const PubInStageForDurationConfigForm: AddionalConfigForm<typeof pubInSta
 									className="shrink grow-0 gap-1"
 									data-invalid={p.fieldState.invalid}
 								>
-									<FieldLabel className="text-xs text-gray-700">
+									<FieldLabel className="text-gray-700 text-xs">
 										Interval
 									</FieldLabel>
 									<Select value={p.field.value} onValueChange={p.field.onChange}>
@@ -84,8 +85,8 @@ export const PubInStageForDurationConfigForm: AddionalConfigForm<typeof pubInSta
 							<FieldError className="text-xs">{fieldState.error.message}</FieldError>
 						)}
 					</FieldGroup>
-				);
+				)
 			}}
 		/>
-	);
-};
+	)
+}

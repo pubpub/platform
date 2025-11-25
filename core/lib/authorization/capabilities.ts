@@ -1,29 +1,32 @@
+import type { XOR } from "utils/types"
+import type {
+	CommunityTargetCapabilities,
+	PubTargetCapabilities,
+	StageTargetCapabilities,
+} from "./capabalities.definition"
+
+import { cache } from "react"
+
 import {
 	Capabilities,
-	MemberRole,
-	MembershipType,
 	type CommunitiesId,
 	type Forms,
 	type FormsId,
+	MemberRole,
+	MembershipType,
 	type PubsId,
 	type PubTypes,
 	type PubTypesId,
 	type StagesId,
 	type UsersId,
 } from "db/public"
-import type { XOR } from "utils/types"
-import type {
-	CommunityTargetCapabilities,
-	PubTargetCapabilities,
-	StageTargetCapabilities,
-} from "./capabalities.definition";
-import { db } from "~/kysely/database";
-import { getLoginData } from "../authentication/loginData";
-import { autoCache } from "../server/cache/autoCache";
-import { findCommunityBySlug } from "../server/community";
-import { getStagesViewableByUser } from "../server/stages";
-import { logger } from "logger";
-import { cache } from "react";
+import { logger } from "logger"
+
+import { db } from "~/kysely/database"
+import { getLoginData } from "../authentication/loginData"
+import { autoCache } from "../server/cache/autoCache"
+import { findCommunityBySlug } from "../server/community"
+import { getStagesViewableByUser } from "../server/stages"
 
 type CapabilitiesArg = {
 	[MembershipType.pub]: PubTargetCapabilities

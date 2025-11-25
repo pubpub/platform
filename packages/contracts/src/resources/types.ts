@@ -1,9 +1,4 @@
 import type {
-	ActionInstances,
-	AutomationConditionBlocks,
-	AutomationConditions,
-	Automations,
-	AutomationTriggers,
 	CommunitiesId,
 	FormElementsId,
 	FormsId,
@@ -17,15 +12,18 @@ import type {
 	StagesId,
 	Users,
 	UsersId,
-} from "db/public";
-import {  MemberRole } from "db/public";
-import type { FullAutomation, IconConfig } from "db/types";
+} from "db/public"
+import type { FullAutomation } from "db/types"
+
+import z from "zod"
+
 import {
 	type CoreSchemaType,
 	communitiesIdSchema,
 	coreSchemaTypeSchema,
 	formElementsSchema,
 	formsSchema,
+	type MemberRole,
 	memberRoleSchema,
 	pubFieldsSchema,
 	pubsIdSchema,
@@ -37,7 +35,6 @@ import {
 	usersIdSchema,
 	usersSchema,
 } from "db/public"
-import z from "zod";
 
 // Auth types
 
@@ -209,7 +206,7 @@ type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] exten
 		? {
 				stage:
 					| (Stages & {
-							automations: FullAutomation[];
+							automations: FullAutomation[]
 					  })
 					| null
 			}
@@ -290,7 +287,7 @@ export type MaybePubOptions = {
 	 *
 	 * @default false
 	 */
-	withStageAutomations?: boolean;
+	withStageAutomations?: boolean
 	/**
 	 * Whether to include members of the pub.
 	 *

@@ -12,8 +12,7 @@ export const ActionRunsTable = ({
 	actionRuns: ActionRun[]
 	communitySlug: string
 }) => {
-<<<<<<< HEAD
-	const actionRunsColumns = getActionRunsTableColumns(communitySlug);
+	const actionRunsColumns = getActionRunsTableColumns(communitySlug)
 	return (
 		<DataTable
 			getRowId={(row) =>
@@ -22,10 +21,5 @@ export const ActionRunsTable = ({
 			columns={actionRunsColumns}
 			data={actionRuns}
 		/>
-	);
-};
-=======
-	const actionRunsColumns = getActionRunsTableColumns(communitySlug)
-	return <DataTable columns={actionRunsColumns} data={actionRuns} />
+	)
 }
->>>>>>> main

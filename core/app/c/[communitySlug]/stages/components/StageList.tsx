@@ -1,21 +1,12 @@
 import type { ProcessedPub } from "contracts"
 import type { CommunitiesId, UsersId } from "db/public"
-import type { CommunityStage } from "~/lib/server/stages"
 import type { MemberWithUser } from "~/lib/types"
 
-<<<<<<< HEAD
-import type { ProcessedPub } from "contracts";
-import type { CommunitiesId, UsersId } from "db/public";
-import { AutomationEvent } from "db/public";
-import { Pencil } from "ui/icon";
-import { PubFieldProvider } from "ui/pubFields";
-import { stagesDAO, StagesProvider } from "ui/stages";
-=======
 import { Suspense } from "react"
 import Link from "next/link"
 import { Eye } from "lucide-react"
->>>>>>> main
 
+import { AutomationEvent } from "db/public"
 import { Pencil } from "ui/icon"
 import { PubFieldProvider } from "ui/pubFields"
 import { StagesProvider, stagesDAO } from "ui/stages"
@@ -29,27 +20,15 @@ import {
 	userCanMoveAllPubs,
 	userCanRunActionsAllPubs,
 	userCanViewAllStages,
-<<<<<<< HEAD
-} from "~/lib/authorization/capabilities";
-import { getStageAutomations } from "~/lib/db/queries";
-import { getPubsWithRelatedValues } from "~/lib/server";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { selectAllCommunityMemberships } from "~/lib/server/member";
-import { getPubFields } from "~/lib/server/pubFields";
-import { getStages } from "~/lib/server/stages";
-import { getOrderedStages } from "~/lib/stages";
-import { PubListSkeleton } from "../../pubs/PubList";
-=======
 } from "~/lib/authorization/capabilities"
-import { getStageActions } from "~/lib/db/queries"
+import { getStageAutomations } from "~/lib/db/queries"
 import { getPubsWithRelatedValues } from "~/lib/server"
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
 import { selectAllCommunityMemberships } from "~/lib/server/member"
 import { getPubFields } from "~/lib/server/pubFields"
-import { getStages } from "~/lib/server/stages"
+import { type CommunityStage, getStages } from "~/lib/server/stages"
 import { getOrderedStages } from "~/lib/stages"
 import { PubListSkeleton } from "../../pubs/PubList"
->>>>>>> main
 
 type Props = {
 	userId: UsersId
@@ -205,7 +184,6 @@ export async function StagePubs({
 		userCanMoveAllPubs(),
 		userCanViewAllStages(),
 	])
-
 
 	const totalPages =
 		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0

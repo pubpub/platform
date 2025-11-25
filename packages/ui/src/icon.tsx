@@ -1,6 +1,6 @@
-import type { LucideProps } from "lucide-react";
+import type { LucideProps } from "lucide-react"
 
-import React, { forwardRef } from "react";
+import React, { forwardRef } from "react"
 // biome-ignore format: don't format
 import {
 	Activity,
@@ -99,9 +99,9 @@ import {
 	XCircle,
 } from "lucide-react";
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-export type { LucideIcon } from "lucide-react";
+export type { LucideIcon } from "lucide-react"
 
 export const Form = forwardRef<SVGSVGElement, LucideProps>(
 	({ className, size = 16, ...props }, ref) => (
@@ -126,7 +126,7 @@ export const Form = forwardRef<SVGSVGElement, LucideProps>(
 			<path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" />
 		</svg>
 	)
-);
+)
 
 export const Stages = forwardRef<SVGSVGElement, LucideProps>(
 	({ className, size = 16, ...props }, ref) => (
@@ -175,7 +175,7 @@ export const Stages = forwardRef<SVGSVGElement, LucideProps>(
 			</defs>
 		</svg>
 	)
-);
+)
 
 export const Pub = forwardRef<SVGSVGElement, LucideProps>(
 	({ className, size = 16, ...props }, ref) => (
@@ -210,7 +210,7 @@ export const Pub = forwardRef<SVGSVGElement, LucideProps>(
 			</defs>
 		</svg>
 	)
-);
+)
 
 export const Integration = forwardRef<SVGSVGElement, LucideProps>(
 	({ className, size = 16, ...props }, ref) => (
@@ -250,7 +250,7 @@ export const Integration = forwardRef<SVGSVGElement, LucideProps>(
 			</defs>
 		</svg>
 	)
-);
+)
 
 // biome-ignore format: don't format
 export {

@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-import { Suspense } from "react";
-import { BookOpen } from "lucide-react";
-
-import type { ProcessedPub } from "contracts";
-import { AutomationEvent, type CommunitiesId, type UsersId } from "db/public";
-=======
 import type { ProcessedPub } from "contracts"
 import type { CommunitiesId, UsersId } from "db/public"
 import type { AutoReturnType } from "~/lib/types"
@@ -12,7 +5,7 @@ import type { AutoReturnType } from "~/lib/types"
 import { Suspense } from "react"
 import { BookOpen } from "lucide-react"
 
->>>>>>> main
+import { AutomationEvent } from "db/public"
 import {
 	Empty,
 	EmptyContent,
@@ -137,7 +130,11 @@ const PaginatedPubListInner = async (
 						communitySlug={props.communitySlug}
 						moveFrom={stageForPub?.moveConstraintSources}
 						moveTo={stageForPub?.moveConstraints}
-						manualAutomations={stageForPub?.automations?.filter(automation=>automation?.triggers.some(trigger=>trigger.event===AutomationEvent.manual))}
+						manualAutomations={stageForPub?.automations?.filter((automation) =>
+							automation?.triggers.some(
+								(trigger) => trigger.event === AutomationEvent.manual
+							)
+						)}
 						userId={props.userId}
 						canEditAllPubs={canEditAllPubs}
 						canArchiveAllPubs={canArchiveAllPubs}

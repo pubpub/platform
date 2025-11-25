@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-
-=======
->>>>>>> main
 import type {
 	Action,
 	ActionInstancesId,
@@ -11,20 +6,12 @@ import type {
 	CommunitiesId,
 	NewActionInstances,
 } from "db/public"
-import type { ActionRun } from "~/app/c/[communitySlug]/activity/actions/getActionRunsTableColumns"
 
-<<<<<<< HEAD
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-=======
-import { jsonObjectFrom } from "kysely/helpers/postgres"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
 import { db } from "~/kysely/database"
 import { autoCache } from "./cache/autoCache"
 import { autoRevalidate } from "./cache/autoRevalidate"
-import { pubType } from "./pub"
->>>>>>> main
 
 export const getActionInstance = (actionInstanceId: ActionInstancesId) =>
 	autoCache(db.selectFrom("action_instances").selectAll().where("id", "=", actionInstanceId))
@@ -145,12 +132,11 @@ export const getAutomationRuns = (communityId: CommunitiesId) => {
 						.select(["users.id", "users.firstName", "users.lastName"])
 				).as("user"),
 			])
-<<<<<<< HEAD
 			.orderBy("automation_runs.createdAt", "desc")
-	);
+	)
 
-	return actionRuns;
-};
+	return actionRuns
+}
 
 export const getAutomationRunById = (
 	communityId: CommunitiesId,
@@ -158,13 +144,5 @@ export const getAutomationRunById = (
 ) => {
 	return autoCache(
 		getAutomationRuns(communityId).qb.where("automation_runs.id", "=", automationRunId)
-	);
-};
-=======
-			.orderBy("action_runs.createdAt", "desc")
-			.$castTo<ActionRun>()
 	)
-
-	return actionRuns
 }
->>>>>>> main

@@ -173,7 +173,7 @@ export const FormPubSearchSelect = ({
 				)}
 
 				{isError && (
-					<div className="flex items-center justify-center py-8 text-sm text-destructive">
+					<div className="flex items-center justify-center py-8 text-destructive text-sm">
 						Error loading pubs
 					</div>
 				)}

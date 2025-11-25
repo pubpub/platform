@@ -1,9 +1,3 @@
-import { randomUUID } from "node:crypto";
-
-import type { ZodError } from "zod";
-
-import { sql } from "kysely";
-
 import type {
 	ActionInstancesId,
 	AutomationConditionBlocksId,
@@ -16,22 +10,26 @@ import type {
 	NewActionInstances,
 	NewAutomations,
 	NewAutomationTriggers,
-} from "db/public";
-import { expect } from "utils";
-
-import type { SequentialAutomationEvent } from "~/actions/types";
+} from "db/public"
+import type { ZodError } from "zod"
+import type { SequentialAutomationEvent } from "~/actions/types"
 import type {
 	ConditionBlockFormValue,
 	ConditionFormValue,
-} from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock";
-import { triggers } from "~/actions/_lib/triggers";
-import { isSequentialAutomationEvent } from "~/actions/types";
-import { db } from "~/kysely/database";
-import { getAutomation } from "../db/queries";
-import { findRanksBetween } from "../rank";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { maybeWithTrx } from "./maybeWithTrx";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
+} from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock"
+
+import { randomUUID } from "node:crypto"
+import { sql } from "kysely"
+
+import { expect } from "utils"
+
+import { triggers } from "~/actions/_lib/triggers"
+import { isSequentialAutomationEvent } from "~/actions/types"
+import { db } from "~/kysely/database"
+import { getAutomation } from "../db/queries"
+import { findRanksBetween } from "../rank"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { maybeWithTrx } from "./maybeWithTrx"
 
 export class AutomationError extends Error {
 	constructor(message: string) {
@@ -110,11 +108,11 @@ export class RegularAutomationAlreadyExistsError extends AutomationAlreadyExists
 }
 
 type AutomationUpsertProps = NewAutomations & {
-	id?: AutomationsId;
-	condition?: ConditionBlockFormValue;
-	actionInstances: Omit<NewActionInstances, "automationId">[];
-	triggers: Omit<NewAutomationTriggers, "automationId" | "id" | "createdAt" | "updatedAt">[];
-};
+	id?: AutomationsId
+	condition?: ConditionBlockFormValue
+	actionInstances: Omit<NewActionInstances, "automationId">[]
+	triggers: Omit<NewAutomationTriggers, "automationId" | "id" | "createdAt" | "updatedAt">[]
+}
 
 // type FlatItem = (Omit<ConditionBlockFormValue, 'items'> | ConditionItemFormValue )
 
@@ -125,50 +123,50 @@ type AutomationUpsertProps = NewAutomations & {
 
 type OutputItems = {
 	blocks: (Omit<ConditionBlockFormValue, "items"> & {
-		id: string;
-		parentId?: string;
-	})[];
+		id: string
+		parentId?: string
+	})[]
 	conditions: (ConditionFormValue & {
-		id: string;
-		parentId?: string;
-	})[];
-};
+		id: string
+		parentId?: string
+	})[]
+}
 
 const getFlatBlocksAndConditions = (
 	parentId: string,
 	items: ConditionBlockFormValue["items"],
 	accumulator: OutputItems
 ): OutputItems => {
-	const ranks = findRanksBetween({ numberOfRanks: items.length });
+	const ranks = findRanksBetween({ numberOfRanks: items.length })
 	for (const [index, item] of items.entries()) {
-		const rank = ranks[index];
+		const rank = ranks[index]
 		if (item.kind === "condition") {
 			accumulator.conditions.push({
 				...item,
 				id: randomUUID(),
 				parentId,
 				rank: item.rank || rank, // makes it easy to seed,
-			});
+			})
 
-			continue;
+			continue
 		}
 
-		const { id: _, items: blockItems, ...blockWithoutItems } = item;
-		const blockId = randomUUID();
+		const { id: _, items: blockItems, ...blockWithoutItems } = item
+		const blockId = randomUUID()
 		accumulator.blocks.push({
 			...blockWithoutItems,
 			rank: blockWithoutItems.rank || rank,
 			id: blockId,
 			parentId,
-		});
+		})
 
 		if (blockItems.length > 0) {
-			getFlatBlocksAndConditions(blockId, blockItems, accumulator);
+			getFlatBlocksAndConditions(blockId, blockItems, accumulator)
 		}
 	}
 
-	return accumulator;
-};
+	return accumulator
+}
 
 export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) => {
 	const res = await maybeWithTrx(trx, async (trx) => {
@@ -195,13 +193,13 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 					}))
 				)
 				.returningAll()
-		).executeTakeFirstOrThrow();
+		).executeTakeFirstOrThrow()
 
 		// delete existing triggers and recreate them
 		await trx
 			.deleteFrom("automation_triggers")
 			.where("automationId", "=", automation.id)
-			.execute();
+			.execute()
 
 		// insert new triggers
 		if (props.triggers.length > 0) {
@@ -216,63 +214,65 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 						sourceAutomationId: trigger.sourceAutomationId,
 					}))
 				)
-				.execute();
+				.execute()
 		}
 
 		// no man actionInstanceId's are important
 
 		// insert the action instances
-			await trx
-				.insertInto("action_instances")
-				.values(
-					props.actionInstances.map((ai) => ({
-						id: ai.id,
-						automationId: automation.id,
-						config: ai.config,
-						action: ai.action,
-					}))
-				).onConflict((oc) =>
-					oc.columns(["id"]).doUpdateSet((eb) => ({
-						config: eb.ref("excluded.config"),
-						action: eb.ref("excluded.action"),
-					}))
-				)
-				.execute();
-
-
-				const actionInstancesWithIds = props.actionInstances.map(ai=>ai.id).filter((aiId) => aiId != undefined);
-
-				if (actionInstancesWithIds.length > 0) {
-		// delete the existing action instances that are not in the new action instances
 		await trx
-			.deleteFrom("action_instances")
-			.where("automationId", "=", automation.id)
-			.where("id", "not in", actionInstancesWithIds)
-			.execute();
-				}
+			.insertInto("action_instances")
+			.values(
+				props.actionInstances.map((ai) => ({
+					id: ai.id,
+					automationId: automation.id,
+					config: ai.config,
+					action: ai.action,
+				}))
+			)
+			.onConflict((oc) =>
+				oc.columns(["id"]).doUpdateSet((eb) => ({
+					config: eb.ref("excluded.config"),
+					action: eb.ref("excluded.action"),
+				}))
+			)
+			.execute()
+
+		const actionInstancesWithIds = props.actionInstances
+			.map((ai) => ai.id)
+			.filter((aiId) => aiId !== undefined)
+
+		if (actionInstancesWithIds.length > 0) {
+			// delete the existing action instances that are not in the new action instances
+			await trx
+				.deleteFrom("action_instances")
+				.where("automationId", "=", automation.id)
+				.where("id", "not in", actionInstancesWithIds)
+				.execute()
+		}
 
 		// delete all existing conditions/blocks, which should remove all conditions as well
 		await trx
 			.deleteFrom("automation_condition_blocks")
 			.where("automationId", "=", automation.id)
-			.execute();
+			.execute()
 
 		if (!props.condition) {
-			return automation;
+			return automation
 		}
 
 		// create new conditions/blocks
-		const firstBlockId = randomUUID() as AutomationConditionBlocksId;
+		const firstBlockId = randomUUID() as AutomationConditionBlocksId
 		const firstBlock = {
 			...props.condition,
 			id: firstBlockId,
 			parentId: undefined,
-		};
+		}
 
 		const flatItems = getFlatBlocksAndConditions(firstBlockId, props.condition.items, {
 			blocks: [firstBlock],
 			conditions: [],
-		});
+		})
 
 		// create all block
 		await trx
@@ -287,7 +287,7 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 					automationId: automation.id,
 				}))
 			)
-			.execute();
+			.execute()
 
 		if (flatItems.conditions.length > 0) {
 			await trx
@@ -302,33 +302,33 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 							condition.parentId as AutomationConditionBlocksId,
 					}))
 				)
-				.execute();
+				.execute()
 		}
 
-		return automation;
-	});
+		return automation
+	})
 
-	return res;
-};
+	return res
+}
 
 export const removeAutomation = (automationId: AutomationsId) =>
 	autoRevalidate(db.deleteFrom("automations").where("id", "=", automationId))
 
 export const duplicateAutomation = async (automationId: AutomationsId) => {
-	const automation = await getAutomation(automationId);
+	const automation = await getAutomation(automationId)
 	if (!automation) {
-		throw new Error(`Automation ${automationId} not found`);
+		throw new Error(`Automation ${automationId} not found`)
 	}
-	const copyNumberMatch = automation.name.match(/\(Copy (\d+)/);
+	const copyNumberMatch = automation.name.match(/\(Copy (\d+)/)
 	const nextCopyNumber = copyNumberMatch
 		? Number.isNaN(parseInt(copyNumberMatch[1]))
 			? 1
 			: parseInt(copyNumberMatch[1]) + 1
-		: 0;
+		: 0
 	const copyName =
 		nextCopyNumber > 0
 			? `${automation.name} (Copy ${nextCopyNumber})`
-			: `${automation.name} (Copy)`;
+			: `${automation.name} (Copy)`
 
 	// const newAutomationId = randomUUID() as AutomationsId
 	const newAutomation = await upsertAutomationWithCycleCheck({
@@ -341,10 +341,10 @@ export const duplicateAutomation = async (automationId: AutomationsId) => {
 		icon: automation.icon,
 		description: automation.description,
 		stageId: automation.stageId,
-	});
+	})
 
-	return newAutomation;
-};
+	return newAutomation
+}
 
 /**
  * The maximum number of automations that can be in a sequence in a single stage.
@@ -435,7 +435,7 @@ async function wouldCreateCycle(
 
 	const pathResult = result[0]
 
-	const fullPath = [sourceAutomationId, toBeRunAutomationId, ...pathResult.path];
+	const fullPath = [sourceAutomationId, toBeRunAutomationId, ...pathResult.path]
 
 	// get the automations for the path
 	const automations = await db
@@ -448,9 +448,9 @@ async function wouldCreateCycle(
 		const automation = expect(
 			automations.find((a) => a.id === id),
 			`Automation ${id} not found`
-		);
-		return automation;
-	});
+		)
+		return automation
+	})
 
 	return {
 		hasCycle: pathResult.isCycle,
@@ -458,35 +458,35 @@ async function wouldCreateCycle(
 		path: filledInPath,
 	} as
 		| {
-				hasCycle: true;
-				exceedsMaxDepth: false;
-				path: Automations[];
+				hasCycle: true
+				exceedsMaxDepth: false
+				path: Automations[]
 		  }
 		| {
-				hasCycle: false;
-				exceedsMaxDepth: true;
-				path: Automations[];
-		  };
+				hasCycle: false
+				exceedsMaxDepth: true
+				path: Automations[]
+		  }
 }
 
 export async function upsertAutomationWithCycleCheck(
 	data: AutomationUpsertProps & {
-		id?: AutomationsId;
+		id?: AutomationsId
 	},
 	maxStackDepth = MAX_STACK_DEPTH
 ) {
 	// validate trigger configs
 	for (const trigger of data.triggers) {
-		const additionalConfigSchema = triggers[trigger.event].config;
+		const additionalConfigSchema = triggers[trigger.event].config
 		if (additionalConfigSchema && trigger.config) {
 			try {
-				additionalConfigSchema.parse(trigger.config);
+				additionalConfigSchema.parse(trigger.config)
 			} catch (e) {
 				throw new AutomationConfigError(
 					trigger.event,
 					trigger.config as Record<string, unknown>,
 					e
-				);
+				)
 			}
 		}
 	}
@@ -494,28 +494,28 @@ export async function upsertAutomationWithCycleCheck(
 	// check for cycles if any trigger is a chaining event with a source automation
 	const chainingTriggers = data.triggers.filter(
 		(t) => isSequentialAutomationEvent(t.event) && t.sourceAutomationId
-	);
+	)
 
 	if (chainingTriggers.length > 0 && data.id) {
 		for (const trigger of chainingTriggers) {
-			if (!trigger.sourceAutomationId) continue;
+			if (!trigger.sourceAutomationId) continue
 
 			const result = await wouldCreateCycle(
 				data.id,
 				trigger.sourceAutomationId,
 				maxStackDepth
-			);
+			)
 
 			if (result.hasCycle) {
-				throw new AutomationCycleError(result.path);
+				throw new AutomationCycleError(result.path)
 			}
 
 			if ("exceedsMaxDepth" in result && result.exceedsMaxDepth) {
-				throw new AutomationMaxDepthError(result.path);
+				throw new AutomationMaxDepthError(result.path)
 			}
 		}
 	}
 
-	const res = await upsertAutomation(data);
-	return res;
+	const res = await upsertAutomation(data)
+	return res
 }

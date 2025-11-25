@@ -2,12 +2,11 @@ import { initContract } from "@ts-rest/core"
 import { z } from "zod"
 
 import {
-	actionRunsIdSchema,
 	automationEventSchema,
 	automationRunsIdSchema,
 	automationsIdSchema,
 	pubsIdSchema,
-} from "db/public";
+} from "db/public"
 
 const contract = initContract()
 

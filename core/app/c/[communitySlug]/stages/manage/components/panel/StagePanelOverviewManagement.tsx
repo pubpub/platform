@@ -19,7 +19,7 @@ export const StagePanelOverviewManagement = (props: Props) => {
 
 	return (
 		<>
-			<h4 className="mb-2 text-base font-medium">Stage Management</h4>
+			<h4 className="mb-2 font-medium text-base">Stage Management</h4>
 			<div className="flex gap-2">
 				<Button variant="secondary" asChild>
 					<Link href={`/c/${props.communitySlug}/stages/${props.stageId}`}>

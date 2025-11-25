@@ -1,19 +1,10 @@
-<<<<<<< HEAD
-import assert from "node:assert";
-=======
 import type { StagesId, UsersId } from "db/public"
->>>>>>> main
 
 import { Suspense } from "react"
 import assert from "node:assert"
 
-<<<<<<< HEAD
-import type { StagesId, UsersId } from "db/public";
-import { AutomationEvent } from "db/public";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "ui/card";
-=======
-import { Card, CardContent } from "ui/card"
->>>>>>> main
+import { AutomationEvent } from "db/public"
+import { Card, CardAction, CardContent, CardTitle } from "ui/card"
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
 import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
@@ -24,18 +15,11 @@ import {
 	userCanMoveAllPubs,
 	userCanRunActionsAllPubs,
 	userCanViewAllStages,
-<<<<<<< HEAD
-} from "~/lib/authorization/capabilities";
-import { getStage, getStageAutomations } from "~/lib/db/queries";
-import { getPubsWithRelatedValues } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { StagePanelCardHeader } from "../editor/StagePanelCard";
-=======
 } from "~/lib/authorization/capabilities"
-import { getStage } from "~/lib/db/queries"
+import { getStage, getStageAutomations } from "~/lib/db/queries"
 import { getPubsWithRelatedValues } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
->>>>>>> main
+import { StagePanelCardHeader } from "../editor/StagePanelCard"
 
 type PropsInner = {
 	stageId: StagesId
@@ -85,19 +69,13 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 
 	return (
 		<Card>
-<<<<<<< HEAD
 			<StagePanelCardHeader>
 				<CardTitle>Pubs </CardTitle>
 				<CardAction>
-=======
-			<CardContent className="space-y-2 p-4">
-				<div className="flex flex-wrap items-center justify-between">
-					<h4 className="mb-2 font-semibold text-base">Pubs</h4>
->>>>>>> main
 					<Suspense fallback={<SkeletonCard />}>
 						<CreatePubButton
 							stageId={props.stageId}
-							className="m-0 h-6 border-none bg-transparent p-0 text-xs text-neutral-600 shadow-none hover:bg-transparent hover:text-neutral-900"
+							className="m-0 h-6 border-none bg-transparent p-0 text-neutral-600 text-xs shadow-none hover:bg-transparent hover:text-neutral-900"
 						/>
 					</Suspense>
 				</CardAction>

@@ -1,33 +1,41 @@
 "use client"
 
-import type { ParserBuilder } from "nuqs";
+import type {
+	Action,
+	AutomationsId,
+	Communities,
+	CommunitiesId,
+	ConditionEvaluationTiming,
+	StagesId,
+} from "db/public"
+import type { FullAutomation } from "db/types"
+import type { ParserBuilder } from "nuqs"
 import type {
 	ControllerFieldState,
 	ControllerRenderProps,
 	FieldValues,
 	UseFormReturn,
-} from "react-hook-form";
-import type { ZodTypeDef } from "zod";
+} from "react-hook-form"
+import type { IconConfig } from "ui/dynamic-icon"
+import type { ZodTypeDef } from "zod"
+import type { ConditionBlockFormValue } from "./ConditionBlock"
 
-import { memo, useCallback, useEffect, useId, useMemo, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronRight, X } from "lucide-react";
-import { parseAsString, useQueryState } from "nuqs";
-import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
+import { memo, useCallback, useEffect, useId, useMemo, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { ChevronRight, X } from "lucide-react"
+import { parseAsString, useQueryState } from "nuqs"
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
+import { z } from "zod"
 
-import type { AutomationsId, Communities, CommunitiesId, StagesId } from "db/public";
-import type { Action, ConditionEvaluationTiming } from "db/public";
-import type { IconConfig } from "ui/dynamic-icon";
 import {
 	AutomationConditionBlockType,
 	AutomationConditionType,
 	AutomationEvent,
 	automationsIdSchema,
 	conditionEvaluationTimingSchema,
-} from "db/public";
-import { Button } from "ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
+} from "db/public"
+import { Button } from "ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
 import {
 	Dialog,
 	DialogContent,
@@ -35,44 +43,42 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "ui/dialog";
-import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field";
-import { Plus } from "ui/icon";
-import { Input } from "ui/input";
-import { Item, ItemContent, ItemHeader } from "ui/item";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { FormSubmitButton } from "ui/submit-button";
-import { cn } from "utils";
+} from "ui/dialog"
+import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field"
+import { Plus } from "ui/icon"
+import { Input } from "ui/input"
+import { Item, ItemContent, ItemHeader } from "ui/item"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { FormSubmitButton } from "ui/submit-button"
+import { cn } from "utils"
 
-import type { ConditionBlockFormValue } from "./ConditionBlock";
-import type { FullAutomation } from "db/types";
-import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
-import { ActionFormContext } from "~/actions/_lib/ActionForm";
+import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder"
+import { ActionFormContext } from "~/actions/_lib/ActionForm"
 import {
 	getTriggerByName,
 	humanReadableEventBase,
 	isTriggerWithConfig,
 	triggers,
-} from "~/actions/_lib/triggers";
-import { getTriggerConfigForm } from "~/actions/_lib/triggers/forms";
-import { actions } from "~/actions/api";
-import { getActionFormComponent } from "~/actions/forms";
-import { isSequentialAutomationEvent } from "~/actions/types";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { useUserOrThrow } from "~/app/components/providers/UserProvider";
-import { entries } from "~/lib/mapping";
-import { findRanksBetween } from "~/lib/rank";
-import { isClientException, useServerAction } from "~/lib/serverActions";
-import { addOrUpdateAutomation } from "../../../actions";
-import { ConditionBlock } from "./ConditionBlock";
-import { IconPicker } from "./IconPicker";
-import { StagePanelActionCreator } from "./StagePanelActionCreator";
+} from "~/actions/_lib/triggers"
+import { getTriggerConfigForm } from "~/actions/_lib/triggers/forms"
+import { actions } from "~/actions/api"
+import { getActionFormComponent } from "~/actions/forms"
+import { isSequentialAutomationEvent } from "~/actions/types"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { useUserOrThrow } from "~/app/components/providers/UserProvider"
+import { entries } from "~/lib/mapping"
+import { findRanksBetween } from "~/lib/rank"
+import { isClientException, useServerAction } from "~/lib/serverActions"
+import { addOrUpdateAutomation } from "../../../actions"
+import { ConditionBlock } from "./ConditionBlock"
+import { IconPicker } from "./IconPicker"
+import { StagePanelActionCreator } from "./StagePanelActionCreator"
 
 type Props = {
-	stageId: StagesId;
-	communityId: CommunitiesId;
-	automations: FullAutomation[];
-};
+	stageId: StagesId
+	communityId: CommunitiesId
+	automations: FullAutomation[]
+}
 
 const AutomationSelector = ({
 	fieldProps,
@@ -86,13 +92,13 @@ const AutomationSelector = ({
 	fieldProps: ControllerRenderProps<
 		CreateAutomationsSchema,
 		`triggers.${number}.sourceAutomationId`
-	>;
-	fieldState: ControllerFieldState;
-	label: string;
-	placeholder: string;
-	disabledAutomationId?: AutomationsId;
-	dataTestIdPrefix?: string;
-	automations: { id: AutomationsId; name: string }[];
+	>
+	fieldState: ControllerFieldState
+	label: string
+	placeholder: string
+	disabledAutomationId?: AutomationsId
+	dataTestIdPrefix?: string
+	automations: { id: AutomationsId; name: string }[]
 }) => {
 	return (
 		<Field data-invalid={fieldState.invalid}>
@@ -107,7 +113,7 @@ const AutomationSelector = ({
 				</SelectTrigger>
 				<SelectContent>
 					{automations.map((automation) => {
-						const isDisabled = disabledAutomationId === automation.id;
+						const isDisabled = disabledAutomationId === automation.id
 						return (
 							<SelectItem
 								key={automation.id}
@@ -133,8 +139,8 @@ const AutomationSelector = ({
 				<FieldError className="text-xs">{fieldState.error.message}</FieldError>
 			)}
 		</Field>
-	);
-};
+	)
+}
 
 const conditionBlockSchema: z.ZodType<ConditionBlockFormValue> = z.lazy(() =>
 	z.object({
@@ -157,47 +163,47 @@ const conditionBlockSchema: z.ZodType<ConditionBlockFormValue> = z.lazy(() =>
 			)
 			.min(1),
 	})
-);
+)
 
 export type CreateAutomationsSchema = {
-	name: string;
-	description?: string;
-	icon?: IconConfig;
-	condition?: ConditionBlockFormValue;
+	name: string
+	description?: string
+	icon?: IconConfig
+	condition?: ConditionBlockFormValue
 	triggers: {
-		_id: string;
-		event: AutomationEvent;
-		config?: Record<string, unknown>;
-		sourceAutomationId?: AutomationsId | undefined;
-	}[];
+		_id: string
+		event: AutomationEvent
+		config?: Record<string, unknown>
+		sourceAutomationId?: AutomationsId | undefined
+	}[]
 	action: {
-		action: Action;
-		config: Record<string, unknown>;
-	};
-	conditionEvaluationTiming: ConditionEvaluationTiming;
-};
+		action: Action
+		config: Record<string, unknown>
+	}
+	conditionEvaluationTiming: ConditionEvaluationTiming
+}
 
 export const StagePanelAutomationForm = (props: Props) => {
 	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] = useQueryState(
 		"automation-id",
 		parseAsString as unknown as ParserBuilder<AutomationsId>
-	);
+	)
 
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState(false)
 
-	const open = isOpen || !!currentlyEditingAutomationId;
+	const open = isOpen || !!currentlyEditingAutomationId
 
-	const isExistingAutomation = !!currentlyEditingAutomationId;
+	const isExistingAutomation = !!currentlyEditingAutomationId
 
 	const handleOpenChange = useCallback(
 		(newOpen: boolean) => {
 			if (!newOpen) {
-				setCurrentlyEditingAutomationId(null);
+				setCurrentlyEditingAutomationId(null)
 			}
-			setIsOpen(newOpen);
+			setIsOpen(newOpen)
 		},
 		[setCurrentlyEditingAutomationId]
-	);
+	)
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
@@ -235,24 +241,24 @@ export const StagePanelAutomationForm = (props: Props) => {
 				</div>
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}
 
 type ConfigCardProps = {
-	icon: typeof ChevronRight;
-	title: React.ReactNode;
-	onRemove: () => void;
-	children?: React.ReactNode;
-	showCollapseToggle?: boolean;
-	isError?: boolean;
-	defaultCollapsed?: boolean;
-};
+	icon: typeof ChevronRight
+	title: React.ReactNode
+	onRemove: () => void
+	children?: React.ReactNode
+	showCollapseToggle?: boolean
+	isError?: boolean
+	defaultCollapsed?: boolean
+}
 
 const ConfigCard = memo(
 	function ConfigCard(props: ConfigCardProps) {
-		const [isCollapsed, setIsCollapsed] = useState(props.defaultCollapsed ?? false);
-		const hasContent = !!props.children;
-		const Icon = props.icon;
+		const [isCollapsed, setIsCollapsed] = useState(props.defaultCollapsed ?? false)
+		const hasContent = !!props.children
+		const Icon = props.icon
 
 		return (
 			<Collapsible
@@ -290,7 +296,7 @@ const ConfigCard = memo(
 									/>
 									<span
 										className={cn(
-											"flex-1 text-left text-sm font-medium text-neutral-900",
+											"flex-1 text-left font-medium text-neutral-900 text-sm",
 											props.isError && "text-destructive"
 										)}
 									>
@@ -308,7 +314,7 @@ const ConfigCard = memo(
 								/>
 								<span
 									className={cn(
-										"flex-1 text-sm font-medium text-neutral-900",
+										"flex-1 font-medium text-neutral-900 text-sm",
 										props.isError && "text-destructive"
 									)}
 								>
@@ -337,7 +343,7 @@ const ConfigCard = memo(
 					</CollapsibleContent>
 				</Item>
 			</Collapsible>
-		);
+		)
 	},
 	(prevProps, nextProps) => {
 		return (
@@ -347,16 +353,16 @@ const ConfigCard = memo(
 			prevProps.showCollapseToggle === nextProps.showCollapseToggle &&
 			prevProps.defaultCollapsed === nextProps.defaultCollapsed &&
 			prevProps.children === nextProps.children
-		);
+		)
 	}
-);
+)
 function Form(
 	props: Props & {
-		currentlyEditingAutomationId: AutomationsId | null;
-		setCurrentlyEditingAutomationId: (id: AutomationsId | null) => void;
+		currentlyEditingAutomationId: AutomationsId | null
+		setCurrentlyEditingAutomationId: (id: AutomationsId | null) => void
 	}
 ) {
-	const { currentlyEditingAutomationId, setCurrentlyEditingAutomationId } = props;
+	const { currentlyEditingAutomationId, setCurrentlyEditingAutomationId } = props
 
 	const schema = useMemo(
 		() =>
@@ -388,20 +394,20 @@ function Form(
 									})
 								) as unknown as [
 									z.ZodObject<{
-										_id: z.ZodString;
-										event: z.ZodLiteral<AutomationEvent>;
-										config: z.ZodObject<any>;
+										_id: z.ZodString
+										event: z.ZodLiteral<AutomationEvent>
+										config: z.ZodObject<any>
 										sourceAutomationId: z.ZodOptional<
 											z.ZodType<AutomationsId, ZodTypeDef, AutomationsId>
-										>;
+										>
 									}>,
 									...z.ZodObject<{
-										_id: z.ZodString;
-										event: z.ZodLiteral<AutomationEvent>;
-										config: z.ZodObject<any>;
+										_id: z.ZodString
+										event: z.ZodLiteral<AutomationEvent>
+										config: z.ZodObject<any>
 										sourceAutomationId: z.ZodOptional<
 											z.ZodType<AutomationsId, ZodTypeDef, AutomationsId>
-										>;
+										>
 									}>[],
 								]
 							)
@@ -421,8 +427,8 @@ function Form(
 						) as [
 							z.ZodObject<{ action: z.ZodLiteral<Action>; config: z.ZodObject<any> }>,
 							...z.ZodObject<{
-								action: z.ZodLiteral<Action>;
-								config: z.ZodObject<any>;
+								action: z.ZodLiteral<Action>
+								config: z.ZodObject<any>
 							}>[],
 						],
 						{
@@ -432,22 +438,22 @@ function Form(
 									issue.code === z.ZodIssueCode.invalid_union_discriminator ||
 									!issue.message
 								) {
-									return { message: "Action is required" };
+									return { message: "Action is required" }
 								}
 
-								return { message: issue.message };
+								return { message: issue.message }
 							},
 						}
 					),
 				})
 				.superRefine((data, ctx) => {
 					if (!data.triggers?.length) {
-						return;
+						return
 					}
 
 					for (const [idx, trigger] of data.triggers.entries()) {
 						if (!isSequentialAutomationEvent(trigger.event)) {
-							continue;
+							continue
 						}
 						if (!trigger.sourceAutomationId) {
 							ctx.addIssue({
@@ -455,8 +461,8 @@ function Form(
 								code: z.ZodIssueCode.custom,
 								message:
 									"Source automation is required for automation chaining events",
-							});
-							continue;
+							})
+							continue
 						}
 
 						if (trigger.sourceAutomationId === currentlyEditingAutomationId) {
@@ -464,18 +470,18 @@ function Form(
 								path: ["triggers", idx, "sourceAutomationId"],
 								code: z.ZodIssueCode.custom,
 								message: "Automations may not trigger themselves in a loop",
-							});
+							})
 						}
 					}
 				}),
 		[currentlyEditingAutomationId]
-	);
+	)
 
-	const runUpsertAutomation = useServerAction(addOrUpdateAutomation);
+	const runUpsertAutomation = useServerAction(addOrUpdateAutomation)
 
 	const currentAutomation = props.automations.find(
 		(automation) => automation.id === currentlyEditingAutomationId
-	);
+	)
 
 	const defaultValues = useMemo(() => {
 		if (!currentAutomation) {
@@ -490,10 +496,10 @@ function Form(
 				triggers: [],
 				condition: undefined,
 				conditionEvaluationTiming: undefined,
-			};
+			}
 		}
 
-		const actionInstance = currentAutomation.actionInstances[0];
+		const actionInstance = currentAutomation.actionInstances[0]
 
 		return {
 			name: currentAutomation.name,
@@ -511,19 +517,19 @@ function Form(
 			})),
 			conditionEvaluationTiming: currentAutomation.conditionEvaluationTiming,
 			condition: currentAutomation.condition,
-		} as CreateAutomationsSchema;
-	}, [currentAutomation]);
+		} as CreateAutomationsSchema
+	}, [currentAutomation])
 
 	const form = useForm<CreateAutomationsSchema>({
 		resolver: zodResolver(schema),
 		defaultValues,
-	});
+	})
 
-	const { setError } = form;
+	const { setError } = form
 
-	const { user } = useUserOrThrow();
+	const { user } = useUserOrThrow()
 
-	const community = useCommunity();
+	const _community = useCommunity()
 
 	const onSubmit = useCallback(
 		async (data: CreateAutomationsSchema) => {
@@ -531,13 +537,13 @@ function Form(
 				stageId: props.stageId,
 				data,
 				automationId: currentlyEditingAutomationId as AutomationsId | undefined,
-			});
+			})
 			if (!isClientException(result)) {
-				setCurrentlyEditingAutomationId(null);
-				return;
+				setCurrentlyEditingAutomationId(null)
+				return
 			}
 
-			setError("root", { message: result.error });
+			setError("root", { message: result.error })
 		},
 		[
 			currentlyEditingAutomationId,
@@ -546,27 +552,27 @@ function Form(
 			setCurrentlyEditingAutomationId,
 			setError,
 		]
-	);
+	)
 
-	const formId = useId();
+	const formId = useId()
 
-	const selectedAction = useWatch({ control: form.control, name: "action" });
+	const selectedAction = useWatch({ control: form.control, name: "action" })
 
 	// track if we've already loaded the initial action to avoid clearing config on mount
-	const [initialActionLoaded, setInitialActionLoaded] = useState(false);
+	const [initialActionLoaded, setInitialActionLoaded] = useState(false)
 
 	useEffect(() => {
 		if (selectedAction?.action) {
 			if (!initialActionLoaded) {
-				setInitialActionLoaded(true);
-				return;
+				setInitialActionLoaded(true)
+				return
 			}
-			form.setValue("action.config", {});
+			form.setValue("action.config", {})
 		}
-	}, [selectedAction?.action, form, initialActionLoaded]);
+	}, [selectedAction?.action, form, initialActionLoaded])
 
-	const condition = form.watch("condition");
-	const _iconConfig = form.watch("icon");
+	const condition = form.watch("condition")
+	const _iconConfig = form.watch("icon")
 
 	const {
 		fields: selectedTriggers,
@@ -576,9 +582,9 @@ function Form(
 	} = useFieldArray<CreateAutomationsSchema, "triggers">({
 		control: form.control,
 		name: "triggers",
-	});
+	})
 
-	const errors = form.formState.errors;
+	const errors = form.formState.errors
 
 	return (
 		<form id={formId} onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-6">
@@ -597,7 +603,7 @@ function Form(
 									</FieldLabel>
 									<IconPicker value={field.value} onChange={field.onChange} />
 								</Field>
-							);
+							)
 						}}
 					/>
 					<Controller
@@ -609,7 +615,7 @@ function Form(
 									<FieldLabel>Name</FieldLabel>
 									<Input placeholder="Automation name" {...field} />
 								</Field>
-							);
+							)
 						}}
 					/>
 				</div>
@@ -652,13 +658,13 @@ function Form(
 										onClick={() => {
 											const ranks = findRanksBetween({
 												numberOfRanks: 1,
-											});
+											})
 											field.onChange({
 												type: AutomationConditionBlockType.OR,
 												kind: "block",
 												rank: ranks[0],
 												items: [],
-											});
+											})
 										}}
 									>
 										<Plus size={14} />
@@ -669,9 +675,9 @@ function Form(
 										type="button"
 										variant="ghost"
 										size="sm"
-										className="h-7 text-xs text-neutral-500"
+										className="h-7 text-neutral-500 text-xs"
 										onClick={() => {
-											field.onChange(undefined);
+											field.onChange(undefined)
 										}}
 									>
 										Remove all conditions
@@ -721,7 +727,7 @@ function Form(
 												form.setValue("action", {
 													action: actionName,
 													config: {},
-												});
+												})
 											}}
 											isSuperAdmin={user?.isSuperAdmin}
 										>
@@ -746,7 +752,7 @@ function Form(
 									</FieldError>
 								)}
 							</Field>
-						);
+						)
 					}}
 				/>
 			)}
@@ -764,37 +770,37 @@ function Form(
 				errorText="Error saving automation"
 			/>
 		</form>
-	);
+	)
 }
 
 const TriggerConfigCard = memo(
 	function TriggerConfigCard(props: {
-		trigger: CreateAutomationsSchema["triggers"][number];
-		form: UseFormReturn<CreateAutomationsSchema>;
-		idx: number;
-		community: Communities;
-		removeTrigger: () => void;
-		currentlyEditingAutomationId: AutomationsId | undefined;
-		stageAutomations: { id: AutomationsId; name: string }[];
-		isEditing: boolean;
+		trigger: CreateAutomationsSchema["triggers"][number]
+		form: UseFormReturn<CreateAutomationsSchema>
+		idx: number
+		community: Communities
+		removeTrigger: () => void
+		currentlyEditingAutomationId: AutomationsId | undefined
+		stageAutomations: { id: AutomationsId; name: string }[]
+		isEditing: boolean
 	}) {
-		const trigger = getTriggerByName(props.trigger.event);
+		const trigger = getTriggerByName(props.trigger.event)
 
 		const TriggerForm = useMemo(() => {
 			if (!isTriggerWithConfig(props.trigger.event)) {
-				return null;
+				return null
 			}
 
-			return getTriggerConfigForm(props.trigger.event);
-		}, [props.trigger.event]);
+			return getTriggerConfigForm(props.trigger.event)
+		}, [props.trigger.event])
 
 		if (!trigger) {
-			return null;
+			return null
 		}
 
 		const hasConfig = Boolean(
 			isSequentialAutomationEvent(props.trigger.event) || (trigger?.config && TriggerForm)
-		);
+		)
 
 		if (!hasConfig) {
 			return (
@@ -805,7 +811,7 @@ const TriggerConfigCard = memo(
 					showCollapseToggle={false}
 					defaultCollapsed={true}
 				/>
-			);
+			)
 		}
 
 		return (
@@ -835,7 +841,7 @@ const TriggerConfigCard = memo(
 				)}
 				{trigger.config && TriggerForm && <TriggerForm form={props.form} idx={props.idx} />}
 			</ConfigCard>
-		);
+		)
 	},
 	(prevProps, nextProps) => {
 		return (
@@ -844,22 +850,22 @@ const TriggerConfigCard = memo(
 			prevProps.idx === nextProps.idx &&
 			prevProps.isEditing === nextProps.isEditing &&
 			prevProps.currentlyEditingAutomationId === nextProps.currentlyEditingAutomationId
-		);
+		)
 	}
-);
+)
 
 function ActionConfigCardWrapper(props: {
-	action: Action;
-	form: UseFormReturn<CreateAutomationsSchema>;
-	onChange: (value: { action: Action | undefined; config: Record<string, unknown> }) => void;
-	isEditing: boolean;
+	action: Action
+	form: UseFormReturn<CreateAutomationsSchema>
+	onChange: (value: { action: Action | undefined; config: Record<string, unknown> }) => void
+	isEditing: boolean
 }) {
 	const removeAction = useCallback(() => {
 		props.onChange({
 			action: undefined,
 			config: {},
-		});
-	}, [props.onChange]);
+		})
+	}, [props.onChange])
 
 	return (
 		<ActionConfigCard
@@ -868,23 +874,23 @@ function ActionConfigCardWrapper(props: {
 			removeAction={removeAction}
 			isEditing={props.isEditing}
 		/>
-	);
+	)
 }
 
 const ActionConfigCard = memo(
 	function ActionConfigCard(props: {
-		action: Action;
-		form: UseFormReturn<CreateAutomationsSchema>;
-		removeAction: () => void;
-		isEditing: boolean;
+		action: Action
+		form: UseFormReturn<CreateAutomationsSchema>
+		removeAction: () => void
+		isEditing: boolean
 	}) {
-		const actionDef = actions[props.action];
+		const actionDef = actions[props.action]
 		const ActionFormComponent = useMemo(() => {
-			return getActionFormComponent(props.action);
-		}, [props.action]);
+			return getActionFormComponent(props.action)
+		}, [props.action])
 
 		if (!ActionFormComponent) {
-			return null;
+			return null
 		}
 
 		return (
@@ -921,31 +927,31 @@ const ActionConfigCard = memo(
 								</FieldError>
 							)}
 						</ConfigCard>
-					);
+					)
 				}}
 			/>
-		);
+		)
 	},
 	(prevProps, nextProps) => {
-		return prevProps.action === nextProps.action && prevProps.isEditing === nextProps.isEditing;
+		return prevProps.action === nextProps.action && prevProps.isEditing === nextProps.isEditing
 	}
-);
+)
 
 export const TriggerField = (props: {
-	field: ControllerRenderProps<CreateAutomationsSchema, "triggers">;
-	fieldState: ControllerFieldState;
-	automations: { id: AutomationsId; name: string }[];
-	currentlyEditingAutomationId: AutomationsId | null;
-	form: UseFormReturn<CreateAutomationsSchema>;
-	appendTrigger: (trigger: CreateAutomationsSchema["triggers"][number]) => void;
+	field: ControllerRenderProps<CreateAutomationsSchema, "triggers">
+	fieldState: ControllerFieldState
+	automations: { id: AutomationsId; name: string }[]
+	currentlyEditingAutomationId: AutomationsId | null
+	form: UseFormReturn<CreateAutomationsSchema>
+	appendTrigger: (trigger: CreateAutomationsSchema["triggers"][number]) => void
 }) => {
-	const community = useCommunity();
+	const community = useCommunity()
 
 	const selectTriggers = useMemo(() => {
 		return Object.values(AutomationEvent)
 			.filter((event) => !props.field.value?.some((t) => t.event === event))
 			.map((event) => {
-				const automation = getTriggerByName(event);
+				const automation = getTriggerByName(event)
 
 				return (
 					<SelectItem
@@ -957,9 +963,9 @@ export const TriggerField = (props: {
 						<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
 						{humanReadableEventBase(event, community)}
 					</SelectItem>
-				);
-			});
-	}, [props.field.value, community]);
+				)
+			})
+	}, [props.field.value, community])
 
 	return (
 		<Field data-invalid={props.fieldState.invalid}>
@@ -987,13 +993,13 @@ export const TriggerField = (props: {
 													props.field.value.filter(
 														(t) => t._id !== field.value._id
 													)
-												);
+												)
 											}}
 											isEditing={!!props.currentlyEditingAutomationId}
 										/>
 									)}
 								/>
-							);
+							)
 						})
 					: null}
 				<Select
@@ -1003,7 +1009,7 @@ export const TriggerField = (props: {
 							event: value as AutomationEvent,
 							config: {},
 							sourceAutomationId: undefined,
-						});
+						})
 					}}
 				>
 					<SelectTrigger
@@ -1022,5 +1028,5 @@ export const TriggerField = (props: {
 				<FieldError className="text-xs">{props.fieldState.error.message}</FieldError>
 			)}
 		</Field>
-	);
-};
+	)
+}

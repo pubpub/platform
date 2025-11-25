@@ -1,21 +1,16 @@
 "use client"
 
-import type { Static } from "@sinclair/typebox";
-
-import { useId } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { ArchiveRestore, GripVertical, Trash, TypeOutline } from "lucide-react";
+import type { Static } from "@sinclair/typebox"
+import type { pubTypeBuilderSchema } from "./TypeBuilder"
 
 import { useId } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { ArchiveRestore, GripVertical, Trash, TypeOutline } from "lucide-react"
 
-import type { pubTypeBuilderSchema } from "./TypeBuilder";
-import { useBuilder } from "~/app/components/FormBuilder/BuilderContext";
-import { FieldIcon } from "~/app/components/FormBuilder/FieldIcon";
-import { pubFieldCanBeTitle } from "../../utils";
+import { useBuilder } from "~/app/components/FormBuilder/BuilderContext"
+import { FieldIcon } from "~/app/components/FormBuilder/FieldIcon"
+import { pubFieldCanBeTitle } from "../../utils"
 
 export type FieldThingProps = {
 	field: Static<typeof pubTypeBuilderSchema>["fields"][number]

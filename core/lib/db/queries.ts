@@ -1,27 +1,16 @@
-import { cache } from "react";
-import { sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import type { AutomationEvent, AutomationsId, StagesId, UsersId } from "db/public"
+import type { ConditionBlock, FullAutomation } from "db/types"
+import type { IconConfig } from "ui/dynamic-icon"
 
-import type {
-	ActionInstances,
-	AutomationConditionBlocks,
-	AutomationConditions,
-	AutomationEvent,
-	Automations,
-	AutomationsId,
-	AutomationTriggers,
-	StagesId,
-	UsersId,
-} from "db/public";
-import type { ConditionBlock, FullAutomation } from "db/types";
-import type { IconConfig } from "ui/dynamic-icon";
+import { cache } from "react"
+import { sql } from "kysely"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
-import type { ActionInstanceWithConfigDefaults } from "../types";
-import { db } from "~/kysely/database";
-import { pubType, pubValuesByRef } from "../server";
-import { autoCache } from "../server/cache/autoCache";
-import { actionConfigDefaultsSelect, viewableStagesCte } from "../server/stages";
-import { SAFE_USER_SELECT } from "../server/user";
+import { db } from "~/kysely/database"
+import { pubType, pubValuesByRef } from "../server"
+import { autoCache } from "../server/cache/autoCache"
+import { actionConfigDefaultsSelect, viewableStagesCte } from "../server/stages"
+import { SAFE_USER_SELECT } from "../server/user"
 
 export const getStage = cache((stageId: StagesId, userId: UsersId) => {
 	return autoCache(
@@ -147,13 +136,13 @@ export type GetEventAutomationOptions =
 			event:
 				| AutomationEvent.pubInStageForDuration
 				| AutomationEvent.webhook
-				| AutomationEvent.manual;
-			sourceAutomationId?: never;
+				| AutomationEvent.manual
+			sourceAutomationId?: never
 	  }
 	| {
-			event: AutomationEvent.automationFailed | AutomationEvent.automationSucceeded;
-			sourceAutomationId: AutomationsId;
-	  };
+			event: AutomationEvent.automationFailed | AutomationEvent.automationSucceeded
+			sourceAutomationId: AutomationsId
+	  }
 
 export const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
 	return db
@@ -208,9 +197,9 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 						// this function is what recursively builds the condition blocks and conditions
 						// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
 						eb
-							.fn<
-								ConditionBlock[]
-							>("get_condition_block_items", ["automation_condition_blocks.id"])
+							.fn<ConditionBlock[]>("get_condition_block_items", [
+								"automation_condition_blocks.id",
+							])
 							.as("items")
 					)
 			).as("condition"),
@@ -228,21 +217,20 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 								"=",
 								options!.sourceAutomationId!
 							)
-<<<<<<< HEAD
 						)
 				)
-			);
+			)
 		})
-		.$narrowType<{ icon: IconConfig | null }>();
-});
+		.$narrowType<{ icon: IconConfig | null }>()
+})
 
 export const getStageAutomations = cache(
 	(stageId: StagesId, options?: GetEventAutomationOptions): Promise<FullAutomation[]> => {
 		return autoCache(
 			getAutomationBase(options).where("automations.stageId", "=", stageId)
-		).execute();
+		).execute()
 	}
-);
+)
 
 export const getAutomation = cache(
 	(
@@ -251,38 +239,6 @@ export const getAutomation = cache(
 	): Promise<FullAutomation | undefined> => {
 		return autoCache(
 			getAutomationBase(options).where("automations.id", "=", automationId)
-		).executeTakeFirst();
-=======
-						// .where("action_instances.stageId", "=", stageId)
-					).as("sourceActionInstance"),
-				])
-				.$if(!!options?.event, (eb) => {
-					const where = eb.where("automations.event", "=", options!.event!)
-
-					if (
-						options?.event === Event.pubInStageForDuration ||
-						options?.event === Event.webhook
-					) {
-						return where
-					}
-
-					if (!options?.sourceActionInstanceId) {
-						logger.warn({
-							msg: `Source action instance id is not set for automation with event ${options?.event}`,
-							event: options?.event,
-							sourceActionInstanceId: options?.sourceActionInstanceId,
-						})
-						return where
-					}
-
-					return where.where(
-						"automations.sourceActionInstanceId",
-						"=",
-						options?.sourceActionInstanceId
-					)
-				})
-				.$narrowType<{ config: AutomationConfig | null }>()
-		)
->>>>>>> main
+		).executeTakeFirst()
 	}
 )

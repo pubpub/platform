@@ -373,56 +373,31 @@ export interface paths {
 				/** @description A JSON array of events. */
 				200: {
 					content: {
-<<<<<<< HEAD
-						"application/vnd.api+json": components["schemas"]["AutomationEvent"];
-					};
-				};
-			};
-		};
-	};
-=======
 						"application/vnd.api+json": components["schemas"]["Event"]
 					}
 				}
 			}
 		}
 	}
->>>>>>> main
 	"/events/{id}": {
-		/** Return an AutomationEvent. */
+		/** Return an event. */
 		get: {
 			parameters: {
 				path: {
-<<<<<<< HEAD
-					/** @description AutomationEvent */
-					id: string;
-				};
-			};
-=======
 					/** @description Event */
 					id: string
 				}
 			}
->>>>>>> main
 			responses: {
 				/** @description A JSON array of events. */
 				200: {
 					content: {
-<<<<<<< HEAD
-						"application/vnd.api+json": components["schemas"]["AutomationEvent"];
-					};
-				};
-			};
-		};
-	};
-=======
 						"application/vnd.api+json": components["schemas"]["Event"]
 					}
 				}
 			}
 		}
 	}
->>>>>>> main
 	"/heartbeat": {
 		/** Return the current status of the REST API. */
 		get: {
@@ -932,7 +907,7 @@ export interface components {
 							| "DataPaper"
 							| "Dataset"
 							| "Dissertation"
-							| "AutomationEvent"
+							| "Event"
 							| "Image"
 							| "InteractiveResource"
 							| "JournalArticle"
@@ -1068,7 +1043,7 @@ export interface components {
 							| "DataPaper"
 							| "Dataset"
 							| "Dissertation"
-							| "AutomationEvent"
+							| "Event"
 							| "Image"
 							| "InteractiveResource"
 							| "JournalArticle"
@@ -1215,28 +1190,6 @@ export interface components {
 					reason?: string
 					/** @description Data describing the landing page, used by link checking. */
 					landingPage?: {
-<<<<<<< HEAD
-						checked?: string;
-						url?: string;
-						contentType?: string;
-						error?: string;
-						redirectCount?: number;
-						redirectUrls?: string[];
-						downloadLatency?: number;
-						hasSchemaOrg?: boolean;
-						schemaOrgid?: string;
-						dcIdentifier?: string;
-						citationDoi?: string;
-						bodyhasPid?: boolean;
-					};
-					created?: string;
-					registered?: string;
-					updated?: string;
-				};
-			};
-		};
-		AutomationEvent: {
-=======
 						checked?: string
 						url?: string
 						contentType?: string
@@ -1257,7 +1210,6 @@ export interface components {
 			}
 		}
 		Event: {
->>>>>>> main
 			data?: {
 				id?: string
 				type?: string

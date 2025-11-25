@@ -1,67 +1,67 @@
-"use client";
+"use client"
 
-import type { DragEndEvent } from "@dnd-kit/core";
-import type { FieldErrors } from "react-hook-form";
+import type { DragEndEvent } from "@dnd-kit/core"
+import type { FieldErrors } from "react-hook-form"
 
-import { useCallback, useId } from "react";
-import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { useCallback, useId } from "react"
+import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
 	SortableContext,
 	sortableKeyboardCoordinates,
 	useSortable,
 	verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { useFieldArray, useFormContext } from "react-hook-form";
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { useFieldArray, useFormContext } from "react-hook-form"
 
-import { AutomationConditionBlockType, AutomationConditionType } from "db/public";
-import { Button } from "ui/button";
-import { GripVertical, Plus, X } from "ui/icon";
-import { Input } from "ui/input";
-import { Item, ItemActions, ItemContent, ItemHeader, ItemMedia } from "ui/item";
-import { Label } from "ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { cn } from "utils";
+import { AutomationConditionBlockType, AutomationConditionType } from "db/public"
+import { Button } from "ui/button"
+import { GripVertical, Plus, X } from "ui/icon"
+import { Input } from "ui/input"
+import { Item, ItemActions, ItemContent, ItemHeader, ItemMedia } from "ui/item"
+import { Label } from "ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { cn } from "utils"
 
-import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
+import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank"
 
 export type ConditionBlockFormValue = {
-	id?: string;
-	kind: "block";
-	type: AutomationConditionBlockType;
-	rank: string;
-	items: ConditionItemFormValue[];
-};
+	id?: string
+	kind: "block"
+	type: AutomationConditionBlockType
+	rank: string
+	items: ConditionItemFormValue[]
+}
 
 export type ConditionFormValue = {
-	id?: string;
-	kind: "condition";
-	type: AutomationConditionType;
-	expression: string;
-	rank: string;
-};
+	id?: string
+	kind: "condition"
+	type: AutomationConditionType
+	expression: string
+	rank: string
+}
 
-export type ConditionItemFormValue = ConditionFormValue | ConditionBlockFormValue;
+export type ConditionItemFormValue = ConditionFormValue | ConditionBlockFormValue
 
 type ConditionItemProps = {
-	id: string;
-	expression: string;
-	onRemove: () => void;
-	slug: string;
-};
+	id: string
+	expression: string
+	onRemove: () => void
+	slug: string
+}
 
 const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) => {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id,
-	});
-	const { register, getFieldState } = useFormContext();
-	const { invalid, error } = getFieldState(slug);
+	})
+	const { register, getFieldState } = useFormContext()
+	const { invalid, error } = getFieldState(slug)
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
 		transition,
-	};
+	}
 
 	return (
 		<Item
@@ -95,7 +95,7 @@ const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) =
 						className={cn("text-sm", invalid && "border-red-300")}
 					/>
 					{invalid && error && (
-						<p className="text-xs text-destructive">
+						<p className="text-destructive text-xs">
 							{error.type === "too_small"
 								? "Condition cannot be empty"
 								: error.message}
@@ -116,101 +116,101 @@ const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) =
 				</Button>
 			</ItemActions>
 		</Item>
-	);
-};
+	)
+}
 
 type ConditionBlockProps = {
-	id: string;
-	slug: string;
-	depth?: number;
-	onRemove?: () => void;
-};
+	id: string
+	slug: string
+	depth?: number
+	onRemove?: () => void
+}
 
 export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlockProps) => {
 	const { control, watch, setValue, getFieldState } =
-		useFormContext<Record<string, ConditionItemFormValue>>();
-	const blockType = watch(`${slug}.type`) as AutomationConditionBlockType;
+		useFormContext<Record<string, ConditionItemFormValue>>()
+	const blockType = watch(`${slug}.type`) as AutomationConditionBlockType
 
-	const { invalid, error } = getFieldState(slug);
+	const { invalid, error } = getFieldState(slug)
 	// we don't want to higlight the block if some subitems have errors, too much info
 	const rootItemError =
 		invalid && error && "items" in error && !Array.isArray(error.items)
 			? (error.items as FieldErrors)?.root
-			: null;
+			: null
 
 	const { fields, append, move, update, remove } = useFieldArray({
 		control,
 		name: `${slug}.items`,
-	});
+	})
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
 		})
-	);
+	)
 
-	const itemId = useId();
+	const itemId = useId()
 
 	const handleDragEnd = useCallback(
 		(event: DragEndEvent) => {
-			const changes = getRankAndIndexChanges(event, fields);
+			const changes = getRankAndIndexChanges(event, fields)
 			if (changes) {
-				move(changes.activeIndex, changes.overIndex);
-				const { id, ...movedField } = fields[changes.activeIndex];
+				move(changes.activeIndex, changes.overIndex)
+				const { id, ...movedField } = fields[changes.activeIndex]
 				update(changes.overIndex, {
 					...movedField,
 					rank: changes.rank,
-				});
+				})
 			}
 		},
 		[move, update, fields]
-	);
+	)
 
 	const handleAdd = useCallback(
 		(kind: "condition" | "block") => {
 			const ranks = findRanksBetween({
 				start: fields[fields.length - 1]?.rank,
 				numberOfRanks: 1,
-			});
+			})
 			if (kind === "condition") {
 				append({
 					kind: "condition",
 					type: AutomationConditionType.jsonata,
 					expression: "",
 					rank: ranks[0],
-				});
-				return;
+				})
+				return
 			}
 			append({
 				kind: "block",
 				type: AutomationConditionBlockType.AND,
 				rank: ranks[0],
 				items: [],
-			});
+			})
 		},
 		[append, fields]
-	);
+	)
 
 	const handleRemove = useCallback(
 		(index: number) => {
-			remove(index);
+			remove(index)
 		},
 		[remove]
-	);
+	)
 
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id,
-	});
+	})
 
-	const isNot = blockType === AutomationConditionBlockType.NOT;
-	const maxDepth = 3;
-	const canNest = depth < maxDepth;
+	const isNot = blockType === AutomationConditionBlockType.NOT
+	const maxDepth = 3
+	const canNest = depth < maxDepth
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
 		transition,
-	};
+	}
 
 	return (
 		<Item
@@ -244,7 +244,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 						</Button>
 					)}
 					{depth === 0 && (
-						<Label className="text-xs font-semibold uppercase text-neutral-600">
+						<Label className="font-semibold text-neutral-600 text-xs uppercase">
 							When
 						</Label>
 					)}
@@ -271,7 +271,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 						type="button"
 						variant="ghost"
 						size="sm"
-						className="text-xs text-neutral-400 hover:text-destructive"
+						className="text-neutral-400 text-xs hover:text-destructive"
 						onClick={onRemove}
 					>
 						<X size={14} />
@@ -313,7 +313,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 							type="button"
 							variant="ghost"
 							size="sm"
-							className="h-8 p-0 text-xs text-neutral-700"
+							className="h-8 p-0 text-neutral-700 text-xs"
 							onClick={() => handleAdd("condition")}
 							disabled={
 								isNot &&
@@ -328,7 +328,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 								type="button"
 								variant="ghost"
 								size="sm"
-								className="h-8 p-0 text-xs text-neutral-700"
+								className="h-8 p-0 text-neutral-700 text-xs"
 								onClick={() => handleAdd("block")}
 								disabled={
 									isNot &&
@@ -347,13 +347,13 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 					{isNot &&
 						(fields.filter((field) => field.kind === "condition").length >= 1 ||
 							fields.filter((field) => field.kind === "block").length >= 1) && (
-							<p className="text-xs text-amber-600">
+							<p className="text-amber-600 text-xs">
 								NOT blocks can only contain one condition or one block
 							</p>
 						)}
 				</div>
 				{rootItemError && (
-					<p className="text-xs text-destructive">
+					<p className="text-destructive text-xs">
 						{rootItemError.type === "too_small"
 							? "Block cannot be empty"
 							: rootItemError.message}
@@ -361,5 +361,5 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 				)}
 			</ItemContent>
 		</Item>
-	);
-};
+	)
+}

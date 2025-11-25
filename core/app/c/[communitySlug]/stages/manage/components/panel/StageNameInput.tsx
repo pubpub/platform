@@ -25,11 +25,7 @@ export const StageNameInput = (props: Props) => {
 
 	return (
 		<Label htmlFor="stage-name">
-<<<<<<< HEAD
-			<h4 className="mb-2 text-base font-medium">Stage Name</h4>
-=======
-			<h4 className="mb-2 font-semibold text-base">Stage Name</h4>
->>>>>>> main
+			<h4 className="mb-2 font-medium text-base">Stage Name</h4>
 			<Input
 				className="font-normal"
 				id="stage-name"

@@ -1,6 +1,5 @@
 "use client"
 
-import type { DragEndEvent } from "@dnd-kit/core"
 import type { ProcessedPub } from "contracts"
 import type { InputComponent, PubsId, PubValuesId } from "db/public"
 import type { FieldErrors } from "react-hook-form"
@@ -14,7 +13,14 @@ import type {
 } from "../types"
 
 import { useCallback, useId, useMemo, useState } from "react"
-import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
+import {
+	DndContext,
+	type DragEndEvent,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core"
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
 	SortableContext,
@@ -238,16 +244,12 @@ export const RelatedPubsElement = ({
 		RelatedFormValues & { deleted: { slug: string; relatedPubId: PubsId }[] }
 	>()
 	const formElementToggle = useFormElementToggleContext()
-	const isEnabled = formElementToggle.isEnabled(slug)
+	const _isEnabled = formElementToggle.isEnabled(slug)
 
-<<<<<<< HEAD
 	const { fields, append, move, update, remove } = useFieldArray({
 		control,
 		name: slug,
-	});
-=======
-	const { fields, append, move, update, remove } = useFieldArray({ control, name: slug })
->>>>>>> main
+	})
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -362,7 +364,7 @@ export const RelatedPubsElement = ({
 							<FormControl>
 								<MultiBlock
 									title="Pub Relations"
-									disabled={!isEnabled}
+									disabled={!_isEnabled}
 									onAdd={() => setShowPanel(true)}
 								>
 									{fields.length ? (

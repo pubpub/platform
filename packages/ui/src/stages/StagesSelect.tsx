@@ -6,8 +6,8 @@ import React from "react"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form";
-import { useStages } from "./StagesProvider";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form"
+import { useStages } from "./StagesProvider"
 
 type Props = {
 	fieldLabel?: string

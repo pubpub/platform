@@ -1,45 +1,27 @@
-<<<<<<< HEAD
-"use server";
-=======
 "use server"
->>>>>>> main
 
-import type {
-	Action,
-	ActionInstancesId,
-	AutomationsId,
-	CommunitiesId,
-	FormsId,
-	StagesId,
-	UsersId,
-<<<<<<< HEAD
-} from "db/public";
-import type { MemberRole } from "db/public";
-import { Capabilities, MembershipType, stagesIdSchema } from "db/public";
-import { logger } from "logger";
-
-import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm";
-import { db } from "~/kysely/database";
-import { isUniqueConstraintError } from "~/kysely/errors";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { ApiError } from "~/lib/server";
-=======
-} from "db/public"
 import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm"
 
-import { captureException } from "@sentry/nextjs"
-
-import { Capabilities, Event, type MemberRole, MembershipType, stagesIdSchema } from "db/public"
+import {
+	type Action,
+	type ActionInstancesId,
+	type AutomationsId,
+	Capabilities,
+	type CommunitiesId,
+	type FormsId,
+	type MemberRole,
+	MembershipType,
+	type StagesId,
+	stagesIdSchema,
+	type UsersId,
+} from "db/public"
 import { logger } from "logger"
 
-import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance"
 import { db } from "~/kysely/database"
 import { isUniqueConstraintError } from "~/kysely/errors"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
 import { ApiError } from "~/lib/server"
->>>>>>> main
 import {
 	createActionInstance,
 	removeActionInstance,
@@ -49,22 +31,13 @@ import {
 	AutomationError,
 	duplicateAutomation as duplicateAutomationDb,
 	removeAutomation,
-<<<<<<< HEAD
 	upsertAutomationWithCycleCheck,
-} from "~/lib/server/automations";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { defineServerAction } from "~/lib/server/defineServerAction";
-import { insertStageMemberships } from "~/lib/server/member";
-=======
 } from "~/lib/server/automations"
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { defineServerAction } from "~/lib/server/defineServerAction"
 import { insertStageMemberships } from "~/lib/server/member"
->>>>>>> main
 import {
 	createMoveConstraint as createMoveConstraintDb,
 	createStage as createStageDb,
@@ -321,7 +294,6 @@ export const addAction = defineServerAction(async function addAction(
 	}
 	try {
 		await createActionInstance({
-			name: actionName,
 			action: actionName,
 			stageId,
 		}).executeTakeFirstOrThrow()
@@ -360,7 +332,6 @@ export const updateAction = defineServerAction(async function updateAction(
 
 	await updateActionInstance(actionInstanceId, {
 		config: props.config,
-		name: props.name,
 	}).executeTakeFirstOrThrow()
 
 	return {
@@ -409,14 +380,10 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 	automationId?: AutomationsId
 	data: CreateAutomationsSchema
 }) {
-<<<<<<< HEAD
-	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()])
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
-=======
-	const loginData = await getLoginData()
->>>>>>> main
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN
 	}
@@ -432,7 +399,6 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 	}
 
 	try {
-<<<<<<< HEAD
 		await upsertAutomationWithCycleCheck({
 			id: automationId,
 			name: data.name,
@@ -441,6 +407,7 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			communityId: community.id,
 			stageId,
 			conditionEvaluationTiming: data.conditionEvaluationTiming ?? null,
+
 			triggers: data.triggers.map((trigger) => ({
 				event: trigger.event,
 				config: trigger.config ?? null,
@@ -453,23 +420,7 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 				},
 			],
 			condition: data.condition,
-		});
-=======
-		await createOrUpdateAutomationWithCycleCheck({
-			automationId,
-			actionInstanceId: data.actionInstanceId as ActionInstancesId,
-			event: data.event,
-			config: {
-				actionConfig: data.actionConfig ?? null,
-				automationConfig:
-					"automationConfig" in data && data.automationConfig
-						? data.automationConfig
-						: null,
-			},
-			sourceActionInstanceId:
-				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
 		})
->>>>>>> main
 	} catch (error) {
 		logger.error(error)
 		if (error instanceof AutomationError) {
@@ -483,12 +434,7 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 		return {
 			error: automationId ? "Failed to update automation" : "Failed to create automation",
 			cause: error,
-<<<<<<< HEAD
-		};
-=======
 		}
-	} finally {
->>>>>>> main
 	}
 })
 
@@ -516,55 +462,10 @@ export const deleteAutomation = defineServerAction(async function deleteAutomati
 			removeAutomation(automationId).qb.returningAll()
 		).executeTakeFirstOrThrow()
 
-<<<<<<< HEAD
 		return {
 			success: true,
 			report: "Automation deleted",
-		};
-=======
-		if (!deletedAutomation) {
-			return {
-				error: "Failed to delete automation",
-				cause: `Automation with id ${automationId} not found`,
-			}
 		}
-
-		if (deletedAutomation.event !== Event.pubInStageForDuration) {
-			return
-		}
-
-		const actionInstance = await getActionInstance(
-			deletedAutomation.actionInstanceId
-		).executeTakeFirst()
-
-		if (!actionInstance) {
-			// something is wrong here
-			captureException(
-				new Error(
-					`Action instance not found for automation ${automationId} while trying to unschedule jobs`
-				)
-			)
-			return
-		}
-
-		const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst()
-		if (!pubsInStage) {
-			// we don't need to unschedule any jobs, as there are no pubs this automation could have been applied to
-			return
-		}
-
-		logger.debug(`Unscheduling jobs for automation ${automationId}`)
-		await Promise.all(
-			pubsInStage.pubIds.map(async (pubInStageId) =>
-				unscheduleAction({
-					actionInstanceId: actionInstance.id,
-					pubId: pubInStageId,
-					stageId: actionInstance.stageId,
-					event: Event.pubInStageForDuration,
-				})
-			)
-		)
->>>>>>> main
 	} catch (error) {
 		logger.error(error)
 		return {
@@ -581,31 +482,31 @@ export const duplicateAutomation = defineServerAction(async function duplicateAu
 	automationId: AutomationsId,
 	stageId: StagesId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
-		const _duplicatedAutomation = await duplicateAutomationDb(automationId);
+		const _duplicatedAutomation = await duplicateAutomationDb(automationId)
 	} catch (error) {
-		logger.error(error);
+		logger.error(error)
 		return {
 			error: "Failed to duplicate automation",
 			cause: error,
-		};
+		}
 	}
-});
+})
 
 export const removeStageMember = defineServerAction(async function removeStageMember(
 	userId: UsersId,

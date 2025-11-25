@@ -1,68 +1,30 @@
-import type { CommunitiesId, PubsId } from "db/public"
 import type { Metadata } from "next"
 
 import { cache } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { BookOpen, Eye } from "lucide-react"
+import { BookOpen, Eye, Pencil } from "lucide-react"
 
-<<<<<<< HEAD
-import type { CommunitiesId, PubsId } from "db/public";
-import { AutomationEvent, Capabilities, MembershipType } from "db/public";
-import { Button } from "ui/button";
-import { Pencil } from "ui/icon";
-import { PubFieldProvider } from "ui/pubFields";
-import { stagesDAO, StagesProvider } from "ui/stages";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { tryCatch } from "utils/try-catch";
-
-import Move from "~/app/c/[communitySlug]/stages/components/Move";
-import { MembersList } from "~/app/components//Memberships/MembersList";
-import { PubsRunAutomationsDropDownMenu } from "~/app/components/ActionUI/PubsRunAutomationDropDownMenu";
-import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
-import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { RemovePubButton } from "~/app/components/pubs/RemovePubButton";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-=======
-import { Capabilities, MembershipType } from "db/public"
+import { Capabilities, type CommunitiesId, MembershipType, type PubsId } from "db/public"
 import { Button } from "ui/button"
-import { Pencil } from "ui/icon"
 import { PubFieldProvider } from "ui/pubFields"
 import { StagesProvider, stagesDAO } from "ui/stages"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { tryCatch } from "utils/try-catch"
 
-import Move from "~/app/c/[communitySlug]/stages/components/Move"
-import { MembersList } from "~/app/components//Memberships/MembersList"
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import { PubsRunAutomationsDropDownMenu } from "~/app/components/ActionUI/PubsRunAutomationDropDownMenu"
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher"
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
+import { MembersList } from "~/app/components/Memberships/MembersList"
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
 import { RemovePubButton } from "~/app/components/pubs/RemovePubButton"
 import { getPageLoginData } from "~/lib/authentication/loginData"
->>>>>>> main
 import {
 	getAuthorizedUpdateForms,
 	getAuthorizedViewForms,
 	userCan,
 	userCanRunActionsAllPubs,
-<<<<<<< HEAD
-} from "~/lib/authorization/capabilities";
-import { getStageAutomations } from "~/lib/db/queries";
-import { constructRedirectToPubEditPage } from "~/lib/links";
-import { getPubByForm, getPubTitle } from "~/lib/pubs";
-import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm } from "~/lib/server/form";
-import { resolveFormAccess } from "~/lib/server/form-access";
-import { redirectToPubDetailPage, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
-import { getPubFields } from "~/lib/server/pubFields";
-import { getStages } from "~/lib/server/stages";
-import { ContentLayout } from "../../ContentLayout";
-=======
 } from "~/lib/authorization/capabilities"
-import { getStageActions } from "~/lib/db/queries"
 import { constructRedirectToPubEditPage } from "~/lib/links"
 import { getPubByForm, getPubTitle } from "~/lib/pubs"
 import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server"
@@ -73,7 +35,7 @@ import { redirectToPubDetailPage, redirectToUnauthorized } from "~/lib/server/na
 import { getPubFields } from "~/lib/server/pubFields"
 import { getStages } from "~/lib/server/stages"
 import { ContentLayout } from "../../ContentLayout"
->>>>>>> main
+import Move from "../../stages/components/Move"
 import {
 	addPubMember,
 	addUserWithPubMembership,
@@ -151,24 +113,17 @@ export default async function Page(props: {
 		notFound()
 	}
 
-	const communityStagesPromise = getStages({
-		communityId: community.id,
-		userId: user.id,
-<<<<<<< HEAD
-		 
-	}, {withAutomations: "full"}).execute();
-=======
-	}).execute()
->>>>>>> main
+	const communityStagesPromise = getStages(
+		{
+			communityId: community.id,
+			userId: user.id,
+		},
+		{ withAutomations: "full" }
+	).execute()
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
 	// This is safe because we've already explicitly checked authorization for the root pub
 	const pubPromise = getPubsWithRelatedValuesCached(pubId, community.id)
-
-<<<<<<< HEAD
-=======
-	const actionsPromise = getStageActions({ pubId: pubId }).execute()
->>>>>>> main
 
 	// if a specific form is provided, we use the slug
 	// otherwise, we get the default form for the pub type of the current pub
@@ -201,7 +156,11 @@ export default async function Page(props: {
 		userCan(Capabilities.addPubMember, { type: MembershipType.pub, pubId }, user.id),
 		userCan(Capabilities.removePubMember, { type: MembershipType.pub, pubId }, user.id),
 		userCan(Capabilities.createRelatedPub, { type: MembershipType.pub, pubId }, user.id),
-		userCan(Capabilities.overrideAutomationConditions, { type: MembershipType.community, communityId: community.id }, user.id),
+		userCan(
+			Capabilities.overrideAutomationConditions,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		),
 		userCanRunActionsAllPubs(communitySlug),
 		communityStagesPromise,
 		userCan(
@@ -261,7 +220,6 @@ export default async function Page(props: {
 			requestedFormSlug: formSlug,
 			communitySlug,
 		})
-
 
 	return (
 		<ContentLayout
@@ -346,16 +304,16 @@ export default async function Page(props: {
 									</div>
 								) : null}
 								<div>
-<<<<<<< HEAD
-									<div className="mb-1 text-lg font-bold">Actions</div>
-									{pub.stage?.automations && pub.stage?.automations.length > 0 && stage && canRunActions ? (
-=======
 									<div className="mb-1 font-bold text-lg">Actions</div>
-									{actions && actions.length > 0 && stage && canRunActions ? (
->>>>>>> main
+									{pub.stage?.automations &&
+									pub.stage?.automations.length > 0 &&
+									stage &&
+									canRunActions ? (
 										<div className="ml-4">
 											<PubsRunAutomationsDropDownMenu
-												canOverrideAutomationConditions={canOverrideAutomationConditions}
+												canOverrideAutomationConditions={
+													canOverrideAutomationConditions
+												}
 												automations={pub.stage.automations}
 												pubId={pubId}
 												testId="run-action-primary"
@@ -414,7 +372,9 @@ export default async function Page(props: {
 								<RelatedPubsTableWrapper
 									pub={pubByForm}
 									userCanRunActions={canRunActionsAllPubs}
-									userCanOverrideAutomationConditions={canOverrideAutomationConditions}
+									userCanOverrideAutomationConditions={
+										canOverrideAutomationConditions
+									}
 								/>
 							</div>
 						)}

@@ -3,7 +3,7 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
 import test from "@playwright/test"
 
-import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
+import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public"
 
 import { createSeed } from "~/prisma/seed/createSeed"
 import { seedCommunity } from "~/prisma/seed/seedCommunity"

@@ -21,25 +21,15 @@ import {
 } from "db/public"
 import { logger } from "logger"
 
-<<<<<<< HEAD
-import { runAutomation } from "~/actions/_lib/runAutomation";
-=======
-import { scheduleActionInstances } from "~/actions/api/server"
->>>>>>> main
+import { runAutomation } from "~/actions/_lib/runAutomation"
 import {
 	checkAuthorization,
 	getAuthorization,
 	parseQueryWithQsMiddleware,
 	shouldReturnRepresentation,
-<<<<<<< HEAD
-} from "~/lib/authentication/api";
-import { userHasAccessToForm } from "~/lib/authorization/capabilities";
-import { getAutomation, getStage } from "~/lib/db/queries";
-=======
 } from "~/lib/authentication/api"
 import { userHasAccessToForm } from "~/lib/authorization/capabilities"
-import { getStage } from "~/lib/db/queries"
->>>>>>> main
+import { getAutomation, getStage } from "~/lib/db/queries"
 import {
 	BadRequestError,
 	createPubRecursiveNew,
@@ -49,6 +39,8 @@ import {
 	fullTextSearch,
 	getPubsCount,
 	getPubsWithRelatedValues,
+	getPubType,
+	getPubTypesForCommunity,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
 	removePubRelations,
@@ -56,24 +48,12 @@ import {
 	tsRestHandleErrors,
 	updatePub,
 	upsertPubRelations,
-<<<<<<< HEAD
-} from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm } from "~/lib/server/form";
-import { validateFilter } from "~/lib/server/pub-filters-validate";
-import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
-import { getStages } from "~/lib/server/stages";
-import { getMember, getSuggestedUsers } from "~/lib/server/user";
-=======
 } from "~/lib/server"
-import { getAutomation } from "~/lib/server/automations"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
 import { validateFilter } from "~/lib/server/pub-filters-validate"
-import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype"
 import { getStages } from "~/lib/server/stages"
 import { getMember, getSuggestedUsers } from "~/lib/server/user"
->>>>>>> main
 
 const handler = createNextHandler(
 	siteApi,
@@ -755,11 +735,7 @@ const handler = createNextHandler(
 
 			const automationId = params.automationId as AutomationsId
 
-<<<<<<< HEAD
-			const automation = await getAutomation(automationId);
-=======
-			const automation = await getAutomation(automationId, community.id).executeTakeFirst()
->>>>>>> main
+			const automation = await getAutomation(automationId)
 
 			if (!automation) {
 				throw new NotFoundError(`Automation ${automationId} not found`)
@@ -775,7 +751,6 @@ const handler = createNextHandler(
 				await runAutomation({
 					automationId,
 					json: body,
-<<<<<<< HEAD
 					trigger: {
 						event: AutomationEvent.webhook,
 						config: null,
@@ -783,11 +758,7 @@ const handler = createNextHandler(
 					manualActionInstancesOverrideArgs: null,
 					communityId: community.id as CommunitiesId,
 					stack: [],
-				});
-=======
-					config: automation.config?.actionConfig,
 				})
->>>>>>> main
 
 				return {
 					status: 201,

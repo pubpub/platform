@@ -1,112 +1,109 @@
-import type { Json } from "contracts";
+import type { Json } from "contracts"
 import type {
-	ActionInstancesId,
 	ActionRunsId,
 	AutomationRunsId,
 	AutomationsId,
 	CommunitiesId,
 	PubsId,
 	StagesId,
-} from "db/public";
-import type { BaseActionInstanceConfig } from "db/types";
-import { ActionRunStatus, AutomationEvent, ConditionEvaluationTiming } from "db/public";
-import { logger } from "logger";
-import { expect } from "utils";
+} from "db/public"
+import type { BaseActionInstanceConfig } from "db/types"
+import type { GetEventAutomationOptions } from "~/lib/db/queries"
 
-import type { SchedulableAutomation } from "./triggers";
-import type { GetEventAutomationOptions } from "~/lib/db/queries";
-import { db } from "~/kysely/database";
-import { addDuration } from "~/lib/dates";
-import { getAutomation, getStageAutomations } from "~/lib/db/queries";
-import { getAutomationRunById } from "~/lib/server/actions";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getJobsClient, getScheduledAutomationJobKey } from "~/lib/server/jobs";
-import { getPubsWithRelatedValues } from "~/lib/server/pub";
-import { evaluateConditions } from "./evaluateConditions";
-import { createPubProxy } from "./pubProxy";
-import { insertAutomationRun } from "./runAutomation";
+import { ActionRunStatus, AutomationEvent, ConditionEvaluationTiming } from "db/public"
+import { logger } from "logger"
+import { expect } from "utils"
+
+import { db } from "~/kysely/database"
+import { addDuration } from "~/lib/dates"
+import { getAutomation } from "~/lib/db/queries"
+import { getAutomationRunById } from "~/lib/server/actions"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getJobsClient, getScheduledAutomationJobKey } from "~/lib/server/jobs"
+import { getPubsWithRelatedValues } from "~/lib/server/pub"
+import { evaluateConditions } from "./evaluateConditions"
+import { createPubProxy } from "./pubProxy"
+import { insertAutomationRun } from "./runAutomation"
 
 type Shared = {
-	stageId: StagesId;
-	stack: ActionRunsId[];
-} & GetEventAutomationOptions;
+	stageId: StagesId
+	stack: ActionRunsId[]
+} & GetEventAutomationOptions
 
 type ScheduleActionInstanceForPubOptions = Shared & {
-	pubId: PubsId;
-	json?: never;
-};
+	pubId: PubsId
+	json?: never
+}
 
 type ScheduleActionInstanceGenericOptions = Shared & {
-	pubId?: never;
-	json: Json;
-};
+	pubId?: never
+	json: Json
+}
 
 type ScheduleActionInstanceOptions =
 	| ScheduleActionInstanceForPubOptions
-	| ScheduleActionInstanceGenericOptions;
+	| ScheduleActionInstanceGenericOptions
 
 export const scheduleDelayedAutomation = async ({
 	automationId,
 	pubId,
 	stack,
 }: {
-	automationId: AutomationsId;
-	pubId: PubsId;
-	stack: AutomationRunsId[];
+	automationId: AutomationsId
+	pubId: PubsId
+	stack: AutomationRunsId[]
 }): Promise<{
-	automationId: string;
-	runAt: string;
+	automationId: string
+	runAt: string
 }> => {
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 	if (!community) {
-		throw new Error("Community not found");
+		throw new Error("Community not found")
 	}
 
-	const automation = await getAutomation(automationId);
+	const automation = await getAutomation(automationId)
 	if (!automation) {
-		throw new Error(`Automation ${automationId} not found`);
+		throw new Error(`Automation ${automationId} not found`)
 	}
 
 	const trigger = automation.triggers.find(
 		(t) => t.event === AutomationEvent.pubInStageForDuration
-	);
+	)
 
 	// validate this is a pubInStageForDuration automation with proper config
 	if (!trigger) {
-		throw new Error(`Automation ${automationId} is not a pubInStageForDuration automation`);
+		throw new Error(`Automation ${automationId} is not a pubInStageForDuration automation`)
 	}
 
-	const config = trigger.config as Record<string, any> | null;
+	const config = trigger.config as Record<string, any> | null
 	if (
 		!config ||
 		typeof config.automationConfig !== "object" ||
 		!config.automationConfig?.duration ||
 		!config.automationConfig?.interval
 	) {
-		throw new Error(`Automation ${automationId} missing duration/interval configuration`);
+		throw new Error(`Automation ${automationId} missing duration/interval configuration`)
 	}
 
-	const duration = config.automationConfig.duration as number;
+	const duration = config.automationConfig.duration as number
 	const interval = config.automationConfig.interval as
 		| "minute"
 		| "hour"
 		| "day"
 		| "week"
 		| "month"
-		| "year";
+		| "year"
 
 	// check if we need to evaluate conditions before scheduling
 	const automationTiming = (automation as any).conditionEvaluationTiming as
 		| string
 		| null
-		| undefined;
+		| undefined
 	const shouldEvaluateNow =
 		automationTiming === ConditionEvaluationTiming.onTrigger ||
-		automationTiming === ConditionEvaluationTiming.both;
+		automationTiming === ConditionEvaluationTiming.both
 
-	const condition = automation.condition;
+	const condition = automation.condition
 
 	if (shouldEvaluateNow && condition) {
 		const pub = await getPubsWithRelatedValues(
@@ -118,14 +115,14 @@ export const scheduleDelayedAutomation = async ({
 				withValues: true,
 				depth: 3,
 			}
-		);
+		)
 
 		if (!pub) {
-			throw new Error(`Pub ${pubId} not found`);
+			throw new Error(`Pub ${pubId} not found`)
 		}
 
-		const input = { pub: createPubProxy(pub, community.slug) };
-		const evaluationResult = await evaluateConditions(condition as any, input);
+		const input = { pub: createPubProxy(pub, community.slug) }
+		const evaluationResult = await evaluateConditions(condition as any, input)
 
 		if (!evaluationResult.passed) {
 			logger.info({
@@ -134,20 +131,20 @@ export const scheduleDelayedAutomation = async ({
 				conditionEvaluationTiming: automationTiming,
 				failureReason: evaluationResult.failureReason,
 				failureMessages: evaluationResult.flatMessages,
-			});
-			throw new Error("Conditions not met");
+			})
+			throw new Error("Conditions not met")
 		}
 
 		logger.info({
 			msg: "Conditions met at trigger time - proceeding with scheduling",
 			automationId,
-		});
+		})
 	}
 
 	const runAt = addDuration({
 		duration,
 		interval,
-	}).toISOString();
+	}).toISOString()
 
 	const scheduleAutomationRun = await insertAutomationRun(db, {
 		automationId,
@@ -166,10 +163,9 @@ export const scheduleDelayedAutomation = async ({
 			config: trigger.config as Record<string, unknown> | null,
 		},
 		userId: undefined,
-	});
-	
+	})
 
-	const jobsClient = await getJobsClient();
+	const jobsClient = await getJobsClient()
 
 	await jobsClient.scheduleDelayedAutomation({
 		automationId,
@@ -186,13 +182,13 @@ export const scheduleDelayedAutomation = async ({
 			event: AutomationEvent.pubInStageForDuration,
 			config: trigger.config as Record<string, unknown> | null,
 		},
-	});
+	})
 
 	return {
 		automationId,
 		runAt,
-	};
-};
+	}
+}
 
 export const cancelScheduledAutomation = async (
 	automationRunId: AutomationRunsId,
@@ -202,14 +198,14 @@ export const cancelScheduledAutomation = async (
 		const automationRun = await getAutomationRunById(
 			communityId,
 			automationRunId
-		).executeTakeFirstOrThrow();
+		).executeTakeFirstOrThrow()
 
 		if (!automationRun) {
 			logger.warn({
 				msg: "Automation run not found",
 				automationRunId,
-			});
-			return { success: false, error: "Automation run not found" };
+			})
+			return { success: false, error: "Automation run not found" }
 		}
 
 		const jobKey = getScheduledAutomationJobKey({
@@ -220,10 +216,10 @@ export const cancelScheduledAutomation = async (
 				event: automationRun.actionRuns[0]?.event as AutomationEvent,
 				config: automationRun.config as Record<string, unknown> | null,
 			},
-		});
+		})
 
-		const jobsClient = await getJobsClient();
-		await jobsClient.unscheduleJob(jobKey);
+		const jobsClient = await getJobsClient()
+		await jobsClient.unscheduleJob(jobKey)
 
 		await insertAutomationRun(db, {
 			automationId: automationRun.automation?.id as AutomationsId,
@@ -240,24 +236,24 @@ export const cancelScheduledAutomation = async (
 				result: { cancelled: "Automation cancelled because pub left stage" },
 				status: ActionRunStatus.failure,
 			})),
-		});
+		})
 
 		logger.info({
 			msg: "Successfully cancelled scheduled automation",
 			automationRunId,
 			jobKey,
-		});
+		})
 
-		return { success: true };
+		return { success: true }
 	} catch (error) {
 		logger.error({
 			msg: "Error cancelling scheduled automation",
 			automationRunId,
 			error,
-		});
+		})
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : "Unknown error",
-		};
+		}
 	}
-};
+}

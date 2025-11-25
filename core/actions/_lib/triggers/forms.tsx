@@ -1,9 +1,9 @@
-import dynamic from "next/dynamic";
+import type { TriggersWithConfig } from "../triggers"
 
-import { AutomationEvent } from "db/public";
-import { Skeleton } from "ui/skeleton";
+import dynamic from "next/dynamic"
 
-import type { TriggersWithConfig } from "../triggers";
+import { AutomationEvent } from "db/public"
+import { Skeleton } from "ui/skeleton"
 
 const triggerConfigForms = {
 	[AutomationEvent.pubInStageForDuration]: dynamic(
@@ -16,12 +16,12 @@ const triggerConfigForms = {
 			loading: () => <Skeleton className="h-20 w-full" />,
 		}
 	),
-} as const satisfies Record<TriggersWithConfig, any>;
+} as const satisfies Record<TriggersWithConfig, any>
 
 export const getTriggerConfigForm = (trigger: AutomationEvent) => {
 	if (!(trigger in triggerConfigForms)) {
-		return null;
+		return null
 	}
 
-	return triggerConfigForms[trigger as TriggersWithConfig];
-};
+	return triggerConfigForms[trigger as TriggersWithConfig]
+}

@@ -55,9 +55,9 @@ const getCurrentCapabilitiesFromPrismaFile = (): string[] => {
 }
 
 const getExpectedCapabilitiesEnum = (): string[] => {
-	console.log("Capabilities", Capabilities);
-	return Object.values(Capabilities).sort();
-};
+	console.log("Capabilities", Capabilities)
+	return Object.values(Capabilities).sort()
+}
 
 const updateCapabilitiesInPrismaFile = (newValues: string[]): void => {
 	try {
@@ -87,8 +87,8 @@ const updateCapabilitiesInPrismaFile = (newValues: string[]): void => {
 		logger.error({
 			msg: "failed to update capabilities in prisma file",
 			error,
-		});
-		throw error;
+		})
+		throw error
 	}
 }
 
@@ -104,10 +104,10 @@ const generateEnumMigrationSql = (
 
 	const hasChanges = toAdd.length > 0 || toRemove.length > 0
 
-	console.log("currentValues", currentValues);
-	console.log("expectedValues", expectedValues);
-	console.log("toAdd", toAdd);
-	console.log("toRemove", toRemove);
+	console.log("currentValues", currentValues)
+	console.log("expectedValues", expectedValues)
+	console.log("toAdd", toAdd)
+	console.log("toRemove", toRemove)
 
 	if (!hasChanges) {
 		return { sql: "", hasChanges: false }
@@ -156,8 +156,8 @@ const generateMigrationContent = (options?: { updatePrismaFile?: boolean }): str
 	const currentEnumValues = getCurrentCapabilitiesFromPrismaFile()
 	const expectedEnumValues = getExpectedCapabilitiesEnum()
 
-	console.log("currentEnumValues", currentEnumValues);
-	console.log("expectedEnumValues", expectedEnumValues);
+	console.log("currentEnumValues", currentEnumValues)
+	console.log("expectedEnumValues", expectedEnumValues)
 
 	const { sql: enumSql, hasChanges: enumHasChanges } = generateEnumMigrationSql(
 		currentEnumValues,

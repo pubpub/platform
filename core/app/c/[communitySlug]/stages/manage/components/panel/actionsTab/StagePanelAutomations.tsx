@@ -1,16 +1,15 @@
 import type { CommunitiesId, StagesId, UsersId } from "db/public"
 
-import type { CommunitiesId, StagesId, UsersId } from "db/public";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "ui/empty";
-import { Bot } from "ui/icon";
-import { ItemGroup } from "ui/item";
+import { Card, CardContent, CardTitle } from "ui/card"
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "ui/empty"
+import { Bot } from "ui/icon"
+import { ItemGroup } from "ui/item"
 
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage, getStageAutomations } from "~/lib/db/queries";
-import { StagePanelCardHeader } from "../../editor/StagePanelCard";
-import { StagePanelAutomation } from "./StagePanelAutomation";
-import { StagePanelAutomationForm } from "./StagePanelAutomationForm";
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
+import { getStage, getStageAutomations } from "~/lib/db/queries"
+import { StagePanelCardHeader } from "../../editor/StagePanelCard"
+import { StagePanelAutomation } from "./StagePanelAutomation"
+import { StagePanelAutomationForm } from "./StagePanelAutomationForm"
 
 type PropsInner = {
 	stageId: StagesId
@@ -21,7 +20,7 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 	const [stage, automations] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getStageAutomations(props.stageId),
-	]);
+	])
 
 	if (!stage) {
 		return <SkeletonCard />

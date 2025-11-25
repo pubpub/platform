@@ -1,6 +1,5 @@
 "use client"
 
-import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types"
 import type { CreateTokenFormSchema } from "./types"
 
 import React from "react"
@@ -145,11 +144,7 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 								</div>
 
 								{form.formState.errors?.permissions && (
-<<<<<<< HEAD
-									<div className="text-sm text-destructive">
-=======
-									<div className="text-red-500 text-sm">
->>>>>>> main
+									<div className="text-destructive text-sm">
 										<p>{form.formState.errors?.permissions?.root?.message}</p>
 									</div>
 								)}
@@ -158,13 +153,9 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 					}}
 				/>
 				{form.formState.errors?.root && (
-<<<<<<< HEAD
-					<p className="text-sm text-destructive">
+					<p className="text-destructive text-sm">
 						{form.formState.errors?.root?.message}
 					</p>
-=======
-					<p className="text-red-500 text-sm">{form.formState.errors?.root?.message}</p>
->>>>>>> main
 				)}
 
 				<FormSubmitButton

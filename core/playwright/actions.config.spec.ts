@@ -4,7 +4,7 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 import { faker } from "@faker-js/faker"
 import test, { expect } from "@playwright/test"
 
-import { Action, CoreSchemaType, MemberRole } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public"
 
 import { createSeed } from "~/prisma/seed/createSeed"
 import { seedCommunity } from "~/prisma/seed/seedCommunity"

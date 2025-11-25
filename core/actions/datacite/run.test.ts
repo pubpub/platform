@@ -1,5 +1,4 @@
 import type {
-	ActionInstancesId,
 	ActionRunsId,
 	AutomationsId,
 	CommunitiesId,
@@ -8,13 +7,12 @@ import type {
 	PubTypesId,
 	PubValuesId,
 	StagesId,
-} from "db/public";
-import { Action, AutomationEvent, CoreSchemaType } from "db/public";
+} from "db/public"
 
 import { afterEach } from "node:test"
 import { describe, expect, it, vitest } from "vitest"
 
-import { Action, CoreSchemaType } from "db/public"
+import { CoreSchemaType } from "db/public"
 
 import { updatePub } from "~/lib/server"
 import { didSucceed } from "~/lib/serverActions"
@@ -137,10 +135,10 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 		id: "" as AutomationsId,
 		name: "deposit to datacite",
 		stageId: "" as StagesId,
-		createdAt: new Date(),	
+		createdAt: new Date(),
 		updatedAt: new Date(),
 		actionInstances: [],
-		triggers:[],
+		triggers: [],
 		condition: null,
 		conditionEvaluationTiming: null,
 		icon: null,

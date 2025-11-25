@@ -4,8 +4,7 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
 import { expect, test } from "@playwright/test"
 
-import type { PubsId, UsersId } from "db/public";
-import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
+import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public"
 
 import { createSeed } from "~/prisma/seed/createSeed"
 import { seedCommunity } from "~/prisma/seed/seedCommunity"

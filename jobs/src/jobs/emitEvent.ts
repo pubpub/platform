@@ -4,10 +4,8 @@ import type {
 	RunAutomationPayload,
 	RunDelayedAutomationPayload,
 	ScheduleDelayedAutomationPayload,
-} from "db/types";
-import type { logger } from "logger";
-
-import { Event } from "db/public"
+} from "db/types"
+import type { logger } from "logger"
 
 import { defineJob } from "../defineJob"
 
@@ -18,7 +16,7 @@ const handleRunAutomation = async (
 	payload: RunAutomationPayload,
 	logger: Logger
 ) => {
-	const { automationId, pubId, trigger, stageId, stack } = payload;
+	const { automationId, pubId, trigger, stageId, stack } = payload
 
 	logger.info({
 		msg: `Running automation ${automationId}`,
@@ -27,13 +25,13 @@ const handleRunAutomation = async (
 		trigger,
 		stageId,
 		stack,
-	});
+	})
 
 	try {
 		const { status, body } = await client.runAutomation({
 			params: { automationId, communitySlug: payload.community.slug },
 			body: { pubId, trigger, stack },
-		});
+		})
 
 		if (status >= 400) {
 			logger.error({
@@ -42,8 +40,8 @@ const handleRunAutomation = async (
 				pubId,
 				status,
 				body,
-			});
-			return;
+			})
+			return
 		}
 
 		logger.info({
@@ -51,12 +49,12 @@ const handleRunAutomation = async (
 			automationId,
 			pubId,
 			result: body,
-		});
+		})
 	} catch (e) {
 		logger.error({
 			msg: `Error running automation ${automationId}`,
 			error: e,
-		});
+		})
 	}
 }
 
@@ -65,20 +63,20 @@ const handleScheduleDelayedAutomation = async (
 	payload: ScheduleDelayedAutomationPayload,
 	logger: Logger
 ) => {
-	const { automationId, pubId, stack } = payload;
+	const { automationId, pubId, stack } = payload
 
 	logger.info({
 		msg: `Scheduling delayed automation ${automationId}`,
 		automationId,
 		pubId,
 		stack,
-	});
+	})
 
 	try {
 		const { status, body } = await client.scheduleDelayedAutomation({
 			params: { automationId, communitySlug: payload.community.slug },
 			body: { pubId, stack },
-		});
+		})
 
 		if (status >= 400) {
 			logger.error({
@@ -86,8 +84,8 @@ const handleScheduleDelayedAutomation = async (
 				error: body,
 				automationId,
 				pubId,
-			});
-			return;
+			})
+			return
 		}
 
 		logger.info({
@@ -95,23 +93,23 @@ const handleScheduleDelayedAutomation = async (
 			result: body,
 			automationId,
 			pubId,
-		});
+		})
 	} catch (e) {
 		logger.error({
 			msg: "Error scheduling delayed automation",
 			error: e,
 			automationId,
 			pubId,
-		});
+		})
 	}
-};
+}
 
 const handleRunDelayedAutomation = async (
 	client: InternalClient,
 	payload: RunDelayedAutomationPayload,
 	logger: Logger
 ) => {
-	const { automationId, pubId, trigger, automationRunId, stack } = payload;
+	const { automationId, pubId, trigger, automationRunId, stack } = payload
 
 	logger.info({
 		msg: `Running delayed automation ${automationId}`,
@@ -120,13 +118,13 @@ const handleRunDelayedAutomation = async (
 		trigger,
 		automationRunId,
 		stack,
-	});
+	})
 
 	try {
 		const { status, body } = await client.runDelayedAutomation({
 			params: { automationId, communitySlug: payload.community.slug },
 			body: { pubId, trigger, automationRunId, stack },
-		});
+		})
 
 		if (status >= 400) {
 			logger.error({
@@ -135,8 +133,8 @@ const handleRunDelayedAutomation = async (
 				pubId,
 				status,
 				body,
-			});
-			return;
+			})
+			return
 		}
 
 		logger.info({
@@ -144,32 +142,32 @@ const handleRunDelayedAutomation = async (
 			automationId,
 			pubId,
 			result: body,
-		});
+		})
 	} catch (e) {
 		logger.error({
 			msg: `Error running delayed automation ${automationId}`,
 			error: e,
-		});
+		})
 	}
-};
+}
 
 const handleCancelScheduledAutomation = async (
 	client: InternalClient,
 	payload: CancelScheduledAutomationPayload,
 	logger: Logger
 ) => {
-	const { automationRunId } = payload;
+	const { automationRunId } = payload
 
 	logger.info({
 		msg: `Cancelling scheduled automation for automation run ${automationRunId}`,
 		automationRunId,
-	});
+	})
 
 	try {
 		const { status, body } = await client.cancelScheduledAutomation({
 			params: { automationRunId, communitySlug: payload.community.slug },
 			body: {},
-		});
+		})
 
 		if (status >= 400) {
 			logger.error({
@@ -177,22 +175,22 @@ const handleCancelScheduledAutomation = async (
 				automationRunId,
 				status,
 				body,
-			});
-			return;
+			})
+			return
 		}
 
 		logger.info({
 			msg: "Scheduled automation cancelled successfully",
 			automationRunId,
 			result: body,
-		});
+		})
 	} catch (e) {
 		logger.error({
 			msg: `Error cancelling scheduled automation ${automationRunId}`,
 			error: e,
-		});
+		})
 	}
-};
+}
 
 export const emitEvent = defineJob(
 	async (client: InternalClient, payload: EmitEventPayload, eventLogger, job) => {
@@ -209,22 +207,22 @@ export const emitEvent = defineJob(
 		// route based on event type
 		switch (payload.type) {
 			case "RunAutomation":
-				await handleRunAutomation(client, payload, eventLogger);
-				break;
+				await handleRunAutomation(client, payload, eventLogger)
+				break
 			case "ScheduleDelayedAutomation":
-				await handleScheduleDelayedAutomation(client, payload, eventLogger);
-				break;
+				await handleScheduleDelayedAutomation(client, payload, eventLogger)
+				break
 			case "RunDelayedAutomation":
-				await handleRunDelayedAutomation(client, payload, eventLogger);
-				break;
+				await handleRunDelayedAutomation(client, payload, eventLogger)
+				break
 			case "CancelScheduledAutomation":
-				await handleCancelScheduledAutomation(client, payload, eventLogger);
-				break;
+				await handleCancelScheduledAutomation(client, payload, eventLogger)
+				break
 			default:
 				eventLogger.warn({
 					msg: "Unknown event type",
 					payload,
-				});
+				})
 		}
 	}
 )

@@ -4,8 +4,16 @@ import type {
 	PubsId,
 	PubValuesHistoryId,
 	UsersId,
-} from "db/public";
-import { Action, ActionRunStatus, AutomationEvent, CoreSchemaType, MemberRole, OperationType } from "db/public";
+} from "db/public"
+
+import {
+	Action,
+	ActionRunStatus,
+	AutomationEvent,
+	CoreSchemaType,
+	MemberRole,
+	OperationType,
+} from "db/public"
 
 import {
 	isCheckContraintError,
@@ -804,8 +812,8 @@ describe("pub_values_history trigger", () => {
 		it("should allow setting lastModifiedBy to a user id, api-token, and actionRunId, and set them to null when removed", async () => {
 			const trx = getTrx()
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-			const { pubFields, pubs, users, stages} = await seedCommunity(
+			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
+			const { pubFields, pubs, users, stages } = await seedCommunity(
 				{
 					...multiCommunityTestSeed,
 					apiTokens: {

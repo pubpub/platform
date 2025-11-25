@@ -1,9 +1,9 @@
 "use client"
 
-import { memo, useEffect, useState } from "react";
-import { skipToken } from "@tanstack/react-query";
+import type { Communities, CommunityMembershipsId } from "db/public"
 
-import type { Communities, CommunityMembershipsId } from "db/public";
+import { memo, useEffect, useState } from "react"
+import { skipToken } from "@tanstack/react-query"
 
 import { client } from "~/lib/api"
 import { useCommunity } from "../providers/CommunityProvider"
@@ -32,12 +32,12 @@ const useMemberSelectData = ({
 	const user = userResult?.body
 
 	// User suggestions query
-	const shouldQueryForUsers = !!email && email !== "";
+	const shouldQueryForUsers = !!email && email !== ""
 	const usersQuery = {
 		limit: 1,
 		communityId: community.id,
 		email: email ?? "",
-	};
+	}
 	const {
 		data: userSuggestionsResult,
 		isPending: userSuggestionsPending,
@@ -71,8 +71,8 @@ const useMemberSelectData = ({
 		user,
 		users: userSuggestionsResult?.body ?? [],
 		refetchUsers: refetch,
-	};
-};
+	}
+}
 
 type Props = {
 	name: string
@@ -82,13 +82,13 @@ type Props = {
 
 export const MemberSelectClientFetch = memo(
 	function MemberSelectClientFetch({ name, value, onChange: onChangeProp }: Props) {
-		const community = useCommunity();
-		const [search, setSearch] = useState("");
+		const community = useCommunity()
+		const [search, setSearch] = useState("")
 		const { user, users, refetchUsers } = useMemberSelectData({
 			community,
 			memberId: value,
 			email: search,
-		});
+		})
 
 		return (
 			<MemberSelectClient
@@ -100,9 +100,9 @@ export const MemberSelectClientFetch = memo(
 				onChangeValue={onChangeProp}
 				onUserAdded={refetchUsers}
 			/>
-		);
+		)
 	},
 	(prevProps, nextProps) => {
-		return prevProps.name === nextProps.name && prevProps.value === nextProps.value;
+		return prevProps.name === nextProps.name && prevProps.value === nextProps.value
 	}
-);
+)

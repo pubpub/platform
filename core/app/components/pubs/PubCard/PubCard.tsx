@@ -1,30 +1,25 @@
 import type { ProcessedPub } from "contracts"
 import type { UsersId } from "db/public"
+import type { FullAutomation } from "db/types"
 import type { CommunityStage } from "~/lib/server/stages"
-import type { ActionInstanceWithConfigDefaults } from "~/lib/types"
 
-import type { ProcessedPub } from "contracts";
-import type { Automations, UsersId } from "db/public";
-import type { FullAutomation } from "db/types";
-import { Capabilities, MembershipType } from "db/public";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "ui/card";
-import { Calendar, History, Pencil, Trash2 } from "ui/icon";
-import { cn } from "utils";
+import { Capabilities, MembershipType } from "db/public"
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "ui/card"
+import { Calendar, History, Pencil, Trash2 } from "ui/icon"
+import { cn } from "utils"
 
-import type { CommunityStage } from "~/lib/server/stages";
-import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
-import Move from "~/app/c/[communitySlug]/stages/components/Move";
-import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
-import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
-import { getPubTitle } from "~/lib/pubs";
-import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector";
-import { PubsRunAutomationsDropDownMenu } from "../../ActionUI/PubsRunAutomationDropDownMenu";
-import { SkeletonButton } from "../../skeletons/SkeletonButton";
-import { RelationsDropDown } from "../RelationsDropDown";
-import { RemovePubButton } from "../RemovePubButton";
-import { PubTypeLabel } from "./PubTypeLabel";
-import { StageMoveButton } from "./StageMoveButton";
+import Move from "~/app/c/[communitySlug]/stages/components/Move"
+import { userCan, userCanEditPub } from "~/lib/authorization/capabilities"
+import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates"
+import { getPubTitle } from "~/lib/pubs"
+import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector"
+import { PubsRunAutomationsDropDownMenu } from "../../ActionUI/PubsRunAutomationDropDownMenu"
+import { SkeletonButton } from "../../skeletons/SkeletonButton"
+import { RelationsDropDown } from "../RelationsDropDown"
+import { RemovePubButton } from "../RemovePubButton"
+import { PubTypeLabel } from "./PubTypeLabel"
+import { StageMoveButton } from "./StageMoveButton"
 
 // import { RemovePubButton } from "./pubs/RemovePubButton";
 
@@ -41,17 +36,17 @@ const LINK_AFTER =
 
 export type PubCardProps = {
 	pub: ProcessedPub<{
-		withPubType: true;
-		withRelatedPubs: false;
-		withStage: true;
-		withRelatedCounts: true;
-	}>;
-	communitySlug: string;
-	moveFrom?: CommunityStage["moveConstraintSources"];
-	moveTo?: CommunityStage["moveConstraints"];
-	manualAutomations?: FullAutomation[];
-	withSelection?: boolean;
-	userId: UsersId;
+		withPubType: true
+		withRelatedPubs: false
+		withStage: true
+		withRelatedCounts: true
+	}>
+	communitySlug: string
+	moveFrom?: CommunityStage["moveConstraintSources"]
+	moveTo?: CommunityStage["moveConstraints"]
+	manualAutomations?: FullAutomation[]
+	withSelection?: boolean
+	userId: UsersId
 	/* if true, overrides the view stage capability check */
 	canViewAllStages?: boolean
 	/* if true, overrides the edit pub capability check */
@@ -82,9 +77,9 @@ export const PubCard = async ({
 }: PubCardProps) => {
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle)
 
-	const showMatchingValues = matchingValues && matchingValues.length !== 0;
-	const showDescription = "description" in pub && pub.description !== null && !showMatchingValues;
-	const hasActions = pub.stage && manualAutomations && manualAutomations.length !== 0;
+	const showMatchingValues = matchingValues && matchingValues.length !== 0
+	const showDescription = "description" in pub && pub.description !== null && !showMatchingValues
+	const hasActions = pub.stage && manualAutomations && manualAutomations.length !== 0
 	return (
 		<Card
 			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
@@ -253,7 +248,7 @@ const PubCardActions = async ({
 	canArchiveAllPubs,
 	canRunActionsAllPubs,
 }: {
-	manualAutomations: FullAutomation[];
+	manualAutomations: FullAutomation[]
 	pub: ProcessedPub<{
 		withPubType: true
 		withRelatedPubs: false
@@ -266,8 +261,8 @@ const PubCardActions = async ({
 	canArchiveAllPubs?: boolean
 	canRunActionsAllPubs?: boolean
 }) => {
-	const hasAutomations = pub.stage && manualAutomations && manualAutomations.length !== 0;
-	const pubTitle = getPubTitle(pub);
+	const hasAutomations = pub.stage && manualAutomations && manualAutomations.length !== 0
+	const pubTitle = getPubTitle(pub)
 	const [canArchive, canRunActions, canEdit, canOverrideAutomationConditions] = await Promise.all(
 		[
 			canArchiveAllPubs ||
@@ -304,7 +299,7 @@ const PubCardActions = async ({
 					userId
 				),
 		]
-	);
+	)
 
 	return (
 		<>

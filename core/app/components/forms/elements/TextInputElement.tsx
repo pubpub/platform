@@ -1,12 +1,7 @@
 "use client"
 
 import type { InputComponent } from "db/public"
-import type { InputProps } from "ui/input"
 import type { ElementProps } from "../types"
-
-import type { InputComponent } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
 
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 import { Input } from "ui/input"
@@ -20,9 +15,9 @@ export const TextInputElement = ({
 	label,
 	...rest
 }: ElementProps<InputComponent.textInput> & React.InputHTMLAttributes<HTMLInputElement>) => {
-	const { control } = useFormContext();
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
+	const { control } = useFormContext()
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(slug)
 	if (!Value.Check(textInputConfigSchema, config)) {
 		return null
 	}
