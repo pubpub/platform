@@ -3,6 +3,8 @@ import type { CommunitiesId, StagesId, UsersId } from "db/public"
 import { Suspense } from "react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card"
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "ui/empty"
+import { Bot } from "ui/icon"
 import { ItemGroup } from "ui/item"
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
@@ -52,9 +54,17 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 							/>
 						))
 					) : (
-						<div>
-							There are no automations for <em>{stage.name}</em>
-						</div>
+						<Empty>
+							<EmptyHeader>
+								<EmptyMedia variant="icon">
+									<Bot size={16} />
+								</EmptyMedia>
+								<EmptyTitle>No automations</EmptyTitle>
+								<EmptyDescription>
+									Add an automation to get started
+								</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
 					)}
 				</ItemGroup>
 			</CardContent>

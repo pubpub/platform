@@ -8,7 +8,7 @@ import Link from "next/link"
 
 import { Capabilities, MembershipType } from "db/public"
 import { Button } from "ui/button"
-import { Card, CardDescription, CardFooter, CardTitle } from "ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "ui/card"
 import { Calendar, History, Pencil, Trash2 } from "ui/icon"
 import { cn } from "utils"
 
@@ -89,13 +89,13 @@ export const PubCard = async ({
 		<Card
 			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
 			className={cn(
-				"group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500",
+				"group relative flex flex-row items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500",
 				// accessibility focus styles
 				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200"
 			)}
 			data-testid={`pub-card-${pub.id}`}
 		>
-			<div className="flex min-w-0 flex-1 flex-col space-y-[6px]">
+			<CardContent className="flex min-w-0 flex-1 flex-col space-y-[6px] px-0">
 				<div className="z-10 flex flex-row gap-2 p-0 font-semibold leading-4">
 					<PubTypeLabel pubType={pub.pubType} canFilter={canFilter} />
 					{pub.stage ? (
@@ -172,7 +172,7 @@ export const PubCard = async ({
 						<span>{formatDateAsPossiblyDistance(new Date(pub.updatedAt))}</span>
 					</div>
 				</CardFooter>
-			</div>
+			</CardContent>
 			<div className="z-10 mr-4 w-fit flex-shrink-0">
 				{/* We use grid and order-[x] to place items according to the design, but 
 				PubsRunActionDropDownMenu needs to be first so it can have `peer`. The other

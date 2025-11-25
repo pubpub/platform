@@ -1,9 +1,3 @@
-import type { ExpressionBuilder } from "kysely";
-
-import { cache } from "react";
-import { QueryCreator, sql } from "kysely";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
-
 import type {
 	CommunitiesId,
 	NewMoveConstraint,
@@ -13,19 +7,25 @@ import type {
 	StagesId,
 	StagesUpdate,
 	UsersId,
-} from "db/public";
-import { Capabilities, MembershipType } from "db/public";
+} from "db/public"
+import type { ExpressionBuilder } from "kysely"
+import type { AutoReturnType } from "../types"
 
-import type { AutoReturnType } from "../types";
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
+import { cache } from "react"
+import { type QueryCreator, sql } from "kysely"
+import { jsonArrayFrom } from "kysely/helpers/postgres"
+
+import { Capabilities, MembershipType } from "db/public"
+
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
 
 export const createStage = (props: NewStages) =>
-	autoRevalidate(db.insertInto("stages").values(props));
+	autoRevalidate(db.insertInto("stages").values(props))
 
 export const updateStage = (stageId: StagesId, props: StagesUpdate) =>
-	autoRevalidate(db.updateTable("stages").set(props).where("id", "=", stageId));
+	autoRevalidate(db.updateTable("stages").set(props).where("id", "=", stageId))
 
 export const removeStages = (stageIds: StagesId[]) =>
 	autoRevalidate(
@@ -38,10 +38,10 @@ export const removeStages = (stageIds: StagesId[]) =>
 			)
 			.deleteFrom("PubsInStages")
 			.where("stageId", "in", (eb) => eb.selectFrom("deleted_stages").select("id"))
-	);
+	)
 
 export const createMoveConstraint = (props: NewMoveConstraint) =>
-	autoRevalidate(db.insertInto("move_constraint").values(props));
+	autoRevalidate(db.insertInto("move_constraint").values(props))
 
 /**
  * You should use `executeTakeFirst` here
@@ -52,7 +52,7 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.selectFrom("PubsInStages")
 			.select(sql<PubsId[]>`array_agg("pubId")`.as("pubIds"))
 			.where("stageId", "=", stageId)
-	);
+	)
 
 /** To conveniently get a CTE of view stage capabilities. Join this to your query on stageId, i.e.
  *
@@ -66,9 +66,9 @@ export const viewableStagesCte = ({
 	userId,
 	communityId,
 }: {
-	db: QueryCreator<PublicSchema>;
-	userId: UsersId;
-	communityId?: CommunitiesId;
+	db: QueryCreator<PublicSchema>
+	userId: UsersId
+	communityId?: CommunitiesId
 }) => {
 	const stageMemberships = db
 		.selectFrom("stage_memberships")
@@ -84,7 +84,7 @@ export const viewableStagesCte = ({
 		)
 		.select("stage_memberships.stageId")
 		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
-		.where("stage_memberships.userId", "=", userId);
+		.where("stage_memberships.userId", "=", userId)
 
 	const communityMemberships = db
 		.selectFrom("community_memberships")
@@ -99,7 +99,7 @@ export const viewableStagesCte = ({
 			qb.where("community_memberships.communityId", "=", communityId!)
 		)
 		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
-		.select(["stages.id as stageId"]);
+		.select(["stages.id as stageId"])
 
 	return db
 		.selectFrom(
@@ -109,8 +109,8 @@ export const viewableStagesCte = ({
 				.as("stageId")
 		)
 		.distinct()
-		.select("stageId");
-};
+		.select("stageId")
+}
 
 export const getStagesViewableByUser = cache(
 	async (
@@ -128,15 +128,15 @@ export const getStagesViewableByUser = cache(
 			}
 		)
 			.executeTakeFirstOrThrow()
-			.then((res) => (res?.count ?? 0) > 0);
+			.then((res) => (res?.count ?? 0) > 0)
 	}
-);
+)
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId }
 type CommunityStageOptions = {
-	withActionInstances?: "count" | "full" | false;
-	withMembers?: "count" | "full" | false;
-};
+	withAutomations?: "count" | "full" | false
+	withMembers?: "count" | "full" | false
+}
 
 export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any>>(eb: EB) => {
 	return (
@@ -154,8 +154,8 @@ export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any
 					)
 					.as("defaultedConfigKeys")
 			)
-	);
-};
+	)
+}
 
 /**
  * Get all stages the given user has access to
@@ -164,7 +164,7 @@ export const getStages = (
 	{ communityId, stageId, userId }: CommunityStageProps,
 	options: CommunityStageOptions = {}
 ) => {
-	const withActionInstances = options.withActionInstances ?? "count";
+	const withAutomations = options.withAutomations ?? "count"
 
 	return autoCache(
 		db
@@ -208,18 +208,18 @@ export const getStages = (
 					)
 					.as("memberCount"),
 			])
-			.$if(withActionInstances === "count", (qb) =>
+			.$if(withAutomations === "count", (qb) =>
 				qb.select((eb) =>
 					eb
 						.selectFrom("automations")
 						.whereRef("automations.stageId", "=", "stages.id")
 						.select((eb) =>
-							eb.fn.count<number>("automations.id").as("actionInstancesCount")
+							eb.fn.count<number>("automations.id").as("automationsCount")
 						)
 						.as("actionInstancesCount")
 				)
 			)
-			.$if(withActionInstances === "full", (qb) =>
+			.$if(withAutomations === "full", (qb) =>
 				qb.select((eb) =>
 					jsonArrayFrom(
 						eb
@@ -227,17 +227,32 @@ export const getStages = (
 							.whereRef("automations.stageId", "=", "stages.id")
 							.selectAll("automations")
 							.select((eb) =>
-								actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys")
+								jsonArrayFrom(
+									eb
+										.selectFrom("action_instances")
+										.whereRef(
+											"action_instances.automationId",
+											"=",
+											"automations.id"
+										)
+										.selectAll("action_instances")
+
+										.select((eb) =>
+											actionConfigDefaultsSelect(eb).as(
+												"defaultedActionConfigKeys"
+											)
+										)
+								).as("actionInstances")
 							)
-					).as("actionInstances")
+					).as("automations")
 				)
 			)
 			.selectAll("stages")
 			.orderBy("order asc")
-	);
-};
+	)
+}
 
-export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
+export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"]
 
 export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
 	return autoRevalidate(
@@ -245,5 +260,5 @@ export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
 			.with("leave_stage", (db) => db.deleteFrom("PubsInStages").where("pubId", "=", pubId))
 			.insertInto("PubsInStages")
 			.values([{ pubId, stageId }])
-	);
-};
+	)
+}

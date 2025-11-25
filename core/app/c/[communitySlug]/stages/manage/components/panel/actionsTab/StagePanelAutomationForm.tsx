@@ -385,7 +385,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 					variant="ghost"
 					size="sm"
 					data-testid="add-automation-button"
-					className="m-0 h-6 p-0 text-gray-400 hover:bg-transparent hover:text-gray-900"
+					className="m-0 h-6 p-0 text-neutral-700 hover:bg-transparent hover:text-neutral-900"
 				>
 					<Plus size={16} /> Add automation
 				</Button>

@@ -58,7 +58,7 @@ export const StagePanelAutomation = (props: Props) => {
 	const triggerIcons = automation.triggers.map((trigger) => getTriggerByName(trigger.event))
 
 	return (
-		<Item variant="outline">
+		<Item variant="outline" size="sm">
 			<ItemMedia>
 				<DynamicIcon icon={automation.icon} size={16} />
 			</ItemMedia>
