@@ -1,6 +1,6 @@
 import type { Communities, Forms, Pubs, PubTypes, Stages } from "db/public"
-import type * as React from "react"
 
+import * as React from "react"
 import {
 	Body,
 	Button,

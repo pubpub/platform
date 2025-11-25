@@ -273,7 +273,11 @@
 
 	"overrides": [
 		{
-			"includes": ["packages/ui/**/*.tsx", "packages/context-editor/**/*.tsx"],
+			"includes": [
+				"packages/ui/**/*.tsx",
+				"packages/context-editor/**/*.tsx",
+				"packages/emails/**/*.tsx"
+			],
 			// so that the `import React from "react"` is not removed
 			"javascript": {
 				"jsxRuntime": "reactClassic"

@@ -1,5 +1,6 @@
 import type { Communities } from "db/public"
 
+import * as React from "react"
 import {
 	Body,
 	Button,
