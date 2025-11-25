@@ -27,7 +27,6 @@ type Props = {
 
 export default async function Page(props: Props) {
 	const searchParams = await props.searchParams
-	const _params = await props.params
 
 	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 

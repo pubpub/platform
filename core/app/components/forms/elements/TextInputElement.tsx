@@ -3,6 +3,10 @@
 import type { InputComponent } from "db/public"
 import type { ElementProps } from "../types"
 
+import { Value } from "@sinclair/typebox/value"
+import { useFormContext } from "react-hook-form"
+import { textInputConfigSchema } from "schemas"
+
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 import { Input } from "ui/input"
 

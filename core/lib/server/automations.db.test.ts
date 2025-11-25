@@ -1,5 +1,7 @@
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
+import { beforeAll, describe, expect, it } from "vitest"
+
 import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public"
 
 import { mockServerCode } from "~/lib/__tests__/utils"
@@ -151,7 +153,7 @@ describe("automations.db", () => {
 			name: "1",
 			actionInstances: [
 				{
-					id: community.stages["Stage 1"].automations["1"].actions[0].id,
+					id: community.stages["Stage 1"].automations["1"].actionInstances[0].id,
 					action: Action.log,
 					config: {},
 				},
@@ -177,7 +179,7 @@ describe("automations.db", () => {
 			createOrUpdateAutomationWithCycleCheck({
 				id: community.stages["Stage 1"].automations["3"].id,
 				name: "3",
-				actionInstances: community.stages["Stage 1"].automations["3"].actions,
+				actionInstances: community.stages["Stage 1"].automations["3"].actionInstances,
 				triggers: [
 					{
 						event: AutomationEvent.pubLeftStage,
@@ -198,7 +200,7 @@ describe("automations.db", () => {
 			createOrUpdateAutomationWithCycleCheck({
 				id: community.stages["Stage 1"].automations["1"].id,
 				name: "1",
-				actionInstances: community.stages["Stage 1"].automations["1"].actions,
+				actionInstances: community.stages["Stage 1"].automations["1"].actionInstances,
 				triggers: community.stages["Stage 1"].automations["1"].triggers,
 				communityId: community.community.id,
 			})
@@ -214,7 +216,7 @@ describe("automations.db", () => {
 			createOrUpdateAutomationWithCycleCheck({
 				id: community.stages["Stage 1"].automations["1"].id,
 				name: "1",
-				actionInstances: community.stages["Stage 1"].automations["1"].actions,
+				actionInstances: community.stages["Stage 1"].automations["1"].actionInstances,
 				triggers: community.stages["Stage 1"].automations["1"].triggers,
 				communityId: community.community.id,
 			})
@@ -230,7 +232,7 @@ describe("automations.db", () => {
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					name: "3",
-					actionInstances: community.stages["Stage 1"].automations["3"].actions,
+					actionInstances: community.stages["Stage 1"].automations["3"].actionInstances,
 					triggers: community.stages["Stage 1"].automations["3"].triggers,
 					communityId: community.community.id,
 				})
@@ -240,7 +242,7 @@ describe("automations.db", () => {
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					name: "3",
-					actionInstances: community.stages["Stage 1"].automations["3"].actions,
+					actionInstances: community.stages["Stage 1"].automations["3"].actionInstances,
 					triggers: community.stages["Stage 1"].automations["3"].triggers,
 					communityId: community.community.id,
 				})
@@ -250,7 +252,7 @@ describe("automations.db", () => {
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					name: "2",
-					actionInstances: community.stages["Stage 1"].automations["2"].actions,
+					actionInstances: community.stages["Stage 1"].automations["2"].actionInstances,
 					triggers: community.stages["Stage 1"].automations["2"].triggers,
 					communityId: community.community.id,
 				})
@@ -263,7 +265,7 @@ describe("automations.db", () => {
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					name: "1",
-					actionInstances: community.stages["Stage 1"].automations["1"].actions,
+					actionInstances: community.stages["Stage 1"].automations["1"].actionInstances,
 					triggers: community.stages["Stage 1"].automations["1"].triggers,
 					communityId: community.community.id,
 				})
@@ -279,7 +281,8 @@ describe("automations.db", () => {
 				createOrUpdateAutomationWithCycleCheck(
 					{
 						name: "3",
-						actionInstances: community.stages["Stage 1"].automations["3"].actions,
+						actionInstances:
+							community.stages["Stage 1"].automations["3"].actionInstances,
 						triggers: community.stages["Stage 1"].automations["3"].triggers,
 						communityId: community.community.id,
 					},

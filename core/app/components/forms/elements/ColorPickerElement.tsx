@@ -68,8 +68,7 @@ export const ColorPickerElement = ({
 	config,
 }: ElementProps<InputComponent.colorPicker>) => {
 	const { control } = useFormContext()
-	const formElementToggle = useFormElementToggleContext()
-	const _isEnabled = formElementToggle.isEnabled(slug)
+	const _formElementToggle = useFormElementToggleContext()
 
 	Value.Default(colorPickerConfigSchema, config)
 	if (!Value.Check(colorPickerConfigSchema, config)) {

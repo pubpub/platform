@@ -3,6 +3,9 @@ import type { UsersId } from "db/public"
 import type { FullAutomation } from "db/types"
 import type { CommunityStage } from "~/lib/server/stages"
 
+import React, { Suspense } from "react"
+import Link from "next/link"
+
 import { Capabilities, MembershipType } from "db/public"
 import { Button } from "ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "ui/card"

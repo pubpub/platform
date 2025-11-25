@@ -17,7 +17,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
 import { actions } from "~/actions/api"
-import { useServerAction } from "~/lib/serverActions"
 
 type ActionCellProps = {
 	action: Action
@@ -68,19 +67,19 @@ const ActionCell = (props: ActionCellProps) => {
 }
 
 type Props = {
-	onAdd: (actionName: Action["name"]) => Promise<unknown>
+	onAdd: (actionName: Action["name"]) => unknown
+	children: React.ReactNode
 	isSuperAdmin?: boolean | null
 }
 
 export const StagePanelActionCreator = (props: Props) => {
-	const runOnAdd = useServerAction(props.onAdd)
 	const [isOpen, setIsOpen] = useState(false)
 	const onActionSelect = useCallback(
 		async (action: Action) => {
 			setIsOpen(false)
-			runOnAdd(action.name)
+			props.onAdd(action.name)
 		},
-		[props.onAdd, runOnAdd]
+		[props.onAdd]
 	)
 	const onOpenChange = useCallback((open: boolean) => {
 		setIsOpen(open)
@@ -90,7 +89,7 @@ export const StagePanelActionCreator = (props: Props) => {
 		<div className="space-y-2 py-2">
 			<Dialog open={isOpen} onOpenChange={onOpenChange}>
 				<DialogTrigger asChild>
-					<Button variant="secondary">Add an action</Button>
+					{props.children}
 				</DialogTrigger>
 				<DialogContent data-testid={"add-action-dialog"}>
 					<DialogHeader>

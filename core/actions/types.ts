@@ -169,12 +169,16 @@ export type EventAutomationOptionsBase<
 		/**
 		 * The base display name for this automation, shown e.g. when selecting the event for a automation
 		 */
-		base: React.ReactNode | ((community: Communities) => React.ReactNode)
+		base: React.ReactNode | ((options: { community: Communities }) => React.ReactNode)
 		/**
 		 * String to use when viewing the automation on the stage.
 		 * Useful if you want to show some configuration or automation-specific information
 		 */
-		hydrated?: (automation: Automations, community: Communities) => React.ReactNode
+		hydrated?: (options: {
+			automation: Automations
+			community: Communities
+			config?: AC
+		}) => React.ReactNode
 	}
 }
 

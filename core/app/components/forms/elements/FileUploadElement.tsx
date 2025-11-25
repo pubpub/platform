@@ -47,11 +47,10 @@ export const FileUploadElement = ({
 	const runDelete = useServerAction(deleteFile)
 	const { form, mode } = usePubForm()
 
-	const { control, getValues, setValue } = useFormContext<FormValues>()
+	const { control } = useFormContext<FormValues>()
 
 	const formElementToggle = useFormElementToggleContext()
 	const isEnabled = formElementToggle.isEnabled(slug)
-	const _files = getValues()[slug]
 
 	const handleDeleteFile = useCallback(
 		async (

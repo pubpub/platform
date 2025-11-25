@@ -1,7 +1,7 @@
 "use client"
 
 import type { CommunitiesId, PubsId } from "db/public"
-import type { FullAutomation, IconConfig } from "db/types"
+import type { FullAutomation } from "db/types"
 import type { UseFormReturn } from "react-hook-form"
 
 import { Suspense, useCallback, useState } from "react"
@@ -9,7 +9,7 @@ import { Suspense, useCallback, useState } from "react"
 import { logger } from "logger"
 import { Button } from "ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog"
-import { DynamicIcon } from "ui/dynamic-icon"
+import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
 import { Separator } from "ui/separator"
 import { TokenProvider } from "ui/tokens"
 import { toast } from "ui/use-toast"

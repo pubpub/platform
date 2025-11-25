@@ -1,6 +1,5 @@
 import type { AutomationRunsId, AutomationsId, CommunitiesId, PubsId } from "db/public"
 
-import { env } from "node:process"
 import { createNextHandler } from "@ts-rest/serverless/next"
 
 import { api } from "contracts"
@@ -13,6 +12,7 @@ import {
 	scheduleDelayedAutomation,
 } from "~/actions/_lib/scheduleAutomations"
 import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api"
+import { env } from "~/lib/env/env"
 import { NotFoundError, tsRestHandleErrors } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
 

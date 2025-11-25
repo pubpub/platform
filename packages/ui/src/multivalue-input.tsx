@@ -2,7 +2,6 @@
 
 import type { Active, DragEndEvent } from "@dnd-kit/core"
 import type { Dispatch } from "react"
-import type { InputProps } from "./input"
 
 import React, { forwardRef, useState } from "react"
 import { DndContext } from "@dnd-kit/core"
@@ -15,7 +14,7 @@ import { Button } from "./button"
 import { GripVertical, XCircle } from "./icon"
 import { Input } from "./input"
 
-type MultiValueInputProps = Omit<InputProps, "onChange"> & {
+type MultiValueInputProps = Omit<React.ComponentProps<typeof Input>, "onChange"> & {
 	value: string[]
 	onChange: Dispatch<string[]>
 	/** Classname to apply to value badges */

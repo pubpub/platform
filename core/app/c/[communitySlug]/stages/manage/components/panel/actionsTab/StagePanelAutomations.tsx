@@ -1,5 +1,7 @@
 import type { CommunitiesId, StagesId, UsersId } from "db/public"
 
+import { Suspense } from "react"
+
 import { Card, CardContent, CardTitle } from "ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "ui/empty"
 import { Bot } from "ui/icon"

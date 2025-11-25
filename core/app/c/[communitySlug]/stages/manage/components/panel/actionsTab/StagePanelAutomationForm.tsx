@@ -420,7 +420,6 @@ function Form(
 							z.object({
 								action: z.literal(actionName),
 								config: new ActionConfigBuilder(actionName)
-									.withConfig(action.config.schema)
 									.withDefaults({})
 									.getSchema(),
 							})
@@ -528,8 +527,6 @@ function Form(
 	const { setError } = form
 
 	const { user } = useUserOrThrow()
-
-	const _community = useCommunity()
 
 	const onSubmit = useCallback(
 		async (data: CreateAutomationsSchema) => {

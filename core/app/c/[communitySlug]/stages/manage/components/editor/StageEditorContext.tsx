@@ -103,7 +103,7 @@ export const StageEditorProvider = (props: StageEditorProps) => {
 		setHasSelection(false)
 	}, [deleteStagesAndMoveConstraints])
 
-	const _editStage = useCallback(
+	const editStage = useCallback(
 		(stage?: CommunityStage) => {
 			router.push(
 				stage
@@ -123,7 +123,7 @@ export const StageEditorProvider = (props: StageEditorProps) => {
 		hasSelection,
 		getNodePosition,
 		setNodePositions,
-		editStage: _editStage,
+		editStage,
 	} satisfies StageEditorContext
 
 	return <StageEditorContext.Provider value={value}>{props.children}</StageEditorContext.Provider>

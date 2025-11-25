@@ -1,6 +1,7 @@
 "use client"
 
 import type { Communities, CommunityMembershipsId } from "db/public"
+import type { MemberSelectUserWithMembership } from "./types"
 
 import { memo, useEffect, useState } from "react"
 import { skipToken } from "@tanstack/react-query"

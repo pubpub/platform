@@ -6,6 +6,7 @@ import type {
 	ScheduleDelayedAutomationPayload,
 } from "db/types"
 import type { logger } from "logger"
+import type { InternalClient } from "../clients"
 
 import { defineJob } from "../defineJob"
 

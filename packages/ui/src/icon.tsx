@@ -1,3 +1,4 @@
+// biome-ignore-all lint/a11y/noSvgWithoutTitle: we don't need a title for these icons
 import type { LucideProps } from "lucide-react"
 
 import React, { forwardRef } from "react"

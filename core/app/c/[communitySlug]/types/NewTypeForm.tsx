@@ -20,7 +20,7 @@ import {
 } from "ui/form"
 import { Input } from "ui/input"
 import { MultiSelect } from "ui/multi-select"
-import { usePubFieldContext } from "ui/pubFields"
+import { type PubFieldContext, usePubFieldContext } from "ui/pubFields"
 import { toast } from "ui/use-toast"
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider"

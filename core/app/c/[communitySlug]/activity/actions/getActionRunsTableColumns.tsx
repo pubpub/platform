@@ -6,11 +6,12 @@ import type { ActionInstances, PubsId, Stages } from "db/public"
 import type { Writeable, XOR } from "utils/types"
 
 import Link from "next/link"
-import { Badge } from "lucide-react"
 
 import { AutomationEvent } from "db/public"
+import { Badge } from "ui/badge"
 import { DataTableColumnHeader } from "ui/data-table"
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
 
 import { PubTitle } from "~/app/components/PubTitle"
 import { getPubTitle, type PubTitleProps } from "~/lib/pubs"
@@ -75,7 +76,7 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 						return "Automation (Webhook)"
 				}
 			},
-		} satisfies ColumnDef<ActionRun, Event>,
+		} satisfies ColumnDef<ActionRun, AutomationEvent>,
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
 			accessorKey: "stage",

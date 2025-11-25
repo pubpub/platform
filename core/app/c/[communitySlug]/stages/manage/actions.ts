@@ -3,8 +3,6 @@
 import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm"
 
 import {
-	type Action,
-	type ActionInstancesId,
 	type AutomationsId,
 	Capabilities,
 	type CommunitiesId,
@@ -22,11 +20,6 @@ import { isUniqueConstraintError } from "~/kysely/errors"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
 import { ApiError } from "~/lib/server"
-import {
-	createActionInstance,
-	removeActionInstance,
-	updateActionInstance,
-} from "~/lib/server/actions"
 import {
 	AutomationError,
 	duplicateAutomation as duplicateAutomationDb,
@@ -272,104 +265,103 @@ export const revalidateStages = defineServerAction(async function revalidateStag
 	await revalidateTagsForCommunity(["stages", "PubsInStages"])
 })
 
-export const addAction = defineServerAction(async function addAction(
-	stageId: StagesId,
-	actionName: Action
-) {
-	const loginData = await getLoginData()
-	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN
-	}
+// export const addAction = defineServerAction(async function addAction(
+// 	stageId: StagesId,
+// 	actionName: Action
+// ) {
+// 	const loginData = await getLoginData()
+// 	if (!loginData || !loginData.user) {
+// 		return ApiError.NOT_LOGGED_IN
+// 	}
 
-	const { user } = loginData
+// 	const { user } = loginData
 
-	const authorized = await userCan(
-		Capabilities.manageStage,
-		{ type: MembershipType.stage, stageId },
-		user.id
-	)
+// 	const authorized = await userCan(
+// 		Capabilities.manageStage,
+// 		{ type: MembershipType.stage, stageId },
+// 		user.id
+// 	)
 
-	if (!authorized) {
-		return ApiError.UNAUTHORIZED
-	}
-	try {
-		await createActionInstance({
-			action: actionName,
-			stageId,
-		}).executeTakeFirstOrThrow()
-	} catch (error) {
-		return {
-			error: "Failed to add action",
-			cause: error,
-		}
-	}
-})
+// 	if (!authorized) {
+// 		return ApiError.UNAUTHORIZED
+// 	}
+// 	try {
+// 		await createActionInstance({
+// 			action: actionName,
+// 		}).executeTakeFirstOrThrow()
+// 	} catch (error) {
+// 		return {
+// 			error: "Failed to add action",
+// 			cause: error,
+// 		}
+// 	}
+// })
 
-export const updateAction = defineServerAction(async function updateAction(
-	actionInstanceId: ActionInstancesId,
-	stageId: StagesId,
-	props:
-		| {
-				config: Record<string, any>
-				name?: undefined
-		  }
-		| { name: string; config?: undefined }
-) {
-	const loginData = await getLoginData()
-	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN
-	}
+// export const updateAction = defineServerAction(async function updateAction(
+// 	actionInstanceId: ActionInstancesId,
+// 	stageId: StagesId,
+// 	props:
+// 		| {
+// 				config: Record<string, any>
+// 				name?: undefined
+// 		  }
+// 		| { name: string; config?: undefined }
+// ) {
+// 	const loginData = await getLoginData()
+// 	if (!loginData || !loginData.user) {
+// 		return ApiError.NOT_LOGGED_IN
+// 	}
 
-	const authorized = await userCan(
-		Capabilities.manageStage,
-		{ type: MembershipType.stage, stageId },
-		loginData.user.id
-	)
+// 	const authorized = await userCan(
+// 		Capabilities.manageStage,
+// 		{ type: MembershipType.stage, stageId },
+// 		loginData.user.id
+// 	)
 
-	if (!authorized) {
-		return ApiError.UNAUTHORIZED
-	}
+// 	if (!authorized) {
+// 		return ApiError.UNAUTHORIZED
+// 	}
 
-	await updateActionInstance(actionInstanceId, {
-		config: props.config,
-	}).executeTakeFirstOrThrow()
+// 	await updateActionInstance(actionInstanceId, {
+// 		config: props.config,
+// 	}).executeTakeFirstOrThrow()
 
-	return {
-		success: true,
-		report: "Action updated",
-	}
-})
+// 	return {
+// 		success: true,
+// 		report: "Action updated",
+// 	}
+// })
 
-export const deleteAction = defineServerAction(async function deleteAction(
-	actionId: ActionInstancesId,
-	stageId: StagesId
-) {
-	const loginData = await getLoginData()
-	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN
-	}
+// export const deleteAction = defineServerAction(async function deleteAction(
+// 	actionId: ActionInstancesId,
+// 	stageId: StagesId
+// ) {
+// 	const loginData = await getLoginData()
+// 	if (!loginData || !loginData.user) {
+// 		return ApiError.NOT_LOGGED_IN
+// 	}
 
-	const authorized = await userCan(
-		Capabilities.manageStage,
-		{ type: MembershipType.stage, stageId },
-		loginData.user.id
-	)
+// 	const authorized = await userCan(
+// 		Capabilities.manageStage,
+// 		{ type: MembershipType.stage, stageId },
+// 		loginData.user.id
+// 	)
 
-	if (!authorized) {
-		return ApiError.UNAUTHORIZED
-	}
+// 	if (!authorized) {
+// 		return ApiError.UNAUTHORIZED
+// 	}
 
-	try {
-		await removeActionInstance(actionId).executeTakeFirstOrThrow()
-	} catch (error) {
-		return {
-			error: "Failed to delete action",
-			cause: error,
-		}
-	} finally {
-		await revalidateTagsForCommunity(["action_instances"])
-	}
-})
+// 	try {
+// 		await removeActionInstance(actionId).executeTakeFirstOrThrow()
+// 	} catch (error) {
+// 		return {
+// 			error: "Failed to delete action",
+// 			cause: error,
+// 		}
+// 	} finally {
+// 		await revalidateTagsForCommunity(["action_instances"])
+// 	}
+// })
 
 export const addOrUpdateAutomation = defineServerAction(async function addOrUpdateAutomation({
 	stageId,
