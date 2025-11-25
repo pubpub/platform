@@ -1,7 +1,7 @@
-import React from "react";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { cva } from "class-variance-authority";
 import { AlertTriangle } from "lucide-react";
+import type React from "react";
 
 import { Info, XCircle } from "ui/icon";
 import { cn } from "utils";
@@ -23,7 +23,7 @@ const infoButtonVariants = cva("h-4 w-4 text-gray-500", {
 		type: {
 			info: "text-gray-500",
 			warning: "text-yellow-500",
-			error: "text-red-500",
+			error: "text-destructive",
 		},
 	},
 });
@@ -34,7 +34,11 @@ const InfoIcon = {
 	error: XCircle,
 };
 
-export const InfoButton = ({ children, className, type = "info" }: InfoButtonProps) => {
+export const InfoButton = ({
+	children,
+	className,
+	type = "info",
+}: InfoButtonProps) => {
 	const Icon = InfoIcon[type];
 	return (
 		<Tooltip>

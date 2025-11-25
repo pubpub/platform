@@ -1,11 +1,17 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
-import type { FieldErrors } from "react-hook-form";
-
-import { useCallback, useId, useMemo, useState } from "react";
-import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+	DndContext,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
+import {
+	restrictToParentElement,
+	restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
 import {
 	SortableContext,
 	sortableKeyboardCoordinates,
@@ -14,28 +20,27 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Value } from "@sinclair/typebox/value";
-import { AlertTriangle } from "lucide-react";
-import { useFieldArray, useFormContext } from "react-hook-form";
-import { relationBlockConfigSchema } from "schemas";
-
 import type { ProcessedPub } from "contracts";
 import type { InputComponent, PubsId, PubValuesId } from "db/public";
 import { MemberRole } from "db/public";
+import { AlertTriangle } from "lucide-react";
+import { useCallback, useId, useMemo, useState } from "react";
+import type { FieldErrors } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
+import { relationBlockConfigSchema } from "schemas";
 import { Button } from "ui/button";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import {
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "ui/form";
 import { GripVertical, Pencil, Plus, Trash, TriangleAlert } from "ui/icon";
 import { MultiBlock } from "ui/multiblock";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { cn } from "utils";
-
-import type { PubFieldFormElementProps } from "../PubFieldFormElement";
-import type {
-	ElementProps,
-	PubFieldElement,
-	PubFieldElementComponent,
-	RelatedFormValues,
-	SingleFormValues,
-} from "../types";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { getPubTitle } from "~/lib/pubs";
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
@@ -43,7 +48,15 @@ import { useContextEditorContext } from "../../ContextEditor/ContextEditorContex
 import { usePubForm } from "../../providers/PubFormProvider";
 import { useCommunityMembershipOrThrow } from "../../providers/UserProvider";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
+import type { PubFieldFormElementProps } from "../PubFieldFormElement";
 import { PubFieldFormElement } from "../PubFieldFormElement";
+import type {
+	ElementProps,
+	PubFieldElement,
+	PubFieldElementComponent,
+	RelatedFormValues,
+	SingleFormValues,
+} from "../types";
 
 const RelatedPubBlock = ({
 	id,
@@ -60,9 +73,10 @@ const RelatedPubBlock = ({
 	slug: string;
 	onBlur?: () => void;
 }) => {
-	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-		id,
-	});
+	const { attributes, listeners, setNodeRef, transform, transition } =
+		useSortable({
+			id,
+		});
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
@@ -78,13 +92,17 @@ const RelatedPubBlock = ({
 			{/* Max width to keep long 'value's truncated. 90% to leave room for the trash button */}
 			<div className="flex max-w-[90%] flex-col items-start gap-1 text-sm">
 				<span className="font-semibold">{pubTitle}</span>
-				<ConfigureRelatedValue {...valueComponentProps} slug={slug} onBlur={onBlur} />
+				<ConfigureRelatedValue
+					{...valueComponentProps}
+					slug={slug}
+					onBlur={onBlur}
+				/>
 			</div>
 			<div className="ml-auto">
 				<Button
 					type="button"
 					variant="ghost"
-					className="p-2 text-neutral-400 hover:bg-white hover:text-red-500"
+					className="p-2 text-neutral-400 hover:bg-white hover:text-destructive"
 					aria-label="Delete link to related pub"
 					onClick={onRemove}
 				>
@@ -109,17 +127,22 @@ const RelatedPubBlock = ({
 
 const parseRelatedPubValuesSlugError = (
 	slug: string,
-	formStateErrors: FieldErrors<SingleFormValues> | FieldErrors<RelatedFormValues>
+	formStateErrors:
+		| FieldErrors<SingleFormValues>
+		| FieldErrors<RelatedFormValues>,
 ) => {
 	const [baseSlug, index] = slug.split(".");
 	const indexNumber = index ? parseInt(index) : undefined;
 
 	if (!indexNumber || isNaN(indexNumber)) {
-		const baseError = (formStateErrors as FieldErrors<SingleFormValues>)[baseSlug];
+		const baseError = (formStateErrors as FieldErrors<SingleFormValues>)[
+			baseSlug
+		];
 		return baseError;
 	}
-	const valueError = (formStateErrors as FieldErrors<RelatedFormValues>)[baseSlug]?.[indexNumber]
-		?.value;
+	const valueError = (formStateErrors as FieldErrors<RelatedFormValues>)[
+		baseSlug
+	]?.[indexNumber]?.value;
 	return valueError;
 };
 
@@ -140,7 +163,9 @@ export const ConfigureRelatedValue = ({
 			: element.config.label;
 	const label = configLabel || element.label || element.slug;
 
-	const { watch, formState } = useFormContext<RelatedFormValues | SingleFormValues>();
+	const { watch, formState } = useFormContext<
+		RelatedFormValues | SingleFormValues
+	>();
 	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
 	const value = watch(slug);
 	const showValue = value != null && value !== "";
@@ -171,9 +196,9 @@ export const ConfigureRelatedValue = ({
 					className={cn(
 						"flex h-4 max-w-full gap-1 p-0 text-blue-500",
 						{
-							"text-red-500": valueError,
+							"text-destructive": valueError,
 						},
-						className
+						className,
 					)}
 				>
 					{valueError && <TriangleAlert />}
@@ -185,14 +210,19 @@ export const ConfigureRelatedValue = ({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent side="bottom">
-				<PubFieldFormElement {...props} element={element} slug={slug} label={label} />
+				<PubFieldFormElement
+					{...props}
+					element={element}
+					slug={slug}
+					label={label}
+				/>
 			</PopoverContent>
 		</Popover>
 	);
 };
 
 const useShouldShowRelationBlockWarning = (
-	element: PubFieldElement<PubFieldElementComponent, true>
+	element: PubFieldElement<PubFieldElementComponent, true>,
 ) => {
 	const membership = useCommunityMembershipOrThrow();
 	const { relatedPubTypes } = element;
@@ -211,19 +241,28 @@ export const RelatedPubsElement = ({
 	const { pubTypes } = useContextEditorContext();
 	const { form, mode } = usePubForm();
 	const { relatedPubTypes: relatedPubTypeIds } = element;
-	const relatedPubTypes = pubTypes.filter((pt) => relatedPubTypeIds?.includes(pt.id));
+	const relatedPubTypes = pubTypes.filter((pt) =>
+		relatedPubTypeIds?.includes(pt.id),
+	);
 
 	const [showPanel, setShowPanel] = useState(false);
 
 	// Look through existing related pubs in `values` to get their pub titles
 	const initialRelatedPubs = valueComponentProps.values.flatMap((v) =>
 		v.relatedPub && v.relatedPubId
-			? [{ id: v.relatedPubId, pub: v.relatedPub as ProcessedPub<{ withPubType: true }> }]
-			: []
+			? [
+					{
+						id: v.relatedPubId,
+						pub: v.relatedPub as ProcessedPub<{ withPubType: true }>,
+					},
+				]
+			: [],
 	);
 	// Keep track of related pubs in state, as we either have 'full' pubs from the initial values,
 	// or from the table when they are added
-	const [relatedPubs, setRelatedPubs] = useState(initialRelatedPubs.map((p) => p.pub));
+	const [relatedPubs, setRelatedPubs] = useState(
+		initialRelatedPubs.map((p) => p.pub),
+	);
 
 	const pubTitles = useMemo(() => {
 		return Object.fromEntries(relatedPubs.map((p) => [p.id, getPubTitle(p)]));
@@ -235,13 +274,16 @@ export const RelatedPubsElement = ({
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(slug);
 
-	const { fields, append, move, update, remove } = useFieldArray({ control, name: slug });
+	const { fields, append, move, update, remove } = useFieldArray({
+		control,
+		name: slug,
+	});
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
-		})
+		}),
 	);
 
 	const id = useId();
@@ -260,7 +302,7 @@ export const RelatedPubsElement = ({
 				});
 			}
 		},
-		[fields]
+		[fields],
 	);
 
 	const showRelationBlockWarning = useShouldShowRelationBlockWarning(element);
@@ -278,7 +320,7 @@ export const RelatedPubsElement = ({
 				render={({ field }) => {
 					const handleRemovePub = (
 						item: { valueId?: PubValuesId; relatedPubId: PubsId },
-						index: number
+						index: number,
 					) => {
 						remove(index);
 						if (item.valueId) {
@@ -290,11 +332,13 @@ export const RelatedPubsElement = ({
 								},
 							]);
 						}
-						setRelatedPubs(relatedPubs.filter((p) => p.id !== item.relatedPubId));
+						setRelatedPubs(
+							relatedPubs.filter((p) => p.id !== item.relatedPubId),
+						);
 					};
 
 					const handleChangeRelatedPubs = (
-						newPubs: ProcessedPub<{ withPubType: true }>[]
+						newPubs: ProcessedPub<{ withPubType: true }>[],
 					) => {
 						for (const [index, value] of field.value.entries()) {
 							const removed = !newPubs.find((p) => p.id === value.relatedPubId);
@@ -310,7 +354,9 @@ export const RelatedPubsElement = ({
 							numberOfRanks: newPubs.length,
 						});
 						// Add new values
-						const newlyAdded = newPubs.filter((p) => !alreadyLinked.includes(p.id));
+						const newlyAdded = newPubs.filter(
+							(p) => !alreadyLinked.includes(p.id),
+						);
 						const newValues = newlyAdded.map((p, i) => ({
 							relatedPubId: p.id,
 							value: null,
@@ -372,16 +418,10 @@ export const RelatedPubsElement = ({
 																<RelatedPubBlock
 																	key={id}
 																	id={id}
-																	pubTitle={
-																		pubTitles[item.relatedPubId]
-																	}
-																	onRemove={() =>
-																		handleRemovePub(item, index)
-																	}
+																	pubTitle={pubTitles[item.relatedPubId]}
+																	onRemove={() => handleRemovePub(item, index)}
 																	slug={innerSlug}
-																	valueComponentProps={
-																		valueComponentProps
-																	}
+																	valueComponentProps={valueComponentProps}
 																	onBlur={field.onBlur}
 																/>
 															);
@@ -394,7 +434,9 @@ export const RelatedPubsElement = ({
 								</FormControl>
 							</div>
 
-							<FormDescription>{config.relationshipConfig.help}</FormDescription>
+							<FormDescription>
+								{config.relationshipConfig.help}
+							</FormDescription>
 							<FormMessage />
 							{showRelationBlockWarning && (
 								<div className="flex items-center gap-2 text-xs text-amber-500">

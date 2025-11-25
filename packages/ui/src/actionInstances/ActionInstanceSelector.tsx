@@ -2,7 +2,13 @@ import React from "react";
 import { useFormContext } from "react-hook-form";
 
 import { FormField, FormItem, FormLabel, FormMessage } from "../form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "../select";
 import { useActionInstanceContext } from "./ActionInstancesContext";
 
 type Props = {};
@@ -15,7 +21,7 @@ export const ActionInstanceSelector = (props: Props) => {
 		<FormField
 			control={form.control}
 			name="actionInstanceId"
-			render={({ field }) => (
+			render={({ triggersField: field }) => (
 				<FormItem>
 					<FormLabel></FormLabel>
 					<Select onValueChange={field.onChange} defaultValue={field.value}>

@@ -1,10 +1,10 @@
 "use client";
 
-import { useId } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { type Static } from "@sinclair/typebox";
+import type { Static } from "@sinclair/typebox";
 import { ArchiveRestore, GripVertical, Trash, TypeOutline } from "lucide-react";
+import { useId } from "react";
 
 import { Button } from "ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
@@ -13,7 +13,7 @@ import { cn } from "utils";
 import { useBuilder } from "~/app/components/FormBuilder/BuilderContext";
 import { FieldIcon } from "~/app/components/FormBuilder/FieldIcon";
 import { pubFieldCanBeTitle } from "../../utils";
-import { pubTypeBuilderSchema } from "./TypeBuilder";
+import type { pubTypeBuilderSchema } from "./TypeBuilder";
 
 export type FieldThingProps = {
 	field: Static<typeof pubTypeBuilderSchema>["fields"][number];
@@ -32,7 +32,14 @@ export const FieldBlock = ({
 	isTitle,
 	toggleTitle,
 }: FieldThingProps) => {
-	const { attributes, listeners, isDragging, setNodeRef, transform, transition } = useSortable({
+	const {
+		attributes,
+		listeners,
+		isDragging,
+		setNodeRef,
+		transform,
+		transition,
+	} = useSortable({
 		id: field.id,
 	});
 
@@ -54,7 +61,7 @@ export const FieldBlock = ({
 						type="button"
 						disabled={isDisabled}
 						variant="ghost"
-						className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
+						className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-destructive"
 						aria-label={`Restore ${field.name}`}
 						onClick={() => {
 							restoreElement(index);
@@ -74,7 +81,7 @@ export const FieldBlock = ({
 					type="button"
 					disabled={isDisabled}
 					variant="ghost"
-					className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
+					className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-destructive"
 					aria-label={`Delete ${field.name}`}
 					data-testid={`delete-${field.name}`}
 					onClick={() => {
@@ -98,7 +105,7 @@ export const FieldBlock = ({
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
 				field.deleted && "border-l-red-200",
-				isDragging && "z-10 cursor-grabbing"
+				isDragging && "z-10 cursor-grabbing",
 			)}
 		>
 			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
@@ -108,14 +115,17 @@ export const FieldBlock = ({
 						className={cn(
 							"mr-4 mt-3 shrink-0",
 							isEditing ? "text-blue-500" : "text-emerald-500",
-							field.deleted && "text-gray-500"
+							field.deleted && "text-gray-500",
 						)}
 					/>
 					<div>
 						<div className="text-gray-500">{field.slug}</div>
 						<div
 							id={labelId}
-							className={cn("font-semibold", field.deleted ? "text-gray-500" : "")}
+							className={cn(
+								"font-semibold",
+								field.deleted ? "text-gray-500" : "",
+							)}
 						>
 							{field.name}
 						</div>
@@ -133,7 +143,7 @@ export const FieldBlock = ({
 									className={cn(
 										"p-1.5 text-neutral-400 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
 										"hover:bg-white hover:text-blue-500",
-										isTitle && "text-blue-500 opacity-100"
+										isTitle && "text-blue-500 opacity-100",
 									)}
 									onClick={() => {
 										toggleTitle();
@@ -171,7 +181,7 @@ export const FieldBlock = ({
 						variant="ghost"
 						className={cn(
 							"p-1.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
-							isDragging ? "cursor-grabbing" : "cursor-grab"
+							isDragging ? "cursor-grabbing" : "cursor-grab",
 						)}
 						{...listeners}
 						{...attributes}

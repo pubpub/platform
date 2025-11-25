@@ -1,20 +1,22 @@
-import { cache } from "react";
-import { sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-
 import type {
 	AutomationConditionBlocks,
 	AutomationConditions,
+	AutomationEvent,
 	AutomationsId,
 	StagesId,
 	UsersId,
 } from "db/public";
-import { AutomationEvent } from "db/public";
-
+import { sql } from "kysely";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { cache } from "react";
+import type { IconConfig } from "ui/dynamic-icon";
 import { db } from "~/kysely/database";
 import { pubType, pubValuesByRef } from "../server";
 import { autoCache } from "../server/cache/autoCache";
-import { actionConfigDefaultsSelect, viewableStagesCte } from "../server/stages";
+import {
+	actionConfigDefaultsSelect,
+	viewableStagesCte,
+} from "../server/stages";
 import { SAFE_USER_SELECT } from "../server/user";
 
 export const getStage = cache((stageId: StagesId, userId: UsersId) => {
@@ -37,17 +39,17 @@ export const getStage = cache((stageId: StagesId, userId: UsersId) => {
 						.selectFrom("move_constraint")
 						.whereRef("move_constraint.stageId", "=", "stages.id")
 						.innerJoin("stages as s", "s.id", "move_constraint.destinationId")
-						.select(["s.id", "s.name"])
+						.select(["s.id", "s.name"]),
 				).as("moveConstraints"),
 				jsonArrayFrom(
 					eb
 						.selectFrom("move_constraint")
 						.whereRef("move_constraint.destinationId", "=", "stages.id")
 						.innerJoin("stages as s", "s.id", "move_constraint.stageId")
-						.select(["s.id", "s.name"])
+						.select(["s.id", "s.name"]),
 				).as("moveConstraintSources"),
 			])
-			.where("stages.id", "=", stageId)
+			.where("stages.id", "=", stageId),
 	);
 });
 
@@ -119,7 +121,7 @@ export const getStagePubs = cache((stageId: StagesId) => {
 			.select(pubValuesByRef("pubs.id"))
 			.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
 			.innerJoin("PubsInStages", "PubsInStages.pubId", "pubs.id")
-			.where("PubsInStages.stageId", "=", stageId)
+			.where("PubsInStages.stageId", "=", stageId),
 	);
 });
 
@@ -132,7 +134,7 @@ export const getStageMembers = cache((stageId: StagesId) => {
 			.select(SAFE_USER_SELECT)
 			.select("stage_memberships.role")
 			.select("stage_memberships.formId")
-			.orderBy("stage_memberships.createdAt asc")
+			.orderBy("stage_memberships.createdAt asc"),
 	);
 });
 
@@ -145,7 +147,9 @@ export type GetEventAutomationOptions =
 			sourceAutomationId?: never;
 	  }
 	| {
-			event: AutomationEvent.automationFailed | AutomationEvent.automationSucceeded;
+			event:
+				| AutomationEvent.automationFailed
+				| AutomationEvent.automationSucceeded;
 			sourceAutomationId: AutomationsId;
 	  };
 
@@ -175,15 +179,15 @@ const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
 					.selectAll("automation_triggers")
 					.whereRef("automation_triggers.automationId", "=", "automations.id")
 					.$if(!!options?.event, (qb) =>
-						qb.where("automation_triggers.event", "=", options!.event)
+						qb.where("automation_triggers.event", "=", options!.event),
 					)
 					.$if(!!options?.sourceAutomationId, (qb) =>
 						qb.where(
 							"automation_triggers.sourceAutomationId",
 							"=",
-							options!.sourceAutomationId!
-						)
-					)
+							options!.sourceAutomationId!,
+						),
+					),
 			)
 				.$notNull()
 				.as("triggers"),
@@ -192,26 +196,36 @@ const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
 					.selectFrom("action_instances")
 					.selectAll("action_instances")
 					.whereRef("action_instances.automationId", "=", "automations.id")
-					.select((eb) => actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys"))
+					.select((eb) =>
+						actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys"),
+					),
 			)
 				.$notNull()
 				.as("actionInstances"),
 			jsonObjectFrom(
 				eb
 					.selectFrom("automation_condition_blocks")
-					.whereRef("automation_condition_blocks.automationId", "=", "automations.id")
-					.where("automation_condition_blocks.automationConditionBlockId", "is", null)
+					.whereRef(
+						"automation_condition_blocks.automationId",
+						"=",
+						"automations.id",
+					)
+					.where(
+						"automation_condition_blocks.automationConditionBlockId",
+						"is",
+						null,
+					)
 					.selectAll("automation_condition_blocks")
 					.select(sql.lit<"block">("block").as("kind"))
 					.select((eb) =>
 						// this function is what recursively builds the condition blocks and conditions
 						// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
 						eb
-							.fn<
-								ConditionBlock[]
-							>("get_condition_block_items", ["automation_condition_blocks.id"])
-							.as("items")
-					)
+							.fn<ConditionBlock[]>("get_condition_block_items", [
+								"automation_condition_blocks.id",
+							])
+							.as("items"),
+					),
 			).as("condition"),
 		])
 		.$if(!!options?.event, (eb) => {
@@ -225,22 +239,27 @@ const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
 							qb.where(
 								"automation_triggers.sourceAutomationId",
 								"=",
-								options!.sourceAutomationId!
-							)
-						)
-				)
+								options!.sourceAutomationId!,
+							),
+						),
+				),
 			);
-		});
+		})
+		.$narrowType<{ icon: IconConfig | null }>();
 });
 
 export const getStageAutomations = cache(
 	(stageId: StagesId, options?: GetEventAutomationOptions) => {
-		return autoCache(getAutomationBase(options).where("automations.stageId", "=", stageId));
-	}
+		return autoCache(
+			getAutomationBase(options).where("automations.stageId", "=", stageId),
+		);
+	},
 );
 
 export const getAutomation = cache(
 	(automationId: AutomationsId, options?: GetEventAutomationOptions) => {
-		return autoCache(getAutomationBase(options).where("automations.id", "=", automationId));
-	}
+		return autoCache(
+			getAutomationBase(options).where("automations.id", "=", automationId),
+		);
+	},
 );

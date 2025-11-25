@@ -1,12 +1,24 @@
 "use client";
 
+import React from "react";
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
-import React from "react";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "ui/select";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../form";
+import {
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "../form";
 import { useStages } from "./StagesProvider";
 
 type Props = {
@@ -46,11 +58,14 @@ export const StagesSelect = (props: Props) => {
 /**
  * Use this instead of the StagesSelect component when you want to use the StagesSelect in a form directly
  */
-export const StagesSelectField = (props: { fieldName: string; fieldLabel: string }) => {
+export const StagesSelectField = (props: {
+	fieldName: string;
+	fieldLabel: string;
+}) => {
 	return (
 		<FormField
 			name={props.fieldName}
-			render={({ field }) => (
+			render={({ triggersField: field }) => (
 				<FormItem>
 					<FormLabel>{props.fieldLabel ?? "Stage"}</FormLabel>
 					<StagesSelect fieldLabel={props.fieldLabel} field={field} />

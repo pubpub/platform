@@ -1,20 +1,21 @@
-import type { FieldArrayWithId } from "react-hook-form";
-
-import { useId } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import Markdown from "react-markdown";
-
 import type { PubFieldsId } from "db/public";
+import { useId } from "react";
+import type { FieldArrayWithId } from "react-hook-form";
+import Markdown from "react-markdown";
 import { Button } from "ui/button";
 import { ArchiveRestore, GripVertical, Pencil, Trash } from "ui/icon";
 import { usePubFieldContext } from "ui/pubFields";
 import { cn } from "utils";
-
-import type { FormBuilderSchema, InputElement, StructuralElement } from "./types";
 import { useBuilder } from "./BuilderContext";
 import { FieldIcon } from "./FieldIcon";
 import { structuralElements } from "./StructuralElements";
+import type {
+	FormBuilderSchema,
+	InputElement,
+	StructuralElement,
+} from "./types";
 import { isFieldInput, isStructuralElement } from "./types";
 
 type FormElementProps = {
@@ -24,8 +25,20 @@ type FormElementProps = {
 	isDisabled: boolean;
 };
 
-export const FormElement = ({ element, index, isEditing, isDisabled }: FormElementProps) => {
-	const { attributes, listeners, isDragging, setNodeRef, transform, transition } = useSortable({
+export const FormElement = ({
+	element,
+	index,
+	isEditing,
+	isDisabled,
+}: FormElementProps) => {
+	const {
+		attributes,
+		listeners,
+		isDragging,
+		setNodeRef,
+		transform,
+		transition,
+	} = useSortable({
 		id: element.id,
 		disabled: isDisabled,
 	});
@@ -52,7 +65,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				type="button"
 				disabled={isDisabled}
 				variant="ghost"
-				className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
+				className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-destructive"
 				aria-label={`Restore ${labelName}`}
 				onClick={() => {
 					restoreElement(index);
@@ -67,7 +80,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			type="button"
 			disabled={isDisabled}
 			variant="ghost"
-			className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
+			className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-destructive"
 			aria-label={`Delete ${labelName}`}
 			data-testid={`delete-${labelName}`}
 			onClick={() => {
@@ -88,18 +101,27 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				isDisabled && "cursor-auto opacity-50",
 				isDragging && "z-10 cursor-grabbing",
 				{
-					"border-l-amber-200/70 bg-amber-50/30": element.updated && !element.added,
+					"border-l-amber-200/70 bg-amber-50/30":
+						element.updated && !element.added,
 					"border-l-emerald-200 bg-emerald-50/30": element.added,
 					"border-l-red-200 bg-red-50/30": element.deleted,
-				}
+				},
 			)}
 		>
 			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
 				{isFieldInput(element) && (
-					<FieldInputElement element={element} isEditing={isEditing} labelId={labelId} />
+					<FieldInputElement
+						element={element}
+						isEditing={isEditing}
+						labelId={labelId}
+					/>
 				)}
 				{isStructuralElement(element) && (
-					<StructuralElement element={element} isEditing={isEditing} labelId={labelId} />
+					<StructuralElement
+						element={element}
+						isEditing={isEditing}
+						labelId={labelId}
+					/>
 				)}
 				{isEditing ? (
 					<div className="my-auto ml-auto text-xs text-blue-500">EDITING</div>
@@ -126,7 +148,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							variant="ghost"
 							className={cn(
 								"p-1.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
-								isDragging ? "cursor-grabbing" : "cursor-grab"
+								isDragging ? "cursor-grabbing" : "cursor-grab",
 							)}
 							{...listeners}
 							{...attributes}
@@ -147,7 +169,11 @@ type FieldInputElementProps = {
 	isEditing: boolean;
 	labelId?: string;
 };
-export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputElementProps) => {
+export const FieldInputElement = ({
+	element,
+	isEditing,
+	labelId,
+}: FieldInputElementProps) => {
 	const pubFields = usePubFieldContext();
 	const field = pubFields[element.fieldId as PubFieldsId];
 
@@ -162,7 +188,7 @@ export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputEle
 						"text-red-300": element.deleted,
 						"text-amber-500": element.updated && !element.added,
 						"text-emerald-700": element.added,
-					}
+					},
 				)}
 			/>
 			<div>
@@ -174,7 +200,7 @@ export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputEle
 					})}
 				>
 					{(element.config as any)?.label ?? field.name}
-					{element.required && <span className="text-red-500">* </span>}
+					{element.required && <span className="text-destructive">* </span>}
 				</div>
 			</div>
 		</>
@@ -186,7 +212,11 @@ type StructuralElementProps = {
 	isEditing: boolean;
 	labelId?: string;
 };
-const StructuralElement = ({ element, isEditing, labelId }: StructuralElementProps) => {
+const StructuralElement = ({
+	element,
+	isEditing,
+	labelId,
+}: StructuralElementProps) => {
 	const { Icon, name } = structuralElements[element.element];
 
 	return (
@@ -194,17 +224,23 @@ const StructuralElement = ({ element, isEditing, labelId }: StructuralElementPro
 			<div className="flex items-center gap-2">
 				<Icon
 					size={20}
-					className={cn("shrink-0", isEditing ? "text-blue-500" : "text-emerald-500", {
-						"text-amber-500": element.updated && !element.added,
-						"text-emerald-700": element.added,
-						"text-red-300": element.deleted,
-					})}
+					className={cn(
+						"shrink-0",
+						isEditing ? "text-blue-500" : "text-emerald-500",
+						{
+							"text-amber-500": element.updated && !element.added,
+							"text-emerald-700": element.added,
+							"text-red-300": element.deleted,
+						},
+					)}
 				/>
 				<div id={labelId} className="text-gray-500">
 					{name}
 				</div>
 			</div>
-			<div className={cn("prose prose-sm", element.deleted ? "text-gray-500" : "")}>
+			<div
+				className={cn("prose prose-sm", element.deleted ? "text-gray-500" : "")}
+			>
 				{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
 				<Markdown className="line-clamp-2">{element.content}</Markdown>
 			</div>

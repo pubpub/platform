@@ -1,9 +1,4 @@
-import type { ZodError } from "zod";
-
 import { captureException } from "@sentry/nextjs";
-import { Kysely, sql } from "kysely";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
-
 import type { ProcessedPub } from "contracts";
 import type { Database } from "db/Database";
 import type {
@@ -18,17 +13,15 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import type { BaseActionInstanceConfig, Json } from "db/types";
-import type { Prettify, XOR } from "utils/types";
 import { ActionRunStatus } from "db/public";
+import type { BaseActionInstanceConfig, Json } from "db/types";
+import type { Kysely } from "kysely";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { logger } from "logger";
-import { assert, expect } from "utils";
+import { expect } from "utils";
 import { tryCatch } from "utils/try-catch";
+import type { ZodError } from "zod";
 
-import type { run as logRun } from "../log/run";
-import type { ActionSuccess } from "../types";
-import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
-import type { AutoReturnType } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getAutomation } from "~/lib/db/queries";
 import { env } from "~/lib/env/env";
@@ -37,19 +30,29 @@ import { ApiError, getPubsWithRelatedValues } from "~/lib/server";
 import {
 	getActionConfigDefaults,
 	getAutomationRunById,
-	getAutomationRuns,
 } from "~/lib/server/actions";
 import { MAX_STACK_DEPTH } from "~/lib/server/automations";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getCommunity } from "~/lib/server/community";
+import type {
+	ClientException,
+	ClientExceptionOptions,
+} from "~/lib/serverActions";
 import { isClientExceptionOptions } from "~/lib/serverActions";
+import type { AutoReturnType } from "~/lib/types";
 import { getActionByName } from "../api";
+import type { run as logRun } from "../log/run";
+import type { ActionSuccess } from "../types";
 import { ActionConfigBuilder } from "./ActionConfigBuilder";
 import { evaluateConditions } from "./evaluateConditions";
 import { getActionRunByName } from "./getRuns";
 import { createPubProxy } from "./pubProxy";
 
-export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions | ActionSuccess) & {
+export type ActionInstanceRunResult = (
+	| ClientException
+	| ClientExceptionOptions
+	| ActionSuccess
+) & {
 	// stack: ActionRunsId[];
 	config: BaseActionInstanceConfig;
 };
@@ -98,13 +101,18 @@ export type RunActionInstanceArgs = {
 /**
  * run a singular action instance on an automation
  */
-const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionInstanceRunResult> => {
+const runActionInstance = async (
+	args: RunActionInstanceArgs,
+): Promise<ActionInstanceRunResult> => {
 	const action = getActionByName(args.actionInstance.action);
 	const pub = args.pub;
 
 	const [actionRun, actionDefaults] = await Promise.all([
 		getActionRunByName(args.actionInstance.action),
-		getActionConfigDefaults(args.community.id, args.actionInstance.action).executeTakeFirst(),
+		getActionConfigDefaults(
+			args.community.id,
+			args.actionInstance.action,
+		).executeTakeFirst(),
 	]);
 
 	if (!args.json && !pub) {
@@ -131,7 +139,9 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 		};
 	}
 
-	const actionConfigBuilder = new ActionConfigBuilder(args.actionInstance.action)
+	const actionConfigBuilder = new ActionConfigBuilder(
+		args.actionInstance.action,
+	)
 		.withConfig(args.actionInstance.config as Record<string, any>)
 		.withOverrides(args.manualActionInstanceOverrideArgs ?? {})
 		.withDefaults(actionDefaults?.config as Record<string, any>)
@@ -163,7 +173,9 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 		});
 
 		const failConfig = interpolated.getResult();
-		const resultConfig = failConfig.success ? failConfig.config : args.actionInstance.config;
+		const resultConfig = failConfig.success
+			? failConfig.config
+			: args.actionInstance.config;
 
 		return {
 			title: "Invalid action configuration",
@@ -210,7 +222,7 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 export async function runAutomation(args: RunAutomationArgs, trx = db) {
 	if (args.stack.length > MAX_STACK_DEPTH) {
 		throw new Error(
-			`Action instance stack depth of ${args.stack.length} exceeds the maximum allowed depth of ${MAX_STACK_DEPTH}`
+			`Action instance stack depth of ${args.stack.length} exceeds the maximum allowed depth of ${MAX_STACK_DEPTH}`,
 		);
 	}
 
@@ -224,7 +236,7 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 						withStage: true,
 						withValues: true,
 						depth: 3,
-					}
+					},
 				)
 			: null,
 		getAutomation(args.automationId).executeTakeFirstOrThrow(),
@@ -240,7 +252,7 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 
 	if (
 		automation.actionInstances.some((ai) =>
-			env.FLAGS?.get("disabled-actions").includes(ai.action)
+			env.FLAGS?.get("disabled-actions").includes(ai.action),
 		)
 	) {
 		return { ...ApiError.FEATURE_DISABLED, stack: args.stack };
@@ -269,18 +281,18 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 				? { pub: createPubProxy(pub, community?.slug) }
 				: { json: args.json ?? ({} as Json) };
 			const [error, evaluationResult] = await tryCatch(
-				evaluateConditions(automation.condition, input)
+				evaluateConditions(automation.condition, input),
 			);
 
 			if (error) {
 				if (args.scheduledAutomationRunId) {
 					const existingAutomationRun = await getAutomationRunById(
 						args.communityId,
-						args.scheduledAutomationRunId
+						args.scheduledAutomationRunId,
 					).executeTakeFirstOrThrow();
 					if (!existingAutomationRun) {
 						throw new Error(
-							`Automation run ${args.scheduledAutomationRunId} not found`
+							`Automation run ${args.scheduledAutomationRunId} not found`,
 						);
 					}
 
@@ -290,7 +302,10 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 							config: ar.config as BaseActionInstanceConfig,
 							result: { error: error.message },
 							status: ActionRunStatus.failure,
-							actionInstanceId: ar.actionInstanceId,
+							actionInstanceId: expect(
+								ar.actionInstanceId,
+								`Action instance id is required for action run ${ar.id} when creating automation run`,
+							),
 							id: ar.id,
 						})),
 						pubId: pub?.id,
@@ -358,7 +373,7 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 	const results = await Promise.all(
 		automation.actionInstances.map(async (ai) => {
 			const correcspondingActionRun = automationRun.actionRuns.find(
-				(ar) => ar.actionInstanceId === ai.id
+				(ar) => ar.actionInstanceId === ai.id,
 			);
 			if (!correcspondingActionRun) {
 				throw new Error(`Action run not found for action instance ${ai.id}`);
@@ -387,7 +402,7 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 				result,
 			});
 			return { status, result, actionInstance: ai };
-		})
+		}),
 	);
 
 	const finalAutomationRun = await insertAutomationRun(trx, {
@@ -568,7 +583,7 @@ export async function insertAutomationRun(
 		stack: AutomationRunsId[];
 		scheduledAutomationRunId?: AutomationRunsId;
 		userId?: UsersId;
-	}
+	},
 ) {
 	const automatonRun = await autoRevalidate(
 		trx
@@ -590,8 +605,8 @@ export async function insertAutomationRun(
 						oc.column("id").doUpdateSet({
 							config: args.eventConfig,
 							event: args.event,
-						})
-					)
+						}),
+					),
 			)
 			.with("actionRuns", (trx) =>
 				trx
@@ -611,7 +626,7 @@ export async function insertAutomationRun(
 							event: args.event,
 							status: ai.status,
 							result: ai.result,
-						}))
+						})),
 					)
 					.returningAll()
 					// update status and result, and config if it had changed in the meantime
@@ -620,8 +635,8 @@ export async function insertAutomationRun(
 							status: eb.ref("excluded.status"),
 							result: eb.ref("excluded.result"),
 							config: eb.ref("excluded.config"),
-						}))
-					)
+						})),
+					),
 			)
 			.selectFrom("automationRun")
 			.selectAll("automationRun")
@@ -630,9 +645,9 @@ export async function insertAutomationRun(
 					eb
 						.selectFrom("actionRuns")
 						.selectAll("actionRuns")
-						.whereRef("actionRuns.automationRunId", "=", "automationRun.id")
-				).as("actionRuns")
-			)
+						.whereRef("actionRuns.automationRunId", "=", "automationRun.id"),
+				).as("actionRuns"),
+			),
 	).executeTakeFirstOrThrow();
 
 	return automatonRun;

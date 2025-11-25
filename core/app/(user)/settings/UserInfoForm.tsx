@@ -1,19 +1,24 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-
 import type { Users } from "db/public";
+import { useForm } from "react-hook-form";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "ui/form";
 import { Loader2, Undo2, X, XCircle } from "ui/icon";
 import { Input } from "ui/input";
 import { toast } from "ui/use-toast";
-
-import type { UserLoginData } from "~/lib/types";
+import { z } from "zod";
 import { useServerAction } from "~/lib/serverActions";
+import type { UserLoginData } from "~/lib/types";
 import * as actions from "./actions";
 
 export const userInfoFormSchema = z.object({
@@ -56,7 +61,10 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
+			<form
+				onSubmit={form.handleSubmit(onSubmit)}
+				className="flex flex-col gap-y-4"
+			>
 				<input type="hidden" name="id" value={user.id} />
 				<FormField
 					name="avatar"
@@ -72,13 +80,13 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 									<Button
 										type="button"
 										variant="ghost"
-										className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 p-0 text-red-500 group-hover:text-red-500"
+										className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 p-0 text-destructive group-hover:text-destructive"
 										onClick={() => {
 											form.setValue("avatar", "");
 										}}
 									>
 										<XCircle
-											className="hidden group-hover:block group-hover:text-red-500"
+											className="hidden group-hover:block group-hover:text-destructive"
 											size="20"
 										/>
 									</Button>
@@ -142,7 +150,9 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 					className="w-min flex-grow-0"
 				>
 					Save
-					{form.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+					{form.formState.isSubmitting && (
+						<Loader2 className="h-4 w-4 animate-spin" />
+					)}
 				</Button>
 			</form>
 		</Form>

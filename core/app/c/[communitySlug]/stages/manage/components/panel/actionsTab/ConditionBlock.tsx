@@ -1,67 +1,97 @@
-"use client"
+"use client";
 
-import type { DragEndEvent } from "@dnd-kit/core"
-import type { FieldErrors } from "react-hook-form"
-
-import { useCallback, useId } from "react"
-import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
-import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
+import type { DragEndEvent } from "@dnd-kit/core";
+import {
+	DndContext,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
+import {
+	restrictToParentElement,
+	restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
 import {
 	SortableContext,
 	sortableKeyboardCoordinates,
 	useSortable,
 	verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { useFieldArray, useFormContext } from "react-hook-form"
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+	AutomationConditionBlockType,
+	AutomationConditionType,
+} from "db/public";
+import { useCallback, useId } from "react";
+import type { FieldErrors } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
+import { Button } from "ui/button";
+import { GripVertical, Plus, X } from "ui/icon";
+import { Input } from "ui/input";
+import { Item, ItemActions, ItemContent, ItemHeader, ItemMedia } from "ui/item";
+import { Label } from "ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "ui/select";
+import { cn } from "utils";
 
-import { AutomationConditionBlockType, AutomationConditionType } from "db/public"
-import { Button } from "ui/button"
-import { GripVertical, Plus, X } from "ui/icon"
-import { Input } from "ui/input"
-import { Item, ItemActions, ItemContent, ItemHeader, ItemMedia } from "ui/item"
-import { Label } from "ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
-import { cn } from "utils"
-
-import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank"
+import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
 
 export type ConditionBlockFormValue = {
-	id?: string
-	kind: "block"
-	type: AutomationConditionBlockType
-	rank: string
-	items: ConditionItemFormValue[]
-}
+	id?: string;
+	kind: "block";
+	type: AutomationConditionBlockType;
+	rank: string;
+	items: ConditionItemFormValue[];
+};
 
 export type ConditionFormValue = {
-	id?: string
-	kind: "condition"
-	type: AutomationConditionType
-	expression: string
-	rank: string
-}
+	id?: string;
+	kind: "condition";
+	type: AutomationConditionType;
+	expression: string;
+	rank: string;
+};
 
-export type ConditionItemFormValue = ConditionFormValue | ConditionBlockFormValue
+export type ConditionItemFormValue =
+	| ConditionFormValue
+	| ConditionBlockFormValue;
 
 type ConditionItemProps = {
-	id: string
-	expression: string
-	onRemove: () => void
-	slug: string
-}
+	id: string;
+	expression: string;
+	onRemove: () => void;
+	slug: string;
+};
 
-const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) => {
-	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+const ConditionItem = ({
+	id,
+	expression,
+	onRemove,
+	slug,
+}: ConditionItemProps) => {
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({
 		id,
-	})
-	const { register, getFieldState } = useFormContext()
-	const { invalid, error } = getFieldState(slug)
+	});
+	const { register, getFieldState } = useFormContext();
+	const { invalid, error } = getFieldState(slug);
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
 		transition,
-	}
+	};
 
 	return (
 		<Item
@@ -71,7 +101,7 @@ const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) =
 			className={cn(
 				"relative border-l-4 border-l-blue-100 bg-white p-2",
 				isDragging && "z-10 cursor-grabbing",
-				invalid && "border-red-300"
+				invalid && "border-red-300",
 			)}
 		>
 			<ItemMedia>
@@ -95,7 +125,7 @@ const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) =
 						className={cn("text-sm", invalid && "border-red-300")}
 					/>
 					{invalid && error && (
-						<p className="text-red-500 text-xs">
+						<p className="text-destructive text-xs">
 							{error.type === "too_small"
 								? "Condition cannot be empty"
 								: error.message}
@@ -116,101 +146,113 @@ const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) =
 				</Button>
 			</ItemActions>
 		</Item>
-	)
-}
+	);
+};
 
 type ConditionBlockProps = {
-	id: string
-	slug: string
-	depth?: number
-	onRemove?: () => void
-}
+	id: string;
+	slug: string;
+	depth?: number;
+	onRemove?: () => void;
+};
 
-export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlockProps) => {
+export const ConditionBlock = ({
+	slug,
+	depth = 0,
+	onRemove,
+	id,
+}: ConditionBlockProps) => {
 	const { control, watch, setValue, getFieldState } =
-		useFormContext<Record<string, ConditionItemFormValue>>()
-	const blockType = watch(`${slug}.type`) as AutomationConditionBlockType
+		useFormContext<Record<string, ConditionItemFormValue>>();
+	const blockType = watch(`${slug}.type`) as AutomationConditionBlockType;
 
-	const { invalid, error } = getFieldState(slug)
+	const { invalid, error } = getFieldState(slug);
 	// we don't want to higlight the block if some subitems have errors, too much info
 	const rootItemError =
 		invalid && error && "items" in error && !Array.isArray(error.items)
 			? (error.items as FieldErrors)?.root
-			: null
+			: null;
 
 	const { fields, append, move, update, remove } = useFieldArray({
 		control,
 		name: `${slug}.items`,
-	})
+	});
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
-		})
-	)
+		}),
+	);
 
-	const itemId = useId()
+	const itemId = useId();
 
 	const handleDragEnd = useCallback(
 		(event: DragEndEvent) => {
-			const changes = getRankAndIndexChanges(event, fields)
+			const changes = getRankAndIndexChanges(event, fields);
 			if (changes) {
-				move(changes.activeIndex, changes.overIndex)
-				const { id, ...movedField } = fields[changes.activeIndex]
+				move(changes.activeIndex, changes.overIndex);
+				const { id, ...movedField } = fields[changes.activeIndex];
 				update(changes.overIndex, {
 					...movedField,
 					rank: changes.rank,
-				})
+				});
 			}
 		},
-		[move, update, fields]
-	)
+		[move, update, fields],
+	);
 
 	const handleAdd = useCallback(
 		(kind: "condition" | "block") => {
 			const ranks = findRanksBetween({
 				start: fields[fields.length - 1]?.rank,
 				numberOfRanks: 1,
-			})
+			});
 			if (kind === "condition") {
 				append({
 					kind: "condition",
 					type: AutomationConditionType.jsonata,
 					expression: "",
 					rank: ranks[0],
-				})
-				return
+				});
+				return;
 			}
 			append({
 				kind: "block",
 				type: AutomationConditionBlockType.AND,
 				rank: ranks[0],
 				items: [],
-			})
+			});
 		},
-		[append, fields]
-	)
+		[append, fields],
+	);
 
 	const handleRemove = useCallback(
 		(index: number) => {
-			remove(index)
+			remove(index);
 		},
-		[remove]
-	)
+		[remove],
+	);
 
-	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({
 		id,
-	})
+	});
 
-	const isNot = blockType === AutomationConditionBlockType.NOT
-	const maxDepth = 3
-	const canNest = depth < maxDepth
+	const isNot = blockType === AutomationConditionBlockType.NOT;
+	const maxDepth = 3;
+	const canNest = depth < maxDepth;
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
 		transition,
-	}
+	};
 
 	return (
 		<Item
@@ -226,7 +268,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 				depth === 2 && "border-neutral-100 bg-neutral-50",
 				depth >= 3 && "border-neutral-100 bg-white",
 				depth > 0 && "p-2",
-				rootItemError && "border-red-300"
+				rootItemError && "border-red-300",
 			)}
 		>
 			<ItemHeader>
@@ -236,7 +278,10 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 							type="button"
 							aria-label="Drag handle"
 							variant="ghost"
-							className={cn("mr-2 cursor-grab p-1", isDragging && "cursor-grabbing")}
+							className={cn(
+								"mr-2 cursor-grab p-1",
+								isDragging && "cursor-grabbing",
+							)}
 							{...listeners}
 							{...attributes}
 						>
@@ -271,7 +316,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 						type="button"
 						variant="ghost"
 						size="sm"
-						className="text-neutral-400 text-xs hover:text-red-500"
+						className="text-neutral-400 text-xs hover:text-destructive"
 						onClick={onRemove}
 					>
 						<X size={14} />
@@ -286,7 +331,10 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 						onDragEnd={handleDragEnd}
 						sensors={sensors}
 					>
-						<SortableContext items={fields} strategy={verticalListSortingStrategy}>
+						<SortableContext
+							items={fields}
+							strategy={verticalListSortingStrategy}
+						>
 							{fields.map((field, index) =>
 								field.kind === "condition" ? (
 									<ConditionItem
@@ -304,7 +352,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 										onRemove={() => handleRemove(index)}
 										slug={`${slug}.items.${index}`}
 									/>
-								)
+								),
 							)}
 						</SortableContext>
 					</DndContext>
@@ -332,8 +380,8 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 								onClick={() => handleAdd("block")}
 								disabled={
 									isNot &&
-									(fields.filter((field) => field.kind === "condition").length >=
-										1 ||
+									(fields.filter((field) => field.kind === "condition")
+										.length >= 1 ||
 										fields.filter((field) => field.kind === "block").length >=
 											1)
 								}
@@ -353,7 +401,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 						)}
 				</div>
 				{rootItemError && (
-					<p className="text-red-500 text-xs">
+					<p className="text-destructive text-xs">
 						{rootItemError.type === "too_small"
 							? "Block cannot be empty"
 							: rootItemError.message}
@@ -361,5 +409,5 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 				)}
 			</ItemContent>
 		</Item>
-	)
-}
+	);
+};

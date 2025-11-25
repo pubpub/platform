@@ -12,7 +12,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "ui/dialog";
-import { DynamicIcon } from "ui/icon";
+import { DynamicIcon } from "ui/dynamic-icon";
 import { Separator } from "ui/separator";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
@@ -51,8 +51,6 @@ export const AutomationRunForm = (props: Props) => {
 				communityId: community.id as CommunitiesId,
 				stack: [],
 			});
-
-			console.log(result);
 
 			if (didSucceed(result)) {
 				toast({
