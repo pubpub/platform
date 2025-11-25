@@ -576,43 +576,44 @@ Table FormElementToPubType {
 }
 
 Enum Capabilities {
-  movePub
-  viewPub
-  deletePub
-  createRelatedPub
-  createPubWithForm
+  addCommunity
+  addCommunityMember
+  addFormMember
+  addPubMember
+  addStageMember
+  archiveForm
+  archivePubField
+  createApiToken
+  createForm
+  createPubField
+  createPubType
   createPubWithAnyForm
-  editPubWithForm
+  createPubWithForm
+  createRelatedPub
+  createStage
+  deletePub
+  deletePubType
+  deleteStage
+  editCommunity
+  editForm
+  editPubField
+  editPubType
   editPubWithAnyForm
   editPubWithDefaultForm
-  createPubField
-  archivePubField
-  editPubField
-  createPubType
-  editPubType
-  deletePubType
-  runAction
-  viewStage
-  createStage
-  manageStage
-  deleteStage
-  addPubMember
-  removePubMember
-  addStageMember
-  removeStageMember
-  addFormMember
-  removeFormMember
-  addCommunityMember
-  removeCommunityMember
+  editPubWithForm
   manageMemberGroups
-  addCommunity
-  editCommunity
-  createForm
-  editForm
-  archiveForm
-  createApiToken
+  manageStage
+  movePub
+  overrideAutomationConditions
+  removeCommunityMember
+  removeFormMember
+  removePubMember
+  removeStageMember
   revokeApiToken
+  runAction
   seeExtraPubValues
+  viewPub
+  viewStage
 }
 
 Enum MemberRole {

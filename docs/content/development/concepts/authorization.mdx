@@ -51,11 +51,12 @@ pnpm capabilities:print-migration
 
 **Option 1: Automatic (Recommended)**
 
-1. Update `capabalities.definition.ts` to include the new capability in the relevant mappings
-2. Run `pnpm capabilities:generate-migration` - this will automatically:
+1. Update `packages/db/src/public/Capabilities.ts` to include the new capability
+2. Update `capabalities.definition.ts` to include the new capability in the relevant mappings
+3. Run `pnpm capabilities:generate-migration` - this will automatically:
     - Update the `Capabilities` enum in your Prisma schema
     - Generate migration SQL for both enum and data changes
-3. Run the generated migration with `pnpm db:migrate-dev`
+4. Run the generated migration with `pnpm db:migrate-dev`
 
 **Option 2: Manual**
 
@@ -66,13 +67,14 @@ pnpm capabilities:print-migration
 
 ### Removing Capabilities
 
-1. Remove the capability from `capabalities.definition.ts`
-2. Run `pnpm capabilities:generate-migration` - this will automatically:
+1. Remove the capability from `packages/db/src/public/Capabilities.ts`
+2. Remove the capability from `capabalities.definition.ts`
+3. Run `pnpm capabilities:generate-migration` - this will automatically:
     - Update the `Capabilities` enum in your Prisma schema (removing the capability)
     - Delete any existing membership_capabilities rows using the removed capability
     - Remove the capability from the enum in the migration SQL
     - Sync the remaining capabilities
-3. Run the generated migration with `pnpm db:migrate-dev`
+4. Run the generated migration with `pnpm db:migrate-dev`
 
 ### Validating Sync Status
 

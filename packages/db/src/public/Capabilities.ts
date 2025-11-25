@@ -42,6 +42,7 @@ export enum Capabilities {
 	createApiToken = "createApiToken",
 	revokeApiToken = "revokeApiToken",
 	seeExtraPubValues = "seeExtraPubValues",
+	overrideAutomationConditions = "overrideAutomationConditions",
 }
 
 /** Zod schema for Capabilities */
