@@ -16,27 +16,15 @@ export const CAPABILITY_MAPPINGS = {
 	[Capabilities.viewPub]: {
 		target: [MembershipType.pub],
 		access: {
-			[MembershipType.pub]: [
-				MemberRole.admin,
-				MemberRole.editor,
-				MemberRole.contributor,
-			],
-			[MembershipType.stage]: [
-				MemberRole.admin,
-				MemberRole.editor,
-				MemberRole.contributor,
-			],
+			[MembershipType.pub]: [MemberRole.admin, MemberRole.editor, MemberRole.contributor],
+			[MembershipType.stage]: [MemberRole.admin, MemberRole.editor, MemberRole.contributor],
 			[MembershipType.community]: [MemberRole.admin, MemberRole.editor],
 		},
 	},
 	[Capabilities.deletePub]: {
 		target: [MembershipType.pub],
 		access: {
-			[MembershipType.pub]: [
-				MemberRole.admin,
-				MemberRole.editor,
-				MemberRole.contributor,
-			],
+			[MembershipType.pub]: [MemberRole.admin, MemberRole.editor, MemberRole.contributor],
 			[MembershipType.stage]: [MemberRole.admin],
 			[MembershipType.community]: [MemberRole.admin, MemberRole.editor],
 		},
@@ -53,20 +41,12 @@ export const CAPABILITY_MAPPINGS = {
 		target: [MembershipType.pub],
 		access: {
 			[MembershipType.pub]: [MemberRole.admin, MemberRole.editor],
-			[MembershipType.stage]: [
-				MemberRole.admin,
-				MemberRole.editor,
-				MemberRole.contributor,
-			],
+			[MembershipType.stage]: [MemberRole.admin, MemberRole.editor, MemberRole.contributor],
 			[MembershipType.community]: [MemberRole.admin, MemberRole.editor],
 		},
 	},
 	[Capabilities.seeExtraPubValues]: {
-		target: [
-			MembershipType.pub,
-			MembershipType.stage,
-			MembershipType.community,
-		],
+		target: [MembershipType.pub, MembershipType.stage, MembershipType.community],
 		access: {
 			[MembershipType.pub]: [MemberRole.admin, MemberRole.editor],
 			[MembershipType.stage]: [MemberRole.admin, MemberRole.editor],
@@ -98,16 +78,8 @@ export const CAPABILITY_MAPPINGS = {
 		// target: [MembershipType.pub, MembershipType.stage],
 		target: [],
 		access: {
-			[MembershipType.pub]: [
-				MemberRole.admin,
-				MemberRole.editor,
-				MemberRole.contributor,
-			],
-			[MembershipType.stage]: [
-				MemberRole.admin,
-				MemberRole.editor,
-				MemberRole.contributor,
-			],
+			[MembershipType.pub]: [MemberRole.admin, MemberRole.editor, MemberRole.contributor],
+			[MembershipType.stage]: [MemberRole.admin, MemberRole.editor, MemberRole.contributor],
 			[MembershipType.community]: [MemberRole.admin, MemberRole.editor],
 		},
 	},
@@ -206,11 +178,7 @@ export const CAPABILITY_MAPPINGS = {
 	[Capabilities.viewStage]: {
 		target: [MembershipType.stage],
 		access: {
-			[MembershipType.stage]: [
-				MemberRole.admin,
-				MemberRole.editor,
-				MemberRole.contributor,
-			],
+			[MembershipType.stage]: [MemberRole.admin, MemberRole.editor, MemberRole.contributor],
 			[MembershipType.community]: [MemberRole.admin, MemberRole.editor],
 		},
 	},
@@ -342,34 +310,23 @@ export const CAPABILITY_MAPPINGS = {
 export type CapabilityMappings = typeof CAPABILITY_MAPPINGS;
 
 type GetCapabilitesForMembershipType<T extends MembershipType> = {
-	[K in keyof CapabilityMappings]: T extends keyof CapabilityMappings[K]
-		? K
-		: never;
+	[K in keyof CapabilityMappings]: T extends keyof CapabilityMappings[K] ? K : never;
 }[keyof CapabilityMappings];
 
-export type PubCapabilities =
-	GetCapabilitesForMembershipType<MembershipType.pub>;
-export type StageCapabilities =
-	GetCapabilitesForMembershipType<MembershipType.stage>;
-export type CommunityCapabilities =
-	GetCapabilitesForMembershipType<MembershipType.community>;
+export type PubCapabilities = GetCapabilitesForMembershipType<MembershipType.pub>;
+export type StageCapabilities = GetCapabilitesForMembershipType<MembershipType.stage>;
+export type CommunityCapabilities = GetCapabilitesForMembershipType<MembershipType.community>;
 
 type GetTargetCapabilities<T extends MembershipType> = {
-	[K in keyof CapabilityMappings]: T extends CapabilityMappings[K]["target"][number]
-		? K
-		: never;
+	[K in keyof CapabilityMappings]: T extends CapabilityMappings[K]["target"][number] ? K : never;
 }[keyof CapabilityMappings];
 
 export type PubTargetCapabilities = GetTargetCapabilities<MembershipType.pub>;
-export type StageTargetCapabilities =
-	GetTargetCapabilities<MembershipType.stage>;
-export type CommunityTargetCapabilities =
-	GetTargetCapabilities<MembershipType.community>;
+export type StageTargetCapabilities = GetTargetCapabilities<MembershipType.stage>;
+export type CommunityTargetCapabilities = GetTargetCapabilities<MembershipType.community>;
 
-export const getTargetCapabilitiesForMembershipType = <
-	T extends MembershipType,
->(
-	membershipType: T,
+export const getTargetCapabilitiesForMembershipType = <T extends MembershipType>(
+	membershipType: T
 ): GetTargetCapabilities<T>[] => {
 	const capabilities: Capabilities[] = [];
 
@@ -383,14 +340,11 @@ export const getTargetCapabilitiesForMembershipType = <
 	return capabilities as GetTargetCapabilities<T>[];
 };
 
-export const pubTargetCapabilities = getTargetCapabilitiesForMembershipType(
-	MembershipType.pub,
+export const pubTargetCapabilities = getTargetCapabilitiesForMembershipType(MembershipType.pub);
+export const stageTargetCapabilities = getTargetCapabilitiesForMembershipType(MembershipType.stage);
+export const communityTargetCapabilities = getTargetCapabilitiesForMembershipType(
+	MembershipType.community
 );
-export const stageTargetCapabilities = getTargetCapabilitiesForMembershipType(
-	MembershipType.stage,
-);
-export const communityTargetCapabilities =
-	getTargetCapabilitiesForMembershipType(MembershipType.community);
 
 // convert the nested structure back to the flat array format for database operations
 export const getCapabilityMappingsArray = (): Array<{
@@ -404,9 +358,7 @@ export const getCapabilityMappingsArray = (): Array<{
 		capability: Capabilities;
 	}> = [];
 
-	for (const [capability, { target, access }] of Object.entries(
-		CAPABILITY_MAPPINGS,
-	)) {
+	for (const [capability, { target, access }] of Object.entries(CAPABILITY_MAPPINGS)) {
 		for (const [membershipType, roles] of Object.entries(access)) {
 			for (const role of roles) {
 				mappings.push({
@@ -422,15 +374,10 @@ export const getCapabilityMappingsArray = (): Array<{
 };
 
 // helper functions to work with the capability mappings
-export const getCapabilitiesForRole = (
-	type: MembershipType,
-	role: MemberRole,
-): Capabilities[] => {
+export const getCapabilitiesForRole = (type: MembershipType, role: MemberRole): Capabilities[] => {
 	const capabilities: Capabilities[] = [];
 
-	for (const [capability, { target, access }] of Object.entries(
-		CAPABILITY_MAPPINGS,
-	)) {
+	for (const [capability, { target, access }] of Object.entries(CAPABILITY_MAPPINGS)) {
 		if (!(type in access)) {
 			continue;
 		}
@@ -447,7 +394,7 @@ export const getCapabilitiesForRole = (
 export const hasCapability = (
 	type: MembershipType,
 	role: MemberRole,
-	capability: Capabilities,
+	capability: Capabilities
 ): boolean => {
 	const { access } = CAPABILITY_MAPPINGS[capability];
 	if (!(type in access)) {
@@ -464,7 +411,7 @@ export const generateCapabilityInserts = (): string => {
 	const values = mappings
 		.map(
 			(mapping) =>
-				`    ('${mapping.type}'::"MembershipType", '${mapping.role}'::"MemberRole", '${mapping.capability}'::"Capabilities")`,
+				`    ('${mapping.type}'::"MembershipType", '${mapping.role}'::"MemberRole", '${mapping.capability}'::"Capabilities")`
 		)
 		.join(",\n");
 

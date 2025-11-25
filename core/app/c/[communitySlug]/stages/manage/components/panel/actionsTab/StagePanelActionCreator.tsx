@@ -12,8 +12,9 @@ import {
 	DialogTrigger,
 } from "ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { actions } from "~/actions/api";
+
 import type { Action } from "~/actions/types";
+import { actions } from "~/actions/api";
 
 type ActionCellProps = {
 	action: Action;
@@ -31,7 +32,7 @@ const ActionCell = (props: ActionCellProps) => {
 				onClick();
 			}
 		},
-		[onClick],
+		[onClick]
 	);
 
 	return (
@@ -88,7 +89,7 @@ export const StagePanelActionCreator = (props: Props) => {
 			setIsOpen(false);
 			props.onAdd(action.name);
 		},
-		[props.onAdd],
+		[props.onAdd]
 	);
 	const onOpenChange = useCallback((open: boolean) => {
 		setIsOpen(open);

@@ -1,22 +1,16 @@
+import type { Static } from "@sinclair/typebox";
+import type { Mark } from "prosemirror-model";
+
+import React, { useMemo } from "react";
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
-import type { Static } from "@sinclair/typebox";
 import { Type } from "@sinclair/typebox";
 import { TypeCompiler } from "@sinclair/typebox/compiler";
-import type { Mark } from "prosemirror-model";
-import React, { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { registerFormats } from "schemas";
 
 import { Button } from "ui/button";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ExternalLink, Trash } from "ui/icon";
 import { Input } from "ui/input";
 
@@ -49,7 +43,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 			state: view.state,
 			dispatch: view.dispatch,
 			type: baseSchema.marks.link,
-		}),
+		})
 	);
 
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
@@ -71,10 +65,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 
 	return (
 		<Form {...form}>
-			<form
-				className="my-2 flex flex-col gap-2"
-				onBlur={form.handleSubmit(handleSubmit)}
-			>
+			<form className="my-2 flex flex-col gap-2" onBlur={form.handleSubmit(handleSubmit)}>
 				<FormField
 					name="href"
 					control={form.control}

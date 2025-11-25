@@ -1,34 +1,30 @@
 "use client";
 
-import type { Automations, CommunitiesId, PubsId } from "db/public";
-import { logger } from "logger";
-import { Suspense, useCallback, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
+
+import { Suspense, useCallback, useState } from "react";
+
+import type { CommunitiesId, PubsId } from "db/public";
+import type { FullAutomation } from "db/types";
+import type { IconConfig } from "ui/dynamic-icon";
+import { logger } from "logger";
 import { Button } from "ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
 import { DynamicIcon } from "ui/dynamic-icon";
 import { Separator } from "ui/separator";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
+
 import { ActionForm } from "~/actions/_lib/ActionForm";
 import { getActionByName } from "~/actions/api";
 import { runAutomationManual } from "~/actions/api/serverAction";
 import { getActionFormComponent } from "~/actions/forms";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
 import { useCommunity } from "../providers/CommunityProvider";
 
 type Props = {
-	automation: Automations & {
-		actionInstances: [ActionInstanceWithConfigDefaults];
-	};
+	automation: FullAutomation;
 	pubId: PubsId;
 	canOverrideAutomationConditions: boolean;
 };
@@ -60,9 +56,7 @@ export const AutomationRunForm = (props: Props) => {
 							: `Successfully ran ${props.automation.name || action.name}`,
 					variant: "default",
 					description: (
-						<div className="max-h-40 max-w-sm overflow-auto">
-							{result.report}
-						</div>
+						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>
 					),
 				});
 				return;
@@ -88,7 +82,7 @@ export const AutomationRunForm = (props: Props) => {
 			mainActionInstance.id,
 			community.id,
 			action.name,
-		],
+		]
 	);
 
 	const [open, setOpen] = useState(false);
@@ -99,7 +93,7 @@ export const AutomationRunForm = (props: Props) => {
 
 	if (!action) {
 		logger.info(
-			`Invalid action name for automation ${props.automation.name}: ${mainActionInstance.action}`,
+			`Invalid action name for automation ${props.automation.name}: ${mainActionInstance.action}`
 		);
 		return null;
 	}
@@ -115,22 +109,18 @@ export const AutomationRunForm = (props: Props) => {
 						className="flex w-full items-center justify-start gap-x-4 px-4 py-2"
 					>
 						<DynamicIcon
-							icon={automationIcon ?? undefined}
-							// fallback={action.icon}
+							icon={(automationIcon as IconConfig) ?? undefined}
 							size="14"
 							className="flex-shrink-0"
 						/>
-						<span className="overflow-auto text-ellipsis">
-							{props.automation.name}
-						</span>
+						<span className="overflow-auto text-ellipsis">{props.automation.name}</span>
 					</Button>
 				</DialogTrigger>
 				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
 					<DialogHeader className="sticky inset-0 top-0 z-10 bg-white p-6 pb-2">
 						<div className="flex items-start gap-x-2">
 							<DynamicIcon
-								icon={automationIcon}
-								// fallback={action.icon}
+								icon={automationIcon as IconConfig}
 								size="16"
 								className="mt-0.5 flex-shrink-0"
 							/>

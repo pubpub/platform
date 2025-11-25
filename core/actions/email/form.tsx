@@ -1,6 +1,8 @@
 import { useWatch } from "react-hook-form";
+
 import { InputWithTokens, MarkdownEditor } from "ui/editors";
 import { FieldSet } from "ui/field";
+
 import { ActionField } from "../_lib/ActionField";
 import { useActionForm } from "../_lib/ActionForm";
 import MemberSelectClientFetch from "./DynamicSelectFetch";
@@ -56,9 +58,7 @@ function RecipientAndMemberFields() {
 
 	return (
 		<>
-			{!recipientMember && (
-				<ActionField name="recipientEmail" label="Recipient Email" />
-			)}
+			{!recipientMember && <ActionField name="recipientEmail" label="Recipient Email" />}
 			{!recipientEmail && (
 				<ActionField
 					name="recipientMember"

@@ -1,12 +1,15 @@
-import { typeboxResolver } from "@hookform/resolvers/typebox";
 import type { Static } from "@sinclair/typebox";
-import { Type } from "@sinclair/typebox";
-import type { PubFieldsId, PubTypesId } from "db/public";
 import type { ReactNode } from "react";
-import { useCallback, useMemo } from "react";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
+
+import { useCallback, useMemo } from "react";
+import { typeboxResolver } from "@hookform/resolvers/typebox";
+import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { IdString } from "schemas/utils";
+
+import type { PubFieldsId, PubTypesId } from "db/public";
+import type { PubFieldContext } from "ui/pubFields";
 import {
 	Form,
 	FormControl,
@@ -18,7 +21,6 @@ import {
 } from "ui/form";
 import { Input } from "ui/input";
 import { MultiSelect } from "ui/multi-select";
-import type { PubFieldContext } from "ui/pubFields";
 import { usePubFieldContext } from "ui/pubFields";
 import { toast } from "ui/use-toast";
 
@@ -94,7 +96,7 @@ export const NewTypeForm = ({
 			values.name,
 			community.id,
 			values.description,
-			values.fields,
+			values.fields
 		);
 		if (result && didSucceed(result)) {
 			toast({ title: `Type ${values.name} created` });
@@ -157,9 +159,7 @@ export const NewTypeForm = ({
 							</FormItem>
 						)}
 					/>
-					{props.mode === "create" && (
-						<FieldSelector pubFields={pubFields} form={form} />
-					)}
+					{props.mode === "create" && <FieldSelector pubFields={pubFields} form={form} />}
 					{form.formState.errors.root && (
 						<div className="text-sm text-destructive">
 							{form.formState.errors.root.message}

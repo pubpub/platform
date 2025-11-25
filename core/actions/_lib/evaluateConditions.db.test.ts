@@ -33,17 +33,21 @@ describe("evaluateConditions", () => {
 			},
 			stages: {
 				"Stage 1": {
-					actions: {
-						"Test Action": {
-							action: Action.log,
-							config: { text: "test" },
-						},
-					},
-					automations: [
-						{
-							event: AutomationEvent.pubEnteredStage,
-							actionInstance: "Test Action",
-							conditions: {
+					automations: {
+						"Test Automation": {
+							triggers: [
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: { text: "test" },
+								},
+							],
+							condition: {
 								type: AutomationConditionBlockType.AND,
 								items: [
 									{
@@ -59,7 +63,7 @@ describe("evaluateConditions", () => {
 								],
 							},
 						},
-					],
+					},
 				},
 			},
 			users: {
@@ -76,8 +80,11 @@ describe("evaluateConditions", () => {
 		const { evaluateConditions } = await import("./evaluateConditions");
 
 		const automation = await getAutomation(
-			stages["Stage 1"].automations[0].id
-		).executeTakeFirstOrThrow();
+			stages["Stage 1"].automations["Test Automation"].id
+		);
+		if (!automation) {
+			throw new Error("Automation not found");
+		}
 		const condition = automation.condition!;
 
 		const resultTrue = await evaluateConditions(condition, {
@@ -111,17 +118,21 @@ describe("evaluateConditions", () => {
 			},
 			stages: {
 				"Stage 1": {
-					actions: {
-						"Test Action": {
-							action: Action.log,
-							config: { text: "test" },
-						},
-					},
-					automations: [
-						{
-							event: AutomationEvent.pubEnteredStage,
-							actionInstance: "Test Action",
-							conditions: {
+					automations: {
+						"Test Automation": {
+							triggers: [
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: { text: "test" },
+								},
+							],
+							condition: {
 								type: AutomationConditionBlockType.OR,
 								items: [
 									{
@@ -137,7 +148,7 @@ describe("evaluateConditions", () => {
 								],
 							},
 						},
-					],
+					},
 				},
 			},
 			users: {
@@ -153,9 +164,10 @@ describe("evaluateConditions", () => {
 		const { getAutomation } = await import("~/lib/db/queries");
 		const { evaluateConditions } = await import("./evaluateConditions");
 
-		const automation = await getAutomation(
-			stages["Stage 1"].automations[0].id
-		).executeTakeFirstOrThrow();
+		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id);
+		if (!automation) {
+			throw new Error("Automation not found");
+		}
 		const condition = automation.condition!;
 
 		const resultDraft = await evaluateConditions(condition, { pub: { status: "draft" } });
@@ -173,7 +185,7 @@ describe("evaluateConditions", () => {
 	test("evaluates NOT block correctly", async () => {
 		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { stages, pubs, community } = await seedCommunity({
+		const { stages } = await seedCommunity({
 			community: {
 				name: "test",
 				slug: "test-not-block",
@@ -188,17 +200,21 @@ describe("evaluateConditions", () => {
 			},
 			stages: {
 				"Stage 1": {
-					actions: {
-						"Test Action": {
-							action: Action.log,
-							config: { text: "test" },
-						},
-					},
-					automations: [
-						{
-							event: AutomationEvent.pubEnteredStage,
-							actionInstance: "Test Action",
-							conditions: {
+					automations: {
+						"Test Automation": {
+							triggers: [
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: { text: "test" },
+								},
+							],
+							condition: {
 								type: AutomationConditionBlockType.NOT,
 								items: [
 									{
@@ -209,7 +225,7 @@ describe("evaluateConditions", () => {
 								],
 							},
 						},
-					],
+					},
 				},
 			},
 			users: {
@@ -225,9 +241,10 @@ describe("evaluateConditions", () => {
 		const { getAutomation } = await import("~/lib/db/queries");
 		const { evaluateConditions } = await import("./evaluateConditions");
 
-		const automation = await getAutomation(
-			stages["Stage 1"].automations[0].id
-		).executeTakeFirstOrThrow();
+		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id);
+		if (!automation) {
+			throw new Error("Automation not found");
+		}
 		const condition = automation.condition!;
 
 		const resultPublished = await evaluateConditions(condition, {
@@ -257,17 +274,21 @@ describe("evaluateConditions", () => {
 			},
 			stages: {
 				"Stage 1": {
-					actions: {
-						"Test Action": {
-							action: Action.log,
-							config: { text: "test" },
-						},
-					},
-					automations: [
-						{
-							event: AutomationEvent.pubEnteredStage,
-							actionInstance: "Test Action",
-							conditions: {
+					automations: {
+						"Test Automation": {
+							triggers: [
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: { text: "test" },
+								},
+							],
+							condition: {
 								type: AutomationConditionBlockType.AND,
 								items: [
 									{
@@ -310,7 +331,7 @@ describe("evaluateConditions", () => {
 								],
 							},
 						},
-					],
+					},
 				},
 			},
 			users: {
@@ -326,9 +347,10 @@ describe("evaluateConditions", () => {
 		const { getAutomation } = await import("~/lib/db/queries");
 		const { evaluateConditions } = await import("./evaluateConditions");
 
-		const automation = await getAutomation(
-			stages["Stage 1"].automations[0].id
-		).executeTakeFirstOrThrow();
+		const automation = await getAutomation(stages["Stage 1"].automations["Test Automation"].id);
+		if (!automation) {
+			throw new Error("Automation not found");
+		}
 		const condition = automation.condition!;
 
 		const resultTrue = await evaluateConditions(condition, {

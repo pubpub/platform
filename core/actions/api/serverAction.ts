@@ -1,22 +1,19 @@
 "use server";
 
-import type { ActionInstancesId, PubsId, UsersId } from "db/public";
-import type { Json } from "db/types";
-import type { DefinitelyHas, XOR } from "utils/types";
+import type { ActionInstancesId, UsersId } from "db/public";
 import { AutomationEvent, Capabilities, MembershipType } from "db/public";
 
-import type {
-	ActionInstanceRunResult,
-	RunActionInstanceArgs,
-	RunAutomationArgs,
-} from "../_lib/runAutomation";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import type {
+	ActionInstanceRunResult,
+	RunAutomationArgs
+} from "../_lib/runAutomation";
 import { runAutomation } from "../_lib/runAutomation";
 
 export const runAutomationManual = defineServerAction(async function runActionInstance(
-	args: Omit<RunAutomationArgs, "userId" | "event" | "eventConfig"> & {
+	args: Omit<RunAutomationArgs, "userId" | 'trigger'> & {
 		manualActionInstancesOverrideArgs: {
 			[actionInstanceId: ActionInstancesId]: Record<string, unknown>;
 		};
@@ -27,7 +24,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 	if (!user) {
 		return {
 			error: "Not logged in",
-			stack: [],
+			config: {},
 		};
 	}
 
@@ -44,7 +41,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 	if (!canRunAction) {
 		return {
 			error: "Not authorized to run action",
-			stack: [],
+			config: {},
 		};
 	}
 
@@ -54,13 +51,15 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		...rest,
 		userId: user.id as UsersId,
 		stack: args.stack ?? [],
-		eventConfig: null,
 		communityId: args.communityId,
 		manualActionInstancesOverrideArgs: args.manualActionInstancesOverrideArgs,
 		...(args.json ? { json: args.json } : { pubId: args.pubId! }),
 		// manual run
 		automationId: args.automationId,
-		event: AutomationEvent.manual,
+		trigger: {
+			event: AutomationEvent.manual,
+			config: null,
+		},
 	});
 
 	return {

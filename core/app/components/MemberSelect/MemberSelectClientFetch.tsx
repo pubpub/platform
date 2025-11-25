@@ -1,13 +1,14 @@
 "use client";
 
-import { skipToken } from "@tanstack/react-query";
-import type { Communities, CommunityMembershipsId } from "db/public";
 import { memo, useEffect, useState } from "react";
+import { skipToken } from "@tanstack/react-query";
 
+import type { Communities, CommunityMembershipsId } from "db/public";
+
+import type { MemberSelectUserWithMembership } from "./types";
 import { client } from "~/lib/api";
 import { useCommunity } from "../providers/CommunityProvider";
 import { MemberSelectClient } from "./MemberSelectClient";
-import type { MemberSelectUserWithMembership } from "./types";
 
 /** Hook to wrap all API calls/status for user search */
 const useMemberSelectData = ({
@@ -21,15 +22,14 @@ const useMemberSelectData = ({
 }) => {
 	// Individual member query
 	const shouldQueryForIndividualUser = !!memberId && memberId !== "";
-	const { data: userResult, isPending: userPending } =
-		client.members.get.useQuery({
-			queryKey: ["getMember", memberId, community.slug],
-			queryData: shouldQueryForIndividualUser
-				? {
-						params: { communitySlug: community.slug, memberId },
-					}
-				: skipToken,
-		});
+	const { data: userResult, isPending: userPending } = client.members.get.useQuery({
+		queryKey: ["getMember", memberId, community.slug],
+		queryData: shouldQueryForIndividualUser
+			? {
+					params: { communitySlug: community.slug, memberId },
+				}
+			: skipToken,
+	});
 	const user = userResult?.body;
 
 	// User suggestions query
@@ -82,11 +82,7 @@ type Props = {
 };
 
 export const MemberSelectClientFetch = memo(
-	function MemberSelectClientFetch({
-		name,
-		value,
-		onChange: onChangeProp,
-	}: Props) {
+	function MemberSelectClientFetch({ name, value, onChange: onChangeProp }: Props) {
 		const community = useCommunity();
 		const [search, setSearch] = useState("");
 		const { user, users, refetchUsers } = useMemberSelectData({
@@ -108,9 +104,6 @@ export const MemberSelectClientFetch = memo(
 		);
 	},
 	(prevProps, nextProps) => {
-		return (
-			prevProps.name === nextProps.name &&
-			prevProps.value === nextProps.value
-		);
-	},
+		return prevProps.name === nextProps.name && prevProps.value === nextProps.value;
+	}
 );

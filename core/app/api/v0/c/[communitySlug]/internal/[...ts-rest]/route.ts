@@ -1,15 +1,15 @@
 import { createNextHandler } from "@ts-rest/serverless/next";
 
-import type { ActionRunsId, AutomationsId, CommunitiesId, PubsId } from "db/public";
 import { api } from "contracts";
+import type { AutomationRunsId, AutomationsId, CommunitiesId, PubsId } from "db/public";
 import { AutomationEvent } from "db/public";
 import { logger } from "logger";
 
-import { runAutomationById } from "~/actions/_lib/runAutomation";
+import { runAutomation } from "~/actions/_lib/runAutomation";
 import {
-	cancelScheduledAutomationByActionRunId,
-	scheduleDelayedAutomation,
-} from "~/actions/_lib/scheduleActionInstance";
+	cancelScheduledAutomation,
+	scheduleDelayedAutomation
+} from "~/actions/_lib/scheduleAutomations";
 import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
 import { env } from "~/lib/env/env";
 import { NotFoundError, tsRestHandleErrors } from "~/lib/server";
@@ -26,7 +26,7 @@ const handler = createNextHandler(
 		runAutomation: async ({ headers, params, body }) => {
 			checkAuthentication(headers.authorization);
 			const { automationId } = params;
-			const { pubId, event, stack } = body;
+			const { pubId, trigger, stack } = body;
 
 			const community = await findCommunityBySlug();
 			if (!community) {
@@ -37,25 +37,28 @@ const handler = createNextHandler(
 				msg: "Running automation",
 				automationId,
 				pubId,
-				event,
+				trigger,
 				stack,
 				communityId: community.id,
 			});
 
-			const result = await runAutomationById({
+			const result = await runAutomation({
 				automationId: automationId as AutomationsId,
+				manualActionInstancesOverrideArgs: null,
 				pubId: pubId as PubsId,
-				event: event as AutomationEvent,
+				trigger: {
+					event: trigger.event as AutomationEvent,
+					config: trigger.config as Record<string, unknown> | null,
+				},
 				communityId: community.id as CommunitiesId,
-				stack: stack as unknown as ActionRunsId[],
+				stack: stack as unknown as AutomationRunsId[],
 			});
 
 			return {
 				status: 200,
 				body: {
 					automationId,
-					actionInstanceId: result.actionInstanceId,
-					result: result.result,
+					result: result,
 				},
 			};
 		},
@@ -80,7 +83,7 @@ const handler = createNextHandler(
 			const result = await scheduleDelayedAutomation({
 				automationId: automationId as AutomationsId,
 				pubId: pubId as PubsId,
-				stack: stack as ActionRunsId[],
+				stack: stack as unknown as AutomationRunsId[],
 			});
 
 			return {
@@ -91,8 +94,7 @@ const handler = createNextHandler(
 		runDelayedAutomation: async ({ headers, params, body }) => {
 			checkAuthentication(headers.authorization);
 			const { automationId } = params;
-			const { pubId, event, actionRunId, stack, config } = body;
-
+			const { pubId, trigger, stack, automationRunId} = body;
 			const community = await findCommunityBySlug();
 			if (!community) {
 				throw new NotFoundError("Community not found");
@@ -102,40 +104,39 @@ const handler = createNextHandler(
 				msg: "Running delayed automation",
 				automationId,
 				pubId,
-				event,
-				actionRunId,
-				stack,
+				trigger,
+				scheduledAutomationRunId: automationRunId,
+				stack: stack as unknown as AutomationRunsId[],
 				communityId: community.id,
 			});
 
-			const result = await runAutomationById({
+			const result = await runAutomation({
 				automationId: automationId as AutomationsId,
 				pubId: pubId as PubsId,
-				event: event as AutomationEvent,
+				trigger,
 				communityId: community.id as CommunitiesId,
-				stack: stack as unknown as ActionRunsId[],
-				scheduledActionRunId: actionRunId,
-				actionInstanceArgs: config ?? null,
-			});
+				stack: stack as unknown as AutomationRunsId[],
+				scheduledAutomationRunId: automationRunId,
+			} as any);
 
 			return {
 				status: 200,
 				body: {
 					automationId,
-					result: result.result,
+					result: result,
 				},
 			};
 		},
 		cancelScheduledAutomation: async ({ headers, params }) => {
 			checkAuthentication(headers.authorization);
-			const { actionRunId } = params;
+			const { automationRunId } = params;
 
 			const community = await findCommunityBySlug();
 			if (!community) {
 				throw new NotFoundError("Community not found");
 			}
 
-			const result = await cancelScheduledAutomationByActionRunId(actionRunId as any);
+			const result = await cancelScheduledAutomation(automationRunId, community.id as CommunitiesId);
 
 			return {
 				status: result.success ? 200 : 400,
@@ -161,19 +162,23 @@ const handler = createNextHandler(
 				communityId: community.id,
 			});
 
-			const result = await runAutomationById({
+			const result = await runAutomation({
 				automationId: automationId as AutomationsId,
 				json: json as any,
-				event: AutomationEvent.webhook,
+				trigger: {
+					event: AutomationEvent.webhook,
+					config: null,
+				},
+				manualActionInstancesOverrideArgs: null,
 				communityId: community.id as CommunitiesId,
-				stack: stack as ActionRunsId[],
+				stack: stack as unknown as AutomationRunsId[],
 			});
 
 			return {
 				status: 200,
 				body: {
 					automationId,
-					result: result.result,
+					result: result,
 				},
 			};
 		},

@@ -6,8 +6,6 @@ import type { StagesId } from "db/public";
 import { Tabs, TabsContent, TabsList } from "ui/tabs";
 
 import { getStage } from "~/lib/db/queries";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { StagePanelActions } from "./actionsTab/StagePanelActions";
 import { StagePanelAutomations } from "./actionsTab/StagePanelAutomations";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";

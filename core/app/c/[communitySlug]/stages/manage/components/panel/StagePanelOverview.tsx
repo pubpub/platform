@@ -1,7 +1,6 @@
-import type { StagesId, UsersId } from "db/public";
-
 import { Suspense } from "react";
 
+import type { StagesId, UsersId } from "db/public";
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
 import { Separator } from "ui/separator";
 
@@ -61,10 +60,7 @@ export const StagePanelOverview = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelOverviewInner
-				stageId={props.stageId as StagesId}
-				userId={props.userId}
-			/>
+			<StagePanelOverviewInner stageId={props.stageId as StagesId} userId={props.userId} />
 		</Suspense>
 	);
 };

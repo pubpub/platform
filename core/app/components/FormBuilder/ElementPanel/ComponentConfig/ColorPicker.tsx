@@ -1,19 +1,14 @@
-import type { InputComponent } from "db/public";
-import { Pencil, PlusIcon, TrashIcon } from "lucide-react";
-import { useEffect, useState } from "react";
 import type { ControllerRenderProps } from "react-hook-form";
+
+import { useEffect, useState } from "react";
+import { Pencil, PlusIcon, TrashIcon } from "lucide-react";
 import { useFormContext } from "react-hook-form";
+
+import type { InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { ColorCircle, ColorPicker } from "ui/color";
-import {
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "ui/form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { cn } from "utils";
@@ -83,10 +78,7 @@ export const FormBuilderColorPickerPopover = ({
 						</div>
 					)}
 				</PopoverTrigger>
-				<PopoverContent
-					className="w-auto overflow-clip p-0"
-					aria-label="Color picker"
-				>
+				<PopoverContent className="w-auto overflow-clip p-0" aria-label="Color picker">
 					<ColorPicker
 						presets={presets}
 						presetsOnly={presetsOnly}
@@ -122,9 +114,7 @@ export const FormBuilderColorPickerPopover = ({
 					size="icon"
 					className="ml-1 h-7 w-7 p-0 hover:bg-gray-200 hover:text-destructive"
 					onClick={() => {
-						parentField.onChange(
-							parentField.value?.filter((_, i) => i !== idx),
-						);
+						parentField.onChange(parentField.value?.filter((_, i) => i !== idx));
 					}}
 					aria-label={`Remove color preset ${label}`}
 				>
@@ -135,12 +125,9 @@ export const FormBuilderColorPickerPopover = ({
 	);
 };
 
-export default (
-	props: ComponentConfigFormProps<InputComponent.colorPicker>,
-) => {
+export default (props: ComponentConfigFormProps<InputComponent.colorPicker>) => {
 	// for some reason if i use `props.form` the watched values don't update when the form values change
-	const reactiveForm =
-		useFormContext<ConfigFormData<InputComponent.colorPicker>>();
+	const reactiveForm = useFormContext<ConfigFormData<InputComponent.colorPicker>>();
 	const presets = reactiveForm.watch("config.presets");
 	const presetsOnly = reactiveForm.watch("config.presetsOnly");
 
@@ -246,7 +233,7 @@ export default (
 					<FormItem
 						className={cn(
 							"flex flex-row items-start space-x-3 space-y-0 rounded-md border bg-white p-4",
-							!presetsOnlyEnabled && "opacity-60",
+							!presetsOnlyEnabled && "opacity-60"
 						)}
 					>
 						<FormControl>

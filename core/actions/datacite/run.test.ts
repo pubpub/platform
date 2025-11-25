@@ -5,6 +5,7 @@ import { describe, expect, it, vitest } from "vitest";
 import type {
 	ActionInstancesId,
 	ActionRunsId,
+	AutomationsId,
 	CommunitiesId,
 	PubFieldsId,
 	PubsId,
@@ -12,7 +13,7 @@ import type {
 	PubValuesId,
 	StagesId,
 } from "db/public";
-import { Action, CoreSchemaType } from "db/public";
+import { Action, AutomationEvent, CoreSchemaType } from "db/public";
 
 import type { ActionPub, RunProps } from "../types";
 import type { action } from "./action";
@@ -134,14 +135,19 @@ const pub = {
 } as ActionPub;
 
 const RUN_OPTIONS: RunProps<typeof action> = {
-	actionInstance: {
-		id: "" as ActionInstancesId,
+	automation: {
+		id: "" as AutomationsId,
 		name: "deposit to datacite",
 		stageId: "" as StagesId,
-		createdAt: new Date(),
+		createdAt: new Date(),	
 		updatedAt: new Date(),
-		action: Action.datacite,
-		config: {},
+		actionInstances: [],
+		triggers:[],
+		condition: null,
+		conditionEvaluationTiming: null,
+		icon: null,
+		communityId: "" as CommunitiesId,
+		description: null,
 	},
 	actionRunId: "" as ActionRunsId,
 	stageId: "" as StagesId,

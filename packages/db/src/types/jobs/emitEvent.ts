@@ -3,9 +3,8 @@
 // by augmenting the `GraphileWorker.Tasks` interface, see `./index.ts`
 
 import type {
-	ActionInstancesId,
-	ActionRunsId,
 	AutomationEvent,
+	AutomationRunsId,
 	AutomationsId,
 	PubsId,
 	StagesId,
@@ -17,21 +16,26 @@ export type RunAutomationPayload = {
 	automationId: AutomationsId;
 	pubId: PubsId;
 	stageId: StagesId;
-	event:
+	trigger: {
+		event:
 		| AutomationEvent.pubEnteredStage
 		| AutomationEvent.pubLeftStage
 		| AutomationEvent.automationSucceeded
 		| AutomationEvent.automationFailed;
+		config: Record<string, unknown> | null;}
 	community: {
 		slug: string;
 	};
 	// stack of automation ids to prevent infinite loops
-	stack: ActionRunsId[];
+	stack: AutomationRunsId[];
 };
 
-// event payload for scheduling a specific time-based automation (pubInStageForDuration)
 export type ScheduleDelayedAutomationPayload = {
 	type: "ScheduleDelayedAutomation";
+	trigger: {
+		event: AutomationEvent;
+		config: Record<string, unknown> | null;
+	};
 	automationId: AutomationsId;
 	pubId: PubsId;
 	stageId: StagesId;
@@ -39,30 +43,30 @@ export type ScheduleDelayedAutomationPayload = {
 		slug: string;
 	};
 	// stack of automation ids to prevent infinite loops
-	stack: ActionRunsId[];
+	stack: AutomationRunsId[];
 };
 
-// event payload for running a delayed automation that was previously scheduled
 export type RunDelayedAutomationPayload = {
 	type: "RunDelayedAutomation";
 	automationId: AutomationsId;
 	pubId: PubsId;
 	stageId: StagesId;
-	event: AutomationEvent;
+	trigger: {
+		event: AutomationEvent;
+		config: Record<string, unknown> | null;
+	},
 	community: {
 		slug: string;
 	};
-	actionRunId: ActionRunsId;
+	automationRunId: AutomationRunsId;
 	// stack of automation ids to prevent infinite loops
-	stack: ActionRunsId[];
-	config?: Record<string, unknown> | null;
+	stack: AutomationRunsId[];
 };
 
 // event payload for canceling scheduled automations when pub leaves stage
 export type CancelScheduledAutomationPayload = {
 	type: "CancelScheduledAutomation";
-	actionRunId: ActionRunsId;
-	actionInstanceId: ActionInstancesId;
+	automationRunId: AutomationRunsId;
 	pubId: PubsId;
 	stageId: StagesId;
 	community: {

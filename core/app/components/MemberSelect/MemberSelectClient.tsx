@@ -147,5 +147,5 @@ export const MemberSelectClient = memo(
 			prevProps.member?.id === nextProps.member?.id &&
 			prevProps.users === nextProps.users
 		);
-	},
+	}
 );

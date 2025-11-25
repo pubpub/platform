@@ -1,28 +1,21 @@
-import type { ProcessedPub } from "contracts";
-import type { Automations, UsersId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
+import React, { Suspense } from "react";
 import Link from "next/link";
 
-import React, { Suspense } from "react";
+import type { ProcessedPub } from "contracts";
+import type { Automations, UsersId } from "db/public";
+import type { FullAutomation } from "db/types";
+import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardTitle,
-} from "ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "ui/card";
 import { Calendar, History, Pencil, Trash2 } from "ui/icon";
 import { cn } from "utils";
-import Move from "~/app/c/[communitySlug]/stages/components/Move";
-import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
-import {
-	formatDateAsMonthDayYear,
-	formatDateAsPossiblyDistance,
-} from "~/lib/dates";
-import { getPubTitle } from "~/lib/pubs";
+
 import type { CommunityStage } from "~/lib/server/stages";
 import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
+import Move from "~/app/c/[communitySlug]/stages/components/Move";
+import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
+import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
+import { getPubTitle } from "~/lib/pubs";
 import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector";
 import { PubsRunAutomationsDropDownMenu } from "../../ActionUI/PubsRunAutomationDropDownMenu";
 import { SkeletonButton } from "../../skeletons/SkeletonButton";
@@ -54,9 +47,7 @@ export type PubCardProps = {
 	communitySlug: string;
 	moveFrom?: CommunityStage["moveConstraintSources"];
 	moveTo?: CommunityStage["moveConstraints"];
-	manualAutomations?: (Automations & {
-		actionInstances: ActionInstanceWithConfigDefaults[];
-	})[];
+	manualAutomations?: FullAutomation[];
 	withSelection?: boolean;
 	userId: UsersId;
 	/* if true, overrides the view stage capability check */
@@ -90,17 +81,15 @@ export const PubCard = async ({
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
 
 	const showMatchingValues = matchingValues && matchingValues.length !== 0;
-	const showDescription =
-		"description" in pub && pub.description !== null && !showMatchingValues;
-	const hasActions =
-		pub.stage && manualAutomations && manualAutomations.length !== 0;
+	const showDescription = "description" in pub && pub.description !== null && !showMatchingValues;
+	const hasActions = pub.stage && manualAutomations && manualAutomations.length !== 0;
 	return (
 		<Card
 			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
 			className={cn(
 				"group relative flex flex-row items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500",
 				// accessibility focus styles
-				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200",
+				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200"
 			)}
 			data-testid={`pub-card-${pub.id}`}
 		>
@@ -127,21 +116,14 @@ export const PubCard = async ({
 						/>
 					) : null}
 					{pub.relatedPubsCount ? (
-						<RelationsDropDown
-							pubId={pub.id}
-							numRelations={pub.relatedPubsCount}
-						/>
+						<RelationsDropDown pubId={pub.id} numRelations={pub.relatedPubsCount} />
 					) : null}
 				</div>
-				<CardTitle className="font-bold text-sm">
+				<CardTitle className="text-sm font-bold">
 					<h3 className="min-w-0 truncate">
 						<Link
 							href={`/c/${communitySlug}/pubs/${pub.id}`}
-							className={cn(
-								"hover:underline",
-								LINK_AFTER,
-								"focus-within:underline",
-							)}
+							className={cn("hover:underline", LINK_AFTER, "focus-within:underline")}
 						>
 							<div
 								className="[&_mark]:bg-yellow-300"
@@ -160,8 +142,8 @@ export const PubCard = async ({
 				{showMatchingValues && (
 					<div
 						className={cn(
-							"grid gap-1 text-gray-500 text-xs [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
-							"[&_mark]:bg-yellow-200",
+							"grid gap-1 text-xs text-gray-500 [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
+							"[&_mark]:bg-yellow-200"
 						)}
 					>
 						{/* Matching values that aren't titles */}
@@ -178,21 +160,13 @@ export const PubCard = async ({
 						))}
 					</div>
 				)}
-				<CardFooter className="flex gap-2 p-0 text-gray-600 text-xs">
+				<CardFooter className="flex gap-2 p-0 text-xs text-gray-600">
 					<div className="flex gap-1" title="Created at">
-						<Calendar
-							size="16px"
-							strokeWidth="1px"
-							className="text-neutral-500"
-						/>
+						<Calendar size="16px" strokeWidth="1px" className="text-neutral-500" />
 						<span>{formatDateAsMonthDayYear(new Date(pub.createdAt))}</span>
 					</div>
 					<div className="flex gap-1" title="Updated at">
-						<History
-							size="16px"
-							strokeWidth="1px"
-							className="text-neutral-500"
-						/>
+						<History size="16px" strokeWidth="1px" className="text-neutral-500" />
 						<span>{formatDateAsPossiblyDistance(new Date(pub.updatedAt))}</span>
 					</div>
 				</CardFooter>
@@ -208,7 +182,7 @@ export const PubCard = async ({
 						withSelection && hasActions && "grid-cols-4",
 						withSelection && !hasActions && "grid-cols-3",
 						!withSelection && hasActions && "grid-cols-3",
-						!withSelection && !hasActions && "grid-cols-2",
+						!withSelection && !hasActions && "grid-cols-2"
 					)}
 				>
 					<Suspense
@@ -218,7 +192,7 @@ export const PubCard = async ({
 									<div
 										className={cn(
 											"peer order-2 data-[state=open]:opacity-100",
-											HOVER_CLASS,
+											HOVER_CLASS
 										)}
 									>
 										<SkeletonButton className="mx-1 h-6 w-6" />
@@ -227,7 +201,7 @@ export const PubCard = async ({
 								<div
 									className={cn(
 										"order-1 peer-data-[state=open]:opacity-100",
-										HOVER_CLASS,
+										HOVER_CLASS
 									)}
 								>
 									<SkeletonButton className="mx-1 h-6 w-6" />
@@ -235,7 +209,7 @@ export const PubCard = async ({
 								<div
 									className={cn(
 										"order-3 peer-data-[state=open]:opacity-100",
-										HOVER_CLASS,
+										HOVER_CLASS
 									)}
 								>
 									<SkeletonButton className="mx-1 h-6 w-6" />
@@ -258,7 +232,7 @@ export const PubCard = async ({
 							pubId={pub.id}
 							className={cn(
 								"order-4 ml-2 box-content h-4 w-4 border-neutral-500 data-[state=checked]:opacity-100 peer-data-[state=open]:opacity-100",
-								HOVER_CLASS,
+								HOVER_CLASS
 							)}
 						/>
 					) : null}
@@ -277,9 +251,7 @@ const PubCardActions = async ({
 	canArchiveAllPubs,
 	canRunActionsAllPubs,
 }: {
-	manualAutomations: (Automations & {
-		actionInstances: [ActionInstanceWithConfigDefaults];
-	})[];
+	manualAutomations: FullAutomation[];
 	pub: ProcessedPub<{
 		withPubType: true;
 		withRelatedPubs: false;
@@ -292,39 +264,51 @@ const PubCardActions = async ({
 	canArchiveAllPubs?: boolean;
 	canRunActionsAllPubs?: boolean;
 }) => {
-	const hasAutomations =
-		pub.stage && manualAutomations && manualAutomations.length !== 0;
+	const hasAutomations = pub.stage && manualAutomations && manualAutomations.length !== 0;
 	const pubTitle = getPubTitle(pub);
-	const [canArchive, canRunActions, canEdit] = await Promise.all([
-		canArchiveAllPubs ||
-			userCan(
-				Capabilities.deletePub,
-				{
-					type: MembershipType.pub,
+	const [canArchive, canRunActions, canEdit, canOverrideAutomationConditions] = await Promise.all(
+		[
+			canArchiveAllPubs ||
+				userCan(
+					Capabilities.deletePub,
+					{
+						type: MembershipType.pub,
+						pubId: pub.id,
+					},
+					userId
+				),
+			canRunActionsAllPubs ||
+				userCan(
+					Capabilities.runAction,
+					{
+						type: MembershipType.pub,
+						pubId: pub.id,
+					},
+					userId
+				),
+			canEditAllPubs ||
+				userCanEditPub({
+					userId,
 					pubId: pub.id,
-				},
-				userId,
-			),
-		canRunActionsAllPubs ||
-			userCan(
-				Capabilities.runAction,
-				{
-					type: MembershipType.pub,
-					pubId: pub.id,
-				},
-				userId,
-			),
-		canEditAllPubs ||
-			userCanEditPub({
-				userId,
-				pubId: pub.id,
-			}),
-	]);
+				}),
+
+			canRunActionsAllPubs ||
+				userCan(
+					Capabilities.overrideAutomationConditions,
+					{
+						type: MembershipType.community,
+						communityId: pub.communityId,
+					},
+					userId
+				),
+		]
+	);
 
 	return (
 		<>
 			{hasAutomations && canRunActions ? (
 				<PubsRunAutomationsDropDownMenu
+					canOverrideAutomationConditions={canOverrideAutomationConditions}
 					automations={manualAutomations}
 					pubId={pub.id}
 					buttonText={`Run actions for ${pubTitle}`}
@@ -332,7 +316,7 @@ const PubCardActions = async ({
 					variant="ghost"
 					className={cn(
 						"peer order-2 w-6 px-4 py-2 data-[state=open]:opacity-100 [&_svg]:size-6",
-						HOVER_CLASS,
+						HOVER_CLASS
 					)}
 				/>
 			) : null}
@@ -344,7 +328,7 @@ const PubCardActions = async ({
 					variant="ghost"
 					className={cn(
 						"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
-						HOVER_CLASS,
+						HOVER_CLASS
 					)}
 					icon={<Trash2 strokeWidth="1px" className="text-neutral-500" />}
 				/>
@@ -352,7 +336,7 @@ const PubCardActions = async ({
 				<span
 					className={cn(
 						"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
-						HOVER_CLASS,
+						HOVER_CLASS
 					)}
 				></span>
 			)}
@@ -361,7 +345,7 @@ const PubCardActions = async ({
 					variant="ghost"
 					className={cn(
 						"order-3 w-6 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
-						HOVER_CLASS,
+						HOVER_CLASS
 					)}
 					asChild
 				>
@@ -374,7 +358,7 @@ const PubCardActions = async ({
 				<span
 					className={cn(
 						"order-3 w-6 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
-						HOVER_CLASS,
+						HOVER_CLASS
 					)}
 				></span>
 			)}

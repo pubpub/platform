@@ -1,9 +1,10 @@
 // @ts-check
 
+import type { NextConfig, normalizeConfig } from "next/dist/server/config";
+
+import { PHASE_PRODUCTION_BUILD } from "next/dist/shared/lib/constants.js";
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
-import type { NextConfig, normalizeConfig } from "next/dist/server/config";
-import { PHASE_PRODUCTION_BUILD } from "next/dist/shared/lib/constants.js";
 
 import { env } from "./lib/env/env";
 
@@ -62,10 +63,7 @@ const nextConfig: NextConfig = {
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
-	webpack: (
-		config,
-		{ buildId, dev, isServer, defaultLoaders, nextRuntime, webpack },
-	) => {
+	webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
 		if (config.cache && !dev) {
 			config.cache = Object.freeze({
 				type: "memory",
@@ -122,7 +120,7 @@ const modifiedConfig = withPreconstruct(
 			// necessary to prevent OOM errors
 			deleteSourcemapsAfterUpload: true,
 		},
-	}),
+	})
 );
 
 const config: typeof normalizeConfig = async (phase, { defaultConfig }) => {
@@ -133,7 +131,7 @@ const config: typeof normalizeConfig = async (phase, { defaultConfig }) => {
 	if (phase === PHASE_PRODUCTION_BUILD && env.CI) {
 		if (!env.SENTRY_AUTH_TOKEN) {
 			throw new Error(
-				"SENTRY_AUTH_TOKEN is required for production builds in CI in order to upload source maps to sentry",
+				"SENTRY_AUTH_TOKEN is required for production builds in CI in order to upload source maps to sentry"
 			);
 		}
 		console.log("✅ SENTRY_AUTH_TOKEN is successfully set");

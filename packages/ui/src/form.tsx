@@ -1,10 +1,10 @@
 "use client";
 
 import type * as LabelPrimitive from "@radix-ui/react-label";
-import { Slot } from "@radix-ui/react-slot";
+import type { ControllerProps, FieldPath, FieldValues } from "react-hook-form";
 
 import * as React from "react";
-import type { ControllerProps, FieldPath, FieldValues } from "react-hook-form";
+import { Slot } from "@radix-ui/react-slot";
 import { Controller, FormProvider, useFormContext } from "react-hook-form";
 
 import { cn } from "utils";
@@ -20,9 +20,7 @@ type FormFieldContextValue<
 	name: TName;
 };
 
-const FormFieldContext = React.createContext<FormFieldContextValue>(
-	{} as FormFieldContextValue,
-);
+const FormFieldContext = React.createContext<FormFieldContextValue>({} as FormFieldContextValue);
 
 const FormField = <
 	TFieldValues extends FieldValues = FieldValues,
@@ -64,22 +62,19 @@ type FormItemContextValue = {
 	id: string;
 };
 
-const FormItemContext = React.createContext<FormItemContextValue>(
-	{} as FormItemContextValue,
+const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
+
+const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+	({ className, ...props }, ref) => {
+		const id = React.useId();
+
+		return (
+			<FormItemContext.Provider value={{ id }}>
+				<div ref={ref} className={cn("space-y-2", className)} {...props} />
+			</FormItemContext.Provider>
+		);
+	}
 );
-
-const FormItem = React.forwardRef<
-	HTMLDivElement,
-	React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
-	const id = React.useId();
-
-	return (
-		<FormItemContext.Provider value={{ id }}>
-			<div ref={ref} className={cn("space-y-2", className)} {...props} />
-		</FormItemContext.Provider>
-	);
-});
 FormItem.displayName = "FormItem";
 
 const FormLabel = React.forwardRef<
@@ -96,7 +91,7 @@ const FormLabel = React.forwardRef<
 			className={cn(
 				error && "text-destructive dark:text-red-900",
 				{ "opacity-50": disabled },
-				className,
+				className
 			)}
 			htmlFor={formItemId}
 			{...props}
@@ -109,17 +104,14 @@ const FormControl = React.forwardRef<
 	React.ElementRef<typeof Slot>,
 	React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
-	const { error, formItemId, formDescriptionId, formMessageId } =
-		useFormField();
+	const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
 	return (
 		<Slot
 			ref={ref}
 			id={formItemId}
 			aria-describedby={
-				!error
-					? `${formDescriptionId}`
-					: `${formDescriptionId} ${formMessageId}`
+				!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`
 			}
 			aria-invalid={!!error}
 			{...props}
@@ -128,24 +120,20 @@ const FormControl = React.forwardRef<
 });
 FormControl.displayName = "FormControl";
 
-const FormDescription = React.forwardRef<
-	HTMLDivElement,
-	React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
-	const { formDescriptionId } = useFormField();
+const FormDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+	({ className, ...props }, ref) => {
+		const { formDescriptionId } = useFormField();
 
-	return (
-		<div
-			ref={ref}
-			id={formDescriptionId}
-			className={cn(
-				"text-[0.8rem] text-gray-500 dark:text-gray-400",
-				className,
-			)}
-			{...props}
-		/>
-	);
-});
+		return (
+			<div
+				ref={ref}
+				id={formDescriptionId}
+				className={cn("text-[0.8rem] text-gray-500 dark:text-gray-400", className)}
+				{...props}
+			/>
+		);
+	}
+);
 FormDescription.displayName = "FormDescription";
 
 const FormMessage = React.forwardRef<
@@ -161,8 +149,7 @@ const FormMessage = React.forwardRef<
 		if (Array.isArray(error)) {
 			const firstErrorIndex = error.findIndex((e) => !!e);
 			const firstError = error[firstErrorIndex];
-			body =
-				firstError?.message ?? `Error with value at index ${firstErrorIndex}`;
+			body = firstError?.message ?? `Error with value at index ${firstErrorIndex}`;
 		}
 	}
 
@@ -176,7 +163,7 @@ const FormMessage = React.forwardRef<
 			id={formMessageId}
 			className={cn(
 				"text-[0.8rem] font-medium text-destructive dark:text-red-900",
-				className,
+				className
 			)}
 			{...props}
 		>

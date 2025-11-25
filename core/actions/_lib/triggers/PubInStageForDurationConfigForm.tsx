@@ -2,30 +2,21 @@ import { Controller } from "react-hook-form";
 
 import { Field, FieldError, FieldGroup, FieldLabel } from "ui/field";
 import { Input } from "ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
-import {
-	type AddionalConfigForm,
-	intervals,
-	type pubInStageForDuration,
-} from "../triggers";
+import type { AddionalConfigForm, pubInStageForDuration } from "../triggers";
+import { intervals } from "../triggers";
 
-export const PubInStageForDurationConfigForm: AddionalConfigForm<
-	typeof pubInStageForDuration
-> = (props) => {
+export const PubInStageForDurationConfigForm: AddionalConfigForm<typeof pubInStageForDuration> = (
+	props
+) => {
 	return (
 		<Controller
 			name={`triggers.${props.idx}.config`}
 			control={props.form.control}
 			render={({ fieldState }) => {
 				return (
-					<FieldGroup className="flex-row gap-2 items-start">
+					<FieldGroup className="flex-row items-start gap-2">
 						<Controller
 							name={`triggers.${props.idx}.config.duration`}
 							control={props.form.control}
@@ -35,7 +26,7 @@ export const PubInStageForDurationConfigForm: AddionalConfigForm<
 									className="shrink grow-0 gap-1"
 									data-invalid={p.fieldState.invalid}
 								>
-									<FieldLabel className="text-gray-700 text-xs">
+									<FieldLabel className="text-xs text-gray-700">
 										Duration
 									</FieldLabel>
 									<Input
@@ -44,7 +35,7 @@ export const PubInStageForDurationConfigForm: AddionalConfigForm<
 										value={p.field.value}
 										onChange={(e) =>
 											p.field.onChange(
-												e.target.value ? Number(e.target.value) : undefined,
+												e.target.value ? Number(e.target.value) : undefined
 											)
 										}
 									/>
@@ -66,13 +57,10 @@ export const PubInStageForDurationConfigForm: AddionalConfigForm<
 									className="shrink grow-0 gap-1"
 									data-invalid={p.fieldState.invalid}
 								>
-									<FieldLabel className="text-gray-700 text-xs">
+									<FieldLabel className="text-xs text-gray-700">
 										Interval
 									</FieldLabel>
-									<Select
-										value={p.field.value}
-										onValueChange={p.field.onChange}
-									>
+									<Select value={p.field.value} onValueChange={p.field.onChange}>
 										<SelectTrigger className="h-9">
 											<SelectValue placeholder="Select an interval" />
 										</SelectTrigger>
@@ -93,9 +81,7 @@ export const PubInStageForDurationConfigForm: AddionalConfigForm<
 							)}
 						/>
 						{fieldState.error && (
-							<FieldError className="text-xs">
-								{fieldState.error.message}
-							</FieldError>
+							<FieldError className="text-xs">{fieldState.error.message}</FieldError>
 						)}
 					</FieldGroup>
 				);

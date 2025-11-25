@@ -1,26 +1,24 @@
 "use client";
 
-import type { CommunitiesId, StagesId } from "db/public";
 import { Copy, Pencil, Trash2 } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useCallback } from "react";
-import { DynamicIcon } from "ui/dynamic-icon";
+
+import type { CommunitiesId, StagesId } from "db/public";
+import { DynamicIcon, type IconConfig } from "ui/dynamic-icon";
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "ui/item";
 import { toast } from "ui/use-toast";
+
+import type { FullAutomation } from "db/types";
 import { getTriggerByName } from "~/actions/_lib/triggers";
-import {
-	EllipsisMenu,
-	EllipsisMenuButton,
-} from "~/app/components/EllipsisMenu";
-import type { getAutomation } from "~/lib/db/queries";
+import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import type { AutoReturnType } from "~/lib/types";
 import { deleteAutomation, duplicateAutomation } from "../../../actions";
 
 type Props = {
 	stageId: StagesId;
 	communityId: CommunitiesId;
-	automation: AutoReturnType<typeof getAutomation>["executeTakeFirstOrThrow"];
+	automation: FullAutomation;
 };
 
 export const StagePanelAutomation = (props: Props) => {
@@ -28,7 +26,7 @@ export const StagePanelAutomation = (props: Props) => {
 
 	const [, setEditingAutomationId] = useQueryState(
 		"automation-id",
-		parseAsString.withDefault("new-automation"),
+		parseAsString.withDefault("new-automation")
 	);
 
 	const onEditClick = useCallback(() => {
@@ -55,16 +53,14 @@ export const StagePanelAutomation = (props: Props) => {
 		}
 	}, [props.stageId, runDuplicateAutomation, automation.id]);
 
-	const triggerIcons = automation.triggers.map((trigger) =>
-		getTriggerByName(trigger.event),
-	);
+	const triggerIcons = automation.triggers.map((trigger) => getTriggerByName(trigger.event));
 
 	return (
 		<Item variant="outline" size="sm">
 			<ItemMedia>
-				<DynamicIcon icon={automation.icon} size={16} />
+				<DynamicIcon icon={automation.icon as IconConfig} size={16} />
 			</ItemMedia>
-			<ItemContent className="w-full items-center flex-row justify-between">
+			<ItemContent className="w-full flex-row items-center justify-between">
 				<ItemTitle>{automation.name}</ItemTitle>
 				<div className="flex items-center gap-2 rounded-full border bg-gray-50 p-2">
 					{triggerIcons.map((icon) => (
@@ -81,10 +77,7 @@ export const StagePanelAutomation = (props: Props) => {
 					<EllipsisMenuButton onClick={onDuplicateClick}>
 						<Copy size={14} /> Duplicate
 					</EllipsisMenuButton>
-					<EllipsisMenuButton
-						onClick={onDeleteClick}
-						className="text-destructive"
-					>
+					<EllipsisMenuButton onClick={onDeleteClick} className="text-destructive">
 						<Trash2 size={14} /> Delete
 					</EllipsisMenuButton>
 				</EllipsisMenu>

@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import type { PubsId, UsersId } from "db/public";
-import { Action, CoreSchemaType, MemberRole } from "db/public";
+import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -67,15 +67,25 @@ const seed = createSeed({
 	},
 	stages: {
 		Evaluating: {
-			actions: {
+			automations: {
 				[ACTION_NAME]: {
-					action: Action.email,
-					name: ACTION_NAME,
-					config: {
-						subject: "Sup",
-						body: "Yo",
-						recipientEmail: "test@example.com",
-					},
+					triggers: [
+						{
+							event: AutomationEvent.manual,
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.email,
+							name: ACTION_NAME,
+							config: {
+								subject: "Sup",
+								body: "Yo",
+								recipientEmail: "test@example.com",
+							},
+						},
+					],
 				},
 			},
 		},

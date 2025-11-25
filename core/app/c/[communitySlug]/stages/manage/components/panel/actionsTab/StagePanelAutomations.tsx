@@ -1,21 +1,8 @@
-import type { CommunitiesId, StagesId, UsersId } from "db/public";
-
 import { Suspense } from "react";
 
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "ui/card";
-import {
-	Empty,
-	EmptyDescription,
-	EmptyHeader,
-	EmptyMedia,
-	EmptyTitle,
-} from "ui/empty";
+import type { CommunitiesId, StagesId, UsersId } from "db/public";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "ui/empty";
 import { Bot } from "ui/icon";
 import { ItemGroup } from "ui/item";
 
@@ -33,7 +20,7 @@ type PropsInner = {
 const StagePanelAutomationsInner = async (props: PropsInner) => {
 	const [stage, automations] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
-		getStageAutomations(props.stageId).execute(),
+		getStageAutomations(props.stageId),
 	]);
 
 	if (!stage) {
@@ -92,10 +79,7 @@ export const StagePanelAutomations = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelAutomationsInner
-				stageId={props.stageId}
-				userId={props.userId}
-			/>
+			<StagePanelAutomationsInner stageId={props.stageId} userId={props.userId} />
 		</Suspense>
 	);
 };

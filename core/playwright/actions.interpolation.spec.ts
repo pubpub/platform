@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 import test from "@playwright/test";
 
-import { Action, CoreSchemaType, MemberRole } from "db/public";
+import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -27,18 +27,23 @@ const seed = createSeed({
 	},
 	stages: {
 		Test: {
-			actions: {
+			automations: {
 				Log: {
-					action: Action.log,
-					config: {
-						text: "Hello, {{ $uppercase($.pub.values.title) }}. Im running {{ $.action.name }} with Debounce: {{ $.action.config.debounce }}",
-						debounce: 10,
-					},
-				},
-
-				Email: {
-					action: Action.email,
-					config: { subject: "Hello", body: "Content" },
+					triggers: [
+						{
+							event: AutomationEvent.manual,
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.log,
+							config: {
+								text: "Hello, {{ $uppercase($.pub.values.title) }}. Im running {{ $.action.name }} with Debounce: {{ $.action.config.debounce }}",
+								debounce: 10,
+							},
+						},
+					],
 				},
 			},
 		},

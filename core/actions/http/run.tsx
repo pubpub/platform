@@ -26,6 +26,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 
 	const body = typeof config.body === "string" ? config.body : JSON.stringify(config.body);
 
+
 	const res = await fetch(url, {
 		method: method,
 		headers: {

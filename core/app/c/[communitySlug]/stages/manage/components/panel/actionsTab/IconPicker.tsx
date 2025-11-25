@@ -1,8 +1,8 @@
+import { Suspense, use, useMemo } from "react";
 import { XIcon } from "lucide-react";
 
-import { Suspense, use, useMemo } from "react";
-import { Button } from "ui/button";
 import type { IconConfig } from "ui/dynamic-icon";
+import { Button } from "ui/button";
 import { DynamicIcon } from "ui/dynamic-icon";
 import { FormLabel } from "ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
@@ -66,7 +66,7 @@ export const IconPickerContent = ({
 						className={cn(
 							"h-10 w-10 p-0",
 							value?.color && "bg-white",
-							value?.name === name && "bg-gray-200",
+							value?.name === name && "bg-gray-200"
 						)}
 						type="button"
 						onClick={() => onChange({ name, color: value?.color })}
@@ -82,7 +82,7 @@ export const IconPickerContent = ({
 				))}
 			</>
 		),
-		[iconMap, onChange, value?.color, value?.name, value?.variant],
+		[iconMap, onChange, value?.color, value?.name, value?.variant]
 	);
 
 	if (!iconMap) return "No icons";

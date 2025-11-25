@@ -13,6 +13,7 @@ import type {
 	ActionInstancesId,
 	ActionRunsId,
 	AutomationEvent,
+	AutomationRunsId,
 	AutomationsId,
 	PubsId,
 	StagesId,
@@ -21,23 +22,25 @@ import type {
 import type { Interval } from "~/actions/_lib/triggers";
 import { addDuration } from "../dates";
 
-export const getScheduledActionJobKey = ({
+export const getScheduledAutomationJobKey = ({
 	stageId,
-	actionInstanceId,
+	automationId,
 	pubId,
-	event,
+	trigger,
 }: {
 	stageId: StagesId;
-	actionInstanceId: ActionInstancesId;
-	event: AutomationEvent;
+	automationId: AutomationsId;
+	trigger: {
+		event: AutomationEvent;
+		config: Record<string, unknown> | null;
+	};
 	pubId?: PubsId;
-}) => `scheduled-action-${stageId}-${actionInstanceId}${pubId ? `-${pubId}` : ""}-${event}`;
+}) => `scheduled-automation-${stageId}-${automationId}${pubId ? `-${pubId}` : ""}-${trigger.event}`;
 
 export type JobsClient = {
 	unscheduleJob(jobKey: string): Promise<void>;
 	scheduleDelayedAutomation(options: {
 		automationId: AutomationsId;
-		actionInstanceId: ActionInstancesId;
 		stageId: StagesId;
 		pubId: PubsId;
 		duration: number;
@@ -45,10 +48,12 @@ export type JobsClient = {
 		community: {
 			slug: string;
 		};
-		event: AutomationEvent;
-		stack: ActionRunsId[];
-		scheduledActionRunId: ActionRunsId;
-		config: Record<string, unknown> | null;
+		trigger: {
+			event: AutomationEvent;
+			config: Record<string, unknown> | null;
+		};
+		stack: AutomationRunsId[];
+		scheduledAutomationRunId: AutomationRunsId;
 	}): Promise<Job | ClientExceptionOptions>;
 };
 
@@ -71,38 +76,34 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 		},
 		async scheduleDelayedAutomation({
 			automationId,
-			actionInstanceId,
 			stageId,
 			pubId,
 			duration,
 			interval,
 			community,
-			event,
+			trigger,
 			stack,
-			scheduledActionRunId,
-			config,
+			scheduledAutomationRunId,
 		}) {
 			const runAt = addDuration({ duration, interval });
-			const jobKey = getScheduledActionJobKey({
+			const jobKey = getScheduledAutomationJobKey({
 				stageId,
-				actionInstanceId,
+				automationId,
 				pubId,
-				event,
+				trigger,
 			});
 
 			logger.info({
 				msg: `Scheduling delayed automation ${automationId} to run at ${runAt}`,
 				automationId,
-				actionInstanceId,
 				stageId,
 				pubId,
 				duration,
 				interval,
-				config,
+				trigger,
 				runAt,
 				stack,
-				event,
-				scheduledActionRunId,
+				scheduledAutomationRunId,
 			});
 			try {
 				const job = await workerUtils.addJob(
@@ -112,11 +113,10 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 						automationId,
 						pubId,
 						stageId,
-						event,
+						trigger,
 						community,
 						stack,
-						config,
-						actionRunId: scheduledActionRunId,
+						automationRunId: scheduledAutomationRunId,
 					},
 					{
 						runAt,
@@ -128,7 +128,6 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				logger.info({
 					msg: `Successfully scheduled delayed automation ${automationId} to run at ${runAt}`,
 					automationId,
-					actionInstanceId,
 					stageId,
 					pubId,
 					runAt,
@@ -138,12 +137,11 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				logger.error({
 					msg: `Error scheduling delayed automation ${automationId}`,
 					automationId,
-					actionInstanceId,
 					stageId,
 					pubId,
 					err: err.message,
 					stack,
-					event,
+					trigger,
 				});
 				return {
 					error: err,

@@ -1,31 +1,31 @@
-"use client"
+"use client";
 
-import { useCallback, useState } from "react"
-import { useDebouncedCallback } from "use-debounce"
+import { useCallback, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
-import { Input } from "ui/input"
-import { Label } from "ui/label"
+import { Input } from "ui/input";
+import { Label } from "ui/label";
 
 type Props = {
-	value: string
-	onChange: (value: string) => void
-}
+	value: string;
+	onChange: (value: string) => void;
+};
 
 export const StageNameInput = (props: Props) => {
-	const [value, setValue] = useState(props.value)
-	const onChangeDebounced = useDebouncedCallback(props.onChange, 500)
+	const [value, setValue] = useState(props.value);
+	const onChangeDebounced = useDebouncedCallback(props.onChange, 500);
 	const onChange = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
-			const name = event.target.value
-			setValue(name)
-			onChangeDebounced(name)
+			const name = event.target.value;
+			setValue(name);
+			onChangeDebounced(name);
 		},
 		[onChangeDebounced]
-	)
+	);
 
 	return (
 		<Label htmlFor="stage-name">
-			<h4 className="mb-2 font-medium text-base">Stage Name</h4>
+			<h4 className="mb-2 text-base font-medium">Stage Name</h4>
 			<Input
 				className="font-normal"
 				id="stage-name"
@@ -34,5 +34,5 @@ export const StageNameInput = (props: Props) => {
 				placeholder="Stage Name"
 			/>
 		</Label>
-	)
-}
+	);
+};

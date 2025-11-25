@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
 	actionRunsIdSchema,
 	automationEventSchema,
+	automationRunsIdSchema,
 	automationsIdSchema,
 	pubsIdSchema,
 } from "db/public";
@@ -23,13 +24,15 @@ export const internalApi = contract.router(
 			}),
 			body: z.object({
 				pubId: pubsIdSchema,
-				event: automationEventSchema,
-				stack: z.array(actionRunsIdSchema),
+				trigger: z.object({
+					event: automationEventSchema,
+					config: z.record(z.unknown()).nullish(),
+				}),
+				stack: z.array(automationRunsIdSchema),
 			}),
 			responses: {
 				200: z.object({
 					automationId: z.string(),
-					actionInstanceId: z.string(),
 					result: z.any(),
 				}),
 			},
@@ -45,12 +48,11 @@ export const internalApi = contract.router(
 			}),
 			body: z.object({
 				pubId: pubsIdSchema,
-				stack: z.array(actionRunsIdSchema),
+				stack: z.array(automationRunsIdSchema),
 			}),
 			responses: {
 				200: z.object({
 					automationId: z.string(),
-					actionInstanceName: z.string(),
 					runAt: z.string(),
 				}),
 			},
@@ -65,10 +67,12 @@ export const internalApi = contract.router(
 			}),
 			body: z.object({
 				pubId: pubsIdSchema,
-				event: automationEventSchema,
-				actionRunId: actionRunsIdSchema,
-				stack: z.array(actionRunsIdSchema),
-				config: z.record(z.unknown()).nullish(),
+				trigger: z.object({
+					event: automationEventSchema,
+					config: z.record(z.unknown()).nullish(),
+				}),
+				automationRunId: automationRunsIdSchema,
+				stack: z.array(automationRunsIdSchema),
 			}),
 			responses: {
 				200: z.object({
@@ -79,11 +83,11 @@ export const internalApi = contract.router(
 		},
 		cancelScheduledAutomation: {
 			method: "POST",
-			path: "/action-runs/:actionRunId/cancel",
-			summary: "Cancel a scheduled action run",
-			description: "Cancel a scheduled automation and mark the action run as cancelled",
+			path: "/automation-runs/:automationRunId/cancel",
+			summary: "Cancel a scheduled automation run",
+			description: "Cancel a scheduled automation and mark the automation run as cancelled",
 			pathParams: z.object({
-				actionRunId: actionRunsIdSchema,
+				automationRunId: automationRunsIdSchema,
 			}),
 			body: z.object({}),
 			responses: {
@@ -102,7 +106,7 @@ export const internalApi = contract.router(
 			}),
 			body: z.object({
 				json: z.record(z.unknown()),
-				stack: z.array(actionRunsIdSchema),
+				stack: z.array(automationRunsIdSchema),
 			}),
 			responses: {
 				200: z.object({

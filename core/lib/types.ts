@@ -1,3 +1,5 @@
+import type { FieldError } from "react-hook-form";
+
 import type {
 	ActionConfigDefaults,
 	ActionInstances,
@@ -9,7 +11,7 @@ import type {
 	PubTypes,
 	Users,
 } from "db/public";
-import type { FieldError } from "react-hook-form";
+
 import type { PubValues } from "./server";
 import type { DirectAutoOutput } from "./server/cache/types";
 
@@ -28,19 +30,13 @@ export type MemberWithUser = Omit<CommunityMemberships, "memberGroupId"> & {
 export type UserPostBody = Pick<Users, "firstName" | "lastName" | "email">;
 export type UserPutBody = Pick<Users, "firstName" | "lastName">;
 export type UserLoginData = Omit<Users, "passwordHash" | "isProvisional">;
-export type UserSetting = Pick<
-	Users,
-	"firstName" | "lastName" | "email" | "slug"
-> & {
+export type UserSetting = Pick<Users, "firstName" | "lastName" | "email" | "slug"> & {
 	communities: Communities[];
 };
 
 export type PubWithValues = Omit<Pubs, "valuesBlob"> & { values: PubValues };
 
-export type PubTypeWithFieldIds = Pick<
-	PubTypes,
-	"id" | "name" | "description"
-> & {
+export type PubTypeWithFieldIds = Pick<PubTypes, "id" | "name" | "description"> & {
 	fields: { id: PubFieldsId; isTitle: boolean }[];
 };
 
@@ -56,9 +52,7 @@ export type PubField = Pick<
 	| "isRelation"
 >;
 
-export type AutoReturnType<
-	T extends (...args: any[]) => DirectAutoOutput<any>,
-> = {
+export type AutoReturnType<T extends (...args: any[]) => DirectAutoOutput<any>> = {
 	[K in "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow"]: Awaited<
 		ReturnType<ReturnType<T>[K]>
 	>;

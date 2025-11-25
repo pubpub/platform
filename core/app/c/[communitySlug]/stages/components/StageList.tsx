@@ -11,7 +11,6 @@ import { stagesDAO, StagesProvider } from "ui/stages";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
-import { triggers } from "~/actions/api";
 import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu";
 import { BasicPagination } from "~/app/components/Pagination";
 import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
@@ -178,7 +177,7 @@ export async function StagePubs({
 				withStageActionInstances: true,
 			}
 		),
-		getStageAutomations(stage.id, { event: AutomationEvent.manual }).execute(),
+		getStageAutomations(stage.id, { event: AutomationEvent.manual }),
 		userCanEditAllPubs(),
 		userCanArchiveAllPubs(),
 		userCanRunActionsAllPubs(),
@@ -186,7 +185,6 @@ export async function StagePubs({
 		userCanViewAllStages(),
 	]);
 
-	console.log("manualAutomations", manualAutomations);
 
 	const totalPages =
 		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0;

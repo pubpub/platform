@@ -1,21 +1,15 @@
-import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
 import type { Static } from "@sinclair/typebox";
-import { Type } from "@sinclair/typebox";
-import { TypeCompiler } from "@sinclair/typebox/compiler";
 import type { Node } from "prosemirror-model";
 import type { ReactNode } from "react";
+
 import React, { useMemo } from "react";
+import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
+import { typeboxResolver } from "@hookform/resolvers/typebox";
+import { Type } from "@sinclair/typebox";
+import { TypeCompiler } from "@sinclair/typebox/compiler";
 import { useForm } from "react-hook-form";
 
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import {
 	AlignCenter,
 	AlignLeft,
@@ -29,12 +23,7 @@ import { Input } from "ui/input";
 import { RadioGroup, RadioGroupCard } from "ui/radio-group";
 import { Slider } from "ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import { Alignment } from "../../schemas/image";
 import { MenuInputField, MenuSwitchField } from "./MenuFields";
@@ -115,7 +104,7 @@ export const MediaUpload = (props: Props) => {
 			props.nodePos,
 			node.type,
 			{ ...node.attrs, ...values },
-			node.marks,
+			node.marks
 		);
 		view.dispatch(tr);
 	});
@@ -139,7 +128,10 @@ export const MediaUpload = (props: Props) => {
 								<TooltipProvider>
 									<Tooltip>
 										<TooltipTrigger>
-											<HelpCircle strokeWidth="1px" className="text-gray-500" />
+											<HelpCircle
+												strokeWidth="1px"
+												className="text-gray-500"
+											/>
 										</TooltipTrigger>
 										<TooltipContent>
 											Describe what the image shows for vision-impaired users.
@@ -176,9 +168,13 @@ export const MediaUpload = (props: Props) => {
 													<Slider
 														defaultValue={[100]}
 														value={
-															field.value == null ? undefined : [field.value]
+															field.value == null
+																? undefined
+																: [field.value]
 														}
-														onValueChange={(value) => field.onChange(value[0])}
+														onValueChange={(value) =>
+															field.onChange(value[0])
+														}
 														min={0}
 														max={100}
 														step={1}
@@ -190,7 +186,9 @@ export const MediaUpload = (props: Props) => {
 															type="number"
 															{...field}
 															onChange={(e) => {
-																field.onChange(e.target.valueAsNumber);
+																field.onChange(
+																	e.target.valueAsNumber
+																);
 															}}
 														/>
 														%
@@ -218,13 +216,21 @@ export const MediaUpload = (props: Props) => {
 														defaultValue={field.value}
 														className="flex w-full items-center justify-end gap-2"
 													>
-														<AlignmentRadioItem alignment={Alignment.left} />
-														<AlignmentRadioItem alignment={Alignment.center} />
-														<AlignmentRadioItem alignment={Alignment.right} />
+														<AlignmentRadioItem
+															alignment={Alignment.left}
+														/>
+														<AlignmentRadioItem
+															alignment={Alignment.center}
+														/>
+														<AlignmentRadioItem
+															alignment={Alignment.right}
+														/>
 														<AlignmentRadioItem
 															alignment={Alignment.verticalCenter}
 														/>
-														<AlignmentRadioItem alignment={Alignment.expand} />
+														<AlignmentRadioItem
+															alignment={Alignment.expand}
+														/>
 													</RadioGroup>
 												</FormControl>
 											</div>
@@ -235,10 +241,7 @@ export const MediaUpload = (props: Props) => {
 							}}
 						/>
 						<hr />
-						<MenuSwitchField
-							name="fullResolution"
-							label="Always use full resolution"
-						/>
+						<MenuSwitchField name="fullResolution" label="Always use full resolution" />
 					</TabsContent>
 				</Tabs>
 			</form>

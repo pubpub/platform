@@ -17,13 +17,13 @@ const handleRunAutomation = async (
 	payload: RunAutomationPayload,
 	logger: Logger
 ) => {
-	const { automationId, pubId, event, stageId, stack } = payload;
+	const { automationId, pubId, trigger, stageId, stack } = payload;
 
 	logger.info({
 		msg: `Running automation ${automationId}`,
 		automationId,
 		pubId,
-		event,
+		trigger,
 		stageId,
 		stack,
 	});
@@ -31,7 +31,7 @@ const handleRunAutomation = async (
 	try {
 		const { status, body } = await client.runAutomation({
 			params: { automationId, communitySlug: payload.community.slug },
-			body: { pubId, event, stack },
+			body: { pubId, trigger, stack },
 		});
 
 		if (status >= 400) {
@@ -110,21 +110,21 @@ const handleRunDelayedAutomation = async (
 	payload: RunDelayedAutomationPayload,
 	logger: Logger
 ) => {
-	const { automationId, pubId, event, actionRunId, stack, config } = payload;
+	const { automationId, pubId, trigger, automationRunId, stack } = payload;
 
 	logger.info({
 		msg: `Running delayed automation ${automationId}`,
 		automationId,
 		pubId,
-		event,
-		actionRunId,
+		trigger,
+		automationRunId,
 		stack,
 	});
 
 	try {
 		const { status, body } = await client.runDelayedAutomation({
 			params: { automationId, communitySlug: payload.community.slug },
-			body: { pubId, event, actionRunId, stack, config },
+			body: { pubId, trigger, automationRunId, stack },
 		});
 
 		if (status >= 400) {
@@ -157,23 +157,23 @@ const handleCancelScheduledAutomation = async (
 	payload: CancelScheduledAutomationPayload,
 	logger: Logger
 ) => {
-	const { actionRunId } = payload;
+	const { automationRunId } = payload;
 
 	logger.info({
-		msg: `Cancelling scheduled automation for action run ${actionRunId}`,
-		actionRunId,
+		msg: `Cancelling scheduled automation for automation run ${automationRunId}`,
+		automationRunId,
 	});
 
 	try {
 		const { status, body } = await client.cancelScheduledAutomation({
-			params: { actionRunId, communitySlug: payload.community.slug },
+			params: { automationRunId, communitySlug: payload.community.slug },
 			body: {},
 		});
 
 		if (status >= 400) {
 			logger.error({
 				msg: "API error cancelling scheduled automation",
-				actionRunId,
+				automationRunId,
 				status,
 				body,
 			});
@@ -182,12 +182,12 @@ const handleCancelScheduledAutomation = async (
 
 		logger.info({
 			msg: "Scheduled automation cancelled successfully",
-			actionRunId,
+			automationRunId,
 			result: body,
 		});
 	} catch (e) {
 		logger.error({
-			msg: `Error cancelling scheduled automation ${actionRunId}`,
+			msg: `Error cancelling scheduled automation ${automationRunId}`,
 			error: e,
 		});
 	}

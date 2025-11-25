@@ -1,10 +1,8 @@
-import type { ProcessedPub } from "contracts"
-import type { CommunitiesId, UsersId } from "db/public"
-import type { AutoReturnType } from "~/lib/types"
+import { Suspense } from "react";
+import { BookOpen } from "lucide-react";
 
-import { Suspense } from "react"
-import { BookOpen } from "lucide-react"
-
+import type { ProcessedPub } from "contracts";
+import { AutomationEvent, type CommunitiesId, type UsersId } from "db/public";
 import {
 	Empty,
 	EmptyContent,
@@ -12,58 +10,59 @@ import {
 	EmptyHeader,
 	EmptyMedia,
 	EmptyTitle,
-} from "ui/empty"
-import { PubFieldProvider } from "ui/pubFields"
-import { Skeleton } from "ui/skeleton"
-import { StagesProvider, stagesDAO } from "ui/stages"
-import { cn } from "utils"
+} from "ui/empty";
+import { PubFieldProvider } from "ui/pubFields";
+import { Skeleton } from "ui/skeleton";
+import { stagesDAO, StagesProvider } from "ui/stages";
+import { cn } from "utils";
 
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
-import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton"
+import type { AutoReturnType } from "~/lib/types";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
+import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 import {
 	userCanArchiveAllPubs,
 	userCanEditAllPubs,
 	userCanMoveAllPubs,
 	userCanRunActionsAllPubs,
 	userCanViewAllStages,
-} from "~/lib/authorization/capabilities"
-import { getPubsCount, getPubsWithRelatedValues, getPubTypesForCommunity } from "~/lib/server"
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
-import { getPubFields } from "~/lib/server/pubFields"
-import { getStages } from "~/lib/server/stages"
-import { PubClearSearchButton } from "./PubClearSearchButton"
-import { PubSearchFooter } from "./PubSearchFooter"
-import { PubSearch } from "./PubSearchInput"
-import { PubSearchProvider } from "./PubSearchProvider"
-import { PubsSelectedProvider } from "./PubsSelectedContext"
-import { PubsSelectedCounter } from "./PubsSelectedCounter"
-import { getPubFilterParamsFromSearch, pubSearchParamsCache } from "./pubQuery"
+} from "~/lib/authorization/capabilities";
+import { getPubsCount, getPubsWithRelatedValues, getPubTypesForCommunity } from "~/lib/server";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { getPubFields } from "~/lib/server/pubFields";
+import { getStages } from "~/lib/server/stages";
+import { PubClearSearchButton } from "./PubClearSearchButton";
+import { getPubFilterParamsFromSearch, pubSearchParamsCache } from "./pubQuery";
+import { PubSearchFooter } from "./PubSearchFooter";
+import { PubSearch } from "./PubSearchInput";
+import { PubSearchProvider } from "./PubSearchProvider";
+import { PubsSelectedProvider } from "./PubsSelectedContext";
+import { PubsSelectedCounter } from "./PubsSelectedCounter";
 
 type PaginatedPubListProps = {
-	communityId: CommunitiesId
-	searchParams: { [key: string]: string | string[] | undefined }
+	communityId: CommunitiesId;
+	searchParams: { [key: string]: string | string[] | undefined };
 	/**
 	 * Needs to be provided for the pagination to work
 	 *
 	 * @default `/c/${communitySlug}/pubs`
 	 */
-	basePath?: string
-	userId: UsersId
-}
+	basePath?: string;
+	userId: UsersId;
+};
 
 type PubListProcessedPub = ProcessedPub<{
-	withPubType: true
-	withRelatedPubs: false
-	withStage: true
-	withRelatedCounts: true
-}>
+	withPubType: true;
+	withRelatedPubs: false;
+	withStage: true;
+	withRelatedCounts: true;
+}>;
 
 const PaginatedPubListInner = async (
 	props: PaginatedPubListProps & {
-		communitySlug: string
-		pubsPromise: Promise<PubListProcessedPub[]>
-		stagesPromise: Promise<AutoReturnType<typeof getStages>["execute"]>
+		communitySlug: string;
+		pubsPromise: Promise<PubListProcessedPub[]>;
+		stagesPromise: Promise<AutoReturnType<typeof getStages>["execute"]>;
 	}
 ) => {
 	const [
@@ -82,12 +81,12 @@ const PaginatedPubListInner = async (
 		userCanRunActionsAllPubs(),
 		userCanMoveAllPubs(),
 		userCanViewAllStages(),
-	])
+	]);
 
 	const hasSearch =
 		props.searchParams.query !== "" ||
 		(props.searchParams.pubTypes?.length ?? 0) > 0 ||
-		(props.searchParams.stages?.length ?? 0) > 0
+		(props.searchParams.stages?.length ?? 0) > 0;
 	return (
 		<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
 			{pubs.length === 0 && (
@@ -120,7 +119,7 @@ const PaginatedPubListInner = async (
 			)}
 
 			{pubs.map((pub) => {
-				const stageForPub = stages.find((stage) => stage.id === pub.stage?.id)
+				const stageForPub = stages.find((stage) => stage.id === pub.stage?.id);
 
 				return (
 					<PubCard
@@ -129,7 +128,7 @@ const PaginatedPubListInner = async (
 						communitySlug={props.communitySlug}
 						moveFrom={stageForPub?.moveConstraintSources}
 						moveTo={stageForPub?.moveConstraints}
-						actionInstances={stageForPub?.actionInstances}
+						manualAutomations={stageForPub?.automations?.filter(automation=>automation?.triggers.some(trigger=>trigger.event===AutomationEvent.manual))}
 						userId={props.userId}
 						canEditAllPubs={canEditAllPubs}
 						canArchiveAllPubs={canArchiveAllPubs}
@@ -138,18 +137,18 @@ const PaginatedPubListInner = async (
 						canViewAllStages={canViewAllStages}
 						canFilter={true}
 					/>
-				)
+				);
 			})}
 		</div>
-	)
-}
+	);
+};
 
 export const PubListSkeleton = ({
 	amount = 10,
 	className,
 }: {
-	amount?: number
-	className?: string
+	amount?: number;
+	className?: string;
 }) => (
 	<div className={cn(["flex flex-col gap-3", className])}>
 		{Array.from({ length: amount }).map((_, index) => (
@@ -159,20 +158,20 @@ export const PubListSkeleton = ({
 			</Skeleton>
 		))}
 	</div>
-)
+);
 
 const PubListFooterPagination = async (props: {
-	basePath: string
-	searchParams: Record<string, unknown>
-	page: number
-	communityId: CommunitiesId
-	children?: React.ReactNode
-	pubsPromise: Promise<ProcessedPub[]>
-	userId: UsersId
+	basePath: string;
+	searchParams: Record<string, unknown>;
+	page: number;
+	communityId: CommunitiesId;
+	children?: React.ReactNode;
+	pubsPromise: Promise<ProcessedPub[]>;
+	userId: UsersId;
 }) => {
-	const search = pubSearchParamsCache.all()
+	const search = pubSearchParamsCache.all();
 
-	const filterParams = getPubFilterParamsFromSearch(search)
+	const filterParams = getPubFilterParamsFromSearch(search);
 
 	const count = await getPubsCount(
 		{
@@ -186,28 +185,28 @@ const PubListFooterPagination = async (props: {
 			search: search.query,
 			filters: filterParams.filters,
 		}
-	)
+	);
 
 	const paginationProps = {
 		mode: "total" as const,
 		totalPages: Math.ceil((count ?? 0) / search.perPage),
-	}
+	};
 
 	return (
 		<PubSearchFooter {...props} {...paginationProps} className="z-20">
 			{props.children}
 			<PubsSelectedCounter pageSize={Math.min(search.perPage, count)} />
 		</PubSearchFooter>
-	)
-}
+	);
+};
 
 export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) => {
-	const search = pubSearchParamsCache.parse(props.searchParams)
-	const filterParams = getPubFilterParamsFromSearch(search)
+	const search = pubSearchParamsCache.parse(props.searchParams);
+	const filterParams = getPubFilterParamsFromSearch(search);
 
-	const communitySlug = await getCommunitySlug()
+	const communitySlug = await getCommunitySlug();
 
-	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`
+	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
 
 	// we do one more than the total amount of pubs to know if there is a next page
 	// const limit = search.query ? filterParams.perPage + 1 : filterParams.perPage;
@@ -232,7 +231,7 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 			orderDirection: filterParams.orderDirection,
 			filters: filterParams.filters,
 		}
-	)
+	);
 
 	const [pubTypes, stages, pubFields] = await Promise.all([
 		getPubTypesForCommunity(props.communityId, {
@@ -240,10 +239,10 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 		}),
 		getStages(
 			{ communityId: props.communityId, userId: props.userId },
-			{ withAutomations: "full" }
+			{ withAutomations: AutomationEvent.manual }
 		).execute(),
 		getPubFields({ communityId: props.communityId }).executeTakeFirstOrThrow(),
-	])
+	]);
 
 	return (
 		<div className="relative flex h-full flex-col">
@@ -283,5 +282,5 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 				</StagesProvider>
 			</PubFieldProvider>
 		</div>
-	)
-}
+	);
+};

@@ -11,10 +11,9 @@ import { AutomationEvent } from "db/public";
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
-import { DynamicIcon } from "ui/icon";
+import { DynamicIcon, type IconConfig } from "ui/dynamic-icon";
 
 import type { PubTitleProps } from "~/lib/pubs";
-import type { IconConfig } from "~/lib/types";
 import { PubTitle } from "~/app/components/PubTitle";
 import { getPubTitle } from "~/lib/pubs";
 
@@ -28,7 +27,7 @@ export type ActionRun = {
 	result: unknown;
 } & (
 	| {
-			event: Event;
+			event: AutomationEvent;
 			user: null;
 	  }
 	| {
@@ -69,17 +68,17 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 					return `${user.firstName} ${user.lastName}`;
 				}
 				switch (getValue()) {
-					case Event.actionFailed:
+					case AutomationEvent.automationFailed:
 						return `Automation (${row.original.sourceActionInstance?.name} failed)`;
-					case Event.actionSucceeded:
+					case AutomationEvent.automationSucceeded:
 						return `Automation (${row.original.sourceActionInstance?.name} succeeded)`;
-					case Event.pubEnteredStage:
+					case AutomationEvent.pubEnteredStage:
 						return "Automation (Pub entered stage)";
-					case Event.pubLeftStage:
+					case AutomationEvent.pubLeftStage:
 						return "Automation (Pub exited stage)";
-					case Event.pubInStageForDuration:
+					case AutomationEvent.pubInStageForDuration:
 						return "Automation (Pub in stage for duration)";
-					case Event.webhook:
+					case AutomationEvent.webhook:
 						return "Automation (Webhook)";
 				}
 			},

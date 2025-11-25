@@ -1,17 +1,15 @@
 "use client";
 
-import { Braces, TestTube, X } from "lucide-react";
-import dynamic from "next/dynamic";
 import type React from "react";
 import type { PropsWithChildren } from "react";
+import type { ControllerFieldState, ControllerProps, ControllerRenderProps } from "react-hook-form";
+import type z from "zod";
 
 import { memo, useCallback, useEffect, useId, useMemo, useState } from "react";
-import type {
-	ControllerFieldState,
-	ControllerProps,
-	ControllerRenderProps,
-} from "react-hook-form";
+import dynamic from "next/dynamic";
+import { Braces, TestTube, X } from "lucide-react";
 import { Controller } from "react-hook-form";
+
 import { Button } from "ui/button";
 import { ButtonGroup } from "ui/button-group";
 import { PlainTextWithTokensEditor } from "ui/editors";
@@ -19,10 +17,11 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field";
 import { Skeleton } from "ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
-import type z from "zod";
+
 import type { Action } from "../types";
 import type { InputState } from "./ActionFieldJsonataInput";
-import { type ActionFormContextContext, useActionForm } from "./ActionForm";
+import type { ActionFormContextContext } from "./ActionForm";
+import { useActionForm } from "./ActionForm";
 import { isJsonTemplate } from "./schemaWithJsonFields";
 
 // checks if value contains template syntax {{ }}
@@ -31,25 +30,19 @@ const hasTemplateSyntax = (value: unknown): boolean => {
 };
 
 const ActionFieldJsonInput = dynamic(
-	() =>
-		import("./ActionFieldJsonataInput").then(
-			(mod) => mod.ActionFieldJsonataInput,
-		),
+	() => import("./ActionFieldJsonataInput").then((mod) => mod.ActionFieldJsonataInput),
 	{
 		ssr: false,
 		loading: () => <Skeleton className="h-10 w-full" />,
-	},
+	}
 );
 
 const ActionFieldJsonTestPanel = dynamic(
-	() =>
-		import("./ActionFieldJsonataTestPanel").then(
-			(mod) => mod.ActionFieldJsonataTestPanel,
-		),
+	() => import("./ActionFieldJsonataTestPanel").then((mod) => mod.ActionFieldJsonataTestPanel),
 	{
 		ssr: false,
 		loading: () => <Skeleton className="h-32 w-full" />,
-	},
+	}
 );
 
 type ActionFieldProps = PropsWithChildren<{
@@ -72,10 +65,9 @@ export const ActionField = memo(
 		props: Omit<
 			ActionFieldProps,
 			"form" | "schema" | "defaultFields" | "path" | "context" | "action"
-		>,
+		>
 	) {
-		const { action, schema, defaultFields, context, path, form } =
-			useActionForm();
+		const { action, schema, defaultFields, context, path, form } = useActionForm();
 
 		const fieldName = path ? `${path}.${props.name}` : props.name;
 		return (
@@ -107,7 +99,7 @@ export const ActionField = memo(
 			prevProps.labelId === nextProps.labelId &&
 			prevProps.render === nextProps.render
 		);
-	},
+	}
 );
 
 const JSONataToggleButton = memo(
@@ -144,7 +136,7 @@ const JSONataToggleButton = memo(
 					"transition-colors duration-200",
 
 					inputState.state === "jsonata" &&
-						"border-orange-400 bg-orange-50 text-orange-900",
+						"border-orange-400 bg-orange-50 text-orange-900"
 				)}
 				onClick={handleToggle}
 			>
@@ -157,7 +149,7 @@ const JSONataToggleButton = memo(
 			prevProps.inputState.state === nextProps.inputState.state &&
 			prevProps.fieldName === nextProps.fieldName
 		);
-	},
+	}
 );
 
 const InnerActionField = memo(
@@ -165,7 +157,7 @@ const InnerActionField = memo(
 		props: Omit<ActionFieldProps, "form"> & {
 			field: ControllerRenderProps<any>;
 			fieldState: ControllerFieldState;
-		},
+		}
 	) {
 		// const { form, schema, defaultFields, context, action, path } =
 		// 	useActionForm();
@@ -190,10 +182,8 @@ const InnerActionField = memo(
 		useEffect(() => {
 			setInputState((prev) => ({
 				...prev,
-				jsonValue:
-					prev.state === "jsonata" ? props.field.value : prev.jsonValue,
-				normalValue:
-					prev.state === "normal" ? props.field.value : prev.normalValue,
+				jsonValue: prev.state === "jsonata" ? props.field.value : prev.jsonValue,
+				normalValue: prev.state === "normal" ? props.field.value : prev.normalValue,
 			}));
 		}, [props.field.value]);
 
@@ -206,8 +196,7 @@ const InnerActionField = memo(
 				(props.context.type === "run" ||
 					props.context.type === "configure" ||
 					props.context.type === "automation" ||
-					(props.context.type === "default" &&
-						props.action?.accepts?.includes("json"))));
+					(props.context.type === "default" && props.action?.accepts?.includes("json"))));
 
 		const rendered = useMemo(() => {
 			if (props.render) {
@@ -239,11 +228,7 @@ const InnerActionField = memo(
 			if (!props.label) return null;
 
 			return (
-				<FieldLabel
-					htmlFor={props.field.name}
-					aria-required={required}
-					id={labelId}
-				>
+				<FieldLabel htmlFor={props.field.name} aria-required={required} id={labelId}>
 					{props.label}
 					{required && <span className="-ml-1 text-destructive">*</span>}
 				</FieldLabel>
@@ -307,9 +292,7 @@ const InnerActionField = memo(
 						actionName={props.action?.name ?? ""}
 						configKey={props.name}
 						value={props.field.value ?? ""}
-						pubId={
-							props.context.type === "run" ? props.context.pubId : undefined
-						}
+						pubId={props.context.type === "run" ? props.context.pubId : undefined}
 						contextType={props.context.type}
 						actionAccepts={props.action?.accepts}
 						mode={inputState.state === "jsonata" ? "jsonata" : "template"}
@@ -326,5 +309,5 @@ const InnerActionField = memo(
 			prevProps.fieldState.isTouched === nextProps.fieldState.isTouched &&
 			prevProps.fieldState.isDirty === nextProps.fieldState.isDirty
 		);
-	},
+	}
 );

@@ -1,31 +1,34 @@
-import type {
-	CommunitiesId,
-	NewMoveConstraint,
-	NewStages,
-	PublicSchema,
-	PubsId,
-	StagesId,
-	StagesUpdate,
-	UsersId,
-} from "db/public"
-import type { ExpressionBuilder } from "kysely"
-import type { AutoReturnType } from "../types"
+import type { ExpressionBuilder } from "kysely";
+import type { QueryCreator } from "kysely";
 
-import { cache } from "react"
-import { type QueryCreator, sql } from "kysely"
-import { jsonArrayFrom } from "kysely/helpers/postgres"
+import { cache } from "react";
+import { sql } from "kysely";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import { Capabilities, MembershipType } from "db/public"
+import {
+	AutomationEvent,
+	type CommunitiesId,
+	type NewMoveConstraint,
+	type NewStages,
+	type PublicSchema,
+	type PubsId,
+	type StagesId,
+	type StagesUpdate,
+	type UsersId,
+} from "db/public";
+import { Capabilities, MembershipType } from "db/public";
 
-import { db } from "~/kysely/database"
-import { autoCache } from "./cache/autoCache"
-import { autoRevalidate } from "./cache/autoRevalidate"
+import type { AutoReturnType } from "../types";
+import { db } from "~/kysely/database";
+import { autoCache } from "./cache/autoCache";
+import { autoRevalidate } from "./cache/autoRevalidate";
+import type { ConditionBlock } from "db/types";
 
 export const createStage = (props: NewStages) =>
-	autoRevalidate(db.insertInto("stages").values(props))
+	autoRevalidate(db.insertInto("stages").values(props));
 
 export const updateStage = (stageId: StagesId, props: StagesUpdate) =>
-	autoRevalidate(db.updateTable("stages").set(props).where("id", "=", stageId))
+	autoRevalidate(db.updateTable("stages").set(props).where("id", "=", stageId));
 
 export const removeStages = (stageIds: StagesId[]) =>
 	autoRevalidate(
@@ -38,10 +41,10 @@ export const removeStages = (stageIds: StagesId[]) =>
 			)
 			.deleteFrom("PubsInStages")
 			.where("stageId", "in", (eb) => eb.selectFrom("deleted_stages").select("id"))
-	)
+	);
 
 export const createMoveConstraint = (props: NewMoveConstraint) =>
-	autoRevalidate(db.insertInto("move_constraint").values(props))
+	autoRevalidate(db.insertInto("move_constraint").values(props));
 
 /**
  * You should use `executeTakeFirst` here
@@ -52,7 +55,7 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.selectFrom("PubsInStages")
 			.select(sql<PubsId[]>`array_agg("pubId")`.as("pubIds"))
 			.where("stageId", "=", stageId)
-	)
+	);
 
 /** To conveniently get a CTE of view stage capabilities. Join this to your query on stageId, i.e.
  *
@@ -66,9 +69,9 @@ export const viewableStagesCte = ({
 	userId,
 	communityId,
 }: {
-	db: QueryCreator<PublicSchema>
-	userId: UsersId
-	communityId?: CommunitiesId
+	db: QueryCreator<PublicSchema>;
+	userId: UsersId;
+	communityId?: CommunitiesId;
 }) => {
 	const stageMemberships = db
 		.selectFrom("stage_memberships")
@@ -84,7 +87,7 @@ export const viewableStagesCte = ({
 		)
 		.select("stage_memberships.stageId")
 		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
-		.where("stage_memberships.userId", "=", userId)
+		.where("stage_memberships.userId", "=", userId);
 
 	const communityMemberships = db
 		.selectFrom("community_memberships")
@@ -99,7 +102,7 @@ export const viewableStagesCte = ({
 			qb.where("community_memberships.communityId", "=", communityId!)
 		)
 		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
-		.select(["stages.id as stageId"])
+		.select(["stages.id as stageId"]);
 
 	return db
 		.selectFrom(
@@ -109,8 +112,8 @@ export const viewableStagesCte = ({
 				.as("stageId")
 		)
 		.distinct()
-		.select("stageId")
-}
+		.select("stageId");
+};
 
 export const getStagesViewableByUser = cache(
 	async (
@@ -128,15 +131,16 @@ export const getStagesViewableByUser = cache(
 			}
 		)
 			.executeTakeFirstOrThrow()
-			.then((res) => (res?.count ?? 0) > 0)
+			.then((res) => (res?.count ?? 0) > 0);
 	}
-)
+);
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId }
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
 type CommunityStageOptions = {
-	withAutomations?: "count" | "full" | false
-	withMembers?: "count" | "full" | false
-}
+	/* AutomationEvent = "full" and filters by AutomationEvent */
+	withAutomations?: "count" | "full" | AutomationEvent | false;
+	withMembers?: "count" | "full" | false;
+};
 
 export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any>>(eb: EB) => {
 	return (
@@ -154,8 +158,8 @@ export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any
 					)
 					.as("defaultedConfigKeys")
 			)
-	)
-}
+	);
+};
 
 /**
  * Get all stages the given user has access to
@@ -164,7 +168,7 @@ export const getStages = (
 	{ communityId, stageId, userId }: CommunityStageProps,
 	options: CommunityStageOptions = {}
 ) => {
-	const withAutomations = options.withAutomations ?? "count"
+	const withAutomations = options.withAutomations ?? "count";
 
 	return autoCache(
 		db
@@ -219,40 +223,61 @@ export const getStages = (
 						.as("actionInstancesCount")
 				)
 			)
-			.$if(withAutomations === "full", (qb) =>
+			.$if(withAutomations && withAutomations !== "count" && (withAutomations === "full" || Boolean(AutomationEvent[withAutomations])), (qb) =>
 				qb.select((eb) =>
 					jsonArrayFrom(
 						eb
 							.selectFrom("automations")
 							.whereRef("automations.stageId", "=", "stages.id")
 							.selectAll("automations")
-							.select((eb) =>
+							.select((eb) =>[
+								jsonArrayFrom(
+									eb
+										.selectFrom("automation_triggers")
+										.selectAll("automation_triggers")
+										.whereRef("automation_triggers.automationId", "=", "automations.id")
+										.$if(!!options?.withAutomations, (qb) =>
+											qb.where("automation_triggers.event", "=", options!.withAutomations as AutomationEvent)
+										)
+								)
+									.$notNull()
+									.as("triggers"),
 								jsonArrayFrom(
 									eb
 										.selectFrom("action_instances")
-										.whereRef(
-											"action_instances.automationId",
-											"=",
-											"automations.id"
-										)
 										.selectAll("action_instances")
-
+										.whereRef("action_instances.automationId", "=", "automations.id")
+										.select((eb) => actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys"))
+								)
+									.$notNull()
+									.as("actionInstances"),
+								jsonObjectFrom(
+									eb
+										.selectFrom("automation_condition_blocks")
+										.whereRef("automation_condition_blocks.automationId", "=", "automations.id")
+										.where("automation_condition_blocks.automationConditionBlockId", "is", null)
+										.selectAll("automation_condition_blocks")
+										.select(sql.lit<"block">("block").as("kind"))
 										.select((eb) =>
-											actionConfigDefaultsSelect(eb).as(
-												"defaultedActionConfigKeys"
-											)
+											// this function is what recursively builds the condition blocks and conditions
+											// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
+											eb
+												.fn<
+													ConditionBlock[]
+												>("get_condition_block_items", ["automation_condition_blocks.id"])
+												.as("items")
 										)
-								).as("actionInstances")
-							)
-					).as("automations")
+								).as("condition"),
+							]
+					)).as("automations")
 				)
 			)
 			.selectAll("stages")
 			.orderBy("order asc")
-	)
-}
+	);
+};
 
-export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"]
+export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
 
 export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
 	return autoRevalidate(
@@ -260,5 +285,5 @@ export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
 			.with("leave_stage", (db) => db.deleteFrom("PubsInStages").where("pubId", "=", pubId))
 			.insertInto("PubsInStages")
 			.values([{ pubId, stageId }])
-	)
-}
+	);
+};

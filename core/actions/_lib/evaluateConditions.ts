@@ -1,7 +1,7 @@
 import { interpolate } from "@pubpub/json-interpolate";
 import { AutomationConditionBlockType } from "db/public";
 
-import type { ConditionBlock } from "~/lib/db/queries";
+import type { ConditionBlock } from "db/types";
 
 type ConditionItem = ConditionBlock["items"][number];
 type Condition = Extract<ConditionItem, { kind: "condition" }>;

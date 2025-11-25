@@ -1,41 +1,22 @@
 "use client";
 
-import { Accordion } from "@radix-ui/react-accordion";
-import type { PubFieldSchemaId, PubFieldsId } from "db/public";
-import React from "react";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
+
+import React from "react";
+import { Accordion } from "@radix-ui/react-accordion";
 import { useFieldArray } from "react-hook-form";
 
-import {
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "../accordion";
+import type { PubFieldSchemaId, PubFieldsId } from "db/public";
+
+import { AccordionContent, AccordionItem, AccordionTrigger } from "../accordion";
 import { Button } from "../button";
-import {
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "../form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form";
 import { ArrowRight, Info, Plus, Trash } from "../icon";
 import { Input } from "../input";
 import { usePubFieldContext } from "../pubFields";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select";
 import { Separator } from "../separator";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "../tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../tooltip";
 
 type PubField = {
 	id: PubFieldsId;
@@ -111,8 +92,8 @@ const OutputMapField = ({
 												field that is used in your community.{" "}
 											</li>
 											<li>
-												When running the action manually, only the pub fields on
-												the pub are available to select.
+												When running the action manually, only the pub
+												fields on the pub are available to select.
 											</li>
 										</ul>
 									</TooltipContent>
@@ -180,18 +161,11 @@ export const FieldOutputMap = <F extends string>({
 	const alreadySelectedPubFields = values[fieldName] ?? [];
 
 	const unselectedPubFields = pubFields.filter(
-		(pubField) =>
-			!alreadySelectedPubFields.some(
-				(field) => field.pubField === pubField.slug,
-			),
+		(pubField) => !alreadySelectedPubFields.some((field) => field.pubField === pubField.slug)
 	);
 
 	return (
-		<Accordion
-			type="multiple"
-			className="space-y-5 border-none"
-			disabled={disabled}
-		>
+		<Accordion type="multiple" className="space-y-5 border-none" disabled={disabled}>
 			<AccordionItem value={"a"} className="border-none">
 				<AccordionTrigger>{title}</AccordionTrigger>
 				<AccordionContent className="flex flex-col gap-y-4">

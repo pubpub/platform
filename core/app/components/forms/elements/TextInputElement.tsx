@@ -5,7 +5,6 @@ import { useFormContext } from "react-hook-form";
 import { textInputConfigSchema } from "schemas";
 
 import type { InputComponent } from "db/public";
-import type { InputProps } from "ui/input";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
@@ -18,7 +17,7 @@ export const TextInputElement = ({
 	slug,
 	label,
 	...rest
-}: ElementProps<InputComponent.textInput> & InputProps) => {
+}: ElementProps<InputComponent.textInput> & React.InputHTMLAttributes<HTMLInputElement>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(slug);

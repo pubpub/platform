@@ -1,62 +1,51 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import type {
-	AutomationsId,
-	Communities,
-	CommunitiesId,
-	StagesId,
-} from "db/public";
-import {
-	type Action,
-	AutomationConditionBlockType,
-	AutomationConditionType,
-	AutomationEvent,
-	automationsIdSchema,
-	type ConditionEvaluationTiming,
-	conditionEvaluationTimingSchema,
-} from "db/public";
-import { ChevronRight, type Icon, X } from "lucide-react";
-import { parseAsString, useQueryState, type ParserBuilder } from "nuqs";
-import { memo, useCallback, useEffect, useId, useMemo, useState } from "react";
+import type { ParserBuilder } from "nuqs";
 import type {
 	ControllerFieldState,
 	ControllerRenderProps,
 	FieldValues,
 	UseFormReturn,
-	UseFormStateReturn,
 } from "react-hook-form";
+import type { ZodTypeDef } from "zod";
+
+import { memo, useCallback, useEffect, useId, useMemo, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ChevronRight, X } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
-import { Button } from "ui/button";
+import { z } from "zod";
+
+import type { AutomationsId, Communities, CommunitiesId, StagesId } from "db/public";
+import type { Action, ConditionEvaluationTiming } from "db/public";
+import type { IconConfig } from "ui/dynamic-icon";
 import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "ui/collapsible";
+	AutomationConditionBlockType,
+	AutomationConditionType,
+	AutomationEvent,
+	automationsIdSchema,
+	conditionEvaluationTimingSchema,
+} from "db/public";
+import { Button } from "ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from "ui/dialog";
-import type { IconConfig } from "ui/dynamic-icon";
 import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field";
 import { Plus } from "ui/icon";
 import { Input } from "ui/input";
 import { Item, ItemContent, ItemHeader } from "ui/item";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { FormSubmitButton } from "ui/submit-button";
 import { cn } from "utils";
-import { z, type ZodTypeDef } from "zod";
+
+import type { ConditionBlockFormValue } from "./ConditionBlock";
+import type { FullAutomation } from "db/types";
 import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
 import { ActionFormContext } from "~/actions/_lib/ActionForm";
 import {
@@ -71,20 +60,18 @@ import { getActionFormComponent } from "~/actions/forms";
 import { isSequentialAutomationEvent } from "~/actions/types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useUserOrThrow } from "~/app/components/providers/UserProvider";
-import type { getAutomation, getStageAutomations } from "~/lib/db/queries";
 import { entries } from "~/lib/mapping";
 import { findRanksBetween } from "~/lib/rank";
 import { isClientException, useServerAction } from "~/lib/serverActions";
-import type { AutoReturnType } from "~/lib/types";
 import { addOrUpdateAutomation } from "../../../actions";
-import { ConditionBlock, type ConditionBlockFormValue } from "./ConditionBlock";
+import { ConditionBlock } from "./ConditionBlock";
 import { IconPicker } from "./IconPicker";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 
 type Props = {
 	stageId: StagesId;
 	communityId: CommunitiesId;
-	automations: AutoReturnType<typeof getAutomation>["execute"];
+	automations: FullAutomation[];
 };
 
 const AutomationSelector = ({
@@ -132,7 +119,7 @@ const AutomationSelector = ({
 								<div className="flex flex-row items-center gap-x-2">
 									<span>{automation.name}</span>
 									{isDisabled && (
-										<span className="text-gray-400 text-xs">
+										<span className="text-xs text-gray-400">
 											(self-reference not allowed)
 										</span>
 									)}
@@ -166,10 +153,10 @@ const conditionBlockSchema: z.ZodType<ConditionBlockFormValue> = z.lazy(() =>
 						rank: z.string(),
 					}),
 					conditionBlockSchema,
-				]),
+				])
 			)
 			.min(1),
-	}),
+	})
 );
 
 export type CreateAutomationsSchema = {
@@ -191,8 +178,10 @@ export type CreateAutomationsSchema = {
 };
 
 export const StagePanelAutomationForm = (props: Props) => {
-	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] =
-		useQueryState("automation-id", parseAsString as unknown as ParserBuilder<AutomationsId  >);
+	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] = useQueryState(
+		"automation-id",
+		parseAsString as unknown as ParserBuilder<AutomationsId>
+	);
 
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -207,7 +196,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 			}
 			setIsOpen(newOpen);
 		},
-		[setCurrentlyEditingAutomationId],
+		[setCurrentlyEditingAutomationId]
 	);
 
 	return (
@@ -261,9 +250,7 @@ type ConfigCardProps = {
 
 const ConfigCard = memo(
 	function ConfigCard(props: ConfigCardProps) {
-		const [isCollapsed, setIsCollapsed] = useState(
-			props.defaultCollapsed ?? false,
-		);
+		const [isCollapsed, setIsCollapsed] = useState(props.defaultCollapsed ?? false);
 		const hasContent = !!props.children;
 		const Icon = props.icon;
 
@@ -282,7 +269,7 @@ const ConfigCard = memo(
 									type="button"
 									variant="ghost"
 									size="sm"
-									className="h-6 w-full p-0 justify-start items-center hover:bg-transparent"
+									className="h-6 w-full items-center justify-start p-0 hover:bg-transparent"
 								>
 									<span className="sr-only">
 										{isCollapsed ? "Expand" : "Collapse"}
@@ -291,20 +278,20 @@ const ConfigCard = memo(
 										size={14}
 										className={cn(
 											"transition-transform duration-200 ease-out",
-											!isCollapsed && "rotate-90",
+											!isCollapsed && "rotate-90"
 										)}
 									/>
 
 									<Icon
 										className={cn(
 											"h-4 w-4 flex-shrink-0 text-neutral-600",
-											props.isError && "text-destructive",
+											props.isError && "text-destructive"
 										)}
 									/>
 									<span
 										className={cn(
-											"flex-1 font-medium text-neutral-900 text-sm text-left",
-											props.isError && "text-destructive",
+											"flex-1 text-left text-sm font-medium text-neutral-900",
+											props.isError && "text-destructive"
 										)}
 									>
 										{props.title}
@@ -316,13 +303,13 @@ const ConfigCard = memo(
 								<Icon
 									className={cn(
 										"h-4 w-4 flex-shrink-0 text-neutral-600",
-										props.isError && "text-destructive",
+										props.isError && "text-destructive"
 									)}
 								/>
 								<span
 									className={cn(
-										"flex-1 font-medium text-neutral-900 text-sm",
-										props.isError && "text-destructive",
+										"flex-1 text-sm font-medium text-neutral-900",
+										props.isError && "text-destructive"
 									)}
 								>
 									{props.title}
@@ -343,7 +330,7 @@ const ConfigCard = memo(
 
 					<CollapsibleContent className={cn(!hasContent ? "hidden" : "w-full")}>
 						{hasContent && (
-							<ItemContent className=" overflow-visible m-1">
+							<ItemContent className="m-1 overflow-visible">
 								{props.children}
 							</ItemContent>
 						)}
@@ -361,18 +348,15 @@ const ConfigCard = memo(
 			prevProps.defaultCollapsed === nextProps.defaultCollapsed &&
 			prevProps.children === nextProps.children
 		);
-	},
+	}
 );
 function Form(
 	props: Props & {
-		currentlyEditingAutomationId: AutomationsId |  null;
-		setCurrentlyEditingAutomationId: (
-			id: AutomationsId |  null,
-		) => void;
-	},
+		currentlyEditingAutomationId: AutomationsId | null;
+		setCurrentlyEditingAutomationId: (id: AutomationsId | null) => void;
+	}
 ) {
-	const { currentlyEditingAutomationId, setCurrentlyEditingAutomationId } =
-		props;
+	const { currentlyEditingAutomationId, setCurrentlyEditingAutomationId } = props;
 
 	const schema = useMemo(
 		() =>
@@ -401,9 +385,26 @@ function Form(
 										...(isSequentialAutomationEvent(event)
 											? { sourceAutomationId: automationsIdSchema }
 											: {}),
-									}),
-								) as unknown as [z.ZodObject<{_id:z.ZodString,event:z.ZodLiteral<AutomationEvent>,config:z.ZodObject<any>,sourceAutomationId:z.ZodOptional<z.ZodType<AutomationsId, ZodTypeDef, AutomationsId>>}>,...z.ZodObject<{_id:z.ZodString,event:z.ZodLiteral<AutomationEvent>,config:z.ZodObject<any>,sourceAutomationId:z.ZodOptional<z.ZodType<AutomationsId, ZodTypeDef, AutomationsId>>}>[]],
-							),
+									})
+								) as unknown as [
+									z.ZodObject<{
+										_id: z.ZodString;
+										event: z.ZodLiteral<AutomationEvent>;
+										config: z.ZodObject<any>;
+										sourceAutomationId: z.ZodOptional<
+											z.ZodType<AutomationsId, ZodTypeDef, AutomationsId>
+										>;
+									}>,
+									...z.ZodObject<{
+										_id: z.ZodString;
+										event: z.ZodLiteral<AutomationEvent>;
+										config: z.ZodObject<any>;
+										sourceAutomationId: z.ZodOptional<
+											z.ZodType<AutomationsId, ZodTypeDef, AutomationsId>
+										>;
+									}>[],
+								]
+							)
 						)
 						.min(1, "At least one trigger is required"),
 
@@ -416,18 +417,27 @@ function Form(
 									.withConfig(action.config.schema)
 									.withDefaults({})
 									.getSchema(),
-							}),
-						) as [z.ZodObject<{action:z.ZodLiteral<Action>,config: z.ZodObject<any>}>,...z.ZodObject<{action:z.ZodLiteral<Action>,config: z.ZodObject<any>}>[]],
+							})
+						) as [
+							z.ZodObject<{ action: z.ZodLiteral<Action>; config: z.ZodObject<any> }>,
+							...z.ZodObject<{
+								action: z.ZodLiteral<Action>;
+								config: z.ZodObject<any>;
+							}>[],
+						],
 						{
 							message: "Action is required",
 							errorMap: (issue, ctx) => {
-								if (issue.code === z.ZodIssueCode.invalid_union_discriminator || !issue.message) {
+								if (
+									issue.code === z.ZodIssueCode.invalid_union_discriminator ||
+									!issue.message
+								) {
 									return { message: "Action is required" };
 								}
 
-								return {message: issue.message}
+								return { message: issue.message };
 							},
-						},
+						}
 					),
 				})
 				.superRefine((data, ctx) => {
@@ -458,13 +468,13 @@ function Form(
 						}
 					}
 				}),
-		[currentlyEditingAutomationId],
+		[currentlyEditingAutomationId]
 	);
 
 	const runUpsertAutomation = useServerAction(addOrUpdateAutomation);
 
 	const currentAutomation = props.automations.find(
-		(automation) => automation.id === currentlyEditingAutomationId,
+		(automation) => automation.id === currentlyEditingAutomationId
 	);
 
 	const defaultValues = useMemo(() => {
@@ -535,7 +545,7 @@ function Form(
 			runUpsertAutomation,
 			setCurrentlyEditingAutomationId,
 			setError,
-		],
+		]
 	);
 
 	const formId = useId();
@@ -571,11 +581,7 @@ function Form(
 	const errors = form.formState.errors;
 
 	return (
-		<form
-			id={formId}
-			onSubmit={form.handleSubmit(onSubmit)}
-			className="flex flex-col gap-y-6"
-		>
+		<form id={formId} onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-6">
 			<div className="flex flex-col gap-y-2">
 				<div className="flex items-start gap-x-2">
 					<Controller
@@ -608,14 +614,10 @@ function Form(
 					/>
 				</div>
 				{errors.icon && (
-					<FieldError className="text-xs">
-						Icon Error: {errors.icon.message}
-					</FieldError>
+					<FieldError className="text-xs">Icon Error: {errors.icon.message}</FieldError>
 				)}
 				{errors.name && (
-					<FieldError className="text-xs">
-						Name Error: {errors.name.message}
-					</FieldError>
+					<FieldError className="text-xs">Name Error: {errors.name.message}</FieldError>
 				)}
 			</div>
 
@@ -624,7 +626,7 @@ function Form(
 				name="triggers"
 				render={(controlProps) => (
 					<TriggerField
-					{...controlProps}
+						{...controlProps}
 						automations={props.automations}
 						currentlyEditingAutomationId={currentlyEditingAutomationId}
 						form={form}
@@ -667,7 +669,7 @@ function Form(
 										type="button"
 										variant="ghost"
 										size="sm"
-										className="h-7 text-neutral-500 text-xs"
+										className="h-7 text-xs text-neutral-500"
 										onClick={() => {
 											field.onChange(undefined);
 										}}
@@ -726,11 +728,13 @@ function Form(
 											<Button
 												data-testid="action-selector-select-trigger"
 												variant="ghost"
-												className="h-auto border justify-start border-dashed bg-transparent w-full"
+												className="h-auto w-full justify-start border border-dashed bg-transparent"
 											>
 												<div className="flex items-center gap-2 py-1">
 													<Plus size={16} className="text-neutral-500" />
-													<span className="text-neutral-600">Add action</span>
+													<span className="text-neutral-600">
+														Add action
+													</span>
 												</div>
 											</Button>
 										</StagePanelActionCreator>
@@ -748,9 +752,7 @@ function Form(
 			)}
 
 			{form.formState.errors.root && (
-				<FieldError className="text-xs">
-					{form.formState.errors.root?.message}
-				</FieldError>
+				<FieldError className="text-xs">{form.formState.errors.root?.message}</FieldError>
 			)}
 
 			<FormSubmitButton
@@ -791,8 +793,7 @@ const TriggerConfigCard = memo(
 		}
 
 		const hasConfig = Boolean(
-			isSequentialAutomationEvent(props.trigger.event) ||
-				(trigger?.config && TriggerForm),
+			isSequentialAutomationEvent(props.trigger.event) || (trigger?.config && TriggerForm)
 		);
 
 		if (!hasConfig) {
@@ -832,9 +833,7 @@ const TriggerConfigCard = memo(
 						)}
 					/>
 				)}
-				{trigger.config && TriggerForm && (
-					<TriggerForm form={props.form} idx={props.idx} />
-				)}
+				{trigger.config && TriggerForm && <TriggerForm form={props.form} idx={props.idx} />}
 			</ConfigCard>
 		);
 	},
@@ -844,19 +843,15 @@ const TriggerConfigCard = memo(
 			prevProps.trigger._id === nextProps.trigger._id &&
 			prevProps.idx === nextProps.idx &&
 			prevProps.isEditing === nextProps.isEditing &&
-			prevProps.currentlyEditingAutomationId ===
-				nextProps.currentlyEditingAutomationId
+			prevProps.currentlyEditingAutomationId === nextProps.currentlyEditingAutomationId
 		);
-	},
+	}
 );
 
 function ActionConfigCardWrapper(props: {
 	action: Action;
 	form: UseFormReturn<CreateAutomationsSchema>;
-	onChange: (value: {
-		action: Action | undefined;
-		config: Record<string, unknown>;
-	}) => void;
+	onChange: (value: { action: Action | undefined; config: Record<string, unknown> }) => void;
 	isEditing: boolean;
 }) {
 	const removeAction = useCallback(() => {
@@ -932,18 +927,15 @@ const ActionConfigCard = memo(
 		);
 	},
 	(prevProps, nextProps) => {
-		return (
-			prevProps.action === nextProps.action &&
-			prevProps.isEditing === nextProps.isEditing
-		);
-	},
+		return prevProps.action === nextProps.action && prevProps.isEditing === nextProps.isEditing;
+	}
 );
 
 export const TriggerField = (props: {
 	field: ControllerRenderProps<CreateAutomationsSchema, "triggers">;
 	fieldState: ControllerFieldState;
 	automations: { id: AutomationsId; name: string }[];
-	currentlyEditingAutomationId: AutomationsId |  null;
+	currentlyEditingAutomationId: AutomationsId | null;
 	form: UseFormReturn<CreateAutomationsSchema>;
 	appendTrigger: (trigger: CreateAutomationsSchema["triggers"][number]) => void;
 }) => {
@@ -951,9 +943,7 @@ export const TriggerField = (props: {
 
 	const selectTriggers = useMemo(() => {
 		return Object.values(AutomationEvent)
-			.filter(
-				(event) => !props.field.value?.some((t) => t.event === event),
-			)
+			.filter((event) => !props.field.value?.some((t) => t.event === event))
 			.map((event) => {
 				const automation = getTriggerByName(event);
 
@@ -995,8 +985,8 @@ export const TriggerField = (props: {
 											removeTrigger={() => {
 												props.field.onChange(
 													props.field.value.filter(
-														(t) => t._id !== field.value._id,
-													),
+														(t) => t._id !== field.value._id
+													)
 												);
 											}}
 											isEditing={!!props.currentlyEditingAutomationId}
@@ -1029,9 +1019,7 @@ export const TriggerField = (props: {
 				</Select>
 			</div>
 			{props.fieldState.error && (
-				<FieldError className="text-xs">
-					{props.fieldState.error.message}
-				</FieldError>
+				<FieldError className="text-xs">{props.fieldState.error.message}</FieldError>
 			)}
 		</Field>
 	);

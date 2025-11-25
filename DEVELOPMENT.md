@@ -4,14 +4,14 @@
 
 Docker-compose provides a means to run all the code components as containers. It has these advantages:
 
--   more realistically emulating the setting where this code is run in production.
--   less contamination of environment, so spurious failures (or successes) can be avoided.
--   easy to boot from nothing without system dependencies except Docker
+- more realistically emulating the setting where this code is run in production.
+- less contamination of environment, so spurious failures (or successes) can be avoided.
+- easy to boot from nothing without system dependencies except Docker
 
 With disadvantages:
 
--   doesn't support hot-reloading
--   slightly slower iteration due to `docker build` between runs
+- doesn't support hot-reloading
+- slightly slower iteration due to `docker build` between runs
 
 With these properties, this is useful for end-to-end tests and locally verifying that the code works when removed from some of the fast-iteration features of `next.js`, such as
 JIT compilation. Because a `docker build` is needed to build the containers to run, hot-reloading is not available in this environment; so faster iteration
@@ -45,8 +45,8 @@ For a nicer DX, bind `Format Document` to a familiar keyboard shortcut so you ca
 
 Two hooks are defined using `husky` and stored in `.husky`.
 
--   The first runs Prettier on commit
--   The second runs a type-check before pushing. Since our deployment setup builds on each push, the intent here is to not trigger a build with known type errors.
+- The first runs Prettier on commit
+- The second runs a type-check before pushing. Since our deployment setup builds on each push, the intent here is to not trigger a build with known type errors.
 
 Sometimes you want to push up changes even though there is a type error. To do so, include `--no-verify` at the end of your command. For example: `git push origin main --no-verify`.
 
@@ -54,8 +54,8 @@ Sometimes you want to push up changes even though there is a type error. To do s
 
 We currently have a race condition where dev will sometimes fail because we can't specify the order of dependency builds. Tied to the fact that we clean out the dist folder on build, but upstream packages are watching dist.
 
--   https://github.com/vercel/turbo/discussions/1299?sort=top?sort=top
--   https://github.com/vercel/turbo/issues/460
+- https://github.com/vercel/turbo/discussions/1299?sort=top?sort=top
+- https://github.com/vercel/turbo/issues/460
 
 `core` depends on `ui` which depends on `utils`. `utils` often takes longer to build than it does for `ui` to start building, which causes an error to be thrown because `utils` d.ts file has been cleared out during its build and hasn't been replaced yet. This generates an error, but is quick to resolve, so doesn't break actual dev work from beginning. It does make the console output messier though.
 
@@ -143,4 +143,4 @@ Images tagged with a SHA alone should be idempotently built, but `-dirty` can be
 
 **TODO:**
 
--   [ ] allow deploying without a rebuild, so that a rollback is convenient
+- [ ] allow deploying without a rebuild, so that a rollback is convenient

@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import type { ReactNode } from "react"
-import type { ButtonProps } from "ui/button"
+import type { ReactNode } from "react";
 
-import { forwardRef } from "react"
-import { MoreHorizontal, MoreVertical } from "lucide-react"
+import { forwardRef } from "react";
+import { MoreHorizontal, MoreVertical } from "lucide-react";
 
-import { Button } from "ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu"
-import { cn } from "utils"
+import type { ButtonProps } from "ui/button";
+import { Button } from "ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
+import { cn } from "utils";
 
 /**
  * reusable ellipsis dropdown menu component that works well on mobile
@@ -25,19 +25,19 @@ import { cn } from "utils"
  */
 
 interface EllipsisMenuProps {
-	children: ReactNode
-	triggerClassName?: string
-	contentClassName?: string
-	align?: "start" | "center" | "end"
-	side?: "top" | "right" | "bottom" | "left"
-	sideOffset?: number
-	triggerSize?: "sm" | "default" | "lg" | "icon"
-	disabled?: boolean
+	children: ReactNode;
+	triggerClassName?: string;
+	contentClassName?: string;
+	align?: "start" | "center" | "end";
+	side?: "top" | "right" | "bottom" | "left";
+	sideOffset?: number;
+	triggerSize?: "sm" | "default" | "lg" | "icon";
+	disabled?: boolean;
 	/**
 	 * use horizontal if the menu represents a truncation of a list of other options, use vertical if the menu is the only list of options
 	 * @default "vertical"
 	 */
-	orientation?: "horizontal" | "vertical"
+	orientation?: "horizontal" | "vertical";
 }
 
 /**
@@ -56,11 +56,11 @@ export const EllipsisMenuButton = forwardRef<HTMLButtonElement, ButtonProps>(
 			>
 				{children}
 			</Button>
-		)
+		);
 	}
-)
+);
 
-EllipsisMenuButton.displayName = "EllipsisMenuButton"
+EllipsisMenuButton.displayName = "EllipsisMenuButton";
 
 export const EllipsisMenu = ({
 	children,
@@ -103,5 +103,5 @@ export const EllipsisMenu = ({
 				{children}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	)
-}
+	);
+};

@@ -1,31 +1,26 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ApiAccessScope } from "db/public";
-import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types";
-import { Bell } from "lucide-react";
 import React from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Bell } from "lucide-react";
 import { useForm } from "react-hook-form";
+
+import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types";
+import { ApiAccessScope } from "db/public";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { CopyButton } from "ui/copy-button";
 import { DatePicker } from "ui/date-picker";
-import {
-	Form,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "ui/form";
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
 import { FormSubmitButton } from "ui/submit-button";
 import { cn } from "utils";
+
+import type { CreateTokenFormSchema } from "./types";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { CreateTokenFormContext } from "./CreateTokenFormContext";
 import { PermissionField } from "./PermissionField";
-import type { CreateTokenFormSchema } from "./types";
 import { createTokenFormSchema } from "./types";
 
 export type CreateTokenFormProps = {
@@ -61,16 +56,10 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 
 	if (token) {
 		return (
-			<Alert
-				variant="default"
-				className={cn("mt-4 w-full min-w-96 bg-emerald-50")}
-			>
+			<Alert variant="default" className={cn("mt-4 w-full min-w-96 bg-emerald-50")}>
 				<Bell className="h-4 w-4 text-emerald-400" />
-				<AlertTitle
-					className={cn("font-semibold leading-normal tracking-normal")}
-				>
-					Make sure to copy this token now as you will not be able to see it
-					again!
+				<AlertTitle className={cn("font-semibold leading-normal tracking-normal")}>
+					Make sure to copy this token now as you will not be able to see it again!
 				</AlertTitle>
 				<AlertDescription className="mt-4">
 					<div className="flex w-full items-center justify-between rounded-md border bg-gray-50 p-1 pl-4 text-muted-foreground">
@@ -122,8 +111,8 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 						<FormItem className="grid gap-2">
 							<FormLabel>Expiry date</FormLabel>
 							<FormDescription>
-								The date when this token expires. Maximum expiration date is 1
-								year in the future
+								The date when this token expires. Maximum expiration date is 1 year
+								in the future
 							</FormDescription>
 							<DatePicker
 								date={field.value}

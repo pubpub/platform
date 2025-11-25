@@ -1,7 +1,9 @@
 import assert from "node:assert";
+
+import { Suspense } from "react";
+
 import type { StagesId, UsersId } from "db/public";
 import { AutomationEvent } from "db/public";
-import { Suspense } from "react";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "ui/card";
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
@@ -45,16 +47,15 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 			{ stageId: [props.stageId], communityId: community.id },
 			{
 				withStage: true,
-				withStageActionInstances: true,
 				withPubType: true,
 				withValues: true,
 				withRelatedPubs: false,
-			},
+			}
 		),
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getStageAutomations(props.stageId, {
 			event: AutomationEvent.manual,
-		}).execute(),
+		}),
 		userCanArchiveAllPubs(),
 		userCanEditAllPubs(),
 		userCanRunActionsAllPubs(),
@@ -74,7 +75,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 					<Suspense fallback={<SkeletonCard />}>
 						<CreatePubButton
 							stageId={props.stageId}
-							className="border-none bg-transparent shadow-none text-xs p-0 text-neutral-600 h-6 m-0 hover:bg-transparent hover:text-neutral-900"
+							className="m-0 h-6 border-none bg-transparent p-0 text-xs text-neutral-600 shadow-none hover:bg-transparent hover:text-neutral-900"
 						/>
 					</Suspense>
 				</CardAction>
@@ -87,7 +88,6 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 							pub={{ ...pub, stageId: props.stageId, depth: 0 }}
 							communitySlug={community.slug}
 							userId={props.userId}
-							// actionInstances={pub.stage?.actionInstances ?? []}
 							manualAutomations={manualAutomations}
 							canArchiveAllPubs={canArchiveAllPubs}
 							canEditAllPubs={canEditAllPubs}

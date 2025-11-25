@@ -12,6 +12,7 @@ import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
 import {
 	ApiAccessScope,
 	ApiAccessType,
+	AutomationEvent,
 	Capabilities,
 	ElementType,
 	InputComponent,
@@ -19,7 +20,7 @@ import {
 } from "db/public";
 import { logger } from "logger";
 
-import { runAutomationById } from "~/actions/_lib/runAutomation";
+import { runAutomation } from "~/actions/_lib/runAutomation";
 import {
 	checkAuthorization,
 	getAuthorization,
@@ -732,7 +733,7 @@ const handler = createNextHandler(
 
 			const automationId = params.automationId as AutomationsId;
 
-			const automation = await getAutomation(automationId).executeTakeFirst();
+			const automation = await getAutomation(automationId);
 
 			if (!automation) {
 				throw new NotFoundError(`Automation ${automationId} not found`);
@@ -745,13 +746,16 @@ const handler = createNextHandler(
 			}
 
 			try {
-				await runAutomationById({
+				await runAutomation({
 					automationId,
 					json: body,
-					event: AutomationEvent.webhook,
+					trigger: {
+						event: AutomationEvent.webhook,
+						config: null,
+					},
+					manualActionInstancesOverrideArgs: null,
 					communityId: community.id as CommunitiesId,
 					stack: [],
-					actionInstanceArgs: automation.config?.actionConfig ?? null,
 				});
 
 				return {

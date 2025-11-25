@@ -18,6 +18,7 @@ import type * as Icons from "ui/icon";
 import type { Prettify, XOR } from "utils/types";
 import { AutomationEvent } from "db/public";
 
+import type { FullAutomation } from "db/types";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 
 export type ActionPub = ProcessedPub<{
@@ -43,7 +44,7 @@ export type RunProps<T extends Action> =
 					 * The user ID of the user who initiated the action, if any
 					 */
 					userId?: UsersId;
-					actionInstance: ActionInstances;
+					automation: FullAutomation;
 				} &
 					// if both are accepted, it's one or the other.
 					// if only one's accepted, it's only that one

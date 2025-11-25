@@ -30,14 +30,7 @@ const seed = createSeed({
 		},
 	},
 	stages: {
-		Test: {
-			actions: {
-				Email: {
-					action: Action.email,
-					config: { subject: "Hello", body: "Content" },
-				},
-			},
-		},
+		Test: {},
 	},
 	users: {
 		admin: {

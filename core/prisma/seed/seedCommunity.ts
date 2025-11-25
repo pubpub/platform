@@ -20,6 +20,7 @@ import type {
 	AutomationEvent,
 	Automations,
 	AutomationsId,
+	AutomationTriggers,
 	Communities,
 	CommunitiesId,
 	CommunityMemberships,
@@ -75,6 +76,7 @@ import { insertForm } from "~/lib/server/form";
 import { InviteService } from "~/lib/server/invites/InviteService";
 import { generateToken } from "~/lib/server/token";
 import { slugifyString } from "~/lib/string";
+import { getAutomation, getAutomationBase } from "~/lib/db/queries";
 
 export type PubFieldsInitializer = Record<
 	string,
@@ -559,25 +561,20 @@ type StagesWithPermissionsAndActionsAndAutomationsByName<
 > = {
 	[K in keyof S]: Omit<Stages, "name"> & { name: K } & {
 		permissions: StagePermissions;
-	} & ("actions" extends keyof S[K]
+	} & ("automations" extends keyof S[K]
 			? {
-					actions: {
-						[KK in keyof S[K]["actions"]]: S[K]["actions"][KK] & ActionInstances;
+					automations: {
+						[KK in keyof S[K]["automations"]]: Automations & {
+							actionInstances: ActionInstances[];
+							triggers: AutomationTriggers[];
+							conditionBlocks?: Array<{
+								id: string;
+								type: AutomationConditionBlockType;
+								items: any[];
+							}>;
+						};
 					};
-				} & ("automations" extends keyof S[K]
-					? {
-							automations: {
-								[KK in keyof S[K]["automations"]]: S[K]["automations"][KK] &
-									Automations & {
-										conditionBlocks?: Array<{
-											id: string;
-											type: AutomationConditionBlockType;
-											items: any[];
-										}>;
-									};
-							};
-						}
-					: {})
+				}
 			: {});
 };
 
@@ -1319,7 +1316,7 @@ export async function seedCommunity<
 
 	const { upsertAutomation } = await import("~/lib/server/automations");
 
-	const createdAutomations: Automations[] = [];
+	const initialCreatedAutomations: Automations[] = [];
 	for (const stage of consolidatedStages) {
 		if (!stage.automations) {
 			continue;
@@ -1348,7 +1345,7 @@ export async function seedCommunity<
 						event: trigger.event,
 						config: trigger.config,
 						sourceAutomationId: trigger.sourceAutomation
-							? createdAutomations.find(
+							? initialCreatedAutomations.find(
 									(automation) => automation.name === trigger.sourceAutomation
 								)?.id
 							: undefined,
@@ -1364,9 +1361,11 @@ export async function seedCommunity<
 				},
 				trx
 			);
-			createdAutomations.push(createdAutomation);
+			initialCreatedAutomations.push(createdAutomation);
 		}
 	}
+
+	const createdAutomations = initialCreatedAutomations.length ? await getAutomationBase().where("automations.id", "in", initialCreatedAutomations.map((automation) => automation.id)).execute() : [];
 
 	logger.info(
 		`${createdCommunity.name}: Successfully created ${createdAutomations.length} automations`
@@ -1544,7 +1543,7 @@ export async function seedCommunity<
 		stages: fullStages,
 		stageConnections: stageConnectionsList,
 		pubs: createdPubs,
-		automations: createdAutomations,
+		automations: Object.fromEntries(createdAutomations.map((automation) => [automation.name, automation])),
 		forms: formsByName,
 		apiTokens: createdApiTokens,
 		invites: createdInvites,

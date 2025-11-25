@@ -2,7 +2,8 @@ import type { Page } from "@playwright/test";
 
 import { test } from "@playwright/test";
 
-import type { Action, StagesId } from "db/public";
+import type { AutomationEvent, StagesId } from "db/public";
+import type { Action } from "db/public";
 
 import { slugifyString } from "~/lib/string";
 

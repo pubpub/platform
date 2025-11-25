@@ -1,7 +1,8 @@
+import * as z from "zod";
+
 import { Action } from "db/public";
 import { DependencyType } from "ui/auto-form/dependencyType";
 import { Mail } from "ui/icon";
-import * as z from "zod";
 
 import {
 	RenderWithPubToken,
@@ -26,31 +27,29 @@ const schema = z.object({
 	replyTo: z
 		.preprocess(emptyStringToUndefined, z.string().email().optional())
 		.optional()
-		.describe(
-			"Determines what the email recipient will see as the 'Reply-To' address",
-		),
+		.describe("Determines what the email recipient will see as the 'Reply-To' address"),
 	recipientEmail: z
 		.preprocess(emptyStringToUndefined, z.string().email().optional())
 		.optional()
 		.describe(
-			"The email address of the recipient(s). Either this or 'Recipient Member' must be set.",
+			"The email address of the recipient(s). Either this or 'Recipient Member' must be set."
 		),
 	recipientMember: z
 		.preprocess(emptyStringToUndefined, z.string().uuid().optional())
 		.optional()
 		.describe(
-			"Someone who is a member of the community. Either this or 'Recipient Email' must be set.",
+			"Someone who is a member of the community. Either this or 'Recipient Email' must be set."
 		),
 	subject: stringWithTokens()
 		.min(1, { message: "Subject is required" })
 		.max(500)
 		.describe(
-			"The subject of the email. Tokens can be used to dynamically insert values from the pub or config.",
+			"The subject of the email. Tokens can be used to dynamically insert values from the pub or config."
 		),
 	body: markdown()
 		.min(0)
 		.describe(
-			"The body of the email. Markdown is supported. Tokens can be used to dynamically insert values from the pub or config.",
+			"The body of the email. Markdown is supported. Tokens can be used to dynamically insert values from the pub or config."
 		),
 });
 

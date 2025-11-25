@@ -1,7 +1,8 @@
-import { Capabilities } from "db/public";
 import { mkdirSync, readFileSync, writeFileSync } from "fs";
-import { logger } from "logger";
 import { join } from "path";
+
+import { Capabilities } from "db/public";
+import { logger } from "logger";
 
 import { generateCapabilityInserts } from "./capabalities.definition";
 
@@ -18,13 +19,7 @@ const generateMigrationTimestamp = (): string => {
 };
 
 const getCapabilitiesPrismaFilePath = (): string => {
-	return join(
-		process.cwd(),
-		"prisma",
-		"schema",
-		"capabilities",
-		"Capabilities.prisma",
-	);
+	return join(process.cwd(), "prisma", "schema", "capabilities", "Capabilities.prisma");
 };
 
 const getCurrentCapabilitiesFromPrismaFile = (): string[] => {
@@ -79,10 +74,7 @@ const updateCapabilitiesInPrismaFile = (newValues: string[]): void => {
 		}
 		newEnumContent += "}";
 
-		const newContent = content.replace(
-			/enum Capabilities \{[\s\S]*?\}/,
-			newEnumContent,
-		);
+		const newContent = content.replace(/enum Capabilities \{[\s\S]*?\}/, newEnumContent);
 
 		writeFileSync(filePath, newContent, "utf8");
 
@@ -102,7 +94,7 @@ const updateCapabilitiesInPrismaFile = (newValues: string[]): void => {
 
 const generateEnumMigrationSql = (
 	currentValues: string[],
-	expectedValues: string[],
+	expectedValues: string[]
 ): { sql: string; hasChanges: boolean } => {
 	const currentSet = new Set(currentValues);
 	const expectedSet = new Set(expectedValues);
@@ -158,9 +150,7 @@ const generateEnumMigrationSql = (
 	return { sql, hasChanges };
 };
 
-const generateMigrationContent = (options?: {
-	updatePrismaFile?: boolean;
-}): string => {
+const generateMigrationContent = (options?: { updatePrismaFile?: boolean }): string => {
 	const updatePrisma = options?.updatePrismaFile ?? false;
 
 	const currentEnumValues = getCurrentCapabilitiesFromPrismaFile();
@@ -171,7 +161,7 @@ const generateMigrationContent = (options?: {
 
 	const { sql: enumSql, hasChanges: enumHasChanges } = generateEnumMigrationSql(
 		currentEnumValues,
-		expectedEnumValues,
+		expectedEnumValues
 	);
 
 	if (updatePrisma && enumHasChanges) {
@@ -203,8 +193,7 @@ export const generateCapabilityMigration = (options?: {
 	const timestamp = generateMigrationTimestamp();
 	const migrationName = options?.migrationName ?? "sync_capabilities";
 	const filename = `${timestamp}_${migrationName}`;
-	const outputDir =
-		options?.outputDir ?? join(process.cwd(), "prisma", "migrations", filename);
+	const outputDir = options?.outputDir ?? join(process.cwd(), "prisma", "migrations", filename);
 
 	const migrationContent = generateMigrationContent({
 		updatePrismaFile: options?.updatePrismaFile ?? true,
@@ -229,9 +218,7 @@ export const generateCapabilityMigration = (options?: {
 	}
 };
 
-export const printCapabilityMigration = (options?: {
-	updatePrismaFile?: boolean;
-}): void => {
+export const printCapabilityMigration = (options?: { updatePrismaFile?: boolean }): void => {
 	const migrationContent = generateMigrationContent({
 		updatePrismaFile: options?.updatePrismaFile ?? false,
 	});

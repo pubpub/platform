@@ -7,7 +7,7 @@ import { expect, it, vitest } from "vitest";
 import type { Database } from "db/Database";
 import type { ActionInstancesId, CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
 import type { Equal, Expect } from "utils/types";
-import { ActionRunStatus, ApiAccessScope, ApiAccessType, MemberRole } from "db/public";
+import { ActionRunStatus, ApiAccessScope, ApiAccessType, AutomationEvent, MemberRole } from "db/public";
 
 import type { QB } from "./types";
 import { autoCache } from "./autoCache";

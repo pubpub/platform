@@ -2,7 +2,7 @@ import type { Browser } from "@playwright/test";
 
 import test, { expect } from "@playwright/test";
 
-import { Action, CoreSchemaType, MemberRole } from "db/public";
+import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -25,10 +25,20 @@ const seed = createSeed({
 	},
 	stages: {
 		Test: {
-			actions: {
+			automations: {
 				"Log 1": {
-					action: Action.log,
-					config: {},
+					triggers: [
+						{
+							event: AutomationEvent.manual,
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.log,
+							config: {},
+						},
+					],
 				},
 			},
 		},
@@ -80,7 +90,7 @@ test.describe("Actions SSE", () => {
 		await expect(page2.getByText("Log 1")).toBeVisible();
 		await expect(
 			page2.getByTestId(
-				`action-instance-${community.stages.Test.actions["Log 1"].id}-update-circle`
+				`automation-${community.stages.Test.automations["Log 1"].id}-update-circle`
 			)
 		).not.toBeVisible();
 		await page2.reload();
@@ -101,7 +111,7 @@ test.describe("Actions SSE", () => {
 		});
 
 		const updateCircle = page2.getByTestId(
-			`action-instance-${community.stages.Test.actions["Log 1"].id}-update-circle`
+			`automation-${community.stages.Test.automations["Log 1"].id}-update-circle`
 		);
 		await test.step("check that other tab sees the update", async () => {
 			await expect(page2.getByText("Log 1")).toBeVisible();
@@ -112,7 +122,7 @@ test.describe("Actions SSE", () => {
 		});
 
 		const staleIndicator = page2.getByTestId(
-			`action-instance-${community.stages.Test.actions["Log 1"].id}-update-circle-stale`
+			`automation-${community.stages.Test.automations["Log 1"].id}-update-circle-stale`
 		);
 
 		let timestamp1: string;
@@ -126,14 +136,14 @@ test.describe("Actions SSE", () => {
 
 			const timestamp = await page2
 				.getByTestId(
-					`action-instance-${community.stages.Test.actions["Log 1"].id}-update-circle-timestamp`
+					`automation-${community.stages.Test.automations["Log 1"].id}-update-circle-timestamp`
 				)
 				// needs first bc radix does some evil stuff with the popover, duplicating it?
 				.first()
 				.textContent({ timeout: 1_000 });
 			const report = await page2
 				.getByTestId(
-					`action-instance-${community.stages.Test.actions["Log 1"].id}-update-circle-result`
+					`automation-${community.stages.Test.automations["Log 1"].id}-update-circle-result`
 				)
 				.first()
 				.textContent({ timeout: 1_000 });
@@ -165,13 +175,13 @@ test.describe("Actions SSE", () => {
 
 			const timestamp = await page2
 				.getByTestId(
-					`action-instance-${community.stages.Test.actions["Log 1"].id}-update-circle-timestamp`
+					`automation-${community.stages.Test.automations["Log 1"].id}-update-circle-timestamp`
 				)
 				.first()
 				.textContent({ timeout: 1_000 });
 			const report = await page2
 				.getByTestId(
-					`action-instance-${community.stages.Test.actions["Log 1"].id}-update-circle-result`
+					`automation-${community.stages.Test.automations["Log 1"].id}-update-circle-result`
 				)
 				.first()
 				.textContent({ timeout: 1_000 });

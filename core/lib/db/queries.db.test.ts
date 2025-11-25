@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { Action, AutomationConditionBlockType, CoreSchemaType, MemberRole } from "db/public";
+import { Action, AutomationConditionBlockType, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
@@ -41,11 +41,23 @@ describe("getStageAutomations", () => {
 							},
 						},
 					},
-					automations: [
-						{
-							event: AutomationEvent.pubEnteredStage,
-							actionInstance: "Test Action",
-							conditions: {
+					automations: {
+						"Test Automation": {
+							triggers: [
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: {
+										text: "test",
+									},
+								},
+							],
+							condition: {
 								type: AutomationConditionBlockType.AND,
 								items: [
 									{
@@ -54,30 +66,42 @@ describe("getStageAutomations", () => {
 										expression: '$.title = "test"',
 									},
 									{
-										kind: "block",
 										type: AutomationConditionBlockType.OR,
+										kind: "block",
 										items: [
 											{
-												kind: "condition",
 												type: "jsonata",
+												kind: "condition",
 												expression: '$.status = "published"',
 											},
 											{
-												kind: "condition",
 												type: "jsonata",
+												kind: "condition",
 												expression: '$.status = "draft"',
 											},
 										],
 									},
 								],
 							},
+						},	
+						"Another Automation": {
+							triggers: [
+								{
+									event: AutomationEvent.automationSucceeded,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: {
+										text: "another",
+									},
+								},
+							],
+							
 						},
-						{
-							event: AutomationEvent.actionSucceeded,
-							actionInstance: "Another Action",
-							sourceAction: "Test Action",
-						},
-					],
+					},
 				},
 			},
 			users: {
@@ -92,7 +116,7 @@ describe("getStageAutomations", () => {
 
 		const { getStageAutomations } = await import("./queries");
 
-		const automations = await getStageAutomations(stages["Stage 1"].id).execute();
+		const automations = await getStageAutomations(stages["Stage 1"].id)
 
 		expect(automations).toHaveLength(2);
 
@@ -129,7 +153,7 @@ describe("getStageAutomations", () => {
 
 		const automationWithoutConditions = automations.find((a) => !a.condition);
 		expect(automationWithoutConditions).toBeDefined();
-		expect(automationWithoutConditions?.event).toBe(AutomationEvent.actionSucceeded);
+		expect(automationWithoutConditions!.triggers[0].event).toBe(AutomationEvent.automationSucceeded);
 	});
 
 	test("fetches automations without conditions", async () => {
@@ -150,22 +174,25 @@ describe("getStageAutomations", () => {
 			},
 			stages: {
 				"Stage 1": {
-					actions: {
-						"Test Action": {
-							action: Action.log,
-							config: {
-								text: "test",
-							},
+					automations: {
+						"Test Automation": {
+							triggers: [
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: {
+										text: "test",
+									},
+								},
+							],
 						},
-					},
-					automations: [
-						{
-							event: AutomationEvent.pubEnteredStage,
-							actionInstance: "Test Action",
-						},
-					],
 				},
-			},
+			}},
 			users: {
 				john: {
 					firstName: "John",
@@ -178,7 +205,7 @@ describe("getStageAutomations", () => {
 
 		const { getStageAutomations } = await import("./queries");
 
-		const automations = await getStageAutomations(stages["Stage 1"].id).execute();
+		const automations = await getStageAutomations(stages["Stage 1"].id);
 
 		expect(automations).toHaveLength(1);
 		expect(automations[0].condition).toBeNull();

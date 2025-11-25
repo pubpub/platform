@@ -1,7 +1,9 @@
+import type { User } from "lucia";
+
+import { Suspense } from "react";
+
 import type { StagesId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
-import type { User } from "lucia";
-import { Suspense } from "react";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "ui/card";
 
 import { MembersList } from "~/app/components//Memberships/MembersList";
@@ -26,11 +28,7 @@ type PropsInner = {
 const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 	const [members, canManage, availableForms] = await Promise.all([
 		getStageMembers(stageId).execute(),
-		userCan(
-			Capabilities.removeStageMember,
-			{ type: MembershipType.stage, stageId },
-			user.id,
-		),
+		userCan(Capabilities.removeStageMember, { type: MembershipType.stage, stageId }, user.id),
 		getSimpleForms(),
 	]);
 
@@ -40,7 +38,7 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 				<CardTitle>Members</CardTitle>
 				<CardAction>
 					<AddMemberDialog
-						className="border-none bg-transparent shadow-none text-xs p-0 text-neutral-600 h-6 m-0 hover:bg-transparent hover:text-neutral-900"
+						className="m-0 h-6 border-none bg-transparent p-0 text-xs text-neutral-600 shadow-none hover:bg-transparent hover:text-neutral-900"
 						addMember={addStageMember.bind(null, stageId)}
 						addUserMember={addUserWithStageMembership.bind(null, stageId)}
 						existingMembers={members.map((member) => member.id)}

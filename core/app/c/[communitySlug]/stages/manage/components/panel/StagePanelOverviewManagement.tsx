@@ -1,25 +1,24 @@
-"use client"
+"use client";
 
-import type { StagesId } from "db/public"
+import Link from "next/link";
 
-import Link from "next/link"
-
-import { Button } from "ui/button"
+import type { StagesId } from "db/public";
+import { Button } from "ui/button";
 
 type Props = {
-	onDelete(): void
-	stageId: StagesId
-	communitySlug: string
-}
+	onDelete(): void;
+	stageId: StagesId;
+	communitySlug: string;
+};
 
 export const StagePanelOverviewManagement = (props: Props) => {
 	const onDeleteClick = () => {
-		props.onDelete()
-	}
+		props.onDelete();
+	};
 
 	return (
 		<>
-			<h4 className="mb-2 font-medium text-base">Stage Management</h4>
+			<h4 className="mb-2 text-base font-medium">Stage Management</h4>
 			<div className="flex gap-2">
 				<Button variant="secondary" asChild>
 					<Link href={`/c/${props.communitySlug}/stages/${props.stageId}`}>
@@ -31,5 +30,5 @@ export const StagePanelOverviewManagement = (props: Props) => {
 				</Button>
 			</div>
 		</>
-	)
-}
+	);
+};

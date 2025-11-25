@@ -1,23 +1,15 @@
-import * as React from "react";
 import type { useForm } from "react-hook-form";
+
+import * as React from "react";
 import { useFormContext } from "react-hook-form";
 import * as z from "zod";
-import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "../../accordion";
+
+import type { Dependency, FieldConfig, FieldConfigItem } from "../types";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../accordion";
 import { FormField } from "../../form";
 import { DEFAULT_ZOD_HANDLERS, INPUT_COMPONENTS } from "../config";
 import resolveDependencies from "../dependencies";
-import type { Dependency, FieldConfig, FieldConfigItem } from "../types";
-import {
-	beautifyObjectName,
-	getBaseSchema,
-	getBaseType,
-	zodToHtmlInputProps,
-} from "../utils";
+import { beautifyObjectName, getBaseSchema, getBaseType, zodToHtmlInputProps } from "../utils";
 import AutoFormArray from "./array";
 
 function DefaultParent({ children }: { children: React.ReactNode }) {
@@ -32,9 +24,7 @@ const isFieldConfigItem = (item: any): item is FieldConfigItem => {
 	return false;
 };
 
-export default function AutoFormObject<
-	SchemaType extends z.ZodObject<any, any>,
->({
+export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>({
 	schema,
 	form,
 	fieldConfig,
@@ -61,8 +51,7 @@ export default function AutoFormObject<
 
 	const handleIfZodNumber = (item: z.ZodType<any>) => {
 		const isZodNumber = (item as any)._def.typeName === "ZodNumber";
-		const isInnerZodNumber =
-			(item._def as any).innerType?._def?.typeName === "ZodNumber";
+		const isInnerZodNumber = (item._def as any).innerType?._def?.typeName === "ZodNumber";
 
 		if (isZodNumber) {
 			(item as any)._def.coerce = true;
@@ -215,9 +204,7 @@ function FormFieldObject({
 			name={key}
 			render={({ field }) => {
 				const inputType =
-					fieldConfigItem.fieldType ??
-					DEFAULT_ZOD_HANDLERS[zodBaseType] ??
-					"fallback";
+					fieldConfigItem.fieldType ?? DEFAULT_ZOD_HANDLERS[zodBaseType] ?? "fallback";
 
 				const typeToUse =
 					additionalType && additionalType in INPUT_COMPONENTS
@@ -228,15 +215,11 @@ function FormFieldObject({
 
 				// fully rendered component
 				if (typeof typeToUse === "object" && "$$typeof" in typeToUse) {
-					return (
-						<ParentElement key={`${key}.parent`}>{typeToUse}</ParentElement>
-					);
+					return <ParentElement key={`${key}.parent`}>{typeToUse}</ParentElement>;
 				}
 
 				const InputComponent =
-					typeof typeToUse === "function"
-						? typeToUse
-						: INPUT_COMPONENTS[typeToUse];
+					typeof typeToUse === "function" ? typeToUse : INPUT_COMPONENTS[typeToUse];
 
 				const defaultValue = fieldConfigItem.inputProps?.defaultValue;
 				const value = field.value ?? defaultValue ?? "";

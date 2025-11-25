@@ -24,10 +24,11 @@ const NoActions = () => {
 	)
 }
 
-const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
-	return row.stage && row.stage?.actionInstances.length > 0 ? (
+const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm, userCanOverrideAutomationConditions: boolean) => {
+	return row.stage && row.stage?.automations.length > 0 ? (
 		<PubsRunAutomationsDropDownMenu
-			actionInstances={row.stage.actionInstances}
+		canOverrideAutomationConditions={userCanOverrideAutomationConditions}
+			automations={row.stage.automations}
 			pubId={row.id}
 		/>
 	) : (
@@ -38,6 +39,7 @@ const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
 type Props = {
 	pub: FullProcessedPubWithForm
 	userCanRunActions: boolean
+	userCanOverrideAutomationConditions: boolean
 }
 
 export const RelatedPubsTableWrapper = async (props: Props) => {
@@ -50,6 +52,7 @@ export const RelatedPubsTableWrapper = async (props: Props) => {
 								...a,
 								[value.relatedPubId]: getRelatedPubRunActionsDropdowns(
 									value.relatedPub
+									, props.userCanOverrideAutomationConditions
 								),
 							}
 						: a,

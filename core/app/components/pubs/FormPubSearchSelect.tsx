@@ -1,13 +1,14 @@
 "use client";
 
+import { useCallback, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Search, X } from "lucide-react";
+import { useDebounce } from "use-debounce";
+
 import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
 import type { PubsId, PubTypesId } from "db/public";
-import { Search, X } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
 import { Loader2 } from "ui/icon";
 import { Input } from "ui/input";
-import { useDebounce } from "use-debounce";
 import { cn } from "utils";
 
 import { client } from "~/lib/api";
@@ -53,15 +54,7 @@ export const FormPubSearchSelect = ({
 		isFetching,
 		isError,
 	} = useQuery({
-		queryKey: [
-			"forms",
-			"pubs",
-			formSlug,
-			fieldSlug,
-			debouncedQuery,
-			pubTypeIds,
-			currentPubId,
-		],
+		queryKey: ["forms", "pubs", formSlug, fieldSlug, debouncedQuery, pubTypeIds, currentPubId],
 		queryFn: async () => {
 			if (!debouncedQuery) {
 				return client.forms.getPubsForFormField.query({
@@ -90,19 +83,13 @@ export const FormPubSearchSelect = ({
 				params: { communitySlug: community.slug },
 			});
 
-			if (
-				searchResults.status !== 200 ||
-				!pubTypeIds ||
-				pubTypeIds.length === 0
-			) {
+			if (searchResults.status !== 200 || !pubTypeIds || pubTypeIds.length === 0) {
 				return searchResults;
 			}
 
 			return {
 				...searchResults,
-				body: searchResults.body.filter((pub) =>
-					pubTypeIds.includes(pub.pubType.id),
-				),
+				body: searchResults.body.filter((pub) => pubTypeIds.includes(pub.pubType.id)),
 			};
 		},
 		placeholderData: (prev) => prev,
@@ -125,7 +112,7 @@ export const FormPubSearchSelect = ({
 				onSelectedPubsChange(selectedPubs.filter((p) => p.id !== pub.id));
 			}
 		},
-		[mode, selectedPubs, onSelectedPubsChange],
+		[mode, selectedPubs, onSelectedPubsChange]
 	);
 
 	const handleClearSearch = () => {
@@ -171,10 +158,7 @@ export const FormPubSearchSelect = ({
 				)}
 			</div>
 
-			<div
-				className="flex flex-col gap-2 overflow-y-auto"
-				style={{ maxHeight }}
-			>
+			<div className="flex flex-col gap-2 overflow-y-auto" style={{ maxHeight }}>
 				{showLoading && (
 					<div className="flex items-center justify-center py-8">
 						<Loader2 className="h-6 w-6 animate-spin text-gray-400" />

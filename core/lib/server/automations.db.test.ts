@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { Action, CoreSchemaType, MemberRole } from "db/public";
+	import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
@@ -55,34 +55,76 @@ const seed = createSeed({
 					config: {},
 				},
 			},
-			automations: [
+			automations: 
 				{
-					event: AutomationEvent.actionSucceeded,
-					actionInstance: "1",
-					sourceAction: "2",
+					"1": {
+					triggers: [
+						{
+							event: AutomationEvent.automationSucceeded,
+							sourceAutomation: "2",
+							config: {},
+
+						},
+					],
+					actions: [
+						{
+							action: Action.log,
+							config: {},
+						},
+					],
 				},
-				{
-					event: AutomationEvent.actionFailed,
-					actionInstance: "2",
-					sourceAction: "3",
+
+					"2": {
+					triggers: [
+						{
+							event: AutomationEvent.automationSucceeded,
+							sourceAutomation: "3",
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.log,
+							config: {},
+						},
+					],
 				},
-				{
-					event: AutomationEvent.pubInStageForDuration,
-					actionInstance: "3",
+					"3": {
+					triggers: [
+						{
+							event: AutomationEvent.pubInStageForDuration,
 					config: {
-						actionConfig: null,
-						automationConfig: {
 							duration: 1000,
 							interval: "s",
+						}},
+						{
+							event: AutomationEvent.pubLeftStage,
+							config: {}
+					}
+					],
+					actions: [
+						{
+							action: Action.log,
+							config: {},
 						},
-					},
+					],
 				},
-				{
-					event: AutomationEvent.pubLeftStage,
-					actionInstance: "3",
+					"4": {
+					triggers: [
+						{
+							event: AutomationEvent.manual,
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.log,
+							name: "1",
+							config: {},
+						},
+					],
 				},
-			],
-		},
+		}},
 	},
 	pubs: [
 		{
@@ -107,8 +149,22 @@ describe("automations.db", () => {
 		const { upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
 			await import("./automations");
 		const automation = await createOrUpdateAutomationWithCycleCheck({
-			event: AutomationEvent.pubEnteredStage,
-			actionInstanceId: community.stages["Stage 1"].actions["1"].id,
+
+			name: "1",
+			actionInstances: [
+				{
+					id: community.stages["Stage 1"].automations["1"].actions[0].id,
+					action: Action.log,
+					config: {},
+				},
+			],
+			triggers: [
+				{
+					event: AutomationEvent.pubEnteredStage,
+					config: {},
+				},
+			],
+			communityId: community.community.id,
 		});
 
 		expect(automation).toBeDefined();
@@ -121,8 +177,16 @@ describe("automations.db", () => {
 		} = await import("./automations");
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
-				event: AutomationEvent.pubLeftStage,
-				actionInstanceId: community.stages["Stage 1"].actions["3"].id,
+				id: community.stages["Stage 1"].automations["3"].id,
+				name: "3",
+				actionInstances: community.stages["Stage 1"].automations["3"].actions,
+				triggers: [
+					{
+						event: AutomationEvent.pubLeftStage,
+						config: {},
+					},
+				],
+				communityId: community.community.id,
 			})
 		).rejects.toThrow(RegularAutomationAlreadyExistsError);
 	});
@@ -134,9 +198,11 @@ describe("automations.db", () => {
 		} = await import("./automations");
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
-				event: AutomationEvent.actionSucceeded,
-				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
-				sourceActionInstanceId: community.stages["Stage 1"].actions["2"].id,
+				id: community.stages["Stage 1"].automations["1"].id,
+				name: "1",
+				actionInstances: community.stages["Stage 1"].automations["1"].actions,
+				triggers: community.stages["Stage 1"].automations["1"].triggers,
+				communityId: community.community.id,
 			})
 		).rejects.toThrow(SequentialAutomationAlreadyExistsError);
 	});
@@ -148,8 +214,11 @@ describe("automations.db", () => {
 		} = await import("./automations");
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
-				event: AutomationEvent.pubInStageForDuration,
-				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
+				id: community.stages["Stage 1"].automations["1"].id,
+				name: "1",
+				actionInstances: community.stages["Stage 1"].automations["1"].actions,
+				triggers: community.stages["Stage 1"].automations["1"].triggers,
+				communityId: community.community.id,
 			})
 		).rejects.toThrowError(AutomationConfigError);
 	});
@@ -162,27 +231,30 @@ describe("automations.db", () => {
 			} = await import("./automations");
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
-					event: AutomationEvent.actionSucceeded,
-					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
-					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
+					name: "3",
+					actionInstances: community.stages["Stage 1"].automations["3"].actions,
+					triggers: community.stages["Stage 1"].automations["3"].triggers,
+					communityId: community.community.id,
 				})
 			).rejects.toThrow(AutomationCycleError);
 
 			// should also happen for ActionFailed
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
-					event: AutomationEvent.actionFailed,
-					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
-					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
+					name: "3",
+					actionInstances: community.stages["Stage 1"].automations["3"].actions,
+					triggers: community.stages["Stage 1"].automations["3"].triggers,
+					communityId: community.community.id,
 				})
 			).rejects.toThrow(AutomationCycleError);
 
 			// just to check that if we have 2->1, 1->2 will create a cycle
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
-					event: AutomationEvent.actionSucceeded,
-					actionInstanceId: community.stages["Stage 1"].actions["2"].id,
-					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
+					name: "2",
+					actionInstances: community.stages["Stage 1"].automations["2"].actions,
+					triggers: community.stages["Stage 1"].automations["2"].triggers,
+					communityId: community.community.id,
 				})
 			).rejects.toThrow(AutomationCycleError);
 		});
@@ -192,9 +264,10 @@ describe("automations.db", () => {
 				await import("./automations");
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
-					event: AutomationEvent.actionSucceeded,
-					actionInstanceId: community.stages["Stage 1"].actions["1"].id,
-					sourceActionInstanceId: community.stages["Stage 1"].actions["3"].id,
+					name: "1",
+					actionInstances: community.stages["Stage 1"].automations["1"].actions,
+					triggers: community.stages["Stage 1"].automations["1"].triggers,
+					communityId: community.community.id,
 				})
 			).resolves.not.toThrow();
 		});
@@ -207,9 +280,10 @@ describe("automations.db", () => {
 			await expect(
 				createOrUpdateAutomationWithCycleCheck(
 					{
-						event: AutomationEvent.actionSucceeded,
-						actionInstanceId: community.stages["Stage 1"].actions["3"].id,
-						sourceActionInstanceId: community.stages["Stage 1"].actions["4"].id,
+						name: "3",
+						actionInstances: community.stages["Stage 1"].automations["3"].actions,
+						triggers: community.stages["Stage 1"].automations["3"].triggers,
+						communityId: community.community.id,
 					},
 					3
 				)

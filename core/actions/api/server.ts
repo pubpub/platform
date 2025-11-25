@@ -2,4 +2,4 @@ export {
 	runAutomation as runAutomation,
 	// runInstancesForEvent,
 } from "../_lib/runAutomation";
-export { scheduleActionInstances } from "../_lib/scheduleActionInstance";
+export { scheduleDelayedAutomation } from "../_lib/scheduleAutomations";

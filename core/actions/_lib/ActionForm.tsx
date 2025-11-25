@@ -1,25 +1,22 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { PubsId } from "db/public";
 import type { PropsWithChildren } from "react";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
+import type { ZodObject, ZodOptional } from "zod";
 
 import { createContext, useCallback, useContext, useMemo } from "react";
-import type { FieldValues, UseFormReturn } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+
+import type { PubsId } from "db/public";
 import { Button } from "ui/button";
 import { Field, FieldGroup } from "ui/field";
 import { Form } from "ui/form";
 import { FormSubmitButton } from "ui/submit-button";
 import { toast } from "ui/use-toast";
-import type { ZodObject, ZodOptional } from "zod";
 
 import type { Action } from "../types";
 import { ActionConfigBuilder } from "./ActionConfigBuilder";
 
-export type ActionFormContextContextValue =
-	| "run"
-	| "configure"
-	| "automation"
-	| "default";
+export type ActionFormContextContextValue = "run" | "configure" | "automation" | "default";
 export type ActionFormContextContext =
 	| {
 			type: "run";
@@ -49,10 +46,7 @@ type ActionFormProps = PropsWithChildren<{
 
 	context: ActionFormContextContext;
 
-	onSubmit(
-		values: Record<string, unknown>,
-		form: UseFormReturn<FieldValues>,
-	): Promise<void>;
+	onSubmit(values: Record<string, unknown>, form: UseFormReturn<FieldValues>): Promise<void>;
 
 	submitButton: {
 		text: string;
@@ -68,9 +62,7 @@ type ActionFormProps = PropsWithChildren<{
 	};
 }>;
 
-export const ActionFormContext = createContext<ActionFormContext | undefined>(
-	undefined,
-);
+export const ActionFormContext = createContext<ActionFormContext | undefined>(undefined);
 
 export function ActionForm(props: ActionFormProps) {
 	const schema = useMemo(() => {
@@ -104,7 +96,7 @@ export function ActionForm(props: ActionFormProps) {
 		async (data: Record<string, unknown>) => {
 			await props.onSubmit(data, form);
 		},
-		[props.onSubmit, form],
+		[props.onSubmit, form]
 	);
 
 	return (

@@ -1,10 +1,8 @@
 import { CardHeader } from "ui/card";
 
-export const StagePanelCardHeader = (
-	props: React.ComponentProps<typeof CardHeader>,
-) => {
+export const StagePanelCardHeader = (props: React.ComponentProps<typeof CardHeader>) => {
 	return (
-		<CardHeader className="flex flex-wrap items-center justify-between h-8">
+		<CardHeader className="flex h-8 flex-wrap items-center justify-between">
 			{props.children}
 		</CardHeader>
 	);
