@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 
 import { Badge } from "ui/badge";
-import { Button } from "ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -13,10 +12,8 @@ import {
 	DialogTrigger,
 } from "ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-
-import type { Action } from "~/actions/types";
 import { actions } from "~/actions/api";
-import { useServerAction } from "~/lib/serverActions";
+import type { Action } from "~/actions/types";
 
 type ActionCellProps = {
 	action: Action;
@@ -34,7 +31,7 @@ const ActionCell = (props: ActionCellProps) => {
 				onClick();
 			}
 		},
-		[onClick]
+		[onClick],
 	);
 
 	return (
@@ -79,50 +76,46 @@ const ActionCell = (props: ActionCellProps) => {
 };
 
 type Props = {
-	onAdd: (actionName: Action["name"]) => Promise<unknown>;
+	onAdd: (actionName: Action["name"]) => unknown;
 	isSuperAdmin?: boolean | null;
+	children: React.ReactNode;
 };
 
 export const StagePanelActionCreator = (props: Props) => {
-	const runOnAdd = useServerAction(props.onAdd);
 	const [isOpen, setIsOpen] = useState(false);
 	const onActionSelect = useCallback(
 		async (action: Action) => {
 			setIsOpen(false);
-			runOnAdd(action.name);
+			props.onAdd(action.name);
 		},
-		[props.onAdd, runOnAdd]
+		[props.onAdd],
 	);
 	const onOpenChange = useCallback((open: boolean) => {
 		setIsOpen(open);
 	}, []);
 
 	return (
-		<div className="space-y-2 py-2">
-			<Dialog open={isOpen} onOpenChange={onOpenChange}>
-				<DialogTrigger asChild>
-					<Button variant="secondary">Add an action</Button>
-				</DialogTrigger>
-				<DialogContent data-testid={"add-action-dialog"}>
-					<DialogHeader>
-						<DialogTitle>Add an action</DialogTitle>
-						<DialogDescription>
-							Pick an action to add from the list below.
-						</DialogDescription>
-					</DialogHeader>
-					<div className="grid grid-cols-2 gap-4">
-						{Object.values(actions)
-							.filter((action) => !action.superAdminOnly || props.isSuperAdmin)
-							.map((action) => (
-								<ActionCell
-									key={action.name}
-									action={action}
-									onClick={onActionSelect}
-								/>
-							))}
-					</div>
-				</DialogContent>
-			</Dialog>
-		</div>
+		<Dialog open={isOpen} onOpenChange={onOpenChange}>
+			<DialogTrigger asChild>{props.children}</DialogTrigger>
+			<DialogContent data-testid={"add-action-dialog"}>
+				<DialogHeader>
+					<DialogTitle>Add an action</DialogTitle>
+					<DialogDescription>
+						Pick an action to add from the list below.
+					</DialogDescription>
+				</DialogHeader>
+				<div className="grid grid-cols-2 gap-4">
+					{Object.values(actions)
+						.filter((action) => !action.superAdminOnly || props.isSuperAdmin)
+						.map((action) => (
+							<ActionCell
+								key={action.name}
+								action={action}
+								onClick={onActionSelect}
+							/>
+						))}
+				</div>
+			</DialogContent>
+		</Dialog>
 	);
 };

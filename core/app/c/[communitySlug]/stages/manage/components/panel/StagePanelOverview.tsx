@@ -1,40 +1,41 @@
-import type { StagesId, UsersId } from "db/public"
+import type { StagesId, UsersId } from "db/public";
 
-import { Suspense } from "react"
+import { Suspense } from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
-import { Separator } from "ui/separator"
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
+import { Separator } from "ui/separator";
 
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
-import { getStage } from "~/lib/db/queries"
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
-import { deleteStage, updateStageName } from "../../actions"
-import { StageNameInput } from "./StageNameInput"
-import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement"
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
+import { getStage } from "~/lib/db/queries";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { deleteStage, updateStageName } from "../../actions";
+import { StagePanelCardHeader } from "../editor/StagePanelCard";
+import { StageNameInput } from "./StageNameInput";
+import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement";
 
 type PropsInner = {
-	stageId: StagesId
-	userId: UsersId
-}
+	stageId: StagesId;
+	userId: UsersId;
+};
 
 const StagePanelOverviewInner = async (props: PropsInner) => {
 	const [stage, communitySlug] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getCommunitySlug(),
-	])
+	]);
 
 	if (stage === undefined) {
-		return <SkeletonCard />
+		return <SkeletonCard />;
 	}
 
-	const onNameChange = updateStageName.bind(null, stage.id)
-	const onDelete = deleteStage.bind(null, stage.id)
+	const onNameChange = updateStageName.bind(null, stage.id);
+	const onDelete = deleteStage.bind(null, stage.id);
 
 	return (
 		<Card>
-			<CardHeader>
+			<StagePanelCardHeader>
 				<CardTitle>Overview</CardTitle>
-			</CardHeader>
+			</StagePanelCardHeader>
 			<CardContent className="space-y-4">
 				<StageNameInput value={stage.name} onChange={onNameChange} />
 				<Separator />
@@ -45,22 +46,25 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 				/>
 			</CardContent>
 		</Card>
-	)
-}
+	);
+};
 
 type Props = {
-	stageId: string | undefined
-	userId: UsersId
-}
+	stageId: string | undefined;
+	userId: UsersId;
+};
 
 export const StagePanelOverview = async (props: Props) => {
 	if (props.stageId === undefined) {
-		return <SkeletonCard />
+		return <SkeletonCard />;
 	}
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelOverviewInner stageId={props.stageId as StagesId} userId={props.userId} />
+			<StagePanelOverviewInner
+				stageId={props.stageId as StagesId}
+				userId={props.userId}
+			/>
 		</Suspense>
-	)
-}
+	);
+};
