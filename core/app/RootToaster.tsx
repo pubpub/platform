@@ -44,7 +44,7 @@ const usePersistedToasts = () => {
 				[activeToastKey]: null,
 			})
 		}
-	}, [activeToasts, setParams])
+	}, [activeToasts])
 }
 
 export const RootToaster = () => {

@@ -31,7 +31,7 @@ const ArchiveMenuItem = ({ field }: { field: TableData }) => {
 		if (didSucceed(result)) {
 			toast({ title: `Archived ${field.name}` })
 		}
-	}, [field.id, archiveField, field.name])
+	}, [field.id])
 	return (
 		<DropdownMenuItem asChild key={field.id}>
 			<MenuItemButton onClick={handleArchive} className="gap-2">

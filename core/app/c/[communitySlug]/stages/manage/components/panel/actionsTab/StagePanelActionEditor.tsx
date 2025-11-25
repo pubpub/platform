@@ -138,7 +138,7 @@ export const StagePanelActionEditor = (props: Props) => {
 		if (isAfter(lastRunTime, initTime)) {
 			setIsStale(true)
 		}
-	}, [props.actionInstance.lastActionRun, initTime])
+	}, [props.actionInstance.lastActionRun])
 
 	if (!action) {
 		logger.warn(`Invalid action name ${props.actionInstance.action}`)

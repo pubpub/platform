@@ -56,7 +56,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 			}
 			setIsEditingName(false)
 		}
-	}, [isEditingName, props.data.stage.id, updateStageName])
+	}, [isEditingName])
 
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: it has buttons in it, can't be a button

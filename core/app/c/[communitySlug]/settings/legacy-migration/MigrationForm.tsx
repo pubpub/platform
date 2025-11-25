@@ -249,7 +249,7 @@ export function UndoMigrationForm({
 				),
 			},
 		] satisfies ColumnDef<NonNullable<typeof toBeDeletedStructure>["pubTypes"][number]>[]
-	}, [toBeDeletedStructure, getSelectedCount, handleSelectAll, renderCheckbox, selectedPubTypes])
+	}, [toBeDeletedStructure, selectedPubTypes])
 
 	const pubFieldColumns = useMemo(() => {
 		return [

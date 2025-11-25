@@ -35,7 +35,7 @@ export const RequestLink = ({
 			title: "Link sent",
 			description: "Successfully requested new link",
 		})
-	}, [token, formSlug, pubId, communityId, sendNewFormLink])
+	}, [token, formSlug, pubId, communityId])
 
 	return (
 		<Button

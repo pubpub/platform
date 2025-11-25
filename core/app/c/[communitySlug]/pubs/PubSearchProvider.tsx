@@ -152,11 +152,8 @@ export function PubSearchProvider({ children, ...props }: Props) {
 
 	// sync input with URL when navigating back/forward
 	useEffect(() => {
-		// if (isStale(query, inputValues)) {
-		// 	return;
-		// }
 		setInputValues(queryparams)
-	}, [queryparams])
+	}, [])
 
 	const debouncedSetQuery = useDebouncedCallback((value: SetStateAction<string>) => {
 		setQueryParaams((old) => {
