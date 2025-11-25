@@ -9,13 +9,12 @@ import { arrayMove, SortableContext, useSortable } from "@dnd-kit/sortable";
 
 import { cn } from "utils";
 
-import type { InputProps } from "./input";
 import { Badge } from "./badge";
 import { Button } from "./button";
 import { GripVertical, XCircle } from "./icon";
 import { Input } from "./input";
 
-type MultiValueInputProps = Omit<InputProps, "onChange"> & {
+type MultiValueInputProps = Omit<React.ComponentProps<"input">, "onChange"> & {
 	value: string[];
 	onChange: Dispatch<string[]>;
 	/** Classname to apply to value badges */

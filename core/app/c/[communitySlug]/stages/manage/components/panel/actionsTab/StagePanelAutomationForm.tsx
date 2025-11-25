@@ -17,7 +17,7 @@ import {
 	conditionEvaluationTimingSchema,
 } from "db/public";
 import { ChevronRight, type Icon, X } from "lucide-react";
-import { parseAsString, useQueryState } from "nuqs";
+import { parseAsString, useQueryState, type ParserBuilder } from "nuqs";
 import { memo, useCallback, useEffect, useId, useMemo, useState } from "react";
 import type {
 	ControllerFieldState,
@@ -56,7 +56,7 @@ import {
 } from "ui/select";
 import { FormSubmitButton } from "ui/submit-button";
 import { cn } from "utils";
-import { z } from "zod";
+import { z, type ZodTypeDef } from "zod";
 import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
 import { ActionFormContext } from "~/actions/_lib/ActionForm";
 import {
@@ -192,7 +192,7 @@ export type CreateAutomationsSchema = {
 
 export const StagePanelAutomationForm = (props: Props) => {
 	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] =
-		useQueryState<AutomationsId | undefined>("automation-id", parseAsString);
+		useQueryState("automation-id", parseAsString as unknown as ParserBuilder<AutomationsId  >);
 
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -250,7 +250,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 };
 
 type ConfigCardProps = {
-	icon: typeof Icon;
+	icon: typeof ChevronRight;
 	title: React.ReactNode;
 	onRemove: () => void;
 	children?: React.ReactNode;
@@ -365,9 +365,9 @@ const ConfigCard = memo(
 );
 function Form(
 	props: Props & {
-		currentlyEditingAutomationId: AutomationsId | undefined | null;
+		currentlyEditingAutomationId: AutomationsId |  null;
 		setCurrentlyEditingAutomationId: (
-			id: AutomationsId | undefined | null,
+			id: AutomationsId |  null,
 		) => void;
 	},
 ) {
@@ -402,7 +402,7 @@ function Form(
 											? { sourceAutomationId: automationsIdSchema }
 											: {}),
 									}),
-								),
+								) as unknown as [z.ZodObject<{_id:z.ZodString,event:z.ZodLiteral<AutomationEvent>,config:z.ZodObject<any>,sourceAutomationId:z.ZodOptional<z.ZodType<AutomationsId, ZodTypeDef, AutomationsId>>}>,...z.ZodObject<{_id:z.ZodString,event:z.ZodLiteral<AutomationEvent>,config:z.ZodObject<any>,sourceAutomationId:z.ZodOptional<z.ZodType<AutomationsId, ZodTypeDef, AutomationsId>>}>[]],
 							),
 						)
 						.min(1, "At least one trigger is required"),
@@ -417,13 +417,15 @@ function Form(
 									.withDefaults({})
 									.getSchema(),
 							}),
-						),
+						) as [z.ZodObject<{action:z.ZodLiteral<Action>,config: z.ZodObject<any>}>,...z.ZodObject<{action:z.ZodLiteral<Action>,config: z.ZodObject<any>}>[]],
 						{
 							message: "Action is required",
 							errorMap: (issue, ctx) => {
-								if (issue.code === z.ZodIssueCode.invalid_union_discriminator) {
-									return "Action is required";
+								if (issue.code === z.ZodIssueCode.invalid_union_discriminator || !issue.message) {
+									return { message: "Action is required" };
 								}
+
+								return {message: issue.message}
 							},
 						},
 					),
@@ -620,11 +622,10 @@ function Form(
 			<Controller
 				control={form.control}
 				name="triggers"
-				render={(props) => (
+				render={(controlProps) => (
 					<TriggerField
-						{...props}
+					{...controlProps}
 						automations={props.automations}
-						parentField={props.field}
 						currentlyEditingAutomationId={currentlyEditingAutomationId}
 						form={form}
 						appendTrigger={appendTrigger}
@@ -899,8 +900,7 @@ const ActionConfigCard = memo(
 					return (
 						<ConfigCard
 							isError={fieldState.invalid}
-							description={actionDef.description}
-							icon={actionDef.icon}
+							icon={actionDef.icon as typeof ChevronRight}
 							title={actionDef.name}
 							onRemove={props.removeAction}
 							showCollapseToggle={true}
@@ -943,8 +943,7 @@ export const TriggerField = (props: {
 	field: ControllerRenderProps<CreateAutomationsSchema, "triggers">;
 	fieldState: ControllerFieldState;
 	automations: { id: AutomationsId; name: string }[];
-	parentField: ControllerRenderProps<CreateAutomationsSchema, "triggers">;
-	currentlyEditingAutomationId: AutomationsId | undefined;
+	currentlyEditingAutomationId: AutomationsId |  null;
 	form: UseFormReturn<CreateAutomationsSchema>;
 	appendTrigger: (trigger: CreateAutomationsSchema["triggers"][number]) => void;
 }) => {
@@ -953,7 +952,7 @@ export const TriggerField = (props: {
 	const selectTriggers = useMemo(() => {
 		return Object.values(AutomationEvent)
 			.filter(
-				(event) => !props.parentField.value?.some((t) => t.event === event),
+				(event) => !props.field.value?.some((t) => t.event === event),
 			)
 			.map((event) => {
 				const automation = getTriggerByName(event);
@@ -970,7 +969,7 @@ export const TriggerField = (props: {
 					</SelectItem>
 				);
 			});
-	}, [props.parentField.value, community]);
+	}, [props.field.value, community]);
 
 	return (
 		<Field data-invalid={props.fieldState.invalid}>
@@ -994,9 +993,8 @@ export const TriggerField = (props: {
 											idx={idx}
 											community={community}
 											removeTrigger={() => {
-												// removeTrigger(idx);
-												props.parentField.onChange(
-													props.parentField.value.filter(
+												props.field.onChange(
+													props.field.value.filter(
 														(t) => t._id !== field.value._id,
 													),
 												);

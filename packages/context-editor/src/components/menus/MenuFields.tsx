@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import { useFormContext } from "react-hook-form";
 
 import {
@@ -26,7 +26,7 @@ export const MenuInputField = ({
 		<FormField
 			name={name}
 			control={form?.control}
-			render={({ triggersField: field }) => {
+			render={({ field }) => {
 				return (
 					<FormItem className="flex flex-col">
 						<div className="grid grid-cols-4 items-center">
@@ -65,7 +65,7 @@ export const MenuSwitchField = (props: MenuSwitchFieldProps) => {
 			name={props.name}
 			// `form` may be undefined if this is used outside of a form context
 			control={form.control}
-			render={({ triggersField: field }) => {
+			render={({ field }) => {
 				return (
 					<FormItem className="flex items-center justify-between">
 						<FormLabel>{label}</FormLabel>

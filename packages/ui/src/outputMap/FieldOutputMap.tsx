@@ -57,7 +57,7 @@ const OutputMapField = ({
 		<div className="flex items-start gap-x-2 overflow-visible">
 			<FormField
 				name={`${fieldName}.responseField`}
-				render={({ triggersField: field }) => (
+				render={({ field }) => (
 					<FormItem className="flex w-1/2 flex-col gap-y-1">
 						<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">
 							<span>Response field</span>
@@ -92,7 +92,7 @@ const OutputMapField = ({
 			<ArrowRight className="mt-10 h-4 w-4" />
 			<FormField
 				name={`${fieldName}.pubField`}
-				render={({ triggersField: field }) => {
+				render={({ field }) => {
 					return (
 						<FormItem className="flex w-1/2 flex-col gap-y-1">
 							<FormLabel className="flex items-center gap-x-2 text-sm font-normal text-gray-700">

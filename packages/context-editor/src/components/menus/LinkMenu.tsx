@@ -78,7 +78,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 				<FormField
 					name="href"
 					control={form.control}
-					render={({ triggersField: field }) => {
+					render={({ field }) => {
 						return (
 							<FormItem className="flex flex-col">
 								<div className="flex items-center gap-2 space-y-0">

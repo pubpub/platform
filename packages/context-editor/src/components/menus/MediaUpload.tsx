@@ -166,7 +166,7 @@ export const MediaUpload = (props: Props) => {
 						<FormField
 							control={form.control}
 							name="width"
-							render={({ triggersField: field }) => {
+							render={({ field }) => {
 								return (
 									<FormItem>
 										<div className="grid grid-cols-4 items-center gap-1">
@@ -206,7 +206,7 @@ export const MediaUpload = (props: Props) => {
 						<FormField
 							control={form.control}
 							name="align"
-							render={({ triggersField: field }) => {
+							render={({ field }) => {
 								return (
 									<FormItem>
 										<div className="grid grid-cols-4 items-center gap-1">

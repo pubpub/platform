@@ -8,8 +8,9 @@ import { cn } from "utils";
 
 export type { LucideIcon } from "lucide-react";
 
-export const Form = ({ className, size = 16, ...props }: LucideProps) => (
+export const Form = React.forwardRef<SVGSVGElement, LucideProps>(({ className, size = 16, ...props }, ref ) => (
 	<svg
+		ref={ref}
 		xmlns="http://www.w3.org/2000/svg"
 		width={size}
 		height={size}
@@ -28,10 +29,11 @@ export const Form = ({ className, size = 16, ...props }: LucideProps) => (
 		<path d="M8 18h1" />
 		<path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" />
 	</svg>
-);
+));
 
-export const Stages = ({ className, size = 16, ...props }: LucideProps) => (
+export const Stages = React.forwardRef<SVGSVGElement, LucideProps>(({ className, size = 16, ...props }, ref ) => (
 	<svg
+		ref={ref}
 		className={cn("lucide", className)}
 		width={size}
 		height={Number(size) - Number(size) / 4}
@@ -74,10 +76,11 @@ export const Stages = ({ className, size = 16, ...props }: LucideProps) => (
 			</clipPath>
 		</defs>
 	</svg>
-);
+));
 
-export const Pub = ({ className, size = 16, ...props }: LucideProps) => (
+export const Pub = React.forwardRef<SVGSVGElement, LucideProps>(({ className, size = 16, ...props }, ref ) => (
 	<svg
+		ref={ref}
 		className={cn("lucide", className)}
 		width={size}
 		height={size}
@@ -106,14 +109,15 @@ export const Pub = ({ className, size = 16, ...props }: LucideProps) => (
 			</clipPath>
 		</defs>
 	</svg>
-);
+));
 
-export const Integration = ({
+export const Integration = React.forwardRef<SVGSVGElement, LucideProps>(({
 	className,
 	size = 16,
 	...props
-}: LucideProps) => (
+}, ref ) => (
 	<svg
+		ref={ref}
 		className={cn("lucide", className)}
 		width={size}
 		height={size}
@@ -147,7 +151,7 @@ export const Integration = ({
 			</clipPath>
 		</defs>
 	</svg>
-);
+));
 
 // biome-ignore format: don't format
 export { Activity, AlertCircle, AlignCenter, AlignLeft, AlignRight, AlignVerticalSpaceAround, Archive, ArchiveRestore, ArrowLeft, ArrowRight, BadgeCheck, Book, BookDashed, Bookmark, BookOpen, BookOpenText, Bot, BoxSelect, Calendar, CalendarClock, CaseSensitive, Check, CheckCircle, CheckSquare, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, ChevronsUpDown, CircleCheck, CircleDashed, CircleDollarSign, CircleDot, CircleEllipsis, CircleHelp, CircleSlash, Clipboard, ClipboardPenLine, Cloud, Contact, CurlyBraces, Download, Ellipsis, Expand, ExternalLink, FileText, FlagTriangleRightIcon, FormInput, Globe, GripVertical, Heading2, Heading3, HelpCircle, History, ImagePlus, Info, Layers3, Link, ListPlus, Loader2, Lock, LogOut, Mail, Menu, Minus, MoreVertical, MoveHorizontal, Pencil, Play, Plus, PlusCircle, RefreshCw, Search, Send, Settings, Settings2, Table, Terminal, ToyBrick, Trash, Trash2, TriangleAlert, Type, Undo2, User, UserCheck, UserCircle2, UserPlus, UserRoundCog, Users, UsersRound, Wand2, X, XCircle,

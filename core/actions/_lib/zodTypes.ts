@@ -32,27 +32,6 @@ class StringWithTokens extends z.ZodString {
 	}
 }
 
-const actionInstanceShape = {
-	name: z.string(),
-	description: z.string(),
-	icon: z.string(),
-	action: z.string(),
-	actionInstanceId: z.string().uuid(),
-};
-
-export type ActionInstanceConfig = z.infer<z.ZodObject<typeof actionInstanceShape>>;
-
-// @ts-expect-error FIXME: '{ name: z.ZodString; description: z.ZodString; icon: z.ZodString; action: z.ZodString; actionInstanceId: z.ZodString; }' is assignable to the constraint of type 'T_1', but 'T_1' could be instantiated with a different subtype of constraint 'ZodRawShape'.ts(2417)
-class ActionInstance extends z.ZodObject<typeof actionInstanceShape, "strip", z.ZodTypeAny> {
-	static create = () =>
-		new ActionInstance({
-			typeName: "ActionInstance" as z.ZodFirstPartyTypeKind.ZodObject,
-			shape: () => actionInstanceShape,
-			catchall: z.never(),
-			unknownKeys: "strip",
-		});
-}
-
 class FieldName extends z.ZodString {
 	static create = () =>
 		new FieldName({
@@ -88,7 +67,6 @@ class OutputMap extends z.ZodArray<
 
 export const markdown = Markdown.create;
 export const stringWithTokens = StringWithTokens.create;
-export const actionInstance = ActionInstance.create;
 export const fieldName = FieldName.create;
 export const stage = Stage.create;
 export const outputMap = OutputMap.create;

@@ -1,4 +1,4 @@
-import type * as React from "react";
+import * as React from "react";
 import type { useForm } from "react-hook-form";
 import { useFormContext } from "react-hook-form";
 import * as z from "zod";
@@ -213,7 +213,7 @@ function FormFieldObject({
 		<FormField
 			control={form.control}
 			name={key}
-			render={({ triggersField: field }) => {
+			render={({ field }) => {
 				const inputType =
 					fieldConfigItem.fieldType ??
 					DEFAULT_ZOD_HANDLERS[zodBaseType] ??

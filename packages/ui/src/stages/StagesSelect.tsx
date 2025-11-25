@@ -13,7 +13,6 @@ import {
 
 import {
 	FormControl,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -65,7 +64,7 @@ export const StagesSelectField = (props: {
 	return (
 		<FormField
 			name={props.fieldName}
-			render={({ triggersField: field }) => (
+			render={({ field }) => (
 				<FormItem>
 					<FormLabel>{props.fieldLabel ?? "Stage"}</FormLabel>
 					<StagesSelect fieldLabel={props.fieldLabel} field={field} />
