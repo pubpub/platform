@@ -32,12 +32,9 @@ export const CreatePubTypeButton = ({ className }: { className?: string }) => {
 			<DialogOverlay />
 			<DialogTrigger asChild>
 				<Button
-					variant="outline"
+					variant="create"
 					size="sm"
-					className={cn(
-						"flex items-center gap-x-2 bg-emerald-500 py-4 text-white",
-						className
-					)}
+					className={cn("flex items-center gap-x-2 py-4", className)}
 				>
 					<Plus size="12" className="mb-0.5" />
 					Create Type

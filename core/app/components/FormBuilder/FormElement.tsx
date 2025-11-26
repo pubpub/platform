@@ -47,7 +47,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 
 	const restoreRemoveButton = element.deleted ? (
 		<>
-			<div className="my-auto text-gray-500">Deleted on save</div>
+			<div className="my-auto text-muted-foreground">Deleted on save</div>
 			<Button
 				type="button"
 				disabled={isDisabled}
@@ -83,14 +83,15 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			ref={setNodeRef}
 			style={style}
 			className={cn(
-				"group flex min-h-[76px] flex-1 shrink-0 items-center justify-between gap-3 self-stretch rounded-sm border border-gray-200 border-l-12 border-l-emerald-100 border-solid bg-white p-3 pr-4",
+				"group flex min-h-[76px] flex-1 shrink-0 items-center justify-between gap-3 self-stretch rounded-sm border border-border border-l-12 border-l-emerald-100 border-solid bg-card p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
 				isDragging && "z-10 cursor-grabbing",
 				{
-					"border-l-amber-200/70 bg-amber-50/30": element.updated && !element.added,
-					"border-l-emerald-200 bg-emerald-50/30": element.added,
-					"border-l-red-200 bg-red-50/30": element.deleted,
+					"border-l-amber-200/70 bg-amber-50/30 dark:bg-amber-50/10":
+						element.updated && !element.added,
+					"border-l-emerald-200 bg-emerald-50/30 dark:bg-emerald-50/10": element.added,
+					"border-l-red-200 bg-red-50/30 dark:bg-red-50/10": element.deleted,
 				}
 			)}
 		>
@@ -170,11 +171,11 @@ export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputEle
 				)}
 			/>
 			<div>
-				<div className="text-gray-500">{field.slug}</div>
+				<div className="text-muted-foreground">{field.slug}</div>
 				<div
 					id={labelId}
 					className={cn("font-semibold", {
-						"text-gray-500": element.deleted,
+						"text-muted-foreground": element.deleted,
 					})}
 				>
 					{(element.config as any)?.label ?? field.name}
@@ -204,11 +205,16 @@ const StructuralElementComponent = ({ element, isEditing, labelId }: StructuralE
 						"text-red-300": element.deleted,
 					})}
 				/>
-				<div id={labelId} className="text-gray-500">
+				<div id={labelId} className="text-muted-foreground">
 					{name}
 				</div>
 			</div>
-			<div className={cn("prose prose-sm", element.deleted ? "text-gray-500" : "")}>
+			<div
+				className={cn(
+					"prose prose-sm dark:prose-invert",
+					element.deleted ? "text-muted-foreground" : ""
+				)}
+			>
 				{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
 				<Markdown className="line-clamp-2">{element.content}</Markdown>
 			</div>

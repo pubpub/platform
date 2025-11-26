@@ -137,7 +137,7 @@ export const FormPubSearchSelect = ({
 		<div className={cn("flex flex-col gap-4", className)}>
 			<div className="relative flex items-center gap-x-2">
 				<Search
-					className="-translate-y-1/2 absolute top-1/2 left-2 text-gray-500"
+					className="-translate-y-1/2 absolute top-1/2 left-2 text-muted-foreground"
 					size={16}
 				/>
 				<Input
@@ -150,7 +150,7 @@ export const FormPubSearchSelect = ({
 				{query && (
 					<button
 						onClick={handleClearSearch}
-						className="-translate-y-1/2 absolute top-1/2 right-2 rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+						className="-translate-y-1/2 absolute top-1/2 right-2 rounded-full p-1 text-muted-foreground hover:bg-gray-100 hover:text-gray-700"
 						type="button"
 						aria-label="Clear search"
 					>
@@ -167,7 +167,7 @@ export const FormPubSearchSelect = ({
 				)}
 
 				{showEmpty && (
-					<div className="flex items-center justify-center py-8 text-gray-500 text-sm">
+					<div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
 						{emptyMessage}
 					</div>
 				)}

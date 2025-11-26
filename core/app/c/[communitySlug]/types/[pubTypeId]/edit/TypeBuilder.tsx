@@ -446,7 +446,7 @@ export const FieldPanel = ({ panelState }: { panelState: PanelState }) => {
 						<PlusCircle /> Add New
 					</Button>
 					<div className="mt-8">
-						<FormLabel className="text-gray-500">ID</FormLabel>
+						<FormLabel className="text-muted-foreground">ID</FormLabel>
 						<hr className="my-2" />
 						<Input disabled value={id} />
 					</div>
@@ -501,7 +501,7 @@ export const SelectField = ({ panelState }: { panelState: PanelState }) => {
 				type="button"
 				variant="outline"
 				key={field.id}
-				className="flex h-[68px] flex-1 shrink-0 justify-start gap-4 bg-white p-4"
+				className="flex h-[68px] flex-1 shrink-0 justify-start gap-4 bg-card p-4"
 				onClick={() => {
 					addElement({
 						id: field.id,

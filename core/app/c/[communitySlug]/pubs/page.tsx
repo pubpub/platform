@@ -50,7 +50,8 @@ export default async function Page(props: Props) {
 		<ContentLayout
 			title={
 				<>
-					<BookOpen size={24} strokeWidth={1} className="mr-2 text-gray-500" /> Pubs
+					<BookOpen size={24} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
+					Pubs
 				</>
 			}
 			right={

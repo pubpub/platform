@@ -166,7 +166,7 @@ export const PubSearch = (props: PubSearchProps) => {
 						<PlusCircle size={16} />
 						Stage
 						{queryParams.stages?.length ? (
-							<span className="ml-1 text-gray-500 text-xs">
+							<span className="ml-1 text-muted-foreground text-xs">
 								{queryParams.stages.length}
 							</span>
 						) : null}

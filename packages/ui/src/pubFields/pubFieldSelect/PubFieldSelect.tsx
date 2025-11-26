@@ -128,7 +128,7 @@ export const PubFieldSelectToggleButton = () => {
 			</TooltipTrigger>
 			<TooltipPortal>
 				<TooltipContent>
-					<p className="text-gray-500 text-sm dark:text-white">
+					<p className="text-muted-foreground text-sm dark:text-white">
 						{shouldReadFromPubField
 							? "Do not read from pubfields"
 							: "Also specify pubfields this value will be read from"}
@@ -152,7 +152,7 @@ export const PubFieldSelectWrapper = ({ children }: { children: React.ReactNode 
 				<h4 className="text-sm">Pubfields</h4>
 				<Tooltip>
 					<TooltipTrigger>
-						<Info className="h-4 w-4 text-gray-500" />
+						<Info className="h-4 w-4 text-muted-foreground" />
 					</TooltipTrigger>
 					<TooltipPortal>
 						<TooltipContent className="max-w-md">

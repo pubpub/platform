@@ -70,7 +70,7 @@ export const FormBuilderColorPickerPopover = ({
 							<span className="max-w-40 truncate font-medium text-sm">
 								{label || color}
 							</span>
-							<span className="font-mono text-gray-500 text-xs">{color}</span>
+							<span className="font-mono text-muted-foreground text-xs">{color}</span>
 						</div>
 					)}
 				</PopoverTrigger>

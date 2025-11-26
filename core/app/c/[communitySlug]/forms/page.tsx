@@ -87,7 +87,11 @@ export default async function Page(props: {
 		<ContentLayout
 			title={
 				<>
-					<ClipboardPenLine size={24} strokeWidth={1} className="mr-2 text-gray-500" />{" "}
+					<ClipboardPenLine
+						size={24}
+						strokeWidth={1}
+						className="mr-2 text-muted-foreground"
+					/>{" "}
 					Forms
 				</>
 			}

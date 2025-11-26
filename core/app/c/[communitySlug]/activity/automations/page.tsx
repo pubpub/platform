@@ -48,8 +48,8 @@ export default async function Page(props: {
 		<ContentLayout
 			title={
 				<>
-					<Activity size={24} strokeWidth={1} className="mr-2 text-gray-500" /> Automation
-					Logs
+					<Activity size={24} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
+					Automation Logs
 				</>
 			}
 		>

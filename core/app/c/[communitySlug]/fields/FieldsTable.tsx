@@ -65,6 +65,10 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 				data={data}
 				onRowClick={handleRowClick}
 				defaultSort={[{ id: "updated", desc: true }]}
+				pagination={{
+					pageIndex: 0,
+					pageSize: 50,
+				}}
 			/>
 			<CreateEditDialog
 				title="Edit Field"

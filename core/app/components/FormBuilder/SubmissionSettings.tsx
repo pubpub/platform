@@ -76,7 +76,9 @@ export const SubmissionSettings = () => {
 
 	return (
 		<div>
-			<FormLabel className="text-gray-500 text-sm uppercase">Submission Settings</FormLabel>
+			<FormLabel className="text-muted-foreground text-sm uppercase">
+				Submission Settings
+			</FormLabel>
 			<hr className="my-2" />
 			<div className="flex flex-col items-start gap-3">
 				{buttons.map((b) => {

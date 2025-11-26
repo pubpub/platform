@@ -142,7 +142,7 @@ export const AutoComplete = ({
 				<Button
 					variant="ghost"
 					size="icon"
-					className="-translate-y-1/2 absolute top-1/2 right-1 h-7 w-7 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+					className="-translate-y-1/2 absolute top-1/2 right-1 h-7 w-7 text-muted-foreground hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
 					onClick={() => {
 						setInputValue("")
 						onClear()

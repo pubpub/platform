@@ -95,7 +95,7 @@ export const PubCardClient = ({
 				{showMatchingValues && (
 					<div
 						className={cn(
-							"grid grid-cols-[minmax(0rem,auto)_minmax(0,1fr)] gap-1 text-gray-500 text-xs",
+							"grid grid-cols-[minmax(0rem,auto)_minmax(0,1fr)] gap-1 text-muted-foreground text-xs",
 							"[&_mark]:bg-yellow-200"
 						)}
 					>

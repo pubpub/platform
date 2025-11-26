@@ -44,7 +44,7 @@ export default async function Page(_props: Props) {
 		<ContentLayout
 			title={
 				<>
-					<Activity size={20} strokeWidth={1} className="mr-2 text-gray-500" />
+					<Activity size={20} strokeWidth={1} className="mr-2 text-muted-foreground" />
 					Action Settings
 				</>
 			}
@@ -74,7 +74,7 @@ export default async function Page(_props: Props) {
 									<action.icon
 										size={16}
 										strokeWidth={1}
-										className="mr-2 text-gray-500"
+										className="mr-2 text-muted-foreground"
 									/>
 								</ItemMedia>
 								<ItemContent>

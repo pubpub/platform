@@ -132,7 +132,8 @@ export default async function Page(props: {
 		<ContentLayout
 			title={
 				<>
-					<Users size={24} strokeWidth={1} className="mr-2 text-gray-500" /> Members
+					<Users size={24} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
+					Members
 				</>
 			}
 			right={

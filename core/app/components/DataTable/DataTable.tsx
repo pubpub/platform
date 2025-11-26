@@ -47,7 +47,7 @@ export interface DataTableProps<TData, TValue> {
 	defaultSort?: SortingState
 }
 
-const STRIPED_ROW_STYLING = "hover:bg-gray-100 data-[state=selected]:bg-sky-50"
+const STRIPED_ROW_STYLING = "hover:bg-muted/50 data-[state=selected]:bg-muted"
 
 export function DataTable<TData, TValue>({
 	columns,
@@ -202,7 +202,7 @@ export function DataTable<TData, TValue>({
 										// data-testid={getRowId?.(row.original)}
 										className={cn({
 											"cursor-pointer": Boolean(onRowClick),
-											"bg-gray-100/50": striped && idx % 2,
+											"bg-muted/50": striped && idx % 2,
 											[STRIPED_ROW_STYLING]: striped,
 										})}
 									>

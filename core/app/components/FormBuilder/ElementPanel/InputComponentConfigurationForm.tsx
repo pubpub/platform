@@ -100,7 +100,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.checkboxGroup]: {
 		name: "Checkbox Group",
 		demoComponent: () => (
-			<div className="flex h-full w-full flex-col items-start justify-between gap-1 text-left text-gray-500 text-sm">
+			<div className="flex h-full w-full flex-col items-start justify-between gap-1 text-left text-muted-foreground text-sm">
 				<div>Label</div>
 				<div className="flex items-center gap-1">
 					<Checkbox id="c1" />
@@ -120,7 +120,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.radioGroup]: {
 		name: "Radio Group",
 		demoComponent: () => (
-			<RadioGroup className="w-full text-left text-gray-500 text-sm">
+			<RadioGroup className="w-full text-left text-muted-foreground text-sm">
 				<div>Label</div>
 				<div className="flex items-center gap-1">
 					<RadioGroupItem value="1" id="r1" />
@@ -140,7 +140,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.selectDropdown]: {
 		name: "Select Dropdown",
 		demoComponent: () => (
-			<div className="flex flex-col gap-1 text-left text-gray-500 text-sm">
+			<div className="flex flex-col gap-1 text-left text-muted-foreground text-sm">
 				<div>Label</div>
 				<Select>
 					<SelectTrigger className="text-left">
@@ -160,7 +160,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		name: "Multivalue Input",
 		demoComponent: () => (
 			<div className="flex flex-col gap-1 text-left text-sm">
-				<div className="text-gray-500">Label</div>
+				<div className="text-muted-foreground">Label</div>
 				<MultiValueInput
 					value={["Value 1"]}
 					onChange={() => {}}
@@ -176,7 +176,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		demoComponent: () => {
 			return (
 				<div className="isolate h-full w-full text-sm">
-					<div className="relative z-10 bg-white text-gray-500">Label</div>
+					<div className="relative z-10 bg-white text-muted-foreground">Label</div>
 					<ContextEditorClient
 						pubs={[]}
 						pubTypes={[]}
@@ -196,7 +196,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		demoComponent: () => {
 			return (
 				<div className="flex w-full flex-col gap-1 text-left text-sm">
-					<div className="text-gray-500">Label</div>
+					<div className="text-muted-foreground">Label</div>
 					<MultiBlock title="Pub Relation" disabled compact onAdd={() => {}} />
 				</div>
 			)
@@ -383,7 +383,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				}}
 				className="flex h-full flex-col gap-2"
 			>
-				<div className="flex flex-nowrap rounded-sm border border-gray-200 border-l-12 border-l-emerald-100 border-solid bg-white p-3 pr-4">
+				<div className="flex flex-nowrap rounded-sm border border-border border-l-12 border-l-emerald-100 border-solid bg-card p-3 pr-4">
 					<FieldInputElement element={fieldInputElement} isEditing={false} />
 				</div>
 				<div className="text-muted-foreground text-sm uppercase">Appearance</div>

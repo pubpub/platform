@@ -63,7 +63,7 @@ export default async function Page(props: Props) {
 		<ContentLayout
 			title={
 				<>
-					<action.icon size={20} strokeWidth={1} className="mr-2 text-gray-500" />
+					<action.icon size={20} strokeWidth={1} className="mr-2 text-muted-foreground" />
 					{actionTitle} Action Defaults
 				</>
 			}

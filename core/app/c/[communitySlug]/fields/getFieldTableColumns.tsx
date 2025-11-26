@@ -7,7 +7,8 @@ import { SCHEMA_TYPES_WITH_ICONS } from "schemas"
 import { Checkbox } from "ui/checkbox"
 import { DataTableColumnHeader } from "ui/data-table"
 import { DropdownMenuItem } from "ui/dropdown-menu"
-import { Archive, CurlyBraces, History } from "ui/icon"
+import { Archive, History } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { toast } from "ui/use-toast"
 
 import { MenuItemButton, TableActionMenu } from "~/app/components/TableActionMenu"
@@ -67,32 +68,34 @@ export const getFieldTableColumns = () =>
 			enableHiding: false,
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
-			accessorKey: "name",
-			cell: ({ row }) => {
-				const { schemaName, name } = row.original
+			header: () => <span> </span>,
+			accessorKey: "schemaName",
+			id: "schemaNameIcon",
+			cell: ({ cell }) => {
+				const schemaName = cell.getValue<CoreSchemaType>()
 				const Icon = schemaName ? SCHEMA_TYPES_WITH_ICONS[schemaName].icon : null
+				if (!Icon) return null
 				return (
-					<div className="flex items-center gap-2">
-						{Icon ? (
-							<span className="-ml-6 absolute">
-								<Icon className="w-4" />
-							</span>
-						) : null}
-						<span>{row.original.name}</span>
-					</div>
+					<Tooltip>
+						<TooltipTrigger>
+							<Icon className="w-4" />
+							<span className="sr-only">{schemaName}</span>
+						</TooltipTrigger>
+						<TooltipContent>{schemaName}</TooltipContent>
+					</Tooltip>
 				)
 			},
 		},
 		{
-			header: ({ column }) => (
-				<DataTableColumnHeader
-					column={column}
-					title="Schema"
-					icon={<CurlyBraces size={15} strokeWidth={1} />}
-				/>
-			),
-			accessorKey: "schemaName",
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+			accessorKey: "name",
+			cell: ({ row }) => {
+				return (
+					<div className="flex items-center gap-2">
+						<span>{row.original.name}</span>
+					</div>
+				)
+			},
 		},
 		{
 			id: "slug",
@@ -100,7 +103,7 @@ export const getFieldTableColumns = () =>
 			accessorKey: "slug",
 			cell: ({ row }) => (
 				<div className="pr-10">
-					<span className="rounded-xs border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-blue-400 text-xs">
+					<span className="rounded-xs border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-blue-400 text-xs dark:border-blue-400 dark:bg-blue-800/80 dark:text-blue-100">
 						{row.original.slug}
 					</span>
 				</div>

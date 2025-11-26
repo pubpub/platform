@@ -22,7 +22,7 @@ type Props = {
 
 const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunities }) => {
 	const avatarClasses =
-		"rounded-md w-9 h-9 mr-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 border"
+		"rounded-md w-9 h-9 mr-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8"
 	const textClasses = "flex-auto text-base font-semibold w-44 text-left"
 
 	const onlyOneCommunity = availableCommunities.length === 1

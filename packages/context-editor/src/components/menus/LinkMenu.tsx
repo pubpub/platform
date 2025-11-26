@@ -87,12 +87,12 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 										<a
 											href={field.value}
 											target="_blank"
-											className="cursor-pointer text-gray-500"
+											className="cursor-pointer text-muted-foreground"
 										>
 											<ExternalLink strokeWidth="1px" size="20" />
 										</a>
 										<Button
-											className="px-2 text-gray-500"
+											className="px-2 text-muted-foreground"
 											variant="ghost"
 											onClick={removeLink}
 											data-testid="remove-link"

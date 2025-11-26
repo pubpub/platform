@@ -3,7 +3,7 @@
 import { useFormContext } from "react-hook-form"
 
 import { FormAccessType } from "db/public"
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 import { Lock, Users } from "ui/icon"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
@@ -30,14 +30,14 @@ export const SelectAccess = () => {
 			name="access"
 			render={({ field }) => (
 				<FormItem>
-					<FormLabel className="text-gray-500 text-sm uppercase">Access</FormLabel>
+					<FormLabel className="text-muted-foreground text-sm uppercase">
+						Access
+					</FormLabel>
 					<hr />
 					<Select onValueChange={field.onChange} defaultValue={field.value}>
-						<FormControl>
-							<SelectTrigger data-testid="select-form-access">
-								<SelectValue placeholder="Select a type" />
-							</SelectTrigger>
-						</FormControl>
+						<SelectTrigger data-testid="select-form-access" className="!h-12 w-full">
+							<SelectValue placeholder="Select a type" />
+						</SelectTrigger>
 						<SelectContent>
 							{Object.values(FormAccessType).map((t) => {
 								const { Icon, description, name } = iconsAndCopy[t]
@@ -51,7 +51,7 @@ export const SelectAccess = () => {
 											<Icon size={16} />
 											<div className="flex flex-col items-start">
 												<div className="font-medium">{name}</div>
-												<div className="text-gray-500 text-xs">
+												<div className="text-muted-foreground text-xs">
 													{description}
 												</div>
 											</div>

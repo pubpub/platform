@@ -124,7 +124,7 @@ const FormDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HT
 			<div
 				ref={ref}
 				id={formDescriptionId}
-				className={cn("text-[0.8rem] text-gray-500 dark:text-gray-400", className)}
+				className={cn("text-[0.8rem] text-muted-foreground", className)}
 				{...props}
 			/>
 		)

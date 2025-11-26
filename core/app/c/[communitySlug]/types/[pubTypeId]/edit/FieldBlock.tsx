@@ -48,7 +48,7 @@ export const FieldBlock = ({
 
 	const restoreRemoveButton = field.deleted ? (
 		<>
-			<div className="my-auto text-gray-500">Deleted on save</div>
+			<div className="my-auto text-muted-foreground">Deleted on save</div>
 			<Tooltip delayDuration={300}>
 				<TooltipTrigger asChild>
 					<Button
@@ -95,7 +95,7 @@ export const FieldBlock = ({
 			ref={setNodeRef}
 			style={style}
 			className={cn(
-				"group flex min-h-[76px] flex-1 shrink-0 items-center justify-between gap-3 self-stretch rounded-sm border border-gray-200 border-l-12 border-l-emerald-100 border-solid bg-white p-3 pr-4",
+				"group flex min-h-[76px] flex-1 shrink-0 items-center justify-between gap-3 self-stretch rounded-sm border border-border border-l-12 border-l-emerald-100 border-solid bg-card p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
 				field.deleted && "border-l-red-200",
@@ -108,14 +108,17 @@ export const FieldBlock = ({
 					className={cn(
 						"mt-3 mr-4 shrink-0",
 						isEditing ? "text-blue-500" : "text-emerald-500",
-						field.deleted && "text-gray-500"
+						field.deleted && "text-muted-foreground"
 					)}
 				/>
 				<div>
-					<div className="text-gray-500">{field.slug}</div>
+					<div className="text-muted-foreground">{field.slug}</div>
 					<div
 						id={labelId}
-						className={cn("font-semibold", field.deleted ? "text-gray-500" : "")}
+						className={cn(
+							"font-semibold",
+							field.deleted ? "text-muted-foreground" : ""
+						)}
 					>
 						{field.name}
 					</div>
