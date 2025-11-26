@@ -70,7 +70,9 @@ export default async function MainLayout(props: Props) {
 			<div className="flex min-h-screen flex-col md:flex-row">
 				<SidebarProvider defaultOpen={defaultOpen}>
 					<SideNav community={community} availableCommunities={availableCommunities} />
-					<div className="relative flex-auto px-4 py-4 md:px-12">{children}</div>
+					<div className="relative flex-auto bg-sidebar px-4 py-4 md:px-12">
+						{children}
+					</div>
 					<SidebarTrigger
 						className={cn(
 							"fixed right-2 bottom-2 z-50",

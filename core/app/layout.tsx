@@ -12,6 +12,7 @@ import { getLoginData } from "~/lib/authentication/loginData"
 import { env } from "~/lib/env/env"
 import { ReactQueryProvider } from "./components/providers/QueryProvider"
 import { UserProvider } from "./components/providers/UserProvider"
+import { ThemeProvider } from "./components/theme/ThemeProvider"
 import { RootToaster } from "./RootToaster"
 
 export const metadata = {
@@ -37,7 +38,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 						<ReactQueryProvider>
 							<NuqsAdapter>
 								<TooltipProvider>
-									{children}
+									<ThemeProvider
+										attribute="class"
+										defaultTheme="system"
+										enableSystem
+										disableTransitionOnChange
+									>
+										{children}
+									</ThemeProvider>
 									<Suspense>
 										<RootToaster />
 									</Suspense>

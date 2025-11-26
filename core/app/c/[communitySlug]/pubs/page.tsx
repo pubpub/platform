@@ -1,15 +1,13 @@
 import type { CommunitiesId } from "db/public"
 import type { Metadata } from "next"
 
-import { Suspense } from "react"
 import Link from "next/link"
 import { BookOpen } from "lucide-react"
 
 import { Capabilities, MembershipType } from "db/public"
 import { Button } from "ui/button"
 
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
-import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton"
+import { MainCreatePubButton } from "~/app/components/pubs/CreatePubButton"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { userCan, userCanCreateAnyPub } from "~/lib/authorization/capabilities"
 import { findCommunityBySlug } from "~/lib/server/community"
@@ -63,12 +61,7 @@ export default async function Page(props: Props) {
 						</Button>
 					)}
 					{canCreateAnyPub && (
-						<Suspense fallback={<SkeletonButton className="h-6 w-20" />}>
-							<CreatePubButton
-								communityId={community.id as CommunitiesId}
-								className="bg-emerald-500 text-white"
-							/>
-						</Suspense>
+						<MainCreatePubButton communityId={community.id as CommunitiesId} />
 					)}
 				</div>
 			}

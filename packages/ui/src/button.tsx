@@ -17,6 +17,7 @@ const buttonVariants = cva(
 				secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
 				ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
 				link: "text-primary underline-offset-4 hover:underline",
+				create: "bg-emerald-500 text-white hover:bg-emerald-600",
 			},
 			size: {
 				default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -34,16 +35,12 @@ const buttonVariants = cva(
 	}
 )
 
-function Button({
-	className,
-	variant,
-	size,
-	asChild = false,
-	...props
-}: React.ComponentProps<"button"> &
+export type ButtonProps = React.ComponentProps<"button"> &
 	VariantProps<typeof buttonVariants> & {
 		asChild?: boolean
-	}) {
+	}
+
+function Button({ className, variant, size, asChild = false, ...props }: ButtonProps) {
 	const Comp = asChild ? Slot : "button"
 
 	return (
@@ -56,5 +53,3 @@ function Button({
 }
 
 export { Button, buttonVariants }
-
-export type ButtonProps = React.ComponentProps<"button"> & VariantProps<typeof buttonVariants>

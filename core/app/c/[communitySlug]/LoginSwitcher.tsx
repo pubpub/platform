@@ -58,7 +58,7 @@ export default async function LoginSwitcher() {
 							variant="ghost"
 							size="sm"
 							asChild
-							className="w-full justify-start gap-2 rounded-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+							className="w-full justify-start gap-2 rounded-none"
 						>
 							<Link
 								className="flex w-full items-center justify-start gap-2"
@@ -71,7 +71,7 @@ export default async function LoginSwitcher() {
 						<Separator className="mx-1" />
 						<LogoutButton
 							variant="ghost"
-							className="w-full justify-start rounded-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+							className="w-full justify-start rounded-none"
 						/>
 					</div>
 				</PopoverContent>

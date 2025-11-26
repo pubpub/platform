@@ -79,7 +79,7 @@ async function StageCard({
 	const communitySlug = await getCommunitySlug()
 
 	return (
-		<div key={stage.id} className="relative rounded-l-md border-gray-400 border-l-2 py-2 pl-4">
+		<div key={stage.id} className="relative rounded-l-md border-border border-l-2 py-2 pl-4">
 			<div className="flex flex-col justify-between gap-4">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-3">
@@ -87,11 +87,11 @@ async function StageCard({
 							href={`/c/${communitySlug}/stages/${stage.id}`}
 							className="group underline"
 						>
-							<h3 className="font-semibold text-gray-900 text-xl transition-colors group-hover:text-blue-600">
+							<h3 className="font-semibold text-xl transition-colors group-hover:text-blue-600">
 								{stage.name}
 							</h3>
 						</Link>
-						<p className="mt-1 text-gray-500 text-xs">
+						<p className="mt-1 text-muted-foreground text-xs">
 							{stage.pubsCount === 0
 								? "No Pubs in this stage"
 								: `${stage.pubsCount} ${stage.pubsCount === 1 ? "Pub" : "Pubs"}`}

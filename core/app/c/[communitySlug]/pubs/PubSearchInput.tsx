@@ -84,10 +84,10 @@ export const PubSearch = (props: PubSearchProps) => {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 border-b bg-white px-4 py-2">
+			<div className="sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 border-b px-4 py-2">
 				<div className="relative flex min-w-96 items-center gap-x-2">
 					<Search
-						className="-translate-y-1/2 absolute top-1/2 left-2 text-gray-500"
+						className="-translate-y-1/2 absolute top-1/2 left-2 text-muted-foreground"
 						size={16}
 					/>
 					<Input
@@ -97,16 +97,13 @@ export const PubSearch = (props: PubSearchProps) => {
 							setQuery(e.target.value)
 						}}
 						placeholder="Search updates as you type..."
-						className={cn(
-							"bg-white pl-8 tracking-wide shadow-none",
-							inputValues && "pr-8"
-						)}
+						className={cn("pl-8 tracking-wide shadow-none", inputValues && "pr-8")}
 					/>
 					<span className="-translate-y-1/2 absolute top-1/2 right-2 flex items-center font-mono text-gray-500 text-xs opacity-50 md:flex">
 						{inputValues?.query && (
 							<button
 								onClick={handleClearInput}
-								className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:right-16"
+								className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground md:right-16"
 								type="button"
 								aria-label="Clear search"
 							>

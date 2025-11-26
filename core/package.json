@@ -50,7 +50,10 @@
 		"storybook": "SKIP_VALIDATION=true PUBPUB_URL=http://localhost:6006 storybook dev -p 6006 --no-open",
 		"build-storybook": "SKIP_VALIDATION=true storybook build"
 	},
-	"files": [".next", "public"],
+	"files": [
+		".next",
+		"public"
+	],
 	"prisma": {
 		"__comment": "The #register-loader goes to the correct file based on the .imports setting below",
 		"seed": "tsx --import #register-loader prisma/seed.ts"
@@ -118,6 +121,7 @@
 		"mudder": "^2.1.1",
 		"next": "catalog:",
 		"next-connect": "^1.0.0",
+		"next-themes": "^0.4.6",
 		"nodemailer": "^6.10.1",
 		"nuqs": "catalog:",
 		"openapi3-ts": "^4.5.0",

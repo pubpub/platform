@@ -87,7 +87,7 @@ export const PubCard = async ({
 		<Card
 			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
 			className={cn(
-				"group relative flex flex-row items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500",
+				"group relative flex flex-row items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500 dark:border-border dark:bg-primary-foreground",
 				// accessibility focus styles
 				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200"
 			)}
@@ -160,14 +160,18 @@ export const PubCard = async ({
 						))}
 					</div>
 				)}
-				<CardFooter className="flex gap-2 p-0 text-gray-600 text-xs">
+				<CardFooter className="flex gap-2 p-0 text-muted-foreground text-xs">
 					<div className="flex gap-1" title="Created at">
-						<Calendar size="16px" strokeWidth="1px" className="text-neutral-500" />
-						<span>{formatDateAsMonthDayYear(new Date(pub.createdAt))}</span>
+						<Calendar size="16px" strokeWidth="1px" />
+						<time dateTime={new Date(pub.createdAt).toISOString()}>
+							{formatDateAsMonthDayYear(new Date(pub.createdAt))}
+						</time>
 					</div>
 					<div className="flex gap-1" title="Updated at">
-						<History size="16px" strokeWidth="1px" className="text-neutral-500" />
-						<span>{formatDateAsPossiblyDistance(new Date(pub.updatedAt))}</span>
+						<History size="16px" strokeWidth="1px" />
+						<time dateTime={new Date(pub.updatedAt).toISOString()}>
+							{formatDateAsPossiblyDistance(new Date(pub.updatedAt))}
+						</time>
 					</div>
 				</CardFooter>
 			</CardContent>

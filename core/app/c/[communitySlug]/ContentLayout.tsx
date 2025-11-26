@@ -14,7 +14,7 @@ const Heading = ({
 	right?: ReactNode
 }) => {
 	return (
-		<header className="z-20 flex h-[72px] items-center justify-between border-b bg-gray-50 p-4 shadow-md">
+		<header className="z-20 flex h-[72px] items-center justify-between border-b bg-muted p-4 shadow-md dark:border-0 dark:bg-sidebar">
 			{COLLAPSIBLE_TYPE === "icon" ? null : <SidebarTrigger />}
 			{left}
 			<h1 className="font-semibold text-lg">
@@ -42,7 +42,9 @@ export const ContentLayout = ({
 		<div className="absolute inset-0 w-full">
 			<div className="flex h-full flex-col">
 				<Heading title={title} left={left} right={right} />
-				<div className={`h-full flex-1 overflow-auto bg-background ${className || ""}`}>
+				<div
+					className={`h-full flex-1 overflow-auto rounded-tl-xl bg-background ${className || ""}`}
+				>
 					{children}
 				</div>
 			</div>

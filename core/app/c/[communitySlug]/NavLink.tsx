@@ -40,7 +40,10 @@ export default function NavLink({
 	const isActive = regex.test(pathname)
 
 	const content = (
-		<Link href={href} className="relative">
+		<Link
+			href={href}
+			className="relative data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
+		>
 			{icon ? icon : null}
 			<span className="flex-auto text-sm transition-opacity group-data-[collapsible=icon]:opacity-0">
 				{text}

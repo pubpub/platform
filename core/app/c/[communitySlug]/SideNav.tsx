@@ -34,6 +34,7 @@ import {
 	SidebarSeparator,
 } from "ui/sidebar"
 
+import { DarkmodeToggle } from "~/app/components/theme/DarkmodeToggle"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan, userCanViewStagePage } from "~/lib/authorization/capabilities"
 import CommunitySwitcher from "./CommunitySwitcher"
@@ -322,7 +323,7 @@ const LinkGroup = async ({
 
 	return (
 		<SidebarGroup className="group-data-[collapsible=icon]:py-0">
-			<SidebarGroupLabel className="font-semibold text-gray-500 uppercase group-data-[collapsible=icon]:hidden">
+			<SidebarGroupLabel className="font-semibold text-muted-foreground uppercase group-data-[collapsible=icon]:hidden">
 				{group.name}
 			</SidebarGroupLabel>
 			<SidebarGroupContent className="group-data-[state=expanded]:px-2">
@@ -345,7 +346,7 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 	}
 
 	return (
-		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="fixed z-40">
+		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="dark:!border-r-0 fixed z-40">
 			<SidebarHeader className="py-4 group-data-[state=expanded]:p-2 group-data-[collapsible=icon]:pt-5">
 				<SidebarMenu>
 					<SidebarMenuItem className={`h-full`}>
@@ -372,6 +373,7 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 						<LoginSwitcher />
 					</SidebarMenuItem>
 				</SidebarMenu>
+				<DarkmodeToggle />
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>

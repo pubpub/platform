@@ -2,6 +2,8 @@ import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public"
 import type { ButtonProps } from "ui/button"
 import type { PubTypeWithForm } from "~/lib/authorization/capabilities"
 
+import { Suspense } from "react"
+
 import { Plus } from "ui/icon"
 
 import { getLoginData } from "~/lib/authentication/loginData"
@@ -11,6 +13,7 @@ import { findCommunityBySlug } from "~/lib/server/community"
 import { getPubFields } from "~/lib/server/pubFields"
 import { ContextEditorContextProvider } from "../ContextEditor/ContextEditorContext"
 import { PathAwareDialog } from "../PathAwareDialog"
+import { SkeletonButton } from "../skeletons/SkeletonButton"
 import { InitialCreatePubForm } from "./InitialCreatePubForm"
 
 type RelatedPubData = {
@@ -134,5 +137,13 @@ export const CreatePubButton = async (props: Props) => {
 				<InitialCreatePubForm pubTypes={pubTypes} relatedPubFields={[]} stageId={stageId} />
 			)}
 		</PathAwareDialog>
+	)
+}
+
+export const MainCreatePubButton = (props: Props) => {
+	return (
+		<Suspense fallback={<SkeletonButton className="w-20" />}>
+			<CreatePubButton {...props} variant="create" />
+		</Suspense>
 	)
 }
