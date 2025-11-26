@@ -283,7 +283,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 					<Command className="overflow-clip rounded-lg">
 						<CommandInput
 							placeholder="Search..."
-							wrapperClassName="border-none rounded-none"
 							onKeyDown={handleInputKeyDown}
 						/>
 						<CommandSeparator />

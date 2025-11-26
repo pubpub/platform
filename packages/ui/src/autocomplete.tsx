@@ -135,7 +135,6 @@ export const AutoComplete = ({
 				onFocus={() => setOpen(true)}
 				placeholder={placeholder}
 				disabled={disabled}
-				icon={icon}
 				data-testid={`autocomplete-${name}`}
 			/>
 			{onClear ? (
