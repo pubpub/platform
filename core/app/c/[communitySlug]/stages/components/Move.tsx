@@ -9,6 +9,7 @@ import { Capabilities, MembershipType } from "db/public"
 
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
+import { getStage } from "~/lib/db/queries"
 import { makeStagesById } from "~/lib/stages"
 import { BasicMoveButton } from "./BasicMoveButton"
 import { MoveInteractive } from "./MoveInteractive"
@@ -30,8 +31,8 @@ type Props = {
 } & XOR<
 	{ communityStages: CommunityStage[] },
 	{
-		moveFrom: CommunityStage["moveConstraintSources"]
-		moveTo: CommunityStage["moveConstraints"]
+		moveFrom: CommunityStage["moveConstraintSources"] | null
+		moveTo: CommunityStage["moveConstraints"] | null
 	}
 >
 
@@ -69,15 +70,21 @@ const getStageDisplayName = (props: Props) => {
 }
 
 async function MoveButton({ hideIfNowhereToMove = true, ...props }: Props) {
-	const { sources, destinations } = makeSourcesAndDestinations(props)
 	const stageName = getStageDisplayName(props)
+	const loginData = await getLoginData()
 
-	if (destinations.length === 0 && sources.length === 0 && hideIfNowhereToMove) {
+	if (!loginData.user) {
 		return <BasicMoveButton name={stageName} />
 	}
 
-	const loginData = await getLoginData()
-	if (!loginData.user) {
+	const { moveConstraints: moveFrom, moveConstraintSources: moveTo } =
+		props.moveFrom && props.moveTo
+			? { moveConstraints: props.moveTo, moveConstraintSources: props.moveFrom }
+			: ((await getStage(props.stageId, loginData.user.id).executeTakeFirst()) ?? {})
+
+	const { sources, destinations } = makeSourcesAndDestinations({ ...props, moveFrom, moveTo })
+
+	if (destinations?.length === 0 && sources?.length === 0 && hideIfNowhereToMove) {
 		return <BasicMoveButton name={stageName} />
 	}
 

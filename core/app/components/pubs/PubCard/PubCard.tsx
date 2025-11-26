@@ -9,12 +9,12 @@ import Link from "next/link"
 import { Capabilities, MembershipType } from "db/public"
 import { Button } from "ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "ui/card"
-import { Calendar, History, Pencil, Trash2 } from "ui/icon"
+import { Pencil, Trash2 } from "ui/icon"
 import { cn } from "utils"
 
+import { DateTimeDisplay } from "~/app/c/[communitySlug]/pubs/[pubId]/components/DateTimeDisplay"
 import Move from "~/app/c/[communitySlug]/stages/components/Move"
 import { userCan, userCanEditPub } from "~/lib/authorization/capabilities"
-import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates"
 import { getPubTitle } from "~/lib/pubs"
 import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector"
 import { PubsRunAutomationsDropDownMenu } from "../../AutomationUI/PubsRunAutomationDropDownMenu"
@@ -161,18 +161,8 @@ export const PubCard = async ({
 					</div>
 				)}
 				<CardFooter className="flex gap-2 p-0 text-muted-foreground text-xs">
-					<div className="flex gap-1" title="Created at">
-						<Calendar size="16px" strokeWidth="1px" />
-						<time dateTime={new Date(pub.createdAt).toISOString()}>
-							{formatDateAsMonthDayYear(new Date(pub.createdAt))}
-						</time>
-					</div>
-					<div className="flex gap-1" title="Updated at">
-						<History size="16px" strokeWidth="1px" />
-						<time dateTime={new Date(pub.updatedAt).toISOString()}>
-							{formatDateAsPossiblyDistance(new Date(pub.updatedAt))}
-						</time>
-					</div>
+					<DateTimeDisplay date={pub.createdAt} type="absolute" />
+					<DateTimeDisplay date={pub.updatedAt} type="relative" />
 				</CardFooter>
 			</CardContent>
 			<div className="z-10 mr-4 w-fit shrink-0">

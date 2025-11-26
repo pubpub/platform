@@ -21,8 +21,7 @@ type Props = {
 }
 
 const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunities }) => {
-	const avatarClasses =
-		"rounded-md w-9 h-9 mr-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8"
+	const avatarClasses = "rounded-md size-6"
 	const textClasses = "flex-auto text-base font-semibold w-44 text-left"
 
 	const onlyOneCommunity = availableCommunities.length === 1
@@ -44,10 +43,14 @@ const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunit
 	const button = (
 		<SidebarMenuButton
 			aria-label="Select a community"
-			className={`h-full group-data-[collapsible=icon]:p-0! md:py-1 ${onlyOneCommunity ? "cursor-default" : ""}`}
+			className={`h-full group-data-[collapsible=icon]:ml-0.5 group-data-[collapsible=icon]:p-0! md:py-1 ${onlyOneCommunity ? "cursor-default" : ""}`}
 		>
-			<Avatar className={avatarClasses}>
-				<AvatarImage src={community.avatar || undefined} />
+			<Avatar className={cn("grid size-6 place-items-center", avatarClasses)}>
+				<AvatarImage
+					src={community.avatar || undefined}
+					height={24}
+					className="aspect-auto size-auto h-6"
+				/>
 				<AvatarFallback>{community.name[0]}</AvatarFallback>
 			</Avatar>
 			<span className={textClasses}>{community.name}</span>
@@ -72,17 +75,20 @@ const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunit
 							<DropdownMenuItem asChild key={option.id}>
 								<Link
 									href={redirectUrlMap.get(option.id) || `/c/${option.slug}`}
-									className="cursor-pointer hover:bg-gray-50"
+									className="flex cursor-pointer items-center hover:bg-gray-50"
 								>
-									<div className="flex items-center gap-2">
-										<Avatar className={avatarClasses}>
-											<AvatarImage src={option.avatar || undefined} />
-											<AvatarFallback>{option.name[0]}</AvatarFallback>
-										</Avatar>
-										<span className={cn(textClasses, "font-medium")}>
-											{option.name}
-										</span>
-									</div>
+									<Avatar
+										className={cn("grid place-items-center", avatarClasses)}
+									>
+										<AvatarImage
+											src={option.avatar || undefined}
+											className="object-cover"
+										/>
+										<AvatarFallback>{option.name[0]}</AvatarFallback>
+									</Avatar>
+									<span className={cn(textClasses, "font-medium")}>
+										{option.name}
+									</span>
 								</Link>
 							</DropdownMenuItem>
 						)

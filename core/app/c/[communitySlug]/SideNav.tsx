@@ -360,16 +360,14 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 			</SidebarHeader>
 			<SidebarContent className="group-data-[state=expanded]:px-1 group-data-[state=expanded]:py-3">
 				<div className="flex h-full max-h-screen flex-col group-data-[state=expanded]:gap-2">
-					<div className="flex-1">
-						<LinkGroup user={user} community={community} group={viewLinks} />
-						<LinkGroup user={user} community={community} group={manageLinks} />
-						<LinkGroup user={user} community={community} group={adminLinks} />
-					</div>
+					<LinkGroup user={user} community={community} group={viewLinks} />
+					<LinkGroup user={user} community={community} group={manageLinks} />
+					<LinkGroup user={user} community={community} group={adminLinks} />
 				</div>
 			</SidebarContent>
-			<SidebarFooter className="px-2 pb-4">
+			<SidebarFooter className="pb-4 group-data-[state=expanded]:px-2">
 				<SidebarMenu>
-					<SidebarGroup className="group-data-[collapsible=icon]:py-0">
+					<SidebarGroup className="group-data-[collapsible=icon]:p-0">
 						<SidebarGroupContent>
 							<SidebarMenuItem>
 								<SidebarSearchDialogTrigger />

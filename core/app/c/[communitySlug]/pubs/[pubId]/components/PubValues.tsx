@@ -1,22 +1,9 @@
-"use client"
+import type { ProcessedPubWithForm } from "contracts"
 
-import type { JsonValue, ProcessedPubWithForm } from "contracts"
-import type { ReactNode } from "react"
-import type { InputTypeForCoreSchemaType } from "schemas"
+import { type CommunityMembershipsId, CoreSchemaType } from "db/public"
 
-import { useState } from "react"
-import Link from "next/link"
-import partition from "lodash.partition"
-
-import { CoreSchemaType } from "db/public"
-import { Button } from "ui/button"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
-import { ColorCircle, ColorLabel, ColorValue } from "ui/color"
-import { ChevronDown, ChevronRight } from "ui/icon"
-import { ShowMore } from "ui/show-more"
-
-import { FileUploadPreview } from "~/app/components/forms/FileUpload"
-import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs"
+import { getMember } from "~/lib/server/user"
+import { FieldBlock } from "./FieldBlock"
 
 type FullProcessedPubWithForm = ProcessedPubWithForm<{
 	withRelatedPubs: true
@@ -25,80 +12,10 @@ type FullProcessedPubWithForm = ProcessedPubWithForm<{
 	withMembers: true
 }>
 
-/**
- * Get the label a form/pub value combo might have. In preference order:
- * 1. "label" on a FormElement
- * 2. "config.label" on a FormElement
- * 3. the name of the PubField
- **/
-const getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
-	// Default to the field name
-	const defaultLabel = value.fieldName
-	let configLabel: string | null = null
-	let formElementLabel: string | null = null
-	if ("formElementId" in value) {
-		const config = value.formElementConfig
-		if (config) {
-			configLabel = "label" in config ? (config.label ?? null) : null
-		}
-		formElementLabel = value.formElementLabel
-	}
-	return formElementLabel || configLabel || defaultLabel
-}
-
-const PubValueHeading = ({
-	depth,
-	children,
-	...props
-}: React.HTMLAttributes<HTMLHeadingElement> & { depth: number }) => {
-	// For "Other Fields" section header which might be one lower than any pub depth
-	if (depth < 1) {
-		return <h2 {...props}>{children}</h2>
-	}
-	// Pub depth starts at 1
-	switch (depth - 1) {
-		case 0:
-			return <h2 {...props}>{children}</h2>
-		case 1:
-			return <h3 {...props}>{children}</h3>
-		case 2:
-			return <h4 {...props}>{children}</h4>
-		default:
-			return <h5 {...props}>{children}</h5>
-	}
-}
-
-const FieldBlock = ({
-	name,
-	values,
-	depth,
-}: {
-	name: string
-	values: FullProcessedPubWithForm["values"]
-	depth: number
-}) => {
-	return (
-		<div key={name}>
-			<PubValueHeading depth={depth} className={"mb-2 font-semibold text-base"}>
-				{name}
-			</PubValueHeading>
-			<div data-testid={`${name}-value`}>
-				{values.map((value) =>
-					value.id ? (
-						<PubValue value={value} key={value.id} />
-					) : (
-						// Blank space if there is no value
-						<div className="h-1" key={value.fieldId} />
-					)
-				)}
-			</div>
-		</div>
-	)
-}
-
-export const PubValues = ({
+export const PubValues = async ({
 	pub,
 	isNested,
+	formSlug,
 }: {
 	pub: FullProcessedPubWithForm
 	/**
@@ -108,150 +25,37 @@ export const PubValues = ({
 	 * forms joined currently
 	 **/
 	isNested?: boolean
-}): ReactNode => {
-	const { values, depth } = pub
-	if (!values.length) {
-		return null
-	}
+	formSlug: string
+}) => {
+	const valuesWithMembers = await Promise.all(
+		pub.values.map(async (val) => {
+			if (val.schemaName !== CoreSchemaType.MemberId) {
+				return val
+			}
 
-	const filteredValues = valuesWithoutTitle(pub)
+			const member = await getMember(val.value as CommunityMembershipsId).executeTakeFirst()
 
-	// Group values by field so we only render one heading for relationship values that have multiple entries
-	const groupedValues: Record<
-		string,
-		{ label: string; isInForm: boolean; values: FullProcessedPubWithForm["values"] }
-	> = {}
-	filteredValues.forEach((value) => {
-		if (groupedValues[value.fieldSlug]) {
-			groupedValues[value.fieldSlug].values.push(value)
-		} else {
-			const label = getLabel(value)
-			const isInForm = "formElementId" in value
-			groupedValues[value.fieldSlug] = { label, values: [value], isInForm }
-		}
-	})
-
-	const [valuesInForm, valuesNotInForm] = partition(
-		Object.values(groupedValues),
-		(values) => values.isInForm
+			return {
+				...val,
+				value: member,
+			}
+		})
 	)
+
 	return (
-		<article className="flex flex-col gap-y-4">
-			{valuesInForm.map(({ label, values }) => {
-				return <FieldBlock key={label} name={label} values={values} depth={depth} />
-			})}
-			{valuesNotInForm.length ? (
-				<div className="flex flex-col gap-2">
-					{valuesInForm.length ? <hr className="mt-2" /> : null}
-					{!isNested ? (
-						<PubValueHeading depth={depth - 1} className="font-semibold text-lg">
-							Other Fields
-						</PubValueHeading>
-					) : null}
-					{valuesNotInForm.map(({ label, values }) => (
-						<FieldBlock key={label} name={label} values={values} depth={depth} />
-					))}
-				</div>
-			) : null}
-		</article>
-	)
-}
-
-const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number] }) => {
-	const [isOpen, setIsOpen] = useState(false)
-	if (value.relatedPub) {
-		const { relatedPub, ...justValue } = value
-		const justValueElement = justValue.value ? (
-			<span className="mr-2 italic">{<PubValue value={justValue} />}:</span>
-		) : null
-		if (relatedPub.isCycle) {
-			return (
-				<>
-					{justValueElement}
-					{getPubTitle(value.relatedPub)}
-					<span className="ml-2 rounded-full bg-green-100 px-2 py-1">Current pub</span>
-				</>
-			)
-		}
-		const renderRelatedValues =
-			value.relatedPub.depth < 3 && valuesWithoutTitle(relatedPub).length > 0
-		return (
-			<Collapsible open={isOpen} onOpenChange={setIsOpen}>
-				<div className="flex items-center">
-					{justValueElement}
-					<Link className="inline underline" href={`./${relatedPub.id}`}>
-						{getPubTitle(value.relatedPub)}
-					</Link>
-					{renderRelatedValues && (
-						<CollapsibleTrigger asChild>
-							<Button
-								variant={isOpen ? "secondary" : "ghost"}
-								size="sm"
-								title="Show pub contents"
-								aria-label="Show pub contents"
-								// className="ml-2"
-							>
-								{isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-							</Button>
-						</CollapsibleTrigger>
-					)}
-				</div>
-				<CollapsibleContent>
-					{renderRelatedValues && (
-						<div className="ml-4">
-							<PubValues pub={relatedPub} isNested />
-						</div>
-					)}
-				</CollapsibleContent>
-			</Collapsible>
-		)
-	}
-
-	if (value.schemaName === CoreSchemaType.FileUpload) {
-		return (
-			<FileUploadPreview
-				files={value.value as InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>}
-			/>
-		)
-	}
-
-	if (value.schemaName === CoreSchemaType.DateTime) {
-		const date = new Date(value.value as string)
-		if (date.toString() !== "Invalid Date") {
-			return date.toISOString().split("T")[0]
-		}
-	}
-
-	if (value.schemaName === CoreSchemaType.RichText) {
-		return (
-			<ShowMore animate={false}>
-				<div
-					className="prose dark:prose-invert prose-sm"
-					dangerouslySetInnerHTML={{ __html: value.value as string }}
+		<div className="grid grid-cols-12 gap-x-2 gap-y-4 text-sm">
+			{valuesWithMembers.map((value) => (
+				<FieldBlock
+					formSlug={formSlug}
+					key={value.id}
+					pubId={pub.id}
+					name={value.fieldName}
+					slug={value.fieldSlug}
+					schemaType={value.schemaName}
+					values={[value]}
+					depth={0}
 				/>
-			</ShowMore>
-		)
-	}
-
-	if (value.schemaName === CoreSchemaType.Color) {
-		return (
-			<ColorLabel>
-				<ColorCircle color={value.value as string} size="sm" />
-				<ColorValue color={value.value as string} />
-			</ColorLabel>
-		)
-	}
-
-	const valueAsString = (value.value as JsonValue)?.toString() || ""
-
-	let renderedField: ReactNode = valueAsString
-	if (value.schemaName === CoreSchemaType.URL) {
-		renderedField = (
-			<a className="underline" href={valueAsString} target="_blank" rel="noreferrer">
-				{valueAsString}
-			</a>
-		)
-	}
-
-	return renderedField
+			))}
+		</div>
+	)
 }

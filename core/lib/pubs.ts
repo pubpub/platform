@@ -117,6 +117,7 @@ export const getPubByForm = <T extends MaybePubOptions>({
 			formElementId: formElement.id,
 			formElementLabel: formElement.label,
 			formElementConfig: formElement.config,
+			formElementComponent: formElement.component,
 		}
 		if (!values) {
 			valuesWithFormElements.push({

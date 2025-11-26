@@ -50,7 +50,7 @@ export default async function MainLayout(props: Props) {
 	// bc we can't import SIDEBAR_COOKIE_NAME here because it's in a "use client" file
 	const defaultOpenCookie = cookieStore.get("sidebar:state")
 	// open by default, only if cookie is explicitly set to false will it be closed
-	const _defaultOpen = defaultOpenCookie?.value !== "false"
+	const defaultOpen = defaultOpenCookie?.value !== "false"
 
 	const role = getCommunityRole(user, community)
 
@@ -70,7 +70,7 @@ export default async function MainLayout(props: Props) {
 				)}
 				<div className="flex min-h-screen flex-col md:flex-row">
 					<SidebarProvider
-						defaultOpen={true}
+						defaultOpen={defaultOpen}
 						style={{
 							"--sidebar-width": "13rem",
 							"--sidebar-width-mobile": "20rem",

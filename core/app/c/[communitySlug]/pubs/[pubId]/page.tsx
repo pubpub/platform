@@ -18,11 +18,15 @@ import { StagesProvider, stagesDAO } from "ui/stages"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { tryCatch } from "utils/try-catch"
 
-import { PubsRunAutomationsDropDownMenu } from "~/app/components/AutomationUI/PubsRunAutomationDropDownMenu"
+<<<<<<< HEAD
+
+=======
+>>>>>>> 1231e2acd (feat: sort of add pub page)
+
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher"
-import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
-import { MembersList } from "~/app/components/Memberships/MembersList"
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import { PubFormProvider } from "~/app/components/providers/PubFormProvider"
+import { PubTypeLabel } from "~/app/components/pubs/PubCard/PubTypeLabel"
+import { StageMoveButton } from "~/app/components/pubs/PubCard/StageMoveButton"
 import { RemovePubButton } from "~/app/components/pubs/RemovePubButton"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import {
@@ -42,14 +46,7 @@ import { getPubFields } from "~/lib/server/pubFields"
 import { getStages } from "~/lib/server/stages"
 import { ContentLayout } from "../../ContentLayout"
 import Move from "../../stages/components/Move"
-import {
-	addPubMember,
-	addUserWithPubMembership,
-	removePubMember,
-	setPubMemberRole,
-} from "./actions"
 import { PubValues } from "./components/PubValues"
-import { RelatedPubsTableWrapper } from "./components/RelatedPubsTableWrapper"
 
 const getPubsWithRelatedValuesCached = cache(async (pubId: PubsId, communityId: CommunitiesId) => {
 	const [error, pub] = await tryCatch(
@@ -146,12 +143,12 @@ export default async function Page(props: {
 		availableViewForms,
 		availableUpdateForms,
 		canArchive,
-		canRunActions,
-		canAddMember,
-		canRemoveMember,
-		canCreateRelatedPub,
-		canRunActionsAllPubs,
-		canOverrideAutomationConditions,
+		_canRunActions,
+		_canAddMember,
+		_canRemoveMember,
+		_canCreateRelatedPub,
+		_canRunActionsAllPubs,
+		_canOverrideAutomationConditions,
 		communityStages,
 		withExtraPubValues,
 		form,
@@ -217,8 +214,8 @@ export default async function Page(props: {
 		return null
 	}
 
-	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation)
-	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub)
+	const _pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation)
+	const _pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub)
 
 	const { stage } = pub
 	const pubByForm = getPubByForm({ pub, form, withExtraPubValues })
@@ -235,7 +232,7 @@ export default async function Page(props: {
 			title={
 				<>
 					<BookOpen size={24} strokeWidth={1} className="mr-3 text-muted-foreground" />
-					<div>
+					<div className="flex flex-col">
 						<Tooltip delayDuration={300}>
 							<TooltipTrigger className="m-0 line-clamp-1 p-0 text-left">
 								{getPubTitle(pub)}
@@ -248,12 +245,30 @@ export default async function Page(props: {
 								{getPubTitle(pub)}
 							</TooltipContent>
 						</Tooltip>
-						<div className="flex items-center gap-1 text-muted-foreground text-sm">
-							<span className="font-semibold">{pub.pubType.name}</span>•
+						<div className="flex items-center gap-2 text-muted-foreground text-sm">
+							<PubTypeLabel pubType={pub.pubType} canFilter={false} />
+							{pub.stage && (
+								<Move
+									pubId={pub.id}
+									stageId={pub.stage?.id}
+									moveTo={[]}
+									moveFrom={[]}
+									stageName={pub.stage.name}
+									hideIfNowhereToMove={false}
+									button={
+										<StageMoveButton
+											className="m-0 p-0"
+											stage={pub.stage}
+											canFilter={false}
+											withDropdown={true}
+										/>
+									}
+								/>
+							)}
 							<FormSwitcher
 								defaultFormSlug={defaultViewForm?.slug}
 								forms={availableViewForms}
-								className="p-1 text-xs"
+								className="!bg-transparent !p-0 h-6! text-xs"
 							>
 								<Eye size={14} />
 							</FormSwitcher>
@@ -290,104 +305,20 @@ export default async function Page(props: {
 		>
 			<StagesProvider stages={stagesDAO(communityStages)}>
 				<PubFieldProvider pubFields={pubFields.fields}>
-					<div className="m-4 flex flex-col space-y-4">
-						<div className="flex flex-wrap space-x-4">
+					<PubFormProvider
+						form={{
+							pubId: pub.id,
+							form,
+							mode: "edit",
+							isExternalForm: false,
+						}}
+					>
+						<div className="m-4 flex flex-col space-y-4">
 							<div className="flex-1">
-								<PubValues pub={pubByForm} />
-							</div>
-							<div className="flex w-96 flex-col gap-4 rounded-lg bg-muted p-4 shadow-inner">
-								{pub.stage ? (
-									<div>
-										<div className="mb-1 font-bold text-lg">Current Stage</div>
-										<div
-											className="ml-4 flex items-center gap-2 font-medium"
-											data-testid="current-stage"
-										>
-											<Move
-												stageName={pub.stage.name}
-												pubId={pub.id}
-												stageId={pub.stage.id}
-												communityStages={communityStages}
-											/>
-										</div>
-									</div>
-								) : null}
-								<div>
-									<div className="mb-1 font-bold text-lg">Actions</div>
-									{pub.stage?.fullAutomations &&
-									pub.stage?.fullAutomations.length > 0 &&
-									stage &&
-									canRunActions ? (
-										<div className="ml-4">
-											<PubsRunAutomationsDropDownMenu
-												canOverrideAutomationConditions={
-													canOverrideAutomationConditions
-												}
-												automations={pub.stage.fullAutomations}
-												pubId={pubId}
-												testId="run-action-primary"
-											/>
-										</div>
-									) : (
-										<div className="ml-4 font-medium">
-											Configure actions to run for this Pub in the stage
-											management settings
-										</div>
-									)}
-								</div>
-
-								<div className="flex flex-col gap-y-4">
-									<div className="mb-2 flex justify-between">
-										<span className="font-bold text-lg">Members</span>
-										{canAddMember && (
-											<AddMemberDialog
-												addMember={addPubMember.bind(null, pubId)}
-												addUserMember={addUserWithPubMembership.bind(
-													null,
-													pubId
-												)}
-												existingMembers={pub.members.map(
-													(member) => member.id
-												)}
-												isSuperAdmin={user.isSuperAdmin}
-												membershipType={MembershipType.pub}
-												availableForms={availableViewForms}
-											/>
-										)}
-									</div>
-									<MembersList
-										members={pub.members}
-										membershipType={MembershipType.pub}
-										setRole={setPubMemberRole}
-										removeMember={removePubMember}
-										targetId={pubId}
-										readOnly={!canRemoveMember}
-										availableForms={availableViewForms}
-									/>
-								</div>
+								<PubValues formSlug={form.slug} pub={pubByForm} />
 							</div>
 						</div>
-						{(pubTypeHasRelatedPubs || pubHasRelatedPubs) && (
-							<div className="flex flex-col gap-2" data-testid="related-pubs">
-								<h2 className="mb-2 font-bold text-xl">Related Pubs</h2>
-								{canCreateRelatedPub && (
-									<CreatePubButton
-										text="Add Related Pub"
-										communityId={community.id}
-										relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
-										className="w-fit"
-									/>
-								)}
-								<RelatedPubsTableWrapper
-									pub={pubByForm}
-									userCanRunActions={canRunActionsAllPubs}
-									userCanOverrideAutomationConditions={
-										canOverrideAutomationConditions
-									}
-								/>
-							</div>
-						)}
-					</div>
+					</PubFormProvider>
 				</PubFieldProvider>
 			</StagesProvider>
 		</ContentLayout>

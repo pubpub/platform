@@ -1,8 +1,5 @@
-import type { User } from "lucia"
-
 import Link from "next/link"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 import { Button } from "ui/button"
 import { ChevronsUpDown, UserRoundCog } from "ui/icon"
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
@@ -11,20 +8,7 @@ import { SidebarMenuButton } from "ui/sidebar"
 
 import { getLoginData } from "~/lib/authentication/loginData"
 import LogoutButton from "../../components/LogoutButton"
-
-const AvatarThing = ({ user }: { user: User }) => (
-	<div className="flex w-full items-center gap-x-2">
-		<Avatar className="group-data-[collapsible=icon]:-ml-2 h-9 w-9 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
-			<AvatarImage src={user.avatar || undefined} />
-			<AvatarFallback>{(user.firstName || user.email)[0].toUpperCase()}</AvatarFallback>
-		</Avatar>
-
-		<div className="flex min-w-0 grow flex-col justify-start text-start group-data-[collapsible=icon]:hidden">
-			<p className="truncate text-sm">{user.firstName}</p>
-			<p className="truncate text-muted-foreground text-xs">{user.email}</p>
-		</div>
-	</div>
-)
+import { UserDisplay } from "./UserDisplay"
 
 export default async function LoginSwitcher() {
 	const { user } = await getLoginData()
@@ -41,7 +25,7 @@ export default async function LoginSwitcher() {
 						data-testid="user-menu-button"
 						aria-haspopup="true"
 					>
-						<AvatarThing user={user} />
+						<UserDisplay user={user} />
 						<ChevronsUpDown
 							size="16"
 							className="group-data-[collapsible=icon]:hidden"
@@ -51,7 +35,7 @@ export default async function LoginSwitcher() {
 				<PopoverContent side="right" className="p-0">
 					<div className="flex flex-col items-start">
 						<div className="p-2">
-							<AvatarThing user={user} />
+							<UserDisplay user={user} />
 						</div>
 						<Separator className="mx-1" />
 						<Button

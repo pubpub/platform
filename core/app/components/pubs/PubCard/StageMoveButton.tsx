@@ -56,9 +56,9 @@ export const FilterableStageMoveButton = ({ stage, withDropdown, className, ...p
 			onFocus={() => setExpanded(true)}
 			onBlur={() => setExpanded(false)}
 			className={cn(
-				className,
 				"relative h-[22px] gap-0 rounded-full border-gray-300 px-[.35rem] font-semibold text-xs shadow-none",
-				withDropdown ? "" : "pr-4"
+				withDropdown ? "" : "pr-4",
+				className
 			)}
 		>
 			<FlagTriangleRightIcon strokeWidth="1px" className="text-neutral-500" />

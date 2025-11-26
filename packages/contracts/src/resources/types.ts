@@ -4,6 +4,7 @@ import type {
 	CommunitiesId,
 	FormElementsId,
 	FormsId,
+	InputComponent,
 	PubFields,
 	PubFieldsId,
 	PubsId,
@@ -375,6 +376,7 @@ type ValuesWithFormElements =
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }
 				| null
+			formElementComponent: InputComponent
 	  })
 	// With only value info
 	| ValueBase
@@ -390,6 +392,7 @@ type ValuesWithFormElements =
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }
 				| null
+			formElementComponent: InputComponent
 	  } & ValueFieldInfo)
 
 type ProcessedPubBase = {

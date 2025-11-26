@@ -96,7 +96,15 @@ export function FileUploadPreview(props: FileUploadPreviewProps) {
 						<CardContent className="p-3">
 							<div className="flex items-center gap-3">
 								<div className="shrink-0" aria-hidden="true">
-									<FileIcon className="h-5 w-5 text-muted-foreground" />
+									{file.fileType.startsWith("image/") ? (
+										<img
+											src={file.fileUploadUrl}
+											alt={file.fileName}
+											className="size-6 object-cover"
+										/>
+									) : (
+										<FileIcon className="h-5 w-5 text-muted-foreground" />
+									)}
 								</div>
 
 								<div className="min-w-0 flex-1">
