@@ -234,7 +234,7 @@ export default async function Page(props: {
 		<ContentLayout
 			title={
 				<>
-					<BookOpen size={24} strokeWidth={1} className="mr-3 text-gray-500" />
+					<BookOpen size={24} strokeWidth={1} className="mr-3 text-muted-foreground" />
 					<div>
 						<Tooltip delayDuration={300}>
 							<TooltipTrigger className="m-0 line-clamp-1 p-0 text-left">
@@ -295,7 +295,7 @@ export default async function Page(props: {
 							<div className="flex-1">
 								<PubValues pub={pubByForm} />
 							</div>
-							<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
+							<div className="flex w-96 flex-col gap-4 rounded-lg bg-muted p-4 shadow-inner">
 								{pub.stage ? (
 									<div>
 										<div className="mb-1 font-bold text-lg">Current Stage</div>

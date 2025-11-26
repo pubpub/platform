@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { Activity } from "lucide-react"
 
 import { Capabilities, MembershipType } from "db/public"
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "ui/item"
 import { cn } from "utils"
 
 import { actions } from "~/actions/api"
@@ -53,34 +54,39 @@ export default async function Page(_props: Props) {
 					Set default configuration values for your actions. <br />
 					These defaults will be applied to new instances of actions in your community.
 				</p>
-				<div className="flex flex-col">
+				<ItemGroup>
 					{Object.values(actions).map((action, idx) => (
-						<Link
+						<Item
+							asChild
 							key={action.name}
-							href={`/c/${community.slug}/settings/actions/${action.name}`}
+							size="sm"
+							className={cn(
+								"rounded-none border border-t-0 hover:bg-muted",
+								idx === 0 && "rounded-t border-t",
+								idx === Object.values(actions).length - 1 && "rounded-b"
+							)}
 						>
-							<div
-								className={cn(
-									"border border-t-0 p-2 hover:bg-gray-50",
-									idx === 0 && "rounded-t border-t",
-									idx === Object.values(actions).length - 1 && "rounded-b"
-								)}
+							<Link
+								key={action.name}
+								href={`/c/${community.slug}/settings/actions/${action.name}`}
 							>
-								<div className="flex items-center">
+								<ItemMedia>
 									<action.icon
 										size={16}
 										strokeWidth={1}
 										className="mr-2 text-gray-500"
 									/>
-									<h2 className="font-medium text-lg">{action.name}</h2>
-								</div>
-								<p className="text-muted-foreground text-sm">
-									{action.description}
-								</p>
-							</div>
-						</Link>
+								</ItemMedia>
+								<ItemContent>
+									<ItemTitle>
+										<h2 className="font-medium text-lg">{action.name}</h2>
+									</ItemTitle>
+									<ItemDescription>{action.description}</ItemDescription>
+								</ItemContent>
+							</Link>
+						</Item>
 					))}
-				</div>
+				</ItemGroup>
 			</div>
 		</ContentLayout>
 	)

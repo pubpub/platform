@@ -17,7 +17,7 @@ const Heading = ({
 		<header className="z-20 flex h-16 items-center justify-between bg-sidebar p-4 dark:border-0">
 			{COLLAPSIBLE_TYPE === "icon" ? null : <SidebarTrigger />}
 			{left}
-			<h1 className="font-semibold text-lg">
+			<h1 className="font-semibold">
 				<div className="flex flex-row items-center">{title}</div>
 			</h1>
 			{right}

@@ -78,11 +78,11 @@ const FieldBlock = ({
 	depth: number
 }) => {
 	return (
-		<div className="my-2" key={name}>
+		<div key={name}>
 			<PubValueHeading depth={depth} className={"mb-2 font-semibold text-base"}>
 				{name}
 			</PubValueHeading>
-			<div className={"ml-2"} data-testid={`${name}-value`}>
+			<div data-testid={`${name}-value`}>
 				{values.map((value) =>
 					value.id ? (
 						<PubValue value={value} key={value.id} />
@@ -136,7 +136,7 @@ export const PubValues = ({
 		(values) => values.isInForm
 	)
 	return (
-		<article>
+		<article className="flex flex-col gap-y-4">
 			{valuesInForm.map(({ label, values }) => {
 				return <FieldBlock key={label} name={label} values={values} depth={depth} />
 			})}
@@ -189,7 +189,7 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 								size="sm"
 								title="Show pub contents"
 								aria-label="Show pub contents"
-								className="ml-2"
+								// className="ml-2"
 							>
 								{isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
 							</Button>

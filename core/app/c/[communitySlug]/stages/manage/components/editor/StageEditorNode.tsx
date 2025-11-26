@@ -85,9 +85,8 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 		// biome-ignore lint/a11y/useSemanticElements: cant nest buttons man
 		<div
 			className={cn(
-				"relative flex items-center justify-between rounded-lg border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
-				props.selected ? "border-gray-800" : "border-gray-300",
-				isCurrentStage ? "" : ""
+				"flex items-center justify-between rounded-md border bg-muted p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
+				props.selected ? "border-gray-800 dark:border-gray-200" : "border-border"
 			)}
 			// Can't use Tailwind for dynamically computed styles
 			style={{
@@ -197,7 +196,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 				})}
 				aria-label="Configure stage"
 			>
-				<Settings className="h-4 w-4 hover:text-gray-700" />
+				<Settings className="h-4 w-4 hover:text-accent-foreground" />
 			</Link>
 		</div>
 	)
