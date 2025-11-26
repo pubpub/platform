@@ -161,8 +161,8 @@ export const PubCard = async ({
 					</div>
 				)}
 				<CardFooter className="flex gap-2 p-0 text-muted-foreground text-xs">
-					<DateTimeDisplay date={pub.createdAt} type="absolute" />
-					<DateTimeDisplay date={pub.updatedAt} type="relative" />
+					<DateTimeDisplay date={new Date(pub.createdAt)} type="absolute" />
+					<DateTimeDisplay date={new Date(pub.updatedAt)} type="relative" />
 				</CardFooter>
 			</CardContent>
 			<div className="z-10 mr-4 w-fit shrink-0">
