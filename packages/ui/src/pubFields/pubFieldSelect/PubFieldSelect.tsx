@@ -178,7 +178,7 @@ export const PubFieldSelect = () => {
 				value: pubField.slug,
 				label: pubField.slug,
 				node: (
-					<span className="rounded-sm border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-blue-400 text-xs">
+					<span className="rounded-xs border border-blue-400 bg-blue-200 px-1 py-[2px] font-mono text-blue-400 text-xs">
 						{pubField.slug}
 					</span>
 				),
@@ -186,7 +186,7 @@ export const PubFieldSelect = () => {
 			placeholder="Select a pub field"
 			onValueChange={(value) => setPubFields(value)}
 			animation={0}
-			badgeClassName="bg-blue-200 text-blue-400 rounded-sm font-mono font-normal border border-blue-400 whitespace-nowrap"
+			badgeClassName="bg-blue-200 text-blue-400 rounded-xs font-mono font-normal border border-blue-400 whitespace-nowrap"
 			defaultValue={pubFields}
 			maxCount={1}
 		/>

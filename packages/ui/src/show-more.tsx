@@ -55,7 +55,7 @@ export function ShowMore({
 					expanded && "max-h-full",
 					animate && "transition-[max-height] duration-300 ease-in-out",
 					!expanded &&
-						"after:absolute after:bottom-0 after:left-0 after:h-16 after:w-full after:bg-gradient-to-t after:from-background after:to-transparent"
+						"after:absolute after:bottom-0 after:left-0 after:h-16 after:w-full after:bg-linear-to-t after:from-background after:to-transparent"
 				)}
 			>
 				{children}

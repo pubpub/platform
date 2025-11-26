@@ -155,7 +155,7 @@ export const AutoComplete = ({
 			<div className="relative mt-1 flex">
 				<div
 					className={cn(
-						"fade-in-0 zoom-in-95 absolute top-0 z-10 w-full animate-in rounded-xl bg-background shadow-lg outline-none",
+						"fade-in-0 zoom-in-95 absolute top-0 z-10 w-full animate-in rounded-xl bg-background shadow-lg outline-hidden",
 						isOpen ? "block" : "hidden"
 					)}
 				>
@@ -197,7 +197,7 @@ export const AutoComplete = ({
 						{!isLoading ? (
 							<CommandPrimitive.Empty
 								asChild
-								className="select-none rounded-sm px-2 py-3 text-center text-sm"
+								className="select-none rounded-xs px-2 py-3 text-center text-sm"
 							>
 								{empty}
 							</CommandPrimitive.Empty>

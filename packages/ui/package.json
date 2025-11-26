@@ -217,10 +217,11 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@tailwindcss/postcss": "^4.1.17",
 		"@types/react": "catalog:react19",
 		"postcss": "catalog:",
 		"react": "catalog:react19",
-		"tailwindcss": "catalog:",
+		"tailwindcss": "4.1.17",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"@typescript/native-preview": "catalog:",
