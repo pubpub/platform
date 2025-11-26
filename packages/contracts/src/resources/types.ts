@@ -762,6 +762,8 @@ export const getPubQuerySchema = z.object({
 		.describe("Whether to include related pubs with the values"),
 	withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
 	withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
+	withSearchValues: z.boolean().default(false).describe("Whether to show highlighted values."),
+	withValues: z.boolean().default(true).describe("Whether to fetch the pub's values."),
 	withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
 	fieldSlugs: z
 		.array(z.string())
