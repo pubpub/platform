@@ -226,7 +226,7 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 		return (
 			<ShowMore animate={false}>
 				<div
-					className="prose prose-sm"
+					className="prose dark:prose-invert prose-sm"
 					dangerouslySetInnerHTML={{ __html: value.value as string }}
 				/>
 			</ShowMore>

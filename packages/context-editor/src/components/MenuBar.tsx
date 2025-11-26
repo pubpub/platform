@@ -251,7 +251,7 @@ const ParagraphDropdown = () => {
 					{activeType ? activeType.name : "Paragraph"}
 				</SelectValue>
 			</SelectTrigger>
-			<SelectContent className="bg-white">
+			<SelectContent className="bg-card">
 				{paragraphTypeItems.map(({ key, icon }) => {
 					return (
 						<SelectItem key={key} value={key}>
@@ -344,7 +344,7 @@ const Separator = () => {
 export const MenuBar = ({ upload }: { upload: Upload }) => {
 	return (
 		<div
-			className="flex items-center overflow-x-auto rounded-t border bg-gray-50 p-4"
+			className="flex items-center overflow-x-auto rounded-t border bg-muted p-4"
 			role="toolbar"
 			aria-label="Formatting tools"
 			style={{ height: `${MENU_BAR_HEIGHT}px` }}

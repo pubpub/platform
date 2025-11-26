@@ -72,7 +72,7 @@ export default async function MainLayout(props: Props) {
 					<SidebarProvider
 						defaultOpen={true}
 						style={{
-							"--sidebar-width": "20rem",
+							"--sidebar-width": "13rem",
 							"--sidebar-width-mobile": "20rem",
 						}}
 					>

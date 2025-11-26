@@ -23,7 +23,7 @@ export const metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
 	const loginData = await getLoginData()
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
 				{env.NODE_ENV === "development" && (
 					<Script

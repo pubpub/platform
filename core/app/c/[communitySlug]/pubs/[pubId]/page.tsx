@@ -122,10 +122,13 @@ export default async function Page(props: {
 		notFound()
 	}
 
-	const communityStagesPromise = getStages({
-		communityId: community.id,
-		userId: user.id,
-	}).execute()
+	const communityStagesPromise = getStages(
+		{
+			communityId: community.id,
+			userId: user.id,
+		},
+		{ withAutomations: AutomationEvent.manual }
+	).execute()
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
 	// This is safe because we've already explicitly checked authorization for the root pub

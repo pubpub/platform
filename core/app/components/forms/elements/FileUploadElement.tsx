@@ -8,6 +8,7 @@ import type { ElementProps } from "../types"
 import { useCallback } from "react"
 import dynamic from "next/dynamic"
 import { Value } from "@sinclair/typebox/value"
+import { useTheme } from "next-themes"
 import { useFormContext } from "react-hook-form"
 import { fileUploadConfigSchema } from "schemas"
 
@@ -46,6 +47,8 @@ export const FileUploadElement = ({
 	}
 	const runDelete = useServerAction(deleteFile)
 	const { form, mode } = usePubForm()
+
+	const { resolvedTheme } = useTheme()
 
 	const { control } = useFormContext<FormValues>()
 
@@ -99,6 +102,7 @@ export const FileUploadElement = ({
 							<FormControl>
 								<FileUpload
 									{...field}
+									theme={resolvedTheme}
 									disabled={!isEnabled}
 									upload={signedUploadUrl}
 									onUpdateFiles={(event) => {

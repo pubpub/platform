@@ -15,7 +15,7 @@ export const FormElementToggle = (props: PropsWithChildren<{ slug: string }>) =>
 				aria-label="Toggle field"
 				data-testid={`${props.slug}-toggle`}
 				className={
-					"z-50 h-auto w-2 min-w-2 rounded-full p-0 data-[state=off]:bg-gray-200 data-[state=on]:bg-gray-400 data-[state=off]:opacity-50"
+					"z-50 h-auto w-2 min-w-2 rounded-full p-0 data-[state=off]:bg-border data-[state=on]:bg-accent data-[state=off]:opacity-50"
 				}
 				pressed={isEnabled}
 				onClick={() => formElementToggle.toggle(props.slug)}

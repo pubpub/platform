@@ -84,8 +84,8 @@ export const PubSearch = (props: PubSearchProps) => {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 border-b px-4 py-2">
-				<div className="relative flex min-w-96 items-center gap-x-2">
+			<div className="sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 px-4 py-4">
+				<div className="relative flex grow items-center gap-x-2">
 					<Search
 						className="-translate-y-1/2 absolute top-1/2 left-2 text-muted-foreground"
 						size={16}
@@ -99,7 +99,7 @@ export const PubSearch = (props: PubSearchProps) => {
 						placeholder="Search updates as you type..."
 						className={cn("pl-8 tracking-wide shadow-none", inputValues && "pr-8")}
 					/>
-					<span className="-translate-y-1/2 absolute top-1/2 right-2 flex items-center font-mono text-gray-500 text-xs opacity-50 md:flex">
+					<span className="-translate-y-1/2 absolute top-1/2 right-2 flex items-center font-mono text-muted-foreground text-xs opacity-50 md:flex">
 						{inputValues?.query && (
 							<button
 								onClick={handleClearInput}
@@ -139,11 +139,11 @@ export const PubSearch = (props: PubSearchProps) => {
 					value={inputValues.pubTypes}
 					asChild
 				>
-					<Button variant="outline" size="sm">
+					<Button variant="outline" className="h-9" size="sm">
 						<PlusCircle size={16} />
 						Type
 						{queryParams.pubTypes?.length ? (
-							<span className="ml-1 text-gray-500 text-xs">
+							<span className="ml-1 text-muted-foreground text-xs">
 								{queryParams.pubTypes.length}
 							</span>
 						) : null}
@@ -162,7 +162,7 @@ export const PubSearch = (props: PubSearchProps) => {
 					showClearAll
 					asChild
 				>
-					<Button variant="outline" size="sm">
+					<Button variant="outline" className="h-9" size="sm">
 						<PlusCircle size={16} />
 						Stage
 						{queryParams.stages?.length ? (
@@ -174,7 +174,7 @@ export const PubSearch = (props: PubSearchProps) => {
 				</MultiSelect>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant="outline" size="sm" className="ml-auto">
+						<Button variant="outline" className="ml-auto h-9" size="sm">
 							{queryParams.sort ? (
 								queryParams.sort[0]?.desc ? (
 									<SortDesc />
@@ -210,7 +210,7 @@ export const PubSearch = (props: PubSearchProps) => {
 				className={cn(
 					stale &&
 						'opacity-50 transition-opacity duration-200 **:data-[testid*="pub-card"]:animate-pulse',
-					"m-4 mt-1"
+					"m-4 mt-0"
 				)}
 			>
 				{props.children}

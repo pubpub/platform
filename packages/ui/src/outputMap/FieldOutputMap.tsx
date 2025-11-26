@@ -45,7 +45,7 @@ const OutputMapField = ({
 								<TooltipTrigger>
 									<Info size="12" />
 								</TooltipTrigger>
-								<TooltipContent className="prose max-w-sm text-xs">
+								<TooltipContent className="prose dark:prose-invert max-w-sm text-xs">
 									You can use{" "}
 									<a
 										href="https://goessner.net/articles/JsonPath/"
@@ -82,7 +82,7 @@ const OutputMapField = ({
 									<TooltipTrigger>
 										<Info size="12" />
 									</TooltipTrigger>
-									<TooltipContent className="prose max-w-sm text-xs">
+									<TooltipContent className="prose dark:prose-invert max-w-sm text-xs">
 										The pub field to overwrite with the specified field of the
 										response.{" "}
 										<ul>

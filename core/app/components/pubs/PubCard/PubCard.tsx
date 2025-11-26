@@ -87,7 +87,7 @@ export const PubCard = async ({
 		<Card
 			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-data-[state=checked]:border-blue-500"
 			className={cn(
-				"group relative flex flex-row items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-data-[state=checked]:border-blue-500 dark:border-border dark:bg-primary-foreground",
+				"group relative flex flex-row items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 has-data-[state=checked]:border-blue-500",
 				// accessibility focus styles
 				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200"
 			)}
@@ -142,7 +142,7 @@ export const PubCard = async ({
 				{showMatchingValues && (
 					<div
 						className={cn(
-							"grid gap-1 text-gray-500 text-xs grid-cols-[minmax(0rem,auto)_minmax(0,1fr)]",
+							"grid grid-cols-[minmax(0rem,auto)_minmax(0,1fr)] gap-1 text-gray-500 text-xs",
 							"[&_mark]:bg-yellow-200"
 						)}
 					>

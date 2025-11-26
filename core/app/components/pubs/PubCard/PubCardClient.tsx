@@ -61,7 +61,7 @@ export const PubCardClient = ({
 	return (
 		<Card
 			className={cn(
-				"group relative flex flex-row items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 transition-colors",
+				"group relative flex items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 transition-colors",
 				selected && "border-blue-500 bg-blue-50",
 				disabled && "cursor-not-allowed opacity-50",
 				!disabled && onSelect && "cursor-pointer hover:border-gray-300",
