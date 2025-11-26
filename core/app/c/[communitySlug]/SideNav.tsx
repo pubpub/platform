@@ -4,6 +4,7 @@ import type { MaybeHas } from "utils/types"
 import type { CommunityData } from "~/lib/server/community"
 
 import { cache, Suspense } from "react"
+import { Moon, Sun } from "lucide-react"
 
 import { Capabilities, MembershipType } from "db/public"
 import {
@@ -27,13 +28,14 @@ import {
 	SidebarGroupLabel,
 	SidebarHeader,
 	SidebarMenu,
+	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSkeleton,
 	SidebarMenuSubItem,
 	SidebarRail,
-	SidebarSeparator,
 } from "ui/sidebar"
 
+import { SidebarSearchDialogTrigger } from "~/app/components/search/SearchDialogTrigger"
 import { DarkmodeToggle } from "~/app/components/theme/DarkmodeToggle"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan, userCanViewStagePage } from "~/lib/authorization/capabilities"
@@ -346,7 +348,7 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 	}
 
 	return (
-		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="dark:!border-r-0 fixed z-40">
+		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="fixed z-40 border-r-0!">
 			<SidebarHeader className="py-4 group-data-[state=expanded]:p-2 group-data-[collapsible=icon]:pt-5">
 				<SidebarMenu>
 					<SidebarMenuItem className={`h-full`}>
@@ -356,7 +358,7 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 						/>
 					</SidebarMenuItem>
 				</SidebarMenu>
-				<SidebarSeparator className="group-data-[state=expanded]:mx-3 group-data-[collapsible=icon]:mt-3" />
+				{/* <SidebarSeparator className="group-data-[state=expanded]:mx-3 group-data-[collapsible=icon]:mt-3" /> */}
 			</SidebarHeader>
 			<SidebarContent className="group-data-[state=expanded]:px-1 group-data-[state=expanded]:py-3">
 				<div className="flex h-full max-h-screen flex-col group-data-[state=expanded]:gap-2">
@@ -369,11 +371,27 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 			</SidebarContent>
 			<SidebarFooter className="px-2 pb-4">
 				<SidebarMenu>
+					<SidebarGroup className="group-data-[collapsible=icon]:py-0">
+						<SidebarGroupContent>
+							<SidebarMenuItem>
+								<SidebarSearchDialogTrigger />
+							</SidebarMenuItem>
+							<SidebarMenuItem className="relative flex items-center">
+								<DarkmodeToggle>
+									<SidebarMenuButton>
+										<Sun className="dark:-rotate-90 h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:block dark:scale-0" />
+										<Moon className="hidden h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:block dark:rotate-0 dark:scale-100" />
+										<span>System</span>
+										<span className="sr-only">Toggle theme</span>
+									</SidebarMenuButton>
+								</DarkmodeToggle>
+							</SidebarMenuItem>
+						</SidebarGroupContent>
+					</SidebarGroup>
 					<SidebarMenuItem>
 						<LoginSwitcher />
 					</SidebarMenuItem>
 				</SidebarMenu>
-				<DarkmodeToggle />
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
