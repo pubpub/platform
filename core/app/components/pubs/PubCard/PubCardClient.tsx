@@ -5,12 +5,12 @@ import type { ProcessedPub } from "contracts"
 import { useCallback } from "react"
 import Link from "next/link"
 
-import { Badge } from "ui/badge"
 import { Card, CardFooter, CardTitle } from "ui/card"
 import { Checkbox } from "ui/checkbox"
 import { Calendar, History } from "ui/icon"
 import { cn } from "utils"
 
+import { BasicMoveButton } from "~/app/c/[communitySlug]/stages/components/BasicMoveButton"
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates"
 import { getPubTitle } from "~/lib/pubs"
 import { useCommunity } from "../../providers/CommunityProvider"
@@ -19,6 +19,8 @@ export type PubCardClientPub = Omit<
 	ProcessedPub<{ withPubType: true; withStage?: boolean }>,
 	"depth" | "communityId" | "values"
 >
+
+import { PubTypeLabel } from "./PubTypeLabel"
 
 export type PubCardClientProps = {
 	pub: PubCardClientPub
@@ -68,18 +70,12 @@ export const PubCardClient = ({
 			)}
 			data-testid={`pub-card-${pub.id}`}
 		>
-			<div className="flex min-w-0 flex-1 flex-col space-y-[6px]">
-				<div className="flex flex-row gap-2 p-0 font-semibold leading-4">
-					<Badge variant="outline" className="text-xs">
-						{pub.pubType.name}
-					</Badge>
-					{pub.stage && (
-						<Badge variant="outline" className="text-xs">
-							{pub.stage.name}
-						</Badge>
-					)}
+			<div className="flex w-full min-w-0 flex-1 flex-col space-y-[6px]">
+				<div className="z-10 flex flex-row gap-2 p-0 font-semibold leading-4">
+					<PubTypeLabel pubType={pub.pubType} canFilter={false} />
+					{pub.stage && <BasicMoveButton name={pub.stage.name} />}
 				</div>
-				<CardTitle className="font-bold text-sm">
+				<CardTitle className="text-sm">
 					<h3 className="min-w-0 truncate">
 						<Link
 							href={`/c/${community.slug}/pubs/${pub.id}`}
@@ -99,7 +95,7 @@ export const PubCardClient = ({
 				{showMatchingValues && (
 					<div
 						className={cn(
-							"grid gap-1 text-gray-500 text-xs [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
+							"grid grid-cols-[minmax(0rem,auto)_minmax(0,1fr)] gap-1 text-gray-500 text-xs",
 							"[&_mark]:bg-yellow-200"
 						)}
 					>
@@ -131,7 +127,7 @@ export const PubCardClient = ({
 				</CardFooter>
 			</div>
 			{showCheckbox && (
-				<div className="z-10 flex-shrink-0">
+				<div className="z-10 shrink-0">
 					<Checkbox
 						aria-label={`Select pub ${getPubTitle(pub)}`}
 						checked={selected}

@@ -67,12 +67,12 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 				return (
 					<div
 						key={item.id}
-						className={`rounded p-1 ${index === selectedIndex ? "bg-neutral-200" : ""}`}
+						className={`rounded-xs p-1 ${index === selectedIndex ? "bg-neutral-200" : ""}`}
 						data-testid="suggest-item"
 					>
 						{itemIsPub && (
 							<div className="flex items-center space-x-2">
-								<StickyNote className="flex-shrink-0" size={16} />{" "}
+								<StickyNote className="shrink-0" size={16} />{" "}
 								<span className="truncate">
 									Insert <span className="italic">{item.values["rd:title"]}</span>
 								</span>
@@ -80,7 +80,7 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 						)}
 						{itemIsField && (
 							<div className="flex items-center space-x-2">
-								<RectangleEllipsis className="flex-shrink-0" size={16} />{" "}
+								<RectangleEllipsis className="shrink-0" size={16} />{" "}
 								<span className="truncate">
 									Insert{" "}
 									<span className="rounded-md bg-neutral-200/80 p-1 font-mono">
@@ -91,7 +91,7 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 						)}
 						{!itemIsPub && !itemIsField && (
 							<div className="flex items-center space-x-2">
-								<ToyBrick className="flex-shrink-0" size={16} />{" "}
+								<ToyBrick className="shrink-0" size={16} />{" "}
 								<span className="truncate">
 									Insert new <span>{item.name}</span>
 								</span>

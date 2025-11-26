@@ -48,7 +48,7 @@ export default async function Page(_props: Props) {
 				</>
 			}
 		>
-			<div className="container ml-0 max-w-screen-md px-4 py-6 md:px-6">
+			<div className="container ml-0 max-w-(--breakpoint-md) px-4 py-6 md:px-6">
 				<p className="mb-4 text-muted-foreground">
 					Set default configuration values for your actions. <br />
 					These defaults will be applied to new instances of actions in your community.

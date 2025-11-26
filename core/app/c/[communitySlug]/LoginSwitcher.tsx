@@ -19,7 +19,7 @@ const AvatarThing = ({ user }: { user: User }) => (
 			<AvatarFallback>{(user.firstName || user.email)[0].toUpperCase()}</AvatarFallback>
 		</Avatar>
 
-		<div className="flex min-w-0 flex-grow flex-col justify-start text-start group-data-[collapsible=icon]:hidden">
+		<div className="flex min-w-0 grow flex-col justify-start text-start group-data-[collapsible=icon]:hidden">
 			<p className="truncate text-sm">{user.firstName}</p>
 			<p className="truncate text-gray-500 text-xs">{user.email}</p>
 		</div>

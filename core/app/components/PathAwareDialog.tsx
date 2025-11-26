@@ -69,7 +69,7 @@ export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, _ref) =>
 			<DialogOverlay />
 			<DialogTrigger asChild>
 				<Button
-					variant={props.buttonVariant ?? "outline"}
+					variant={props.buttonVariant ?? "outline-solid"}
 					size={props.buttonSize ?? "sm"}
 					className={cn("flex items-center gap-x-2 py-4", props.className)}
 					disabled={props.disabled}
@@ -79,7 +79,7 @@ export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, _ref) =>
 					<span className={cn({ "sr-only": props.iconOnly })}>{props.buttonText}</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
+			<DialogContent className="max-h-full min-w-lg max-w-fit overflow-auto">
 				<DialogTitle>{props.title}</DialogTitle>
 				{isOpen && <Suspense fallback={<SkeletonCard />}>{props.children}</Suspense>}
 			</DialogContent>

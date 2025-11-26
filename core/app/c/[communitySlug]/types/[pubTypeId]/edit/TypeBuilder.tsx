@@ -224,7 +224,7 @@ export const TypeBuilder = ({
 		})
 		if (didSucceed(result)) {
 			toast({
-				className: "rounded border-emerald-100 bg-emerald-50",
+				className: "rounded-sm border-emerald-100 bg-emerald-50",
 				action: (
 					<div className="flex w-full gap-3 text-green-700">
 						<CircleCheck className="" /> Type Successfully Saved
@@ -501,7 +501,7 @@ export const SelectField = ({ panelState }: { panelState: PanelState }) => {
 				type="button"
 				variant="outline"
 				key={field.id}
-				className="flex h-[68px] flex-1 flex-shrink-0 justify-start gap-4 bg-white p-4"
+				className="flex h-[68px] flex-1 shrink-0 justify-start gap-4 bg-white p-4"
 				onClick={() => {
 					addElement({
 						id: field.id,
@@ -529,7 +529,7 @@ export const SelectField = ({ panelState }: { panelState: PanelState }) => {
 		)
 	})
 	return (
-		<div className="flex flex-grow flex-col data-[state=inactive]:hidden">
+		<div className="flex grow flex-col data-[state=inactive]:hidden">
 			<Input
 				type="search"
 				placeholder="Type a field name to search..."

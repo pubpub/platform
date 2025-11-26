@@ -209,7 +209,7 @@ export const PubSearch = (props: PubSearchProps) => {
 			<div
 				className={cn(
 					stale &&
-						'opacity-50 transition-opacity duration-200 [&_[data-testid*="pub-card"]]:animate-pulse',
+						'opacity-50 transition-opacity duration-200 **:data-[testid*="pub-card"]:animate-pulse',
 					"m-4 mt-1"
 				)}
 			>

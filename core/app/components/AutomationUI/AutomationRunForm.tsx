@@ -149,7 +149,7 @@ export const AutomationRunForm = (props: Props) => {
 						<DynamicIcon
 							icon={(automationIcon as IconConfig) ?? undefined}
 							size="14"
-							className="flex-shrink-0"
+							className="shrink-0"
 						/>
 						<span className="overflow-auto text-ellipsis">{props.automation.name}</span>
 					</Button>
@@ -160,7 +160,7 @@ export const AutomationRunForm = (props: Props) => {
 							<DynamicIcon
 								icon={automationIcon as IconConfig}
 								size="16"
-								className="mt-0.5 flex-shrink-0"
+								className="mt-0.5 shrink-0"
 							/>
 							<DialogTitle className="flex items-baseline gap-x-2 pb-2">
 								{props.automation.name}

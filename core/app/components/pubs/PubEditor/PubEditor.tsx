@@ -51,7 +51,7 @@ const RelatedPubValueElement = ({
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="flex flex-col gap-4 rounded border p-2">
+			<div className="flex flex-col gap-4 rounded-sm border p-2">
 				<h2>Related field value</h2>
 				<p className="text-sm">
 					You are creating a Pub related to{" "}

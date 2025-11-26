@@ -232,7 +232,7 @@ const ConfigCard = memo(
 
 									<Icon
 										className={cn(
-											"h-4 w-4 flex-shrink-0 text-neutral-600",
+											"h-4 w-4 shrink-0 text-neutral-600",
 											props.isError && "text-destructive"
 										)}
 									/>
@@ -250,7 +250,7 @@ const ConfigCard = memo(
 							<>
 								<Icon
 									className={cn(
-										"h-4 w-4 flex-shrink-0 text-neutral-600",
+										"h-4 w-4 shrink-0 text-neutral-600",
 										props.isError && "text-destructive"
 									)}
 								/>
@@ -381,7 +381,7 @@ export function StagePanelAutomationForm(props: Props) {
 					icon: z
 						.object({
 							name: z.string(),
-							variant: z.enum(["solid", "outline"]).nullish(),
+							variant: z.enum(["solid", "outline-solid"]).nullish(),
 							color: z.string().nullish(),
 						})
 						.nullish(),

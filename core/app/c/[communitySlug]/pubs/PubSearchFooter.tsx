@@ -151,7 +151,7 @@ export const PubSearchResultsPerPageInput = () => {
 					}))
 				}}
 			>
-				<SelectTrigger className="h-8 w-[4.5rem]">
+				<SelectTrigger className="h-8 w-18">
 					<SelectValue placeholder={queryParams.perPage} />
 				</SelectTrigger>
 				<SelectContent side="top">

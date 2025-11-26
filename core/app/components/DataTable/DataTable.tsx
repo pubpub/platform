@@ -157,7 +157,7 @@ export function DataTable<TData, TValue>({
 											className={cn([
 												isNotDefaultSize
 													? "overflow-clip"
-													: "max-w-[12rem] overflow-auto",
+													: "max-w-48 overflow-auto",
 											])}
 											style={
 												isNotDefaultSize
@@ -215,7 +215,7 @@ export function DataTable<TData, TValue>({
 													className={cn([
 														isNotDefaultSize
 															? "overflow-clip"
-															: "max-w-[12rem] overflow-auto",
+															: "max-w-48 overflow-auto",
 													])}
 													style={
 														isNotDefaultSize

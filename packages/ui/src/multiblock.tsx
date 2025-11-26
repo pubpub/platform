@@ -23,7 +23,7 @@ export const MultiBlock = ({
 	return (
 		<div
 			className={cn(
-				"flex w-full flex-col gap-4 rounded-sm border border-gray-300 border-dashed p-1",
+				"flex w-full flex-col gap-4 rounded-xs border border-gray-300 border-dashed p-1",
 				{
 					"bg-gray-50": disabled,
 					"p-3": !compact,

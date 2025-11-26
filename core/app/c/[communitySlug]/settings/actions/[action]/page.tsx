@@ -68,7 +68,7 @@ export default async function Page(props: Props) {
 				</>
 			}
 		>
-			<div className="container ml-0 max-w-screen-md px-4 py-6 md:px-6">
+			<div className="container ml-0 max-w-(--breakpoint-md) px-4 py-6 md:px-6">
 				<div>
 					<p className="mb-4 text-muted-foreground">
 						Set default configuration values for the {actionTitle} action. <br /> These

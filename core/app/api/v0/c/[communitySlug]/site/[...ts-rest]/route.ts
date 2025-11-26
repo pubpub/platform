@@ -183,6 +183,7 @@ const handler = createNextHandler(
 					}
 				}
 
+				console.log(rest)
 				const [pubs, pubCount] = await Promise.all([
 					getPubsWithRelatedValues(
 						{

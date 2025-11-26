@@ -90,7 +90,7 @@ const PaginatedPubListInner = async (
 		(props.searchParams.pubTypes?.length ?? 0) > 0 ||
 		(props.searchParams.stages?.length ?? 0) > 0
 	return (
-		<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
+		<div className="mr-auto flex flex-col gap-3 md:max-w-(--breakpoint-lg)">
 			{pubs.length === 0 && (
 				<Empty className="">
 					<EmptyHeader>

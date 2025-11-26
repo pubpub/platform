@@ -30,7 +30,7 @@ export const ButtonOption = ({
 		// overflow-hidden to keep the div that is only a color inside the border radius
 		<div
 			data-testid={`button-option-${label}`}
-			className="relative flex w-full items-center justify-between overflow-hidden rounded border"
+			className="relative flex w-full items-center justify-between overflow-hidden rounded-sm border"
 		>
 			<div
 				className={cn("absolute h-full w-4 bg-foreground", {

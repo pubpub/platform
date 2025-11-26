@@ -139,7 +139,7 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 						!form.formState.isValid ||
 						!form.formState.isDirty
 					}
-					className="w-min flex-grow-0"
+					className="w-min grow-0"
 				>
 					Save
 					{form.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}

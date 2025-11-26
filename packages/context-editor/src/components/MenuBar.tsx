@@ -278,7 +278,7 @@ const ImagePopoverMenuItem = ({ upload }: { upload: Upload }) => {
 					variant="ghost"
 					size="sm"
 					title="Image"
-					className={cn("h-fit rounded-sm p-1", {
+					className={cn("h-fit rounded-xs p-1", {
 						"bg-blue-200 hover:bg-blue-300": isActive,
 					})}
 				>
@@ -322,7 +322,7 @@ const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 			size="sm"
 			disabled={!canRun}
 			type="button"
-			className={cn("h-fit rounded-sm p-1", {
+			className={cn("h-fit rounded-xs p-1", {
 				"bg-blue-200 hover:bg-blue-300": isActive,
 			})}
 			title={name}

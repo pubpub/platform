@@ -79,7 +79,7 @@ const RelatedPubBlock = ({
 		<div
 			ref={setNodeRef}
 			style={style}
-			className="flex items-center justify-start rounded border border-l-[12px] border-l-emerald-100 p-3"
+			className="flex items-center justify-start rounded-sm border border-l-12 border-l-emerald-100 p-3"
 		>
 			{/* Max width to keep long 'value's truncated. 90% to leave room for the trash button */}
 			<div className="flex max-w-[90%] flex-col items-start gap-1 text-sm">

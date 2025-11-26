@@ -19,7 +19,7 @@ export const NewFieldButton = () => {
 			open={isOpen}
 			trigger={
 				<DialogTrigger asChild>
-					<Button className="flex items-center gap-x-2 rounded-md bg-emerald-500 text-white shadow hover:bg-emerald-600">
+					<Button className="flex items-center gap-x-2 rounded-md bg-emerald-500 text-white shadow-sm hover:bg-emerald-600">
 						<Plus size="16" /> <span>New Field</span>
 					</Button>
 				</DialogTrigger>

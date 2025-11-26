@@ -166,7 +166,7 @@ export function AcceptRejectInvite({
 									redirectTo: redirectTo,
 								})
 							})}
-							className="flex-grow"
+							className="grow"
 						>
 							<FormSubmitButton
 								formState={acceptForm.formState}
@@ -188,7 +188,7 @@ export function AcceptRejectInvite({
 							<AlertDialogTrigger asChild>
 								<Button
 									variant="outline"
-									className="flex flex-grow items-center gap-2"
+									className="flex grow items-center gap-2"
 								>
 									<X className="mt-0.5 h-3 w-3" />
 									Reject

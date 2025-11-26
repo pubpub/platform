@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@import "@pubpub/tailwind/style.css";
+
+@source "../../packages/ui/src/**/*.{ts,tsx}";
 
 /* Not clear why we need this here if we
 also import ui/styles which includes it */
+
+/* @custom-variant dark (&:is(.dark *)); */
+@custom-variant dark (&:where(.dark, .dark *));

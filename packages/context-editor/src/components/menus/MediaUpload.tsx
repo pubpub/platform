@@ -58,7 +58,7 @@ const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
 			<FormControl>
 				<RadioGroupCard
 					value={alignment}
-					className="rounded border-0 data-[state=checked]:border-ring-0 data-[state=checked]:bg-gray-200"
+					className="rounded-xs border-0 data-[state=checked]:border-ring-0 data-[state=checked]:bg-gray-200"
 				>
 					{icon}
 				</RadioGroupCard>

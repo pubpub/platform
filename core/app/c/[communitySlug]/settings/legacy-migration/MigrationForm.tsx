@@ -350,7 +350,7 @@ export function UndoMigrationForm({
 					<UndoIcon className="mr-1 h-4 w-4" /> Undo Migration
 				</Button>
 			</AlertDialogTrigger>
-			<AlertDialogContent className="max-w-screen-lg">
+			<AlertDialogContent className="max-w-(--breakpoint-lg)">
 				<AlertDialogTitle>Undo Migration</AlertDialogTitle>
 				<AlertDialogDescription>
 					Select what data you want to be deleted

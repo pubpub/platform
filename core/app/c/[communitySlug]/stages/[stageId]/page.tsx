@@ -134,7 +134,7 @@ export default async function Page(props: {
 				</div>
 			}
 		>
-			<div className="m-4 max-w-screen-lg">
+			<div className="m-4 max-w-(--breakpoint-lg)">
 				<Suspense
 					fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
 				>

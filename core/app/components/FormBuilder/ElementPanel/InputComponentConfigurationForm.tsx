@@ -277,7 +277,7 @@ const ComponentSelect = ({
 								onChange(c)
 							}}
 						/>
-						<div className="flex h-32 w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm peer-checked:border-2 peer-checked:border-ring peer-checked:outline-none">
+						<div className="flex h-32 w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-xs peer-checked:border-2 peer-checked:border-ring peer-checked:outline-hidden">
 							<label
 								className="cursor-pointer"
 								htmlFor={`component-${c}`}
@@ -383,7 +383,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				}}
 				className="flex h-full flex-col gap-2"
 			>
-				<div className="flex flex-nowrap rounded border border-gray-200 border-l-[12px] border-l-emerald-100 border-solid bg-white p-3 pr-4">
+				<div className="flex flex-nowrap rounded-sm border border-gray-200 border-l-12 border-l-emerald-100 border-solid bg-white p-3 pr-4">
 					<FieldInputElement element={fieldInputElement} isEditing={false} />
 				</div>
 				<div className="text-muted-foreground text-sm uppercase">Appearance</div>
@@ -454,7 +454,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 										onCheckedChange={field.onChange}
 									/>
 								</FormControl>
-								<FormLabel className="!mt-0">Mark as required</FormLabel>
+								<FormLabel className="mt-0!">Mark as required</FormLabel>
 								<FormMessage />
 							</FormItem>
 						)}

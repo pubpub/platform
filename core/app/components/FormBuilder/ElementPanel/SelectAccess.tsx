@@ -47,7 +47,7 @@ export const SelectAccess = () => {
 										value={t.toString()}
 										data-testid={`select-form-access-${t}`}
 									>
-										<div className="flex h-auto flex-1 flex-shrink-0 items-center gap-2">
+										<div className="flex h-auto flex-1 shrink-0 items-center gap-2">
 											<Icon size={16} />
 											<div className="flex flex-col items-start">
 												<div className="font-medium">{name}</div>

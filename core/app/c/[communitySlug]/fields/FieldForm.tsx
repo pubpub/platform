@@ -213,7 +213,7 @@ const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: 
 										field.onChange(change)
 									}
 								}}
-								className="rounded"
+								className="rounded-sm"
 								data-testid="isRelation-checkbox"
 							/>
 						</FormControl>

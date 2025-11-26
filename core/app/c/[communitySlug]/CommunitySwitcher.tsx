@@ -44,7 +44,7 @@ const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunit
 	const button = (
 		<SidebarMenuButton
 			aria-label="Select a community"
-			className={`group-data-[collapsible=icon]:!p-0 h-full md:py-1 ${onlyOneCommunity ? "cursor-default" : ""}`}
+			className={`group-data-[collapsible=icon]:p-0! h-full md:py-1 ${onlyOneCommunity ? "cursor-default" : ""}`}
 		>
 			<Avatar className={avatarClasses}>
 				<AvatarImage src={community.avatar || undefined} />
@@ -62,7 +62,7 @@ const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunit
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>{button}</DropdownMenuTrigger>
-			<DropdownMenuContent className="w-[--radix-popper-anchor-width] min-w-52" side="right">
+			<DropdownMenuContent className="w-(--radix-popper-anchor-width) min-w-52" side="right">
 				{availableCommunities
 					.filter((option) => {
 						return option?.slug !== community.slug

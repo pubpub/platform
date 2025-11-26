@@ -59,7 +59,7 @@ export default async function Page(props: Props) {
 				</div>
 			}
 		>
-			<div className="m-4 max-w-screen-lg">
+			<div className="m-4 max-w-(--breakpoint-lg)">
 				<StageList
 					userId={user.id}
 					communityId={community.id}

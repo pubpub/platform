@@ -85,9 +85,9 @@ export const PubCard = async ({
 	const hasActions = pub.stage && manualAutomations && manualAutomations.length !== 0
 	return (
 		<Card
-			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
+			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-data-[state=checked]:border-blue-500"
 			className={cn(
-				"group relative flex flex-row items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500 dark:border-border dark:bg-primary-foreground",
+				"group relative flex flex-row items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-data-[state=checked]:border-blue-500 dark:border-border dark:bg-primary-foreground",
 				// accessibility focus styles
 				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200"
 			)}
@@ -142,7 +142,7 @@ export const PubCard = async ({
 				{showMatchingValues && (
 					<div
 						className={cn(
-							"grid gap-1 text-gray-500 text-xs [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
+							"grid gap-1 text-gray-500 text-xs grid-cols-[minmax(0rem,auto)_minmax(0,1fr)]",
 							"[&_mark]:bg-yellow-200"
 						)}
 					>
@@ -175,7 +175,7 @@ export const PubCard = async ({
 					</div>
 				</CardFooter>
 			</CardContent>
-			<div className="z-10 mr-4 w-fit flex-shrink-0">
+			<div className="z-10 mr-4 w-fit shrink-0">
 				{/* We use grid and order-[x] to place items according to the design, but 
 				PubsRunActionDropDownMenu needs to be first so it can have `peer`. The other
 				buttons check if the `peer` is open, and if it is, it does not lose opacity.

@@ -55,7 +55,7 @@ export const FieldBlock = ({
 						type="button"
 						disabled={isDisabled}
 						variant="ghost"
-						className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-destructive"
+						className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto hover:[&_svg]:text-destructive"
 						aria-label={`Restore ${field.name}`}
 						onClick={() => {
 							restoreElement(index)
@@ -75,7 +75,7 @@ export const FieldBlock = ({
 					type="button"
 					disabled={isDisabled}
 					variant="ghost"
-					className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-destructive"
+					className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto hover:[&_svg]:text-destructive"
 					aria-label={`Delete ${field.name}`}
 					data-testid={`delete-${field.name}`}
 					onClick={() => {
@@ -95,14 +95,14 @@ export const FieldBlock = ({
 			ref={setNodeRef}
 			style={style}
 			className={cn(
-				"group flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-gray-200 border-l-[12px] border-l-emerald-100 border-solid bg-white p-3 pr-4",
+				"group flex min-h-[76px] flex-1 shrink-0 items-center justify-between gap-3 self-stretch rounded-sm border border-gray-200 border-l-12 border-l-emerald-100 border-solid bg-white p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
 				field.deleted && "border-l-red-200",
 				isDragging && "z-10 cursor-grabbing"
 			)}
 		>
-			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
+			<div className="flex flex-1 shrink-0 flex-wrap justify-start gap-0.5">
 				<FieldIcon
 					field={field}
 					className={cn(

@@ -33,6 +33,7 @@
 		"@storybook/addon-onboarding": "^9.1.2",
 		"@storybook/react-vite": "^9.1.2",
 		"@tailwindcss/forms": "^0.5.10",
+		"@tailwindcss/postcss": "^4.1.17",
 		"@tailwindcss/typography": "^0.5.16",
 		"@types/node": "^20.19.11",
 		"@types/prosemirror-dev-tools": "^3.0.6",

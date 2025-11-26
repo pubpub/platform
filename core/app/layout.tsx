@@ -1,6 +1,6 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 
-import "ui/styles.css"
+import "./globals.css"
 
 import { Suspense } from "react"
 import Script from "next/script"

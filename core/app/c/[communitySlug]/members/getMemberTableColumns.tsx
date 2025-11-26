@@ -112,7 +112,7 @@ export const getMemberTableColumns = (props: TableColumnsProps) =>
 								? "default"
 								: role === "editor"
 									? "secondary"
-									: "outline"
+									: "outline-solid"
 						}
 					>
 						{role}

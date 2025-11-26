@@ -56,7 +56,7 @@ export const SidePanel = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 				{...rest}
 				ref={ref}
 				className={cn(
-					"fixed top-[72px] right-0 z-10 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-gray-200 border-l bg-gray-50 p-4 pr-6 shadow",
+					"fixed top-[72px] right-0 z-10 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-gray-200 border-l bg-gray-50 p-4 pr-6 shadow-sm",
 					className
 				)}
 			>
