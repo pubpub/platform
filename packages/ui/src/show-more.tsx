@@ -55,11 +55,12 @@ export function ShowMore({
 	React.useEffect(() => {
 		if (
 			!fitsInContainer &&
+			ref.current?.clientHeight &&
 			ref.current?.clientHeight < (variant === "default" ? 200 : variant === "sm" ? 100 : 400)
 		) {
 			setFitsInContainer(true)
 		}
-	}, [])
+	}, [ref.current])
 
 	return (
 		<div className={cn("w-fit", className)} {...props}>
