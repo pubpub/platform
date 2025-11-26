@@ -13,7 +13,7 @@ import { env } from "~/lib/env/env"
 import { ReactQueryProvider } from "./components/providers/QueryProvider"
 import { UserProvider } from "./components/providers/UserProvider"
 import { ThemeProvider } from "./components/theme/ThemeProvider"
-import { RootToaster } from "./RootToaster"
+import { Toaster } from 'ui/toaster'
 
 export const metadata = {
 	title: "PubPub Platform",
@@ -45,10 +45,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 										disableTransitionOnChange
 									>
 										{children}
+									<Toaster/>
 									</ThemeProvider>
-									<Suspense>
-										<RootToaster />
-									</Suspense>
 								</TooltipProvider>
 							</NuqsAdapter>
 						</ReactQueryProvider>

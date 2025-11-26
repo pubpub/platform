@@ -258,7 +258,7 @@ export const FieldForm = ({
 				isRelation: values.isRelation,
 			})
 			if (didSucceed(result)) {
-				toast({ title: `Created field ${values.name}` })
+				toast.success(`Created field ${values.name}`)
 				onSubmitSuccess()
 			}
 		},
@@ -268,7 +268,7 @@ export const FieldForm = ({
 	const handleUpdate = useCallback(async (values: FormValues) => {
 		const result = await updateFieldName(values.id, values.name)
 		if (didSucceed(result)) {
-			toast({ title: `Updated field ${values.name}` })
+			toast.success(`Updated field ${values.name}`)
 			onSubmitSuccess()
 		}
 	}, [])

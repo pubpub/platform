@@ -30,10 +30,7 @@ export const AddCommunityForm = (props: Props) => {
 		const result = await runCreateCommunity({ ...data })
 		if (didSucceed(result)) {
 			props.setOpen(false)
-			toast({
-				title: "Success",
-				description: "Community created",
-			})
+			toast.success("Community created")
 		}
 	}
 	const form = useForm<z.infer<typeof communityCreateFormSchema>>({

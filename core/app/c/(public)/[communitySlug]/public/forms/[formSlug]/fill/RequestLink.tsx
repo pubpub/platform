@@ -31,10 +31,7 @@ export const RequestLink = ({
 			return
 		}
 
-		toast({
-			title: "Link sent",
-			description: "Successfully requested new link",
-		})
+		toast.success("Link sent")
 	}, [token, formSlug, pubId, communityId])
 
 	return (

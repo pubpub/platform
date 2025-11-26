@@ -25,7 +25,7 @@ export const RemoveMemberButton = <T extends TargetId>({
 	const handleClick = async () => {
 		const result = await runRemoveMember(userId, targetId)
 		if (didSucceed(result)) {
-			toast({ title: "Success", description: "Member removed" })
+			toast.success("Member removed")
 		}
 	}
 

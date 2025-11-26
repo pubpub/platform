@@ -57,19 +57,14 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 	const onSubmit = async ({ pubTypeName, name, slug }: z.infer<typeof schema>) => {
 		const pubTypeId = pubTypes.find((type) => type.name === pubTypeName)?.id
 		if (!pubTypeId) {
-			toast({
-				title: "Error",
-				description: `Unable to find pub type ${pubTypeName}`,
-				variant: "destructive",
-			})
+			toast.error(
+				 `Unable to find pub type ${pubTypeName}`,
+			)
 			return
 		}
 		const result = await runCreateForm(pubTypeId, name, slug, community.id)
 		if (didSucceed(result)) {
-			toast({
-				title: "Success",
-				description: "Form created",
-			})
+			toast.success("Form created")
 			form.reset()
 			setIsOpen(false)
 		}

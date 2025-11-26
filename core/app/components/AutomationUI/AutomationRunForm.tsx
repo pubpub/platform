@@ -21,8 +21,7 @@ import { ActionForm } from "~/actions/_lib/ActionForm"
 import { getActionByName } from "~/actions/api"
 import { runAutomationManual } from "~/actions/api/serverAction"
 import { getActionFormComponent } from "~/actions/forms"
-import { isActionSuccess } from "~/actions/results"
-import { useServerAction } from "~/lib/serverActions"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
 import { useCommunity } from "../providers/CommunityProvider"
 import { SkeletonCard } from "../skeletons/SkeletonCard"
 
@@ -83,19 +82,19 @@ export const AutomationRunForm = (props: Props) => {
 				skipConditionCheck: skipConditionCheck && hasConditions,
 			})
 
-			if (isActionSuccess(result)) {
-				toast({
-					title:
-						"title" in result && typeof result.title === "string"
-							? result.title
-							: `Successfully ran ${props.automation.name || action.niceName}`,
-					variant: "default",
-					description: (
-						<div className="max-h-screen max-w-sm overflow-auto text-xs">
-							{result.report}
-						</div>
-					),
-				})
+			if (didSucceed(result)) {
+				toast.success(
+					"title" in result && typeof result.title === "string"
+						? result.title
+						: `Successfully ran ${props.automation.name || action.niceName}`,
+					{
+						description: (
+							<div className="max-h-screen max-w-sm overflow-auto text-xs">
+								{result.report}
+							</div>
+						),
+					}
+				)
 				return
 			}
 			if ("issues" in result && result.issues) {

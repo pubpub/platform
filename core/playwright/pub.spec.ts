@@ -113,7 +113,7 @@ test.describe("Moving a pub", () => {
 		await page.getByRole("option", { name: "Shelved" }).click()
 		await page.getByRole("button", { name: "Save" }).click()
 		await expect(
-			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+			page.getByRole("status").filter({ hasText: "Updated Pub" })
 		).toHaveCount(1)
 
 		const pubDetailsPage = new PubDetailsPage(
@@ -201,7 +201,7 @@ test.describe("Creating a pub", () => {
 		await page.getByRole("button", { name: "Save" }).click()
 
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*/edit?*`)
-		await closeToast(page)
+		// await closeToast(page)
 		await page.getByRole("link", { name: "View Pub" }).click()
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats")
 
@@ -213,7 +213,7 @@ test.describe("Creating a pub", () => {
 		await page.waitForTimeout(200)
 		await page.getByRole("button", { name: "Save" }).click()
 		await expect(
-			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+			page.getByRole("status").filter({ hasText: "Updated Pub" })
 		).toHaveCount(1, { timeout: 10_000 })
 		await page.getByRole("link", { name: "View Pub" }).click()
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins")
@@ -264,7 +264,7 @@ test.describe("Creating a pub", () => {
 
 		await page.getByRole("button", { name: "Save" }).click()
 		await expect(
-			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+			page.getByRole("status").filter({ hasText: "Updated Pub" })
 		).toHaveCount(1)
 		await pubsPage.goTo()
 		await expect(
@@ -373,7 +373,7 @@ test.describe("Updating a pub", () => {
 		await page.getByTestId(`${community.community.slug}:title`).fill(newTitle)
 		await page.getByRole("button", { name: "Save" }).click()
 		await expect(
-			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
+			page.getByRole("status").filter({ hasText: "Updated Pub" })
 		).toHaveCount(1)
 		await expect(page.getByTestId("save-status-text")).toContainText("Last saved at")
 

@@ -61,6 +61,6 @@ export class PubDetailsPage {
 			.filter({ hasText: "Successfully removed the pub" })
 			.first()
 			.waitFor()
-		await closeToast(this.page)
+		// await closeToast(this.page)
 	}
 }

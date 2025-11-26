@@ -35,14 +35,7 @@ const EditFormTitleButton = ({ formId, name }: { formId: FormsId; name: string }
 	const onSubmit = async (data: z.infer<typeof editFormTitleSchema>) => {
 		const result = await runUpdateFormTitle({ formId, name: data.name })
 		if (didSucceed(result)) {
-			toast({
-				className: "rounded-sm border-emerald-100 bg-emerald-50",
-				action: (
-					<div className="flex w-full gap-3 text-green-700">
-						<CircleCheck className="" /> Name Successfully Updated
-					</div>
-				),
-			})
+			toast.success("Name Successfully Updated")
 			setIsOpen(false)
 		}
 	}

@@ -259,14 +259,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 	const onSubmit = async (_formData: FormBuilderSchema) => {
 		const result = await runSaveForm(payload)
 		if (didSucceed(result)) {
-			toast({
-				className: "rounded-sm border-emerald-100 bg-emerald-50",
-				action: (
-					<div className="flex w-full gap-3 text-green-700">
-						<CircleCheck className="" /> Form Successfully Saved
-					</div>
-				),
-			})
+			toast.success("Form saved")
 		}
 	}
 	const addElement = useCallback(

@@ -47,10 +47,7 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 	const onSubmit = async (data: z.infer<typeof userInfoFormSchema>) => {
 		const result = await runUpdateUserInfo({ data })
 		if (result && "success" in result) {
-			toast({
-				title: "Success",
-				description: "User information updated",
-			})
+			toast.success("User information updated")
 		}
 	}
 

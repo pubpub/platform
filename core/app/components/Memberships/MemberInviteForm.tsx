@@ -105,10 +105,7 @@ export const MemberInviteForm = ({
 			})
 
 			if (didSucceed(result)) {
-				toast({
-					title: "Success",
-					description: "User successfully invited",
-				})
+				toast.success("User invited")
 				closeForm()
 			}
 
@@ -122,10 +119,7 @@ export const MemberInviteForm = ({
 		})
 
 		if (didSucceed(result)) {
-			toast({
-				title: "Success",
-				description: "Member added successfully",
-			})
+			toast.success("Member added")	
 
 			closeForm()
 		}

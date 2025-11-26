@@ -102,7 +102,7 @@ export const NewTypeForm = ({
 					fields: [],
 				})
 				if (result && didSucceed(result)) {
-					toast({ title: `Type ${values.name} updated` })
+					toast.success(`Type ${values.name} updated`)
 					onSubmitSuccess(props.pubTypeId)
 					return
 				}
@@ -118,7 +118,7 @@ export const NewTypeForm = ({
 				values.fields
 			)
 			if (result && didSucceed(result)) {
-				toast({ title: `Type ${values.name} created` })
+				toast.success(`Type ${values.name} created`)
 				onSubmitSuccess(result.data.id)
 				return
 			}

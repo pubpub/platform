@@ -56,9 +56,9 @@ export function useServerAction<T extends unknown[], U>(action: (...args: T) => 
 			try {
 				const result = await action(...args)
 				if (isClientException(result)) {
-					toast({
-						title: result.title ?? "Error",
-						variant: "destructive",
+					toast.error(result.title ?? "Error", {
+						closeButton: true,
+						duration: 100_000,
 						description: `${result.error}${result.id ? ` (Error ID: ${result.id})` : ""}`,
 						...(result.issues
 							? {

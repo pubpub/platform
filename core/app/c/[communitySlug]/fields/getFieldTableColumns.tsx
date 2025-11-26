@@ -30,7 +30,7 @@ const ArchiveMenuItem = ({ field }: { field: TableData }) => {
 	const handleArchive = useCallback(async () => {
 		const result = await archiveField(field.id)
 		if (didSucceed(result)) {
-			toast({ title: `Archived ${field.name}` })
+			toast.success(`Archived ${field.name}`)
 		}
 	}, [field.id])
 	return (

@@ -223,14 +223,7 @@ export const TypeBuilder = ({
 			})),
 		})
 		if (didSucceed(result)) {
-			toast({
-				className: "rounded-sm border-emerald-100 bg-emerald-50",
-				action: (
-					<div className="flex w-full gap-3 text-green-700">
-						<CircleCheck className="" /> Type Successfully Saved
-					</div>
-				),
-			})
+			toast.success("Type saved")
 		}
 	}
 	const addElement = useCallback(

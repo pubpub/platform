@@ -14,7 +14,7 @@ import {
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu"
 import { ArrowLeft, ArrowRight, FlagTriangleRightIcon } from "ui/icon"
-import { useToast } from "ui/use-toast"
+import { toast } from "ui/use-toast"
 
 import { move } from "~/app/c/[communitySlug]/stages/components/lib/actions"
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
@@ -47,7 +47,6 @@ export function MoveInteractive({
 	hideIfNowhereToMove,
 }: Props) {
 	const [popoverIsOpen, setPopoverIsOpen] = useState(false)
-	const { toast } = useToast()
 	const community = useCommunity()
 
 	const [isMoving, startTransition] = useTransition()
@@ -61,10 +60,7 @@ export function MoveInteractive({
 			return
 		}
 
-		toast({
-			title: "Success",
-			description: "Pub was successfully moved",
-			variant: "default",
+		toast("Pub was successfully moved", {
 			action: (
 				<Button
 					onClick={async () => {
@@ -73,11 +69,7 @@ export function MoveInteractive({
 						if (isClientException(result)) {
 							return
 						}
-						toast({
-							variant: "default",
-							title: "Success",
-							description: "Pub was successfully moved back",
-						})
+						toast("Pub was successfully moved back")
 					}}
 				>
 					Undo

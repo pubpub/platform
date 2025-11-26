@@ -20,10 +20,9 @@ export const PubEditorWrapper = ({
 	const community = useCommunity()
 
 	const onSuccess = () => {
-		toast({
-			title: "Success",
-			description: props.mode === "edit" ? "Pub successfully updated" : "New pub created",
-		})
+		toast.success(
+			 props.mode === "edit" ? "Updated Pub" : "New Pub created",
+		)
 
 		const newParams = new URLSearchParams(params)
 		const currentTime = `${Date.now()}`

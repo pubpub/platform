@@ -78,7 +78,7 @@ test.describe("File upload", () => {
 		})
 
 		await page.getByRole("button", { name: "Save" }).click()
-		await page.getByText("Pub successfully updated", { exact: true }).waitFor({
+		await page.getByText("Updated Pub", { exact: true }).waitFor({
 			timeout: 2_000,
 		})
 
@@ -155,7 +155,7 @@ test.describe("File upload", () => {
 				expect(opts2.status).toBe(404)
 
 				await page.getByRole("button", { name: "Save" }).click()
-				await page.getByText("Pub successfully updated", { exact: true }).waitFor({
+				await page.getByText("Updated Pub", { exact: true }).waitFor({
 					timeout: 2_000,
 				})
 
@@ -195,7 +195,7 @@ test.describe("File upload", () => {
 				})
 
 				await page.getByRole("button", { name: "Save" }).click()
-				await page.getByText("Pub successfully updated", { exact: true }).waitFor({
+				await page.getByText("Updated Pub", { exact: true }).waitFor({
 					timeout: 2_000,
 				})
 
