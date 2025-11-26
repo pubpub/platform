@@ -4,7 +4,6 @@ import type { MaybeHas } from "utils/types"
 import type { CommunityData } from "~/lib/server/community"
 
 import { cache, Suspense } from "react"
-import { Moon, Sun } from "lucide-react"
 
 import { Capabilities, MembershipType } from "db/public"
 import {
@@ -28,7 +27,6 @@ import {
 	SidebarGroupLabel,
 	SidebarHeader,
 	SidebarMenu,
-	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSkeleton,
 	SidebarMenuSubItem,
@@ -36,7 +34,7 @@ import {
 } from "ui/sidebar"
 
 import { SidebarSearchDialogTrigger } from "~/app/components/search/SearchDialogTrigger"
-import { DarkmodeToggle } from "~/app/components/theme/DarkmodeToggle"
+import { SidebarDarkmodeToggle } from "~/app/components/theme/DarkmodeToggle"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan, userCanViewStagePage } from "~/lib/authorization/capabilities"
 import CommunitySwitcher from "./CommunitySwitcher"
@@ -377,14 +375,7 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 								<SidebarSearchDialogTrigger />
 							</SidebarMenuItem>
 							<SidebarMenuItem className="relative flex items-center">
-								<DarkmodeToggle>
-									<SidebarMenuButton>
-										<Sun className="dark:-rotate-90 h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:block dark:scale-0" />
-										<Moon className="hidden h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:block dark:rotate-0 dark:scale-100" />
-										<span>System</span>
-										<span className="sr-only">Toggle theme</span>
-									</SidebarMenuButton>
-								</DarkmodeToggle>
+								<SidebarDarkmodeToggle />
 							</SidebarMenuItem>
 						</SidebarGroupContent>
 					</SidebarGroup>

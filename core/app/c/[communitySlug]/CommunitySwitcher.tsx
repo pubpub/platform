@@ -44,7 +44,7 @@ const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunit
 	const button = (
 		<SidebarMenuButton
 			aria-label="Select a community"
-			className={`group-data-[collapsible=icon]:p-0! h-full md:py-1 ${onlyOneCommunity ? "cursor-default" : ""}`}
+			className={`h-full group-data-[collapsible=icon]:p-0! md:py-1 ${onlyOneCommunity ? "cursor-default" : ""}`}
 		>
 			<Avatar className={avatarClasses}>
 				<AvatarImage src={community.avatar || undefined} />

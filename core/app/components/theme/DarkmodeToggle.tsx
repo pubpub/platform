@@ -1,6 +1,6 @@
 "use client"
 
-import { Moon, Sun } from "lucide-react"
+import { Computer, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "ui/button"
@@ -10,6 +10,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu"
+import { SidebarMenuButton } from "ui/sidebar"
 
 export function DarkmodeToggle({ children }: { children?: React.ReactNode }) {
 	const { setTheme } = useTheme()
@@ -31,5 +32,32 @@ export function DarkmodeToggle({ children }: { children?: React.ReactNode }) {
 				<DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
+	)
+}
+
+export function SidebarDarkmodeToggle() {
+	const { theme } = useTheme()
+
+	return (
+		<DarkmodeToggle>
+			<SidebarMenuButton>
+				{theme === "dark" ? (
+					<>
+						<Moon className="h-[1.2rem] w-[1.2rem]" />
+						<span>Dark</span>
+					</>
+				) : theme === "light" ? (
+					<>
+						<Sun className="h-[1.2rem] w-[1.2rem]" />
+						<span>Light</span>
+					</>
+				) : (
+					<>
+						<Computer className="h-[1.2rem] w-[1.2rem]" />
+						<span>System</span>
+					</>
+				)}
+			</SidebarMenuButton>
+		</DarkmodeToggle>
 	)
 }
