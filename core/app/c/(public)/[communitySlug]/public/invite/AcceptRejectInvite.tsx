@@ -186,10 +186,7 @@ export function AcceptRejectInvite({
 					{hideRejectButton ? null : (
 						<AlertDialog>
 							<AlertDialogTrigger asChild>
-								<Button
-									variant="outline"
-									className="flex grow items-center gap-2"
-								>
+								<Button variant="outline" className="flex grow items-center gap-2">
 									<X className="mt-0.5 h-3 w-3" />
 									Reject
 								</Button>

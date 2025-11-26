@@ -2,10 +2,10 @@ import { NuqsAdapter } from "nuqs/adapters/next/app"
 
 import "./globals.css"
 
-import { Suspense } from "react"
 import Script from "next/script"
 
 import { KeyboardShortcutProvider } from "ui/hooks"
+import { Toaster } from "ui/toaster"
 import { TooltipProvider } from "ui/tooltip"
 
 import { getLoginData } from "~/lib/authentication/loginData"
@@ -13,7 +13,6 @@ import { env } from "~/lib/env/env"
 import { ReactQueryProvider } from "./components/providers/QueryProvider"
 import { UserProvider } from "./components/providers/UserProvider"
 import { ThemeProvider } from "./components/theme/ThemeProvider"
-import { Toaster } from 'ui/toaster'
 
 export const metadata = {
 	title: "PubPub Platform",
@@ -45,7 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 										disableTransitionOnChange
 									>
 										{children}
-									<Toaster/>
+										<Toaster />
 									</ThemeProvider>
 								</TooltipProvider>
 							</NuqsAdapter>

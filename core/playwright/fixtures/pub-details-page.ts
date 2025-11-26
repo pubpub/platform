@@ -1,8 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 import type { PubsId } from "db/public"
 
-import { closeToast } from "../helpers"
-
 export class PubDetailsPage {
 	constructor(
 		public readonly page: Page,

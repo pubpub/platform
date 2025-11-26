@@ -119,7 +119,7 @@ export const MemberInviteForm = ({
 		})
 
 		if (didSucceed(result)) {
-			toast.success("Member added")	
+			toast.success("Member added")
 
 			closeForm()
 		}

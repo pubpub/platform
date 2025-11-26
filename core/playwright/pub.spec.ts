@@ -15,7 +15,6 @@ import { PubTypesEditPage } from "./fixtures/pub-types-edit-page"
 import { PubTypesPage } from "./fixtures/pub-types-page"
 import { choosePubType, PubsPage } from "./fixtures/pubs-page"
 import { StagesManagePage } from "./fixtures/stages-manage-page"
-import { closeToast } from "./helpers"
 
 test.describe.configure({ mode: "serial" })
 
@@ -112,9 +111,7 @@ test.describe("Moving a pub", () => {
 		// Shelved is its own node in stages
 		await page.getByRole("option", { name: "Shelved" }).click()
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(
-			page.getByRole("status").filter({ hasText: "Updated Pub" })
-		).toHaveCount(1)
+		await expect(page.getByRole("status").filter({ hasText: "Updated Pub" })).toHaveCount(1)
 
 		const pubDetailsPage = new PubDetailsPage(
 			page,
@@ -212,9 +209,9 @@ test.describe("Creating a pub", () => {
 		await page.getByTestId("remove-button").first().click()
 		await page.waitForTimeout(200)
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(
-			page.getByRole("status").filter({ hasText: "Updated Pub" })
-		).toHaveCount(1, { timeout: 10_000 })
+		await expect(page.getByRole("status").filter({ hasText: "Updated Pub" })).toHaveCount(1, {
+			timeout: 10_000,
+		})
 		await page.getByRole("link", { name: "View Pub" }).click()
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins")
 	})
@@ -263,9 +260,7 @@ test.describe("Creating a pub", () => {
 		await page.keyboard.type("prefix ")
 
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(
-			page.getByRole("status").filter({ hasText: "Updated Pub" })
-		).toHaveCount(1)
+		await expect(page.getByRole("status").filter({ hasText: "Updated Pub" })).toHaveCount(1)
 		await pubsPage.goTo()
 		await expect(
 			page.getByRole("link", { name: `prefix ${actualTitle}`, exact: true })
@@ -372,9 +367,7 @@ test.describe("Updating a pub", () => {
 		const newTitle = `New title ${Date.now()}`
 		await page.getByTestId(`${community.community.slug}:title`).fill(newTitle)
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(
-			page.getByRole("status").filter({ hasText: "Updated Pub" })
-		).toHaveCount(1)
+		await expect(page.getByRole("status").filter({ hasText: "Updated Pub" })).toHaveCount(1)
 		await expect(page.getByTestId("save-status-text")).toContainText("Last saved at")
 
 		await page.getByRole("link", { name: "View Pub" }).click()

@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/sortable"
 import { typeboxResolver } from "@hookform/resolvers/typebox"
 import { Type } from "@sinclair/typebox"
-import { CircleCheck, PlusCircle } from "lucide-react"
+import { PlusCircle } from "lucide-react"
 import { useFieldArray, useForm, useFormContext } from "react-hook-form"
 import { IdString } from "schemas/utils"
 
