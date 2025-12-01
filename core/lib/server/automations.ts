@@ -238,7 +238,8 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 
 		const actionInstancesWithIds = props.actionInstances
 			.map((ai) => ai.id)
-			.filter((aiId) => aiId !== undefined)
+			// biome-ignore lint/suspicious/noDoubleEquals: otherwise it won't work for some reason
+			.filter((aiId) => aiId != undefined)
 
 		if (actionInstancesWithIds.length > 0) {
 			// delete the existing action instances that are not in the new action instances
