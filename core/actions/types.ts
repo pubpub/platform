@@ -174,11 +174,20 @@ export type EventAutomationOptionsBase<
 		 * String to use when viewing the automation on the stage.
 		 * Useful if you want to show some configuration or automation-specific information
 		 */
-		hydrated?: (options: {
-			automation: Automations
-			community: Communities
-			config?: AC
-		}) => React.ReactNode
+		hydrated?: (
+			options: NonNullable<AC> extends undefined
+				? {
+						automation: Automations
+						community: Communities
+						sourceAutomation?: Automations
+					}
+				: {
+						automation: Automations
+						community: Communities
+						sourceAutomation?: Automations
+						config: NonNullable<AC>
+					}
+		) => React.ReactNode
 	}
 }
 

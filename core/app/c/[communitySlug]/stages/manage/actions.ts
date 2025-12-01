@@ -407,8 +407,8 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			})),
 			actionInstances: [
 				{
-					action: data.action.action,
-					config: data.action.config ?? null,
+					...data.action,
+					id: data.action.actionInstanceId,
 				},
 			],
 			condition: data.condition,

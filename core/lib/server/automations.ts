@@ -217,8 +217,6 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 				.execute()
 		}
 
-		// no man actionInstanceId's are important
-
 		// insert the action instances
 		await trx
 			.insertInto("action_instances")

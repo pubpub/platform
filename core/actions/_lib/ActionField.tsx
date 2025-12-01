@@ -2,7 +2,7 @@
 
 import type React from "react"
 import type { PropsWithChildren } from "react"
-import type { ControllerFieldState, ControllerProps, ControllerRenderProps } from "react-hook-form"
+import type { ControllerFieldState, ControllerProps, ControllerRenderProps, FormState } from "react-hook-form"
 import type z from "zod"
 import type { Action } from "../types"
 import type { InputState } from "./ActionFieldJsonataInput"
@@ -79,6 +79,7 @@ export const ActionField = memo(
 						{...{
 							field: p.field,
 							fieldState: p.fieldState,
+							formState: p.formState,
 							...props,
 						}}
 						schema={schema}
@@ -157,15 +158,14 @@ const InnerActionField = memo(
 		props: Omit<ActionFieldProps, "form"> & {
 			field: ControllerRenderProps<any>
 			fieldState: ControllerFieldState
+			formState: FormState<any>
 		}
 	) {
-		// const { form, schema, defaultFields, context, action, path } =
-		// 	useActionForm();
 
 		const innerSchema =
 			"innerType" in props.schema._def
-				? props.schema._def?.innerType
-				: (props.schema as z.ZodObject<any>)
+				? props.schema._def?.innerType as z.ZodObject<z.ZodRawShape>
+				: (props.schema as z.ZodObject<z.ZodRawShape>)
 		const schemaShape = innerSchema?.shape ?? {}
 		const fieldSchema = schemaShape[props.name] as z.ZodType<any>
 		const required = fieldSchema && !fieldSchema.isOptional()
@@ -203,6 +203,7 @@ const InnerActionField = memo(
 				return props.render({
 					field: props.field,
 					fieldState: props.fieldState,
+					formState: props.formState,
 				})
 			}
 			return (

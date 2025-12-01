@@ -1,4 +1,4 @@
-import type { ActionInstances, Automations, AutomationsId, Communities } from "db/public"
+import type { Automations, AutomationsId, Communities } from "db/public"
 import type { UseFormReturn } from "react-hook-form"
 import type { SequentialAutomationEvent } from "~/actions/types"
 
@@ -193,7 +193,7 @@ export const humanReadableEventHydrated = <T extends AutomationEvent>(
 		config?: (typeof triggers)[T]["config"] extends undefined
 			? never
 			: z.infer<NonNullable<(typeof triggers)[T]["config"]>>
-		sourceAction?: ActionInstances | null
+		sourceAutomation?: Automations
 	}
 ) => {
 	const automationConf = getTriggerByName(event)
@@ -205,14 +205,14 @@ export const humanReadableEventHydrated = <T extends AutomationEvent>(
 		})
 	}
 	if (
-		options.sourceAction &&
+		options.sourceAutomation &&
 		isReferentialTrigger(automationConf) &&
 		automationConf.display.hydrated
 	) {
 		return automationConf.display.hydrated({
 			automation: options.automation,
 			community,
-			config: options.sourceAction,
+			sourceAutomation: options.sourceAutomation,
 		})
 	}
 
@@ -240,9 +240,9 @@ export const humanReadableAutomation = <
 	config?: (typeof triggers)[keyof typeof triggers]["config"] extends undefined
 		? never
 		: z.infer<NonNullable<(typeof triggers)[keyof typeof triggers]["config"]>>,
-	sourceAction?: ActionInstances | null
+	sourceAutomation?: Automations | null
 ) =>
-	`${instanceName} will run when ${humanReadableEventHydrated(automation.triggers[0].event, community, { automation: automation, config, sourceAction })}`
+	`${instanceName} will run when ${humanReadableEventHydrated(automation.triggers[0].event, community, { automation: automation, config, sourceAutomation })}`
 
 export type TriggersWithConfig = {
 	[K in keyof typeof triggers]: undefined extends (typeof triggers)[K]["config"] ? never : K
@@ -252,12 +252,16 @@ export const isTriggerWithConfig = (trigger: AutomationEvent): trigger is Trigge
 	return trigger in triggers && triggers[trigger].config !== undefined
 }
 
-export type AddionalConfigForm<T extends Trigger> = React.FC<{
-	form: UseFormReturn<{
-		triggers: {
-			event: NonNullable<T["event"]>
-			config: z.infer<NonNullable<T["config"]>>
-		}[]
-	}>
+export type AdditionalConfigFormReturn = UseFormReturn<{
+	triggers: Trigger extends infer T extends Trigger
+		? {
+				event: T["event"]
+				config: z.infer<NonNullable<T["config"]>>
+			}[]
+		: never
+}>
+
+export type AdditionalConfigForm = React.FC<{
+	form: AdditionalConfigFormReturn
 	idx: number
 }>

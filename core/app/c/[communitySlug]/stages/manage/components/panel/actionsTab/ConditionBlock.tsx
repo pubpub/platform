@@ -1,7 +1,8 @@
 "use client"
 
 import type { DragEndEvent } from "@dnd-kit/core"
-import type { FieldErrors } from "react-hook-form"
+import type { Control, ControllerFieldState, FieldErrors } from "react-hook-form"
+import type { CreateAutomationsSchema } from "./StagePanelAutomationForm"
 
 import { useCallback, useId } from "react"
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
@@ -13,7 +14,7 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { useFieldArray, useFormContext } from "react-hook-form"
+import { Controller, useFieldArray, useWatch } from "react-hook-form"
 
 import { AutomationConditionBlockType, AutomationConditionType } from "db/public"
 import { Button } from "ui/button"
@@ -49,14 +50,22 @@ type ConditionItemProps = {
 	expression: string
 	onRemove: () => void
 	slug: string
+	fieldState: ControllerFieldState
+	control: Control<Record<string, ConditionItemFormValue>, any>
 }
 
-const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) => {
+const ConditionItem = ({
+	id,
+	expression,
+	onRemove,
+	slug,
+	fieldState,
+	control,
+}: ConditionItemProps) => {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id,
 	})
-	const { register, getFieldState } = useFormContext()
-	const { invalid, error } = getFieldState(slug)
+	const { invalid, error } = fieldState
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
@@ -89,7 +98,7 @@ const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) =
 			<ItemContent>
 				<div className="flex-1 space-y-2">
 					<Input
-						{...register(slug)}
+						{...control.register(slug)}
 						placeholder="Enter JSONata expression (e.g., $.fieldName = 'value')"
 						defaultValue={expression}
 						className={cn("text-sm", invalid && "border-red-300")}
@@ -124,14 +133,23 @@ type ConditionBlockProps = {
 	slug: string
 	depth?: number
 	onRemove?: () => void
+	fieldState: ControllerFieldState
+	control: Control<CreateAutomationsSchema, any>
 }
 
-export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlockProps) => {
-	const { control, watch, setValue, getFieldState } =
-		useFormContext<Record<string, ConditionItemFormValue>>()
-	const blockType = watch(`${slug}.type`) as AutomationConditionBlockType
+export const ConditionBlock = ({
+	slug,
+	depth = 0,
+	onRemove,
+	id,
+	fieldState,
+	control: controlProp,
+}: ConditionBlockProps) => {
+	// this just makes the types easier
+	const control = controlProp as unknown as Control<Record<string, ConditionItemFormValue>, any>
+	const blockType = useWatch({ control, name: `${slug}.type` })
 
-	const { invalid, error } = getFieldState(slug)
+	const { invalid, error } = fieldState
 	// we don't want to higlight the block if some subitems have errors, too much info
 	const rootItemError =
 		invalid && error && "items" in error && !Array.isArray(error.items)
@@ -248,23 +266,32 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 							When
 						</Label>
 					)}
-					<Select
-						value={blockType}
-						onValueChange={(value) =>
-							setValue(`${slug}.type`, value as AutomationConditionBlockType)
-						}
-					>
-						<SelectTrigger className="h-8 w-24 text-xs">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							{Object.values(AutomationConditionBlockType).map((type) => (
-								<SelectItem key={type} value={type}>
-									{type}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+					<Controller
+						control={control}
+						name={`${slug}.type`}
+						render={({ field }) => (
+							<Select
+								value={blockType}
+								onValueChange={(value) =>
+									field.onChange(
+										`${slug}.type`,
+										value as AutomationConditionBlockType
+									)
+								}
+							>
+								<SelectTrigger className="h-8 w-24 text-xs">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{Object.values(AutomationConditionBlockType).map((type) => (
+										<SelectItem key={type} value={type}>
+											{type}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						)}
+					/>
 				</div>
 				{depth > 0 && onRemove && (
 					<Button
@@ -287,25 +314,34 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 						sensors={sensors}
 					>
 						<SortableContext items={fields} strategy={verticalListSortingStrategy}>
-							{fields.map((field, index) =>
-								field.kind === "condition" ? (
-									<ConditionItem
-										key={field.id}
-										id={field.id}
-										expression={field.expression}
-										onRemove={() => handleRemove(index)}
-										slug={`${slug}.items.${index}.expression`}
-									/>
-								) : (
-									<ConditionBlock
-										key={field.id}
-										id={field.id}
-										depth={depth + 1}
-										onRemove={() => handleRemove(index)}
-										slug={`${slug}.items.${index}`}
-									/>
-								)
-							)}
+							{fields.map((arrayField, index) => (
+								<Controller
+									control={control}
+									key={arrayField.id}
+									name={`${slug}.items.${index}`}
+									render={({ field, fieldState }) =>
+										field.value?.kind === "condition" ? (
+											<ConditionItem
+												id={arrayField.id}
+												fieldState={fieldState}
+												control={control}
+												expression={field.value.expression}
+												onRemove={() => handleRemove(index)}
+												slug={`${slug}.items.${index}.expression`}
+											/>
+										) : (
+											<ConditionBlock
+												control={controlProp}
+												id={arrayField.id}
+												fieldState={fieldState}
+												depth={depth + 1}
+												onRemove={() => handleRemove(index)}
+												slug={`${slug}.items.${index}`}
+											/>
+										)
+									}
+								/>
+							))}
 						</SortableContext>
 					</DndContext>
 					<div className="flex gap-4 pt-1">

@@ -1,13 +1,5 @@
 "use client"
 
-import type {
-	Action,
-	AutomationsId,
-	Communities,
-	CommunitiesId,
-	ConditionEvaluationTiming,
-	StagesId,
-} from "db/public"
 import type { FullAutomation } from "db/types"
 import type { ParserBuilder } from "nuqs"
 import type {
@@ -28,11 +20,21 @@ import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
 import {
+	type Action,
+	type ActionInstancesId,
 	AutomationConditionBlockType,
 	AutomationConditionType,
 	AutomationEvent,
+	type AutomationsId,
+	type AutomationTriggersId,
+	actionInstancesIdSchema,
 	automationsIdSchema,
+	automationTriggersIdSchema,
+	type Communities,
+	type CommunitiesId,
+	type ConditionEvaluationTiming,
 	conditionEvaluationTimingSchema,
+	type StagesId,
 } from "db/public"
 import { Button } from "ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
@@ -55,6 +57,7 @@ import { cn } from "utils"
 import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder"
 import { ActionFormContext } from "~/actions/_lib/ActionForm"
 import {
+	type AdditionalConfigFormReturn,
 	getTriggerByName,
 	humanReadableEventBase,
 	isTriggerWithConfig,
@@ -171,12 +174,13 @@ export type CreateAutomationsSchema = {
 	icon?: IconConfig
 	condition?: ConditionBlockFormValue
 	triggers: {
-		_id: string
+		triggerId: AutomationTriggersId
 		event: AutomationEvent
 		config?: Record<string, unknown>
 		sourceAutomationId?: AutomationsId | undefined
 	}[]
 	action: {
+		actionInstanceId?: ActionInstancesId
 		action: Action
 		config: Record<string, unknown>
 	}
@@ -385,7 +389,7 @@ function Form(
 								"event",
 								entries(triggers).map(([event, automation]) =>
 									z.object({
-										_id: z.string().default(() => crypto.randomUUID()),
+										triggerId: automationTriggersIdSchema,
 										event: z.literal(event),
 										...(automation.config ? { config: automation.config } : {}),
 										...(isSequentialAutomationEvent(event)
@@ -394,7 +398,7 @@ function Form(
 									})
 								) as unknown as [
 									z.ZodObject<{
-										_id: z.ZodString
+										triggerId: typeof automationTriggersIdSchema
 										event: z.ZodLiteral<AutomationEvent>
 										config: z.ZodObject<any>
 										sourceAutomationId: z.ZodOptional<
@@ -402,7 +406,7 @@ function Form(
 										>
 									}>,
 									...z.ZodObject<{
-										_id: z.ZodString
+										triggerId: typeof automationTriggersIdSchema
 										event: z.ZodLiteral<AutomationEvent>
 										config: z.ZodObject<any>
 										sourceAutomationId: z.ZodOptional<
@@ -418,14 +422,20 @@ function Form(
 						"action",
 						entries(actions).map(([actionName, action]) =>
 							z.object({
+								actionInstanceId: actionInstancesIdSchema,
 								action: z.literal(actionName),
 								config: new ActionConfigBuilder(actionName)
 									.withDefaults({})
 									.getSchema(),
 							})
 						) as [
-							z.ZodObject<{ action: z.ZodLiteral<Action>; config: z.ZodObject<any> }>,
+							z.ZodObject<{
+								actionInstanceId: typeof actionInstancesIdSchema
+								action: z.ZodLiteral<Action>
+								config: z.ZodObject<any>
+							}>,
 							...z.ZodObject<{
+								actionInstanceId: typeof actionInstancesIdSchema
 								action: z.ZodLiteral<Action>
 								config: z.ZodObject<any>
 							}>[],
@@ -489,6 +499,7 @@ function Form(
 				description: "",
 				icon: undefined,
 				action: {
+					actionInstanceId: undefined,
 					action: undefined,
 					config: {},
 				},
@@ -505,11 +516,12 @@ function Form(
 			description: currentAutomation.description ?? "",
 			icon: currentAutomation.icon as IconConfig | undefined,
 			action: {
+				actionInstanceId: actionInstance?.id,
 				action: actionInstance?.action,
 				config: actionInstance?.config ?? {},
 			},
 			triggers: currentAutomation.triggers.map((trigger) => ({
-				_id: trigger.id,
+				triggerId: trigger.id,
 				event: trigger.event,
 				config: trigger.config,
 				sourceAutomationId: trigger.sourceAutomationId,
@@ -530,6 +542,7 @@ function Form(
 
 	const onSubmit = useCallback(
 		async (data: CreateAutomationsSchema) => {
+			console.log("DAAATTA", data)
 			const result = await runUpsertAutomation({
 				stageId: props.stageId,
 				data,
@@ -688,7 +701,12 @@ function Form(
 										run. Use JSONata expressions to construct a boolean value
 										like <code>'Hello' in $.pub.values.title</code>.
 									</FieldDescription>
-									<ConditionBlock slug={"condition"} id={"root-block"} />
+									<ConditionBlock
+										control={form.control}
+										fieldState={fieldState}
+										slug={"condition"}
+										id={"root-block"}
+									/>
 								</>
 							)}
 							{fieldState.error && (
@@ -722,6 +740,8 @@ function Form(
 										<StagePanelActionCreator
 											onAdd={(actionName) => {
 												form.setValue("action", {
+													actionInstanceId:
+														crypto.randomUUID() as ActionInstancesId,
 													action: actionName,
 													config: {},
 												})
@@ -836,14 +856,20 @@ const TriggerConfigCard = memo(
 						)}
 					/>
 				)}
-				{trigger.config && TriggerForm && <TriggerForm form={props.form} idx={props.idx} />}
+				{trigger.config && TriggerForm && (
+					<TriggerForm
+						// FIXME: this is not very safe, watch out for subtle bugs
+						form={props.form as unknown as AdditionalConfigFormReturn}
+						idx={props.idx}
+					/>
+				)}
 			</ConfigCard>
 		)
 	},
 	(prevProps, nextProps) => {
 		return (
 			prevProps.trigger.event === nextProps.trigger.event &&
-			prevProps.trigger._id === nextProps.trigger._id &&
+			prevProps.trigger.triggerId === nextProps.trigger.triggerId &&
 			prevProps.idx === nextProps.idx &&
 			prevProps.isEditing === nextProps.isEditing &&
 			prevProps.currentlyEditingAutomationId === nextProps.currentlyEditingAutomationId
@@ -854,11 +880,16 @@ const TriggerConfigCard = memo(
 function ActionConfigCardWrapper(props: {
 	action: Action
 	form: UseFormReturn<CreateAutomationsSchema>
-	onChange: (value: { action: Action | undefined; config: Record<string, unknown> }) => void
+	onChange: (value: {
+		actionInstanceId?: ActionInstancesId
+		action: Action | undefined
+		config: Record<string, unknown>
+	}) => void
 	isEditing: boolean
 }) {
 	const removeAction = useCallback(() => {
 		props.onChange({
+			actionInstanceId: undefined,
 			action: undefined,
 			config: {},
 		})
@@ -974,7 +1005,7 @@ export const TriggerField = (props: {
 								<Controller
 									control={props.form.control}
 									name={`triggers.${idx}`}
-									key={field._id}
+									key={field.triggerId}
 									render={({ field }) => (
 										<TriggerConfigCard
 											currentlyEditingAutomationId={
@@ -988,7 +1019,7 @@ export const TriggerField = (props: {
 											removeTrigger={() => {
 												props.field.onChange(
 													props.field.value.filter(
-														(t) => t._id !== field.value._id
+														(t) => t.triggerId !== field.value.triggerId
 													)
 												)
 											}}
@@ -1002,7 +1033,7 @@ export const TriggerField = (props: {
 				<Select
 					onValueChange={(value) => {
 						props.appendTrigger({
-							_id: crypto.randomUUID(),
+							triggerId: crypto.randomUUID() as AutomationTriggersId,
 							event: value as AutomationEvent,
 							config: {},
 							sourceAutomationId: undefined,

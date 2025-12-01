@@ -1,4 +1,4 @@
-import type { AddionalConfigForm, pubInStageForDuration } from "../triggers"
+import type { AdditionalConfigForm } from "../triggers"
 
 import { Controller } from "react-hook-form"
 
@@ -8,9 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 
 import { intervals } from "../triggers"
 
-export const PubInStageForDurationConfigForm: AddionalConfigForm<typeof pubInStageForDuration> = (
-	props
-) => {
+export const PubInStageForDurationConfigForm: AdditionalConfigForm = (props) => {
 	return (
 		<Controller
 			name={`triggers.${props.idx}.config`}
