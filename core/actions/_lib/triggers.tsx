@@ -242,7 +242,7 @@ export const humanReadableAutomation = <
 		: z.infer<NonNullable<(typeof triggers)[keyof typeof triggers]["config"]>>,
 	sourceAutomation?: Automations | null
 ) =>
-	`${instanceName} will run when ${humanReadableEventHydrated(automation.triggers[0].event, community, { automation: automation, config, sourceAutomation })}`
+	`${instanceName} will run when ${humanReadableEventHydrated(automation.triggers[0].event, community, { automation: automation, config, sourceAutomation: sourceAutomation ?? undefined })}`
 
 export type TriggersWithConfig = {
 	[K in keyof typeof triggers]: undefined extends (typeof triggers)[K]["config"] ? never : K
