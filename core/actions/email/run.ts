@@ -150,6 +150,7 @@ export const run = defineRun<typeof action>(
 			logger.error({ msg: "Failed to send email", error })
 
 			return {
+				success: false,
 				title: "Failed to Send Email",
 				error: error.message,
 				cause: error,

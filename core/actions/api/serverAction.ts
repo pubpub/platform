@@ -21,6 +21,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 
 	if (!user) {
 		return {
+			success: false,
 			error: "Not logged in",
 			config: {},
 		}
@@ -38,6 +39,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 
 	if (!canRunAction) {
 		return {
+			success: false,
 			error: "Not authorized to run action",
 			config: {},
 		}
@@ -60,19 +62,12 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		},
 	})
 
-	console.log("RESULT", result)
+	// runAutomation returns the full automation result, but we just need to return
+	// the first action run result for now
 	return {
 		success: result.success ?? false,
-
 		title: result.title,
-		error: result.error ?? result.report.error,
-		...(result.report?.[0]?.result ? { report: result.report?.[0]?.result?.report } : {}),
-	}
-
-	return {
-		...result,
-		success: result.success ?? false,
-		title: result.title,
-		...(result.report?.[0]?.result ? { report: result.report?.[0]?.result?.report } : {}),
+		data: {},
+		config: {},
 	}
 })

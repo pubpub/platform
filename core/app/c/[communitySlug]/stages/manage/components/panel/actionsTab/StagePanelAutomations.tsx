@@ -9,6 +9,7 @@ import { ItemGroup } from "ui/item"
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
 import { getStage, getStageAutomations } from "~/lib/db/queries"
+import { getActionConfigDefaultsFields } from "~/lib/server/actions"
 import { StagePanelCardHeader } from "../../editor/StagePanelCard"
 import { StagePanelAutomation } from "./StagePanelAutomation"
 import { StagePanelAutomationForm } from "./StagePanelAutomationForm"
@@ -16,12 +17,14 @@ import { StagePanelAutomationForm } from "./StagePanelAutomationForm"
 type PropsInner = {
 	stageId: StagesId
 	userId: UsersId
+	communityId: CommunitiesId
 }
 
 const StagePanelAutomationsInner = async (props: PropsInner) => {
-	const [stage, automations] = await Promise.all([
+	const [stage, automations, actionConfigDefaults] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getStageAutomations(props.stageId),
+		getActionConfigDefaultsFields(props.communityId),
 	])
 
 	if (!stage) {
@@ -36,6 +39,7 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 					stageId={stage.id}
 					communityId={stage.communityId as CommunitiesId}
 					automations={automations}
+					actionConfigDefaults={actionConfigDefaults ?? {}}
 				/>
 			</StagePanelCardHeader>
 			<CardContent>
@@ -71,6 +75,7 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 type Props = {
 	stageId?: StagesId
 	userId: UsersId
+	communityId: CommunitiesId
 }
 
 export const StagePanelAutomations = async (props: Props) => {
@@ -80,7 +85,11 @@ export const StagePanelAutomations = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelAutomationsInner stageId={props.stageId} userId={props.userId} />
+			<StagePanelAutomationsInner
+				stageId={props.stageId}
+				userId={props.userId}
+				communityId={props.communityId}
+			/>
 		</Suspense>
 	)
 }

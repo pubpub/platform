@@ -27,29 +27,31 @@ type Props = {
 import { useEffect, useState } from "react"
 import { isAfter, parseISO } from "date-fns"
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
 import { cn } from "utils"
+
+import { AutomationRunResult } from "~/app/components/ActionUI/AutomationRunResult"
 
 export const UpdateCircle = (
 	props: AutomationRuns & {
 		actionRuns: ActionRuns[]
+		status: "success" | "failure" | "scheduled" | "partial"
 		stale: boolean
 		setStale: (stale: boolean) => void
 		setInitTime: (initTime: Date) => void
 	}
 ) => {
-	const status = props.actionRuns.at(-1)?.status
+	const status = props.status
 
 	return (
-		<Tooltip>
-			<TooltipTrigger
+		<HoverCard>
+			<HoverCardTrigger
 				onMouseOver={() => {
 					if (props.stale === true) {
 						props.setStale(false)
 						props.setInitTime(new Date())
 					}
 				}}
-				asChild
 			>
 				<div
 					data-testid={`automation-run-${props.id}-update-circle`}
@@ -74,8 +76,8 @@ export const UpdateCircle = (
 						></span>
 					)}
 				</div>
-			</TooltipTrigger>
-			<TooltipContent className="max-w-xs p-3">
+			</HoverCardTrigger>
+			<HoverCardContent className="max-h-[32rem] w-96 overflow-auto p-3">
 				<div className="space-y-2">
 					<div className="flex items-center gap-2">
 						<div
@@ -115,20 +117,23 @@ export const UpdateCircle = (
 						)}
 					</div>
 
-					{Boolean(props.actionRuns.at(-1)?.result) && (
+					{props.actionRuns.length > 0 && (
 						<div className="pt-1">
 							<div className="font-medium text-xs">Result:</div>
-							<pre
-								className="mt-1 max-h-40 overflow-auto rounded bg-gray-100 p-2 font-mono text-xs"
+							<div
+								className="mt-1"
 								data-testid={`automation-run-${props.id}-update-circle-result`}
 							>
-								{JSON.stringify(props.actionRuns.at(-1)?.result, null, 2)}
-							</pre>
+								<AutomationRunResult
+									automationRun={props}
+									showOverallStatus={false}
+								/>
+							</div>
 						</div>
 					)}
 				</div>
-			</TooltipContent>
-		</Tooltip>
+			</HoverCardContent>
+		</HoverCard>
 	)
 }
 

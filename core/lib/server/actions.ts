@@ -38,6 +38,24 @@ export const getActionConfigDefaults = (communityId: CommunitiesId, action: Acti
 	)
 }
 
+export type ActionConfigDefaultFields = Record<Action, string[]>
+
+export const getActionConfigDefaultsFields = async (
+	communityId: CommunitiesId
+): Promise<ActionConfigDefaultFields> => {
+	const result = await autoCache(
+		db
+			.selectFrom("action_config_defaults")
+			.select(["action", "config"])
+			.where("communityId", "=", communityId)
+	).execute()
+
+	return result.reduce((acc, row) => {
+		acc[row.action] = Object.keys(row.config ?? {})
+		return acc
+	}, {} as ActionConfigDefaultFields)
+}
+
 export const setActionConfigDefaults = (
 	communityId: CommunitiesId,
 	action: Action,

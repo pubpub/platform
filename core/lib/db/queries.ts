@@ -6,6 +6,7 @@ import { cache } from "react"
 import { sql } from "kysely"
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
+import { getAutomationRunStatus } from "~/actions/results"
 import { db } from "~/kysely/database"
 import { pubType, pubValuesByRef } from "../server"
 import { autoCache } from "../server/cache/autoCache"
@@ -242,20 +243,44 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 })
 
 export const getStageAutomations = cache(
-	(stageId: StagesId, options?: GetEventAutomationOptions): Promise<FullAutomation[]> => {
-		return autoCache(
+	async (stageId: StagesId, options?: GetEventAutomationOptions): Promise<FullAutomation[]> => {
+		const automations = await autoCache(
 			getAutomationBase(options).where("automations.stageId", "=", stageId)
 		).execute()
+
+		return automations.map((automation) => ({
+			...automation,
+			lastAutomationRun: automation.lastAutomationRun
+				? {
+						...automation.lastAutomationRun,
+						status: getAutomationRunStatus(automation.lastAutomationRun),
+					}
+				: null,
+		}))
 	}
 )
 
 export const getAutomation = cache(
-	(
+	async (
 		automationId: AutomationsId,
 		options?: GetEventAutomationOptions
 	): Promise<FullAutomation | undefined> => {
-		return autoCache(
+		const automation = await autoCache(
 			getAutomationBase(options).where("automations.id", "=", automationId)
 		).executeTakeFirst()
+
+		if (!automation) {
+			return undefined
+		}
+
+		return {
+			...automation,
+			lastAutomationRun: automation.lastAutomationRun
+				? {
+						...automation.lastAutomationRun,
+						status: getAutomationRunStatus(automation.lastAutomationRun),
+					}
+				: null,
+		}
 	}
 )

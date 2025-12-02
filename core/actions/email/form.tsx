@@ -8,13 +8,10 @@ import { useActionForm } from "../_lib/ActionForm"
 import MemberSelectClientFetch from "./DynamicSelectFetch"
 
 export default function EmailActionForm() {
-	// const a = useMemo(() => <RecipientAndMemberFields />, []);
-
 	return (
 		<FieldSet>
 			<ActionField name="senderName" label="Sender Name" />
 			<ActionField name="replyTo" label="Reply-To" />
-			{/* {a} */}
 			<RecipientAndMemberFields />
 			<ActionField
 				name="subject"

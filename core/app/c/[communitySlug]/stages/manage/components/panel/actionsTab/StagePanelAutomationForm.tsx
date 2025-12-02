@@ -10,6 +10,7 @@ import type {
 } from "react-hook-form"
 import type { IconConfig } from "ui/dynamic-icon"
 import type { ZodTypeDef } from "zod"
+import type { ActionConfigDefaultFields } from "~/lib/server/actions"
 import type { ConditionBlockFormValue } from "./ConditionBlock"
 
 import { memo, useCallback, useEffect, useId, useMemo, useState } from "react"
@@ -52,6 +53,7 @@ import { Input } from "ui/input"
 import { Item, ItemContent, ItemHeader } from "ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 import { FormSubmitButton } from "ui/submit-button"
+import { type TokenContext, TokenProvider } from "ui/tokens"
 import { cn } from "utils"
 
 import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder"
@@ -81,6 +83,7 @@ type Props = {
 	stageId: StagesId
 	communityId: CommunitiesId
 	automations: FullAutomation[]
+	actionConfigDefaults: ActionConfigDefaultFields
 }
 
 const AutomationSelector = ({
@@ -360,6 +363,83 @@ const ConfigCard = memo(
 		)
 	}
 )
+
+const ConditionFieldSection = memo(
+	function ConditionFieldSection(props: {
+		form: UseFormReturn<CreateAutomationsSchema>
+		condition: ConditionBlockFormValue | undefined
+	}) {
+		return (
+			<Controller
+				control={props.form.control}
+				name="condition"
+				render={({ field, fieldState }) => (
+					<Field data-invalid={fieldState.invalid}>
+						<div className="flex items-center justify-between">
+							<FieldLabel>Conditions (optional)</FieldLabel>
+							{!props.condition ? (
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									className="h-7 text-xs"
+									onClick={() => {
+										const ranks = findRanksBetween({
+											numberOfRanks: 1,
+										})
+										field.onChange({
+											type: AutomationConditionBlockType.OR,
+											kind: "block",
+											rank: ranks[0],
+											items: [],
+										})
+									}}
+								>
+									<Plus size={14} />
+									Add conditions
+								</Button>
+							) : (
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="h-7 text-neutral-500 text-xs"
+									onClick={() => {
+										field.onChange(undefined)
+									}}
+								>
+									Remove all conditions
+								</Button>
+							)}
+						</div>
+						{props.condition && (
+							<>
+								<FieldDescription>
+									Define conditions that must be met for this automation to run.
+									Use JSONata expressions to construct a boolean value like{" "}
+									<code>'Hello' in $.pub.values.title</code>.
+								</FieldDescription>
+								<ConditionBlock
+									control={props.form.control}
+									fieldState={fieldState}
+									slug={"condition"}
+									id={"root-block"}
+								/>
+							</>
+						)}
+						{fieldState.error && (
+							<FieldError className="text-xs">{fieldState.error.message}</FieldError>
+						)}
+					</Field>
+				)}
+			/>
+		)
+	},
+	(prevProps, nextProps) => {
+		return prevProps.condition === nextProps.condition
+	}
+)
+
 function Form(
 	props: Props & {
 		currentlyEditingAutomationId: AutomationsId | null
@@ -582,7 +662,6 @@ function Form(
 	}, [selectedAction?.action, form, initialActionLoaded])
 
 	const condition = form.watch("condition")
-	const _iconConfig = form.watch("icon")
 
 	const {
 		fields: selectedTriggers,
@@ -652,71 +731,7 @@ function Form(
 			/>
 
 			{selectedTriggers.length > 0 && (
-				<Controller
-					control={form.control}
-					name="condition"
-					render={({ field, fieldState }) => (
-						<Field data-invalid={fieldState.invalid}>
-							<div className="flex items-center justify-between">
-								<FieldLabel>Conditions (optional)</FieldLabel>
-								{!condition ? (
-									<Button
-										type="button"
-										variant="outline"
-										size="sm"
-										className="h-7 text-xs"
-										onClick={() => {
-											const ranks = findRanksBetween({
-												numberOfRanks: 1,
-											})
-											field.onChange({
-												type: AutomationConditionBlockType.OR,
-												kind: "block",
-												rank: ranks[0],
-												items: [],
-											})
-										}}
-									>
-										<Plus size={14} />
-										Add conditions
-									</Button>
-								) : (
-									<Button
-										type="button"
-										variant="ghost"
-										size="sm"
-										className="h-7 text-neutral-500 text-xs"
-										onClick={() => {
-											field.onChange(undefined)
-										}}
-									>
-										Remove all conditions
-									</Button>
-								)}
-							</div>
-							{condition && (
-								<>
-									<FieldDescription>
-										Define conditions that must be met for this automation to
-										run. Use JSONata expressions to construct a boolean value
-										like <code>'Hello' in $.pub.values.title</code>.
-									</FieldDescription>
-									<ConditionBlock
-										control={form.control}
-										fieldState={fieldState}
-										slug={"condition"}
-										id={"root-block"}
-									/>
-								</>
-							)}
-							{fieldState.error && (
-								<FieldError className="text-xs">
-									{fieldState.error.message}
-								</FieldError>
-							)}
-						</Field>
-					)}
-				/>
+				<ConditionFieldSection form={form} condition={condition} />
 			)}
 
 			{selectedTriggers.length > 0 && (
@@ -731,6 +746,9 @@ function Form(
 									{field.value?.action ? (
 										<ActionConfigCardWrapper
 											action={field.value.action}
+											defaults={
+												props.actionConfigDefaults[field.value.action]
+											}
 											form={form}
 											onChange={field.onChange}
 											isEditing={!!currentlyEditingAutomationId}
@@ -886,6 +904,7 @@ function ActionConfigCardWrapper(props: {
 		config: Record<string, unknown>
 	}) => void
 	isEditing: boolean
+	defaults?: string[]
 }) {
 	const removeAction = useCallback(() => {
 		props.onChange({
@@ -901,6 +920,7 @@ function ActionConfigCardWrapper(props: {
 			form={props.form}
 			removeAction={removeAction}
 			isEditing={props.isEditing}
+			defaults={props.defaults}
 		/>
 	)
 }
@@ -911,11 +931,23 @@ const ActionConfigCard = memo(
 		form: UseFormReturn<CreateAutomationsSchema>
 		removeAction: () => void
 		isEditing: boolean
+		defaults?: string[]
 	}) {
 		const actionDef = actions[props.action]
 		const ActionFormComponent = useMemo(() => {
 			return getActionFormComponent(props.action)
 		}, [props.action])
+
+		const translatedDefaults = useMemo(() => {
+			return props.defaults?.map((key) => `action.config.${key}`) ?? []
+		}, [props.defaults])
+
+		const translatedTokens = useMemo(() => {
+			return Object.entries(actionDef.tokens ?? {}).reduce((acc, [key, value]) => {
+				acc[`action.config.${key}`] = value
+				return acc
+			}, {} as TokenContext)
+		}, [actionDef.tokens])
 
 		if (!ActionFormComponent) {
 			return null
@@ -935,25 +967,27 @@ const ActionConfigCard = memo(
 							showCollapseToggle={true}
 							defaultCollapsed={props.isEditing}
 						>
-							<ActionFormContext.Provider
-								value={{
-									action: actionDef,
-									schema: actionDef.config.schema,
-									path: "action.config",
-									form: props.form as UseFormReturn<any> as UseFormReturn<FieldValues>,
-									defaultFields: [],
-									context: {
-										type: "automation",
-									},
-								}}
-							>
-								<ActionFormComponent />
-							</ActionFormContext.Provider>
-							{fieldState.error && (
-								<FieldError className="text-xs">
-									{fieldState.error.message}
-								</FieldError>
-							)}
+							<TokenProvider tokens={translatedTokens}>
+								<ActionFormContext.Provider
+									value={{
+										action: actionDef,
+										schema: actionDef.config.schema,
+										path: "action.config",
+										form: props.form as UseFormReturn<any> as UseFormReturn<FieldValues>,
+										defaultFields: translatedDefaults,
+										context: {
+											type: "automation",
+										},
+									}}
+								>
+									<ActionFormComponent />
+								</ActionFormContext.Provider>
+								{fieldState.error && (
+									<FieldError className="text-xs">
+										{fieldState.error.message}
+									</FieldError>
+								)}
+							</TokenProvider>
 						</ConfigCard>
 					)
 				}}

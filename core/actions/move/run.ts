@@ -24,6 +24,7 @@ export const run = defineRun<typeof action>(async ({ pub, config }) => {
 		}
 		logger.error({ msg: "move", error })
 		return {
+			success: false,
 			title: "Failed to move pub",
 			error: "An error occured while moving the pub",
 			cause: error,

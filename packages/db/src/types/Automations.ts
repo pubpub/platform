@@ -1,5 +1,6 @@
 import type {
 	ActionInstances,
+	ActionRunStatus,
 	ActionRuns,
 	AutomationConditionBlocks,
 	AutomationConditions,
@@ -26,5 +27,10 @@ export type FullAutomation = Automations & {
 	actionInstances: ActionInstanceWithConfigDefaults[]
 	condition: ConditionBlock | null
 	icon: IconConfig | null
-	lastAutomationRun: (AutomationRuns & { actionRuns: ActionRuns[] }) | null
+	lastAutomationRun:
+		| (AutomationRuns & {
+				actionRuns: ActionRuns[]
+				status: ActionRunStatus | "partial"
+		  })
+		| null
 }

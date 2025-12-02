@@ -31,7 +31,7 @@ export const StagePanelSheet = (props: Props) => {
 				<SheetTitle>Stage edit panel</SheetTitle>
 				<SheetDescription>Edit the stage settings and actions.</SheetDescription>
 			</SheetHeader>
-			<SheetContent className="max-h-100vh overflow-y-auto sm:max-w-md">
+			<SheetContent className="max-h-100vh w-screen overflow-y-auto sm:max-w-md">
 				<SheetTitle className="sr-only">Edit Stage</SheetTitle>
 				{props.children}
 			</SheetContent>

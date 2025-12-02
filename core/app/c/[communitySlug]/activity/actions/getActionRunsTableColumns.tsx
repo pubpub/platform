@@ -8,11 +8,11 @@ import type { Writeable, XOR } from "utils/types"
 import Link from "next/link"
 
 import { AutomationEvent } from "db/public"
-import { Badge } from "ui/badge"
 import { DataTableColumnHeader } from "ui/data-table"
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
 
+import { ActionRunStatusBadge } from "~/app/components/ActionUI/ActionRunResult"
 import { PubTitle } from "~/app/components/PubTitle"
 import { getPubTitle, type PubTitleProps } from "~/lib/pubs"
 
@@ -113,30 +113,20 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
 			accessorKey: "status",
 			cell: ({ row, getValue }) => {
-				let badge: React.ReactNode
-				switch (getValue()) {
-					case "success":
-						badge = <Badge>success</Badge>
-						break
-					case "failure":
-						badge = <Badge variant="destructive">failure</Badge>
-						break
-					case "scheduled":
-						badge = (
-							<Badge variant="default" className="bg-orange-500">
-								scheduled
-							</Badge>
-						)
-						break
-					default:
-						badge = <Badge variant="outline">unknown</Badge>
-						break
-				}
+				const statusValue = getValue()
+				const status =
+					statusValue === "success" ||
+					statusValue === "failure" ||
+					statusValue === "scheduled"
+						? statusValue
+						: "scheduled"
 				return (
 					<HoverCard>
-						<HoverCardTrigger className="cursor-default">{badge}</HoverCardTrigger>
-						<HoverCardContent className="overflow-scroll">
-							<pre>
+						<HoverCardTrigger className="cursor-default">
+							<ActionRunStatusBadge status={status} />
+						</HoverCardTrigger>
+						<HoverCardContent className="max-h-96 max-w-md overflow-auto">
+							<pre className="text-xs">
 								<code>{JSON.stringify(row.original.result, null, 2)}</code>
 							</pre>
 						</HoverCardContent>

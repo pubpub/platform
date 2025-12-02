@@ -47,9 +47,7 @@ export const AutomationRunForm = (props: Props) => {
 				stack: [],
 			})
 
-			console.log("RESULT", result)
 			if (didSucceed(result)) {
-				console.log("RESULT report", result.report?.report)
 				toast({
 					title:
 						"title" in result && typeof result.title === "string"

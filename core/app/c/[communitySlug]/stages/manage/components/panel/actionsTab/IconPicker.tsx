@@ -5,7 +5,7 @@ import { XIcon } from "lucide-react"
 
 import { Button } from "ui/button"
 import { DynamicIcon } from "ui/dynamic-icon"
-import { FormLabel } from "ui/form"
+import { FieldLabel } from "ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
 import { cn } from "utils"
 
@@ -90,7 +90,7 @@ export const IconPickerContent = ({
 
 	return (
 		<div className="space-y-2">
-			<FormLabel className="sr-only text-xs">Icon</FormLabel>
+			<FieldLabel className="sr-only text-xs">Icon</FieldLabel>
 			<div className="flex items-center justify-between gap-2">
 				<ColorPickerPopover
 					color={value?.color ?? "#000000"}

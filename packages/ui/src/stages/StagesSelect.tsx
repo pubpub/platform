@@ -6,7 +6,7 @@ import React from "react"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form"
+import { FormField, FormItem, FormLabel, FormMessage } from "../form"
 import { useStages } from "./StagesProvider"
 
 type Props = {
@@ -27,11 +27,9 @@ export const StagesSelect = (props: Props) => {
 			}}
 			defaultValue={props.field.value}
 		>
-			<FormControl>
-				<SelectTrigger>
-					<SelectValue placeholder="Select a stage" />
-				</SelectTrigger>
-			</FormControl>
+			<SelectTrigger>
+				<SelectValue placeholder="Select a stage" />
+			</SelectTrigger>
 			<SelectContent>
 				{stages.map((stage) => (
 					<SelectItem key={stage.id} value={stage.id}>

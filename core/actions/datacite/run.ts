@@ -295,6 +295,7 @@ const createPubDeposit = async (depositPayload: Payload) => {
 			},
 		})
 		return {
+			success: false,
 			title: "Failed to create DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
 		}
@@ -326,6 +327,7 @@ const updatePubDeposit = async (depositPayload: Payload) => {
 			},
 		})
 		return {
+			success: false,
 			title: "Failed to update DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
 		}
@@ -343,6 +345,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 	} catch (error) {
 		if (error instanceof AssertionError) {
 			return {
+				success: false,
 				title: "Failed to create DataCite deposit",
 				error: error.message,
 				cause: undefined,
@@ -381,6 +384,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 			})
 		} catch (error) {
 			return {
+				success: false,
 				title: "Failed to save DOI",
 				error: "The pub was deposited to DataCite, but we were unable to update the pub's DOI in PubPub",
 				cause: error.message,

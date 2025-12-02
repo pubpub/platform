@@ -268,6 +268,7 @@ export const run = defineRun<typeof action>(
 			logger.error(err)
 
 			return {
+				success: false,
 				title: "Error",
 				error: "An error occurred while importing the pub from Google Drive.",
 				cause: err,

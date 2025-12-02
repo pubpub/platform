@@ -39,6 +39,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 
 	if (res.status !== 200) {
 		return {
+			success: false,
 			title: "Error",
 			error: `Error ${res.status} ${res.statusText}`,
 		}
@@ -49,6 +50,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 		!res.headers.get("content-type")?.includes("application/json")
 	) {
 		return {
+			success: false,
 			title: "Error",
 			error: `Expected application/json response, got ${res.headers.get("content-type")}`,
 		}
@@ -98,6 +100,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 	} catch (error) {
 		logger.debug(error)
 		return {
+			success: false,
 			title: "Error",
 			error: `Failed to update fields: ${error}`,
 			cause: error,

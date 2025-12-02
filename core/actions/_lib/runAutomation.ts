@@ -15,7 +15,6 @@ import type {
 import type { BaseActionInstanceConfig, FullAutomation, Json } from "db/types"
 import type { Kysely } from "kysely"
 import type { ZodError } from "zod"
-import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions"
 import type { run as logRun } from "../log/run"
 import type { ActionSuccess } from "../types"
 
@@ -27,6 +26,12 @@ import { logger } from "logger"
 import { expect } from "utils"
 import { tryCatch } from "utils/try-catch"
 
+import {
+	type ActionRunResult,
+	getActionRunStatusFromResult,
+	isActionFailure,
+	isActionSuccess,
+} from "~/actions/results"
 import { db } from "~/kysely/database"
 import { getAutomation } from "~/lib/db/queries"
 import { env } from "~/lib/env/env"
@@ -43,10 +48,7 @@ import { evaluateConditions } from "./evaluateConditions"
 import { getActionRunByName } from "./getRuns"
 import { createPubProxy } from "./pubProxy"
 
-export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions | ActionSuccess) & {
-	// stack: ActionRunsId[];
-	config: BaseActionInstanceConfig
-}
+export type ActionInstanceRunResult = ActionRunResult
 
 export type RunAutomationArgs = {
 	automationId: AutomationsId
@@ -109,6 +111,7 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			json: args.json,
 		})
 		return {
+			success: false,
 			error: "No input found",
 			config: args.actionInstance.config as BaseActionInstanceConfig,
 		}
@@ -121,6 +124,7 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			action,
 		})
 		return {
+			success: false,
 			error: "Action not found",
 			config: args.actionInstance.config as BaseActionInstanceConfig,
 		}
@@ -161,10 +165,10 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 		const resultConfig = failConfig.success ? failConfig.config : args.actionInstance.config
 
 		return {
+			success: false,
 			title: "Invalid action configuration",
 			error: result.error.message,
 			cause: result.error.zodError as ZodError<any>,
-			issues: result.error.zodError?.issues,
 			config: resultConfig,
 		}
 	}
@@ -189,14 +193,41 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			automation: args.automation,
 		})
 
-		return { ...result, config }
+		if (isActionSuccess(result)) {
+			return { ...result, config }
+		}
+
+		if (isActionFailure(result)) {
+			return { ...result, config }
+		}
+
+		// handle legacy ClientExceptionOptions format
+		if (isClientExceptionOptions(result)) {
+			return {
+				success: false,
+				title: result.title,
+				error: result.error,
+				cause: result.cause,
+				config,
+			}
+		}
+
+		// handle legacy ActionSuccess format
+		return {
+			success: true,
+			report: (result as ActionSuccess).report,
+			data: (result as ActionSuccess).data,
+			config,
+		}
 	} catch (error) {
 		captureException(error)
 		logger.error(error)
 
 		return {
+			success: false,
 			title: "Failed to run action",
 			error: error.message,
+			cause: error,
 			config: config,
 		}
 	}
@@ -370,9 +401,7 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 				automation,
 			})
 
-			const status = isClientExceptionOptions(result)
-				? ActionRunStatus.failure
-				: ActionRunStatus.success
+			const status = getActionRunStatusFromResult(result)
 
 			logger[status === ActionRunStatus.failure ? "error" : "info"]({
 				msg: "Automation run finished",
@@ -381,13 +410,19 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 				status,
 				result,
 			})
-			return { status, result, actionInstance: ai }
+			return {
+				status,
+				result,
+				actionInstance: ai,
+				actionRunId: correcspondingActionRun.id,
+			}
 		})
 	)
 
 	const finalAutomationRun = await insertAutomationRun(trx, {
 		automationId: args.automationId,
 		actionRuns: results.map((r) => ({
+			id: r.actionRunId,
 			actionInstanceId: r.actionInstance.id,
 			config: r.result.config,
 			status: r.status,
@@ -594,6 +629,7 @@ export async function insertAutomationRun(
 					.insertInto("action_runs")
 					.values((eb) =>
 						args.actionRuns.map((ai) => ({
+							id: ai.id,
 							automationRunId: eb
 								.selectFrom("automationRun")
 								.select("automationRun.id")
