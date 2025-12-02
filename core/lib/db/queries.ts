@@ -203,6 +203,23 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 							.as("items")
 					)
 			).as("condition"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("automation_runs")
+					.whereRef("automation_runs.automationId", "=", "automations.id")
+					.selectAll("automation_runs")
+					.orderBy("automation_runs.createdAt", "desc")
+					.limit(1)
+					.select((eb) => [
+						jsonArrayFrom(
+							eb
+								.selectFrom("action_runs")
+								.whereRef("action_runs.automationRunId", "=", "automation_runs.id")
+								.selectAll("action_runs")
+								.orderBy("action_runs.createdAt", "asc")
+						).as("actionRuns"),
+					])
+			).as("lastAutomationRun"),
 		])
 		.$if(!!options?.event, (eb) => {
 			return eb.where((eb) =>

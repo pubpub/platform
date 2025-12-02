@@ -106,7 +106,7 @@ export default async function Page(props: Props) {
 					</PubFieldProvider>
 				</StagesProvider>
 			</StagesManageProvider>
-			<SSERevalidator listenTables={["action_runs"]} />
+			<SSERevalidator listenTables={["automation_runs"]} />
 		</>
 	)
 }

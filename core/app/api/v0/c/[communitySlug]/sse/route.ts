@@ -16,7 +16,7 @@ type Tables = (typeof databaseTableNames)[number]
 /**
  * Tables that are currently supported for SSE notifications
  */
-const notifyTables = ["action_runs"] as const satisfies Tables[]
+const notifyTables = ["automation_runs"] as const satisfies Tables[]
 export type NotifyTables = (typeof notifyTables)[number]
 
 const parseNotifyTables = (tables: string[]): NotifyTables[] => {

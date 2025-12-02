@@ -60,10 +60,19 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		},
 	})
 
+	console.log("RESULT", result)
+	return {
+		success: result.success ?? false,
+
+		title: result.title,
+		error: result.error ?? result.report.error,
+		...(result.report?.[0]?.result ? { report: result.report?.[0]?.result?.report } : {}),
+	}
+
 	return {
 		...result,
 		success: result.success ?? false,
 		title: result.title,
-		...(result.report?.[0]?.result ? { report: result.report?.[0]?.result } : {}),
+		...(result.report?.[0]?.result ? { report: result.report?.[0]?.result?.report } : {}),
 	}
 })

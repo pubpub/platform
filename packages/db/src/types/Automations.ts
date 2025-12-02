@@ -1,8 +1,10 @@
 import type {
 	ActionInstances,
+	ActionRuns,
 	AutomationConditionBlocks,
 	AutomationConditions,
 	AutomationEvent,
+	AutomationRuns,
 	Automations,
 	AutomationTriggers,
 } from "../public"
@@ -24,4 +26,5 @@ export type FullAutomation = Automations & {
 	actionInstances: ActionInstanceWithConfigDefaults[]
 	condition: ConditionBlock | null
 	icon: IconConfig | null
+	lastAutomationRun: (AutomationRuns & { actionRuns: ActionRuns[] }) | null
 }

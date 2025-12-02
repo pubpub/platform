@@ -47,7 +47,9 @@ export const AutomationRunForm = (props: Props) => {
 				stack: [],
 			})
 
+			console.log("RESULT", result)
 			if (didSucceed(result)) {
+				console.log("RESULT report", result.report?.report)
 				toast({
 					title:
 						"title" in result && typeof result.title === "string"
@@ -55,7 +57,9 @@ export const AutomationRunForm = (props: Props) => {
 							: `Successfully ran ${props.automation.name || action.name}`,
 					variant: "default",
 					description: (
-						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>
+						<div className="max-h-40 max-w-sm overflow-auto">
+							{result.report?.report}
+						</div>
 					),
 				})
 				return

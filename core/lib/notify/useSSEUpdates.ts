@@ -1,6 +1,6 @@
 import type { ChangeNotification, NotifyTables } from "~/app/api/v0/c/[communitySlug]/sse/route"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDebounce } from "use-debounce"
 import { useSSE } from "use-next-sse"
 
@@ -56,6 +56,7 @@ export function useSSEUpdates<T extends NotifyTables>({
 		withCredentials,
 		reconnect: true,
 	})
+	console.log("data", data)
 
 	const lastDataRef = useRef<ChangeNotification<T> | null>(null)
 	const [debouncedData] = useDebounce(data, debounceMs)
@@ -65,11 +66,11 @@ export function useSSEUpdates<T extends NotifyTables>({
 	> | null>(null)
 	const [isReloading, setIsReloading] = useState(false)
 
-	const beforeUnload = () => {
+	const beforeUnload = useCallback(() => {
 		if (isReloading) return
 		setIsReloading(true)
 		window.location.reload()
-	}
+	}, [isReloading])
 
 	// we don't want to show the error toast when reloading
 	useEffect(() => {
