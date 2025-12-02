@@ -59,7 +59,7 @@ BEGIN
                             NEW."stageId"
                         WHEN TG_OP = 'DELETE' THEN
                             OLD."stageId"
-                        END, 'event', target_event, 'community', community, 'stack', '[]'::json));
+                        END, 'trigger', json_build_object('event', target_event, 'config', NULL), 'community', community, 'stack', '[]'::json));
         END LOOP;
     IF TG_OP = 'INSERT' THEN
         RETURN NEW;
@@ -103,7 +103,7 @@ BEGIN
         AND at.event = 'pubInStageForDuration' LOOP
             -- emit a scheduling event for each specific automation
             PERFORM
-                graphile_worker.add_job('emitEvent', json_build_object('type', 'ScheduleDelayedAutomation', 'automationId', automation."automationId", 'pubId', NEW."pubId", 'stageId', NEW."stageId", 'community', community, 'stack', '[]'::json));
+                graphile_worker.add_job('emitEvent', json_build_object('type', 'ScheduleDelayedAutomation', 'automationId', automation."automationId", 'pubId', NEW."pubId", 'stageId', NEW."stageId", 'trigger', json_build_object('event', 'pubInStageForDuration', 'config', NULL), 'community', community, 'stack', '[]'::json));
         END LOOP;
     RETURN NEW;
 END;
@@ -151,7 +151,7 @@ BEGIN
         AND ar.event = 'pubInStageForDuration' LOOP
             -- emit cancellation event for each scheduled run
             PERFORM
-                graphile_worker.add_job('emitEvent', json_build_object('type', 'CancelScheduledAutomation', 'actionRunId', scheduled_run."actionRunId", 'automationRunId', scheduled_run."automationRunId", 'automationId', scheduled_run."automationId", 'pubId', OLD."pubId", 'stageId', OLD."stageId", 'community', community));
+                graphile_worker.add_job('emitEvent', json_build_object('type', 'CancelScheduledAutomation', 'automationRunId', scheduled_run."automationRunId", 'pubId', OLD."pubId", 'stageId', OLD."stageId", 'community', community));
         END LOOP;
     RETURN OLD;
 END;

@@ -25,7 +25,7 @@ export const internalApi = contract.router(
 				pubId: pubsIdSchema,
 				trigger: z.object({
 					event: automationEventSchema,
-					config: z.record(z.unknown()).nullish(),
+					config: z.record(z.unknown()).nullable(),
 				}),
 				stack: z.array(automationRunsIdSchema),
 			}),
@@ -68,7 +68,7 @@ export const internalApi = contract.router(
 				pubId: pubsIdSchema,
 				trigger: z.object({
 					event: automationEventSchema,
-					config: z.record(z.unknown()).nullish(),
+					config: z.record(z.unknown()).nullable(),
 				}),
 				automationRunId: automationRunsIdSchema,
 				stack: z.array(automationRunsIdSchema),

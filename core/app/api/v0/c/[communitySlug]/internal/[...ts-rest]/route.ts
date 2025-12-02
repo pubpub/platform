@@ -113,12 +113,13 @@ const handler = createNextHandler(
 
 			const result = await runAutomation({
 				automationId: automationId as AutomationsId,
+				manualActionInstancesOverrideArgs: null,
 				pubId: pubId as PubsId,
 				trigger,
 				communityId: community.id as CommunitiesId,
 				stack: stack as unknown as AutomationRunsId[],
 				scheduledAutomationRunId: automationRunId,
-			} as any)
+			})
 
 			return {
 				status: 200,

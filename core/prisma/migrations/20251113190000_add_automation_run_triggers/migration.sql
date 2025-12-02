@@ -59,7 +59,7 @@ BEGIN
             -- emit an event for each watching automation
             -- append current action run to stack
             PERFORM
-                graphile_worker.add_job('emitEvent', json_build_object('type', 'RunAutomation', 'automationId', watched_automation."automationId", 'pubId', NEW."pubId", 'stageId', watched_automation."stageId", 'event', target_event, 'community', community, 'stack', action_stack || jsonb_build_array(NEW.id)));
+                graphile_worker.add_job('emitEvent', json_build_object('type', 'RunAutomation', 'automationId', watched_automation."automationId", 'pubId', NEW."pubId", 'stageId', watched_automation."stageId", 'trigger', json_build_object('event', target_event, 'config', NULL), 'community', community, 'stack', action_stack || jsonb_build_array(NEW.id)));
         END LOOP;
     RETURN NEW;
 END;

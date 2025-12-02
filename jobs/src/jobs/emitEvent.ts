@@ -1,12 +1,13 @@
 import type {
 	CancelScheduledAutomationPayload,
-	EmitEventPayload,
 	RunAutomationPayload,
 	RunDelayedAutomationPayload,
 	ScheduleDelayedAutomationPayload,
 } from "db/types"
 import type { logger } from "logger"
 import type { InternalClient } from "../clients"
+
+import { emitEventPayloadSchema } from "db/types"
 
 import { defineJob } from "../defineJob"
 
@@ -194,36 +195,37 @@ const handleCancelScheduledAutomation = async (
 }
 
 export const emitEvent = defineJob(
-	async (client: InternalClient, payload: EmitEventPayload, eventLogger, job) => {
+	async (client: InternalClient, payload: unknown, eventLogger, job) => {
 		eventLogger.info({ msg: "Starting emitEvent", payload })
 
-		if (!payload?.community?.slug) {
+		// parse and validate the payload
+		const parseResult = emitEventPayloadSchema.safeParse(payload)
+
+		if (!parseResult.success) {
 			eventLogger.error({
-				msg: "No community slug found in payload",
-				job,
+				msg: "Invalid payload for emitEvent",
+				error: parseResult.error.format(),
+				payload,
 			})
 			return
 		}
 
+		const validPayload = parseResult.data
+
 		// route based on event type
-		switch (payload.type) {
+		switch (validPayload.type) {
 			case "RunAutomation":
-				await handleRunAutomation(client, payload, eventLogger)
+				await handleRunAutomation(client, validPayload, eventLogger)
 				break
 			case "ScheduleDelayedAutomation":
-				await handleScheduleDelayedAutomation(client, payload, eventLogger)
+				await handleScheduleDelayedAutomation(client, validPayload, eventLogger)
 				break
 			case "RunDelayedAutomation":
-				await handleRunDelayedAutomation(client, payload, eventLogger)
+				await handleRunDelayedAutomation(client, validPayload, eventLogger)
 				break
 			case "CancelScheduledAutomation":
-				await handleCancelScheduledAutomation(client, payload, eventLogger)
+				await handleCancelScheduledAutomation(client, validPayload, eventLogger)
 				break
-			default:
-				eventLogger.warn({
-					msg: "Unknown event type",
-					payload,
-				})
 		}
 	}
 )

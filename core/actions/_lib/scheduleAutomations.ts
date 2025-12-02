@@ -76,23 +76,18 @@ export const scheduleDelayedAutomation = async ({
 	}
 
 	const config = trigger.config as Record<string, any> | null
-	if (
-		!config ||
-		typeof config.automationConfig !== "object" ||
-		!config.automationConfig?.duration ||
-		!config.automationConfig?.interval
-	) {
-		throw new Error(`Automation ${automationId} missing duration/interval configuration`)
+	if (!config || typeof config !== "object" || !config.duration || !config.interval) {
+		console.log({
+			config: JSON.stringify(config, null, 2),
+			typeof: typeof config,
+		})
+		throw new Error(
+			`Automation ${automation.name} (${automationId}) in Community ${community.slug} missing duration/interval configuration. Is ${JSON.stringify(config)}`
+		)
 	}
 
-	const duration = config.automationConfig.duration as number
-	const interval = config.automationConfig.interval as
-		| "minute"
-		| "hour"
-		| "day"
-		| "week"
-		| "month"
-		| "year"
+	const duration = config.duration as number
+	const interval = config.interval as "minute" | "hour" | "day" | "week" | "month" | "year"
 
 	// check if we need to evaluate conditions before scheduling
 	const automationTiming = (automation as any).conditionEvaluationTiming as
