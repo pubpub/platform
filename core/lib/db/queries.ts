@@ -239,6 +239,7 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 				)
 			)
 		})
+		.orderBy("automations.createdAt", "asc")
 		.$narrowType<{ icon: IconConfig | null }>()
 })
 
