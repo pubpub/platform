@@ -1012,6 +1012,12 @@ export const TriggerField = (props: {
 	const selectTriggers = useMemo(() => {
 		return Object.values(AutomationEvent)
 			.filter((event) => !props.field.value?.some((t) => t.event === event))
+			.sort((a, b) => {
+				// Put "manual" trigger first
+				if (a === AutomationEvent.manual) return -1
+				if (b === AutomationEvent.manual) return 1
+				return 0
+			})
 			.map((event) => {
 				const automation = getTriggerByName(event)
 
