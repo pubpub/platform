@@ -7,9 +7,9 @@ import { cache, Suspense } from "react"
 
 import { Capabilities, MembershipType } from "db/public"
 import {
-	Activity,
 	BookOpen,
 	BookOpenText,
+	Bot,
 	CurlyBraces,
 	FlagTriangleRightIcon,
 	Form,
@@ -103,9 +103,9 @@ const viewLinks: LinkGroupDefinition = {
 			authorization: userCanViewStagePage,
 		},
 		{
-			href: "/activity/actions",
-			text: "Action Log",
-			icon: <Activity size={16} />,
+			href: "/activity/automations",
+			text: "Automation Log",
+			icon: <Bot size={16} />,
 			authorization: userCanEditCommunityCached,
 		},
 	],

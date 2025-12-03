@@ -28,6 +28,7 @@ import { tryCatch } from "utils/try-catch"
 
 import {
 	type ActionRunResult,
+	type AutomationRunResult,
 	getActionRunStatusFromResult,
 	isActionFailure,
 	isActionSuccess,
@@ -233,7 +234,10 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 	}
 }
 
-export async function runAutomation(args: RunAutomationArgs, trx = db) {
+export async function runAutomation(
+	args: RunAutomationArgs,
+	trx = db
+): Promise<AutomationRunResult> {
 	if (args.stack.length > MAX_STACK_DEPTH) {
 		throw new Error(
 			`Action instance stack depth of ${args.stack.length} exceeds the maximum allowed depth of ${MAX_STACK_DEPTH}`
@@ -258,10 +262,7 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 	])
 
 	if (!automation) {
-		return {
-			error: "Automation not found",
-			stack: args.stack,
-		}
+		throw new Error(`Automation ${args.automationId} not found`)
 	}
 
 	if (
@@ -269,21 +270,16 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 			env.FLAGS?.get("disabled-actions").includes(ai.action)
 		)
 	) {
-		return { ...ApiError.FEATURE_DISABLED, stack: args.stack }
+		return { ...ApiError.FEATURE_DISABLED, stack: args.stack, actionRuns: [], success: false }
 	}
 
 	if (!community) {
-		return {
-			error: "Community not found",
-			stack: args.stack,
-		}
+		throw new Error(`Community ${args.communityId} not found`)
 	}
+
 	// check if we need to evaluate conditions at execution time
 	if (automation?.condition) {
-		const automationTiming = (automation as any).conditionEvaluationTiming as
-			| string
-			| null
-			| undefined
+		const automationTiming = automation.conditionEvaluationTiming as string | null | undefined
 		const shouldEvaluateNow =
 			automationTiming === "onExecution" ||
 			automationTiming === "both" ||
@@ -303,10 +299,9 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 					const existingAutomationRun = await getAutomationRunById(
 						args.communityId,
 						args.scheduledAutomationRunId
-					).executeTakeFirstOrThrow()
-					if (!existingAutomationRun) {
-						throw new Error(`Automation run ${args.scheduledAutomationRunId} not found`)
-					}
+					).executeTakeFirstOrThrow(
+						() => new Error(`Automation run ${args.scheduledAutomationRunId} not found`)
+					)
 
 					await insertAutomationRun(trx, {
 						automationId: automation.id,
@@ -331,8 +326,11 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 				}
 
 				return {
+					success: false,
+					title: "Failed to evaluate conditions",
 					error: error.message,
 					stack: args.stack,
+					actionRuns: [],
 				}
 			}
 
@@ -345,6 +343,8 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 					failureMessages: evaluationResult.flatMessages,
 				})
 				return {
+					success: false,
+					actionRuns: [],
 					title: "Automation condition not met",
 					error: evaluationResult.flatMessages.map((m) => m.message).join(", "),
 					stack: args.stack,
@@ -380,7 +380,10 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 		userId: isActionUserInitiated ? args.userId : undefined,
 	})
 
-	const results = await Promise.all(
+	const results: (ActionRunResult & {
+		actionInstance: FullAutomation["actionInstances"][number]
+		actionRunId: ActionRunsId
+	})[] = await Promise.all(
 		automation.actionInstances.map(async (ai) => {
 			const correcspondingActionRun = automationRun.actionRuns.find(
 				(ar) => ar.actionInstanceId === ai.id
@@ -401,18 +404,28 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 				automation,
 			})
 
-			const status = getActionRunStatusFromResult(result)
-
-			logger[status === ActionRunStatus.failure ? "error" : "info"]({
+			logger[result.success === false ? "error" : "info"]({
 				msg: "Automation run finished",
 				pubId: args.pubId,
 				actionInstanceId: ai.id,
-				status,
+				status: result.success ? ActionRunStatus.success : ActionRunStatus.failure,
 				result,
 			})
+
+			if (result.success === false) {
+				return {
+					success: false,
+					title: "Failed to run action",
+					error: result.error,
+					cause: result.cause,
+					config: result.config,
+					actionInstance: ai,
+					actionRunId: correcspondingActionRun.id,
+				}
+			}
+
 			return {
-				status,
-				result,
+				...result,
 				actionInstance: ai,
 				actionRunId: correcspondingActionRun.id,
 			}
@@ -421,12 +434,12 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 
 	const finalAutomationRun = await insertAutomationRun(trx, {
 		automationId: args.automationId,
-		actionRuns: results.map((r) => ({
-			id: r.actionRunId,
-			actionInstanceId: r.actionInstance.id,
-			config: r.result.config,
-			status: r.status,
-			result: r.result,
+		actionRuns: results.map(({ actionRunId, actionInstance, ...result }) => ({
+			id: actionRunId,
+			actionInstanceId: actionInstance.id,
+			config: result.config,
+			status: getActionRunStatusFromResult(result),
+			result: result,
 		})),
 		pubId: args.pubId,
 		json: args.json,
@@ -437,146 +450,29 @@ export async function runAutomation(args: RunAutomationArgs, trx = db) {
 		userId: isActionUserInitiated ? args.userId : undefined,
 	})
 
-	// // update the action run with the result
-	// await autoRevalidate(
-	// 	trx
-	// 		.updateTable("action_runs")
-	// 		.set({ status, result })
-	// 		.where("id", "=", args.scheduledActionRunId ?? actionRun.id)
-	// ).executeTakeFirstOrThrow(
-	// 	() =>
-	// 		new Error(
-	// 			`Failed to update action run ${actionRun.id} for pub ${args.pubId} and action instance ${args.actionInstanceId}`
-	// 		)
-	// );
+	const success = results.every((r) => r.success === true)
 
-	const success = results.every((r) => r.status === ActionRunStatus.success)
+	if (!success) {
+		return {
+			success: false,
+			title: "Automation run failed",
+			error: `${results
+				.filter((r) => r.success === false)
+				.map((r) => r.error)
+				.join(", ")}`,
+			stack: [...args.stack, finalAutomationRun.id],
+			actionRuns: results,
+		}
+	}
 
 	return {
 		success,
 		title: success ? "Automation run finished" : "Automation run failed",
 		stack: [...args.stack, finalAutomationRun.id],
-		report: results?.[0]?.result,
+		actionRuns: results,
+		data: results.map((r) => r.data).reduce((acc, curr) => ({ ...acc, ...curr }), {}),
 	}
 }
-
-// export const runAutomationById = async (
-// 	args:
-// 		| {
-// 				automationId: AutomationsId;
-// 				pubId: PubsId;
-// 				json?: never;
-// 				event: AutomationEvent;
-// 				communityId: CommunitiesId;
-// 				stack: ActionRunsId[];
-// 				scheduledActionRunId?: ActionRunsId;
-// 				actionInstanceArgs?: Record<string, unknown> | null;
-// 		  }
-// 		| {
-// 				automationId: AutomationsId;
-// 				pubId?: never;
-// 				json: Json;
-// 				event: AutomationEvent;
-// 				communityId: CommunitiesId;
-// 				stack: ActionRunsId[];
-// 				scheduledActionRunId?: ActionRunsId;
-// 				actionInstanceArgs?: Record<string, unknown> | null;
-// 		  }
-// ): Promise<{
-// 	actionInstanceId: ActionInstancesId;
-// 	result: any;
-// }> => {
-// 	const automation = await getAutomation(args.automationId).executeTakeFirst();
-
-// 	if (!automation) {
-// 		throw new Error(`Automation ${args.automationId} not found`);
-// 	}
-
-// 	const runArgs = args.pubId
-// 		? ({
-// 				pubId: args.pubId,
-// 				communityId: args.communityId,
-// 				actionInstanceId: automation.actionInstance.id,
-// 				event: args.event,
-// 				actionInstanceArgs: args.actionInstanceArgs ?? null,
-// 				stack: args.stack ?? [],
-// 				automationId: args.automationId,
-// 				scheduledActionRunId: args.scheduledActionRunId,
-// 			} as const)
-// 		: ({
-// 				json: args.json!,
-// 				communityId: args.communityId,
-// 				actionInstanceId: automation.actionInstance.id,
-// 				event: args.event,
-// 				actionInstanceArgs: args.actionInstanceArgs ?? null,
-// 				stack: args.stack ?? [],
-// 				automationId: args.automationId,
-// 				scheduledActionRunId: args.scheduledActionRunId,
-// 			} as const);
-
-// 	const result = await runAutomation(runArgs as any, db);
-
-// 	return {
-// 		actionInstanceId: automation.actionInstance.id,
-// 		result,
-// 	};
-// };
-
-// export const runInstancesForEvent = async (
-// 	pubId: PubsId,
-// 	stageId: StagesId | null,
-// 	event: AutomationEvent,
-// 	communityId: CommunitiesId,
-// 	stack: ActionRunsId[],
-// 	automationId?: AutomationsId,
-// 	trx = db
-// ) => {
-// 	let query = trx
-// 		.selectFrom("action_instances")
-// 		.innerJoin("automations", "automations.actionInstanceId", "action_instances.id")
-// 		.select([
-// 			"action_instances.id as actionInstanceId",
-// 			"automations.config as automationConfig",
-// 			"automations.id as automationId",
-// 			"action_instances.name as actionInstanceName",
-// 			"action_instances.stageId as stageId",
-// 		])
-// 		.where("automations.event", "=", event);
-
-// 	if (stageId) {
-// 		query = query.where("action_instances.stageId", "=", stageId);
-// 	}
-
-// 	if (automationId) {
-// 		query = query.where("automations.id", "=", automationId);
-// 	}
-
-// 	const instances = await query.execute();
-
-// 	const results = await Promise.all(
-// 		instances.map(async (instance) => {
-// 			return {
-// 				actionInstanceId: instance.actionInstanceId,
-// 				actionInstanceName: instance.actionInstanceName,
-// 				result: await runAutomation(
-// 					{
-// 						pubId,
-// 						communityId,
-// 						actionInstanceId: instance.actionInstanceId,
-// 						event,
-// 						actionInstanceArgs: instance.automationConfig ?? null,
-// 						stack,
-// 						automationId: instance.automationId,
-// 					},
-
-// 					trx
-// 				),
-// 			};
-// 		})
-// 	);
-
-// 	return results;
-// };
 
 export async function insertAutomationRun(
 	trx: Kysely<Database>,
@@ -606,14 +502,14 @@ export async function insertAutomationRun(
 			.with("automationRun", (trx) =>
 				trx
 					.insertInto("automation_runs")
-					.values((eb) => ({
+					.values({
 						id: args.scheduledAutomationRunId,
 						automationId: args.automationId,
 						userId: args.userId,
 						config: args.trigger.config,
 						event: args.trigger.event,
 						sourceAutomationRunId: args.stack.at(-1),
-					}))
+					})
 					.returningAll()
 					// conflict should only happen if a scheduled action is excecuted
 					// not on user initiated actions or on other events

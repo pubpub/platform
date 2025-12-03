@@ -7,22 +7,21 @@ import { Activity } from "ui/icon"
 
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
-import { getAutomationRuns } from "~/lib/server/actions"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { ContentLayout } from "../../ContentLayout"
-import { ActionRunsTable } from "./ActionRunsTable"
-import { mapAutomationRunsForTable } from "./mapAutomationRunsForTable"
+import { PaginatedAutomationRunList } from "./AutomationRunList"
 
 export const metadata: Metadata = {
-	title: "Action Log",
+	title: "Automation Logs",
 }
 
 export default async function Page(props: {
 	params: Promise<{
 		communitySlug: string
 	}>
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-	const params = await props.params
+	const [params, searchParams] = await Promise.all([props.params, props.searchParams])
 
 	const { communitySlug } = params
 
@@ -35,33 +34,26 @@ export default async function Page(props: {
 		notFound()
 	}
 
-	const [canEditCommunity, automationRuns] = await Promise.all([
-		userCan(
-			Capabilities.editCommunity,
-			{ type: MembershipType.community, communityId: community.id },
-			user.id
-		),
-		getAutomationRuns(community.id).execute(),
-	])
+	const canEditCommunity = await userCan(
+		Capabilities.editCommunity,
+		{ type: MembershipType.community, communityId: community.id },
+		user.id
+	)
 
 	if (!canEditCommunity) {
 		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
-	const actionRuns = mapAutomationRunsForTable(automationRuns)
-
 	return (
 		<ContentLayout
 			title={
 				<>
-					<Activity size={24} strokeWidth={1} className="mr-2 text-gray-500" /> Action
+					<Activity size={24} strokeWidth={1} className="mr-2 text-gray-500" /> Automation
 					Logs
 				</>
 			}
 		>
-			<div className="m-4">
-				<ActionRunsTable actionRuns={actionRuns} communitySlug={community.slug} />
-			</div>
+			<PaginatedAutomationRunList communityId={community.id} searchParams={searchParams} />
 		</ContentLayout>
 	)
 }

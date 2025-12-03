@@ -83,5 +83,4 @@ export function useServerAction<T extends unknown[], U>(action: (...args: T) => 
 
 export const didSucceed = <T>(result: T): result is Exclude<T, ClientException> =>
 	typeof result !== "object" ||
-	(result !== null && !("error" in result)) ||
-	("success" in result && result.success)
+	(result !== null && (!("error" in result) || ("success" in result && !!result.success)))

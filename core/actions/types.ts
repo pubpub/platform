@@ -180,6 +180,7 @@ export type EventAutomationOptionsBase<
 						automation: Automations
 						community: Communities
 						sourceAutomation?: Automations
+						config?: never
 					}
 				: {
 						automation: Automations

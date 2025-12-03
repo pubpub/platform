@@ -2,9 +2,12 @@ import type {
 	Action,
 	ActionInstancesId,
 	ActionInstancesUpdate,
+	ActionRunStatus,
 	AutomationRunsId,
+	AutomationsId,
 	CommunitiesId,
 	NewActionInstances,
+	StagesId,
 } from "db/public"
 
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
@@ -73,17 +76,45 @@ export const setActionConfigDefaults = (
 	)
 }
 
-export const getAutomationRuns = (communityId: CommunitiesId) => {
+export const getAutomationRuns = (
+	communityId: CommunitiesId,
+	options?: {
+		limit?: number
+		offset?: number
+		orderBy?: "createdAt"
+		orderDirection?: "desc" | "asc"
+		automations?: AutomationsId[]
+		statuses?: (ActionRunStatus | "partial")[]
+		stages?: StagesId[]
+		actions?: Action[]
+		query?: string
+	}
+) => {
+	let query = db
+		.selectFrom("automation_runs")
+		.innerJoin("automations", "automation_runs.automationId", "automations.id")
+		.where("automations.communityId", "=", communityId)
+
+	if (options?.automations && options.automations.length > 0) {
+		query = query.where("automation_runs.automationId", "in", options.automations)
+	}
+
+	if (options?.stages && options.stages.length > 0) {
+		query = query.where("automations.stageId", "in", options.stages)
+	}
+
+	if (options?.query) {
+		query = query.where("automations.name", "ilike", `%${options.query}%`)
+	}
+
 	const actionRuns = autoCache(
-		db
-			.selectFrom("automation_runs")
-			.innerJoin("automations", "automation_runs.automationId", "automations.id")
-			.where("automations.communityId", "=", communityId)
+		query
 			.select((eb) => [
 				"automation_runs.id",
 				"automation_runs.config",
 				"automation_runs.createdAt",
 				"automation_runs.updatedAt",
+				"automation_runs.event",
 				jsonObjectFrom(
 					eb
 						.selectFrom("automations")
@@ -114,6 +145,7 @@ export const getAutomationRuns = (communityId: CommunitiesId) => {
 							"action_runs.config",
 							"action_runs.event",
 							"action_runs.params",
+							"action_runs.json",
 						])
 				).as("actionRuns"),
 				"automation_runs.sourceAutomationRunId",
@@ -134,15 +166,6 @@ export const getAutomationRuns = (communityId: CommunitiesId) => {
 						.whereRef("stages.id", "=", "automations.stageId")
 						.select(["stages.id", "stages.name"])
 				).as("stage"),
-				// jsonObjectFrom(
-				// 	eb
-				// 		.selectFrom("pubs")
-				// 		.select(["pubs.id", "pubs.createdAt", "pubs.title"])
-				// 		.whereRef("pubs.id", "=", "automation_runs.pubId")
-				// 		.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
-				// )
-				// 	.$notNull()
-				// 	.as("pub"),
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
@@ -150,10 +173,47 @@ export const getAutomationRuns = (communityId: CommunitiesId) => {
 						.select(["users.id", "users.firstName", "users.lastName"])
 				).as("user"),
 			])
-			.orderBy("automation_runs.createdAt", "desc")
+			.orderBy(
+				options?.orderBy ?? "automation_runs.createdAt",
+				options?.orderDirection ?? "desc"
+			)
+			.limit(options?.limit ?? 1000)
+			.offset(options?.offset ?? 0)
 	)
 
 	return actionRuns
+}
+
+export const getAutomationRunsCount = async (
+	communityId: CommunitiesId,
+	options?: {
+		automations?: AutomationsId[]
+		stages?: StagesId[]
+		query?: string
+	}
+) => {
+	let query = db
+		.selectFrom("automation_runs")
+		.innerJoin("automations", "automation_runs.automationId", "automations.id")
+		.where("automations.communityId", "=", communityId)
+
+	if (options?.automations && options.automations.length > 0) {
+		query = query.where("automation_runs.automationId", "in", options.automations)
+	}
+
+	if (options?.stages && options.stages.length > 0) {
+		query = query.where("automations.stageId", "in", options.stages)
+	}
+
+	if (options?.query) {
+		query = query.where("automations.name", "ilike", `%${options.query}%`)
+	}
+
+	const result = await autoCache(
+		query.select((eb) => eb.fn.countAll<number>().as("count"))
+	).executeTakeFirst()
+
+	return result?.count ?? 0
 }
 
 export const getAutomationRunById = (

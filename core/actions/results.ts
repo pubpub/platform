@@ -1,4 +1,4 @@
-import type { ActionRuns, AutomationRuns } from "db/public"
+import type { ActionRuns, AutomationRuns, AutomationRunsId } from "db/public"
 import type { BaseActionInstanceConfig } from "db/types"
 import type React from "react"
 
@@ -39,6 +39,26 @@ export const isActionFailure = (result: unknown): result is ActionRunResultFailu
 		result.success === false
 	)
 }
+
+export type AutomationRunResultSuccess = {
+	success: true
+	title?: string
+	report?: React.ReactNode | string
+	data: unknown
+	actionRuns: ActionRunResult[]
+	stack: AutomationRunsId[]
+}
+
+export type AutomationRunResultFailure = {
+	success: false
+	title?: string
+	error: string
+	cause?: unknown
+	actionRuns: ActionRunResult[]
+	stack: AutomationRunsId[]
+}
+
+export type AutomationRunResult = AutomationRunResultSuccess | AutomationRunResultFailure
 
 export type AutomationRunComputedStatus = ActionRunStatus | "partial"
 
@@ -82,3 +102,4 @@ export const getActionRunStatusFromResult = (result: unknown): ActionRunStatus =
 
 	return ActionRunStatus.scheduled
 }
+

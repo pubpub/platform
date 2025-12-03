@@ -5,6 +5,8 @@ import type { ActionRuns, AutomationRuns } from "db/public"
 import { useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 
+import { Badge } from "ui/badge"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
 import { cn } from "utils"
 
 import { type AutomationRunComputedStatus, getAutomationRunStatus } from "~/actions/results"
@@ -55,28 +57,35 @@ export const AutomationRunResult = ({
 					{automationRun.actionRuns.map((actionRun, index) => {
 						const isExpanded = expandedActionRuns.has(actionRun.id)
 						return (
-							<div key={actionRun.id} className="rounded border border-gray-200 p-2">
-								<button
-									type="button"
-									onClick={() => toggleActionRun(actionRun.id)}
-									className="flex w-full items-center justify-between text-sm"
-								>
-									<div className="flex items-center gap-2">
-										{isExpanded ? (
-											<ChevronDown size={16} />
-										) : (
-											<ChevronRight size={16} />
-										)}
-										<span className="font-medium">Action {index + 1}</span>
-										<ActionRunStatusBadge status={actionRun.status} />
-									</div>
-								</button>
-								{isExpanded && (
-									<div className="mt-2 pl-6">
+							<Collapsible
+								key={actionRun.id}
+								open={isExpanded}
+								onOpenChange={() => toggleActionRun(actionRun.id)}
+							>
+								<div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+									<CollapsibleTrigger asChild>
+										<button
+											type="button"
+											className="flex w-full items-center justify-between text-sm hover:text-gray-900"
+										>
+											<div className="flex items-center gap-2">
+												{isExpanded ? (
+													<ChevronDown size={16} />
+												) : (
+													<ChevronRight size={16} />
+												)}
+												<span className="font-medium">
+													Action {index + 1}
+												</span>
+												<ActionRunStatusBadge status={actionRun.status} />
+											</div>
+										</button>
+									</CollapsibleTrigger>
+									<CollapsibleContent className="mt-2 pl-6">
 										<ActionRunResult actionRun={actionRun} />
-									</div>
-								)}
-							</div>
+									</CollapsibleContent>
+								</div>
+							</Collapsible>
 						)
 					})}
 				</div>
@@ -86,25 +95,32 @@ export const AutomationRunResult = ({
 }
 
 export const AutomationRunStatusBadge = ({ status }: { status: AutomationRunComputedStatus }) => {
-	const getStatusColor = () => {
+	const getStatusVariant = () => {
 		switch (status) {
 			case "success":
-				return "bg-green-500"
+				return "default"
 			case "failure":
-				return "bg-red-500"
+				return "destructive"
 			case "scheduled":
-				return "bg-yellow-500"
+				return "secondary"
 			case "partial":
-				return "bg-orange-500"
+				return "outline"
 			default:
-				return "bg-gray-500"
+				return "outline"
 		}
 	}
 
 	return (
-		<div
-			className={cn("h-3 w-3 rounded-full transition-colors duration-200", getStatusColor())}
-			title={status}
-		/>
+		<Badge
+			variant={getStatusVariant()}
+			className={cn(
+				"capitalize",
+				status === "scheduled" && "bg-yellow-500 hover:bg-yellow-600",
+				status === "partial" &&
+					"border-orange-500 bg-orange-500 text-white hover:bg-orange-600"
+			)}
+		>
+			{status}
+		</Badge>
 	)
 }
