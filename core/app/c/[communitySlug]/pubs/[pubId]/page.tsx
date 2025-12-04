@@ -5,7 +5,13 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { BookOpen, Eye, Pencil } from "lucide-react"
 
-import { Capabilities, type CommunitiesId, MembershipType, type PubsId } from "db/public"
+import {
+	AutomationEvent,
+	Capabilities,
+	type CommunitiesId,
+	MembershipType,
+	type PubsId,
+} from "db/public"
 import { Button } from "ui/button"
 import { PubFieldProvider } from "ui/pubFields"
 import { StagesProvider, stagesDAO } from "ui/stages"
@@ -56,7 +62,10 @@ const getPubsWithRelatedValuesCached = cache(async (pubId: PubsId, communityId: 
 				withPubType: true,
 				withRelatedPubs: true,
 				withStage: true,
-				withStageAutomations: true,
+				withStageAutomations: {
+					detail: "full",
+					filter: [AutomationEvent.manual],
+				},
 				withMembers: true,
 				depth: 3,
 			}
@@ -113,13 +122,10 @@ export default async function Page(props: {
 		notFound()
 	}
 
-	const communityStagesPromise = getStages(
-		{
-			communityId: community.id,
-			userId: user.id,
-		},
-		{ withAutomations: "full" }
-	).execute()
+	const communityStagesPromise = getStages({
+		communityId: community.id,
+		userId: user.id,
+	}).execute()
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
 	// This is safe because we've already explicitly checked authorization for the root pub
@@ -305,8 +311,8 @@ export default async function Page(props: {
 								) : null}
 								<div>
 									<div className="mb-1 font-bold text-lg">Actions</div>
-									{pub.stage?.automations &&
-									pub.stage?.automations.length > 0 &&
+									{pub.stage?.fullAutomations &&
+									pub.stage?.fullAutomations.length > 0 &&
 									stage &&
 									canRunActions ? (
 										<div className="ml-4">
@@ -314,7 +320,7 @@ export default async function Page(props: {
 												canOverrideAutomationConditions={
 													canOverrideAutomationConditions
 												}
-												automations={pub.stage.automations}
+												automations={pub.stage.fullAutomations}
 												pubId={pubId}
 												testId="run-action-primary"
 											/>

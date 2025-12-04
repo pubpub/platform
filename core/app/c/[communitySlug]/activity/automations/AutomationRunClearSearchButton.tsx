@@ -17,6 +17,8 @@ export const AutomationRunClearSearchButton = () => {
 					statuses: [],
 					filters: [],
 					page: 1,
+					stages: [],
+					actions: [],
 					sort: [{ id: "createdAt", desc: true }],
 					perPage: 25,
 				})

@@ -146,6 +146,7 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 		icon: null,
 		communityId: "" as CommunitiesId,
 		description: null,
+		lastAutomationRun: null,
 	},
 	actionRunId: "" as ActionRunsId,
 	stageId: "" as StagesId,

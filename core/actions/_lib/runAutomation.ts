@@ -432,6 +432,9 @@ export async function runAutomation(
 		})
 	)
 
+	console.log("resultsSSSSSSSSSSSSSSS")
+	console.dir(results, { depth: null })
+	console.log("_______________")
 	const finalAutomationRun = await insertAutomationRun(trx, {
 		automationId: args.automationId,
 		actionRuns: results.map(({ actionRunId, actionInstance, ...result }) => ({
@@ -466,8 +469,8 @@ export async function runAutomation(
 	}
 
 	return {
-		success,
-		title: success ? "Automation run finished" : "Automation run failed",
+		success: true,
+		title: "Automation run finished",
 		stack: [...args.stack, finalAutomationRun.id],
 		actionRuns: results,
 		data: results.map((r) => r.data).reduce((acc, curr) => ({ ...acc, ...curr }), {}),
@@ -497,6 +500,7 @@ export async function insertAutomationRun(
 		userId?: UsersId
 	}
 ) {
+	console.log({ args })
 	const automatonRun = await autoRevalidate(
 		trx
 			.with("automationRun", (trx) =>
@@ -505,9 +509,11 @@ export async function insertAutomationRun(
 					.values({
 						id: args.scheduledAutomationRunId,
 						automationId: args.automationId,
-						userId: args.userId,
-						config: args.trigger.config,
-						event: args.trigger.event,
+						sourceUserId: args.userId,
+						inputJson: args.json,
+						inputPubId: args.pubId,
+						triggerConfig: args.trigger.config,
+						triggerEvent: args.trigger.event,
 						sourceAutomationRunId: args.stack.at(-1),
 					})
 					.returningAll()
@@ -515,8 +521,8 @@ export async function insertAutomationRun(
 					// not on user initiated actions or on other events
 					.onConflict((oc) =>
 						oc.column("id").doUpdateSet({
-							config: args.trigger.config,
-							event: args.trigger.event,
+							triggerConfig: args.trigger.config,
+							triggerEvent: args.trigger.event,
 						})
 					)
 			)

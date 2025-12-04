@@ -1,14 +1,5 @@
-import type { Json } from "contracts"
-import type {
-	ActionRunsId,
-	AutomationRunsId,
-	AutomationsId,
-	CommunitiesId,
-	PubsId,
-	StagesId,
-} from "db/public"
+import type { AutomationRunsId, AutomationsId, CommunitiesId, PubsId, StagesId } from "db/public"
 import type { BaseActionInstanceConfig } from "db/types"
-import type { GetEventAutomationOptions } from "~/lib/db/queries"
 
 import { ActionRunStatus, AutomationEvent, ConditionEvaluationTiming } from "db/public"
 import { logger } from "logger"
@@ -24,25 +15,6 @@ import { getPubsWithRelatedValues } from "~/lib/server/pub"
 import { evaluateConditions } from "./evaluateConditions"
 import { createPubProxy } from "./pubProxy"
 import { insertAutomationRun } from "./runAutomation"
-
-type Shared = {
-	stageId: StagesId
-	stack: ActionRunsId[]
-} & GetEventAutomationOptions
-
-type ScheduleActionInstanceForPubOptions = Shared & {
-	pubId: PubsId
-	json?: never
-}
-
-type ScheduleActionInstanceGenericOptions = Shared & {
-	pubId?: never
-	json: Json
-}
-
-type ScheduleActionInstanceOptions =
-	| ScheduleActionInstanceForPubOptions
-	| ScheduleActionInstanceGenericOptions
 
 export const scheduleDelayedAutomation = async ({
 	automationId,
@@ -75,12 +47,8 @@ export const scheduleDelayedAutomation = async ({
 		throw new Error(`Automation ${automationId} is not a pubInStageForDuration automation`)
 	}
 
-	const config = trigger.config as Record<string, any> | null
+	const config = trigger.config as Record<string, unknown> | null
 	if (!config || typeof config !== "object" || !config.duration || !config.interval) {
-		console.log({
-			config: JSON.stringify(config, null, 2),
-			typeof: typeof config,
-		})
 		throw new Error(
 			`Automation ${automation.name} (${automationId}) in Community ${community.slug} missing duration/interval configuration. Is ${JSON.stringify(config)}`
 		)
@@ -90,10 +58,7 @@ export const scheduleDelayedAutomation = async ({
 	const interval = config.interval as "minute" | "hour" | "day" | "week" | "month" | "year"
 
 	// check if we need to evaluate conditions before scheduling
-	const automationTiming = (automation as any).conditionEvaluationTiming as
-		| string
-		| null
-		| undefined
+	const automationTiming = automation.conditionEvaluationTiming as string | null | undefined
 	const shouldEvaluateNow =
 		automationTiming === ConditionEvaluationTiming.onTrigger ||
 		automationTiming === ConditionEvaluationTiming.both
@@ -117,7 +82,7 @@ export const scheduleDelayedAutomation = async ({
 		}
 
 		const input = { pub: createPubProxy(pub, community.slug) }
-		const evaluationResult = await evaluateConditions(condition as any, input)
+		const evaluationResult = await evaluateConditions(condition, input)
 
 		if (!evaluationResult.passed) {
 			logger.info({
@@ -208,8 +173,8 @@ export const cancelScheduledAutomation = async (
 			automationId: automationRun.automation?.id as AutomationsId,
 			pubId: automationRun.actionRuns[0]?.pubId as PubsId,
 			trigger: {
-				event: automationRun.actionRuns[0]?.event as AutomationEvent,
-				config: automationRun.config as Record<string, unknown> | null,
+				event: automationRun.triggerEvent,
+				config: automationRun.triggerConfig as Record<string, unknown> | null,
 			},
 		})
 
@@ -223,7 +188,7 @@ export const cancelScheduledAutomation = async (
 			stack: [automationRunId],
 			trigger: {
 				event: AutomationEvent.pubInStageForDuration,
-				config: automationRun.config as Record<string, unknown> | null,
+				config: automationRun.triggerConfig as Record<string, unknown> | null,
 			},
 			actionRuns: automationRun.actionRuns.map((ar) => ({
 				actionInstanceId: expect(ar.actionInstanceId),

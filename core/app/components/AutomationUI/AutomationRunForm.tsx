@@ -18,10 +18,10 @@ import { ActionForm } from "~/actions/_lib/ActionForm"
 import { getActionByName } from "~/actions/api"
 import { runAutomationManual } from "~/actions/api/serverAction"
 import { getActionFormComponent } from "~/actions/forms"
-import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { isActionSuccess } from "~/actions/results"
+import { useServerAction } from "~/lib/serverActions"
 import { useCommunity } from "../providers/CommunityProvider"
 import { SkeletonCard } from "../skeletons/SkeletonCard"
-import { isActionSuccess } from "~/actions/results"
 
 type Props = {
 	automation: FullAutomation

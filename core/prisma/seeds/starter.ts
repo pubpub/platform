@@ -282,7 +282,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 										kind: "condition",
 										type: "jsonata",
 										expression:
-											'$.pub.values.Title = "Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
+											'$.pub.values.title = "Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
 									},
 									{
 										kind: "block",

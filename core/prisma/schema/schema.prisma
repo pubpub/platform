@@ -133,8 +133,9 @@ model Pub {
   relatedValues PubValue[]      @relation("related_pub")
   members       PubMembership[]
 
-  searchVector Unsupported("tsvector")?
-  Invite       Invite[]
+  searchVector   Unsupported("tsvector")?
+  Invite         Invite[]
+  automationRuns AutomationRun[]
 
   @@index([searchVector], type: Gin)
   @@map(name: "pubs")
@@ -341,22 +342,19 @@ model AutomationRun {
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
   automationId String
 
-  // event trigger
-  triggerEvent      AutomationEvent
-  // trigger config
+  triggerEvent  AutomationEvent
   triggerConfig Json?
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @default(now()) @updatedAt
-  actionRuns ActionRun[]
+  sourceUserId  String?
+  sourceUser    User?           @relation(fields: [sourceUserId], references: [id], onDelete: Cascade)
 
-  sourceUserId String?
-  sourceUser   User?   @relation(fields: [sourceUserId], references: [id], onDelete: Cascade)
-
-// add constraint that either one of them is defined
+  // db constraint: at least one of inputPubId or non-empty inputJson must be defined
   inputPubId String?
-  inputPub   Pub?   @relation(fields: [inputPubId], references: [id], onDelete: Cascade)
+  inputPub   Pub?    @relation(fields: [inputPubId], references: [id], onDelete: Cascade)
   inputJson  Json
 
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @default(now()) @updatedAt
+  actionRuns ActionRun[]
 
   // action run that triggered this action run
   sourceAutomationRunId String?

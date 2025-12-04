@@ -11,6 +11,7 @@ import type {
 } from "contracts"
 import type { Database } from "db/Database"
 import type {
+	AutomationEvent,
 	CommunitiesId,
 	MembershipCapabilitiesRole,
 	PubFieldsId,
@@ -64,7 +65,7 @@ import { maybeWithTrx } from "./maybeWithTrx"
 import { applyFilters } from "./pub-filters"
 import { _getPubFields } from "./pubFields"
 import { getPubTypeBase } from "./pubtype"
-import { actionConfigDefaultsSelect, movePub } from "./stages"
+import { movePub, nestedBaseAutomationsSelect, nestedFullAutomationsSelect } from "./stages"
 import { SAFE_USER_SELECT } from "./user"
 import { validatePubValuesBySchemaName } from "./validateFields"
 
@@ -1210,6 +1211,13 @@ export interface GetPubsWithRelatedValuesOptions
 	 */
 	depth?: number
 	searchConfig?: SearchConfig
+
+	withStageAutomations?:
+		| {
+				detail: "count" | "full" | "base"
+				filter: AutomationEvent[] | "all"
+		  }
+		| false
 	/**
 	 * Whether to include the first pub that is part of a cycle.
 	 * By default, the first "cycled" pub is included, marked with `isCycle: true`.
@@ -1284,6 +1292,7 @@ const DEFAULT_OPTIONS = {
 	cycle: "include",
 	withValues: true,
 	withRelatedCounts: false,
+	withStageAutomations: false,
 	trx: db,
 } as const satisfies GetPubsWithRelatedValuesOptions
 
@@ -1874,33 +1883,28 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						eb
 							.selectFrom("stages")
 							.selectAll("stages")
-							.$if(Boolean(withStageAutomations), (qb) =>
-								qb.select(
-									jsonArrayFrom(
-										eb
-											.selectFrom("automations")
-											.whereRef("automations.stageId", "=", "pt.stageId")
-											.selectAll()
-											.select((eb) =>
-												jsonArrayFrom(
-													eb
-														.selectFrom("action_instances")
-														.whereRef(
-															"action_instances.automationId",
-															"=",
-															"automations.id"
-														)
-														.selectAll("action_instances")
-														.select((eb) =>
-															actionConfigDefaultsSelect(eb).as(
-																"defaultedActionConfigKeys"
-															)
-														)
-												).as("actionInstances")
-											)
-									).as("automations")
+							.$if(Boolean(withStageAutomations), (qb) => {
+								if (!withStageAutomations) {
+									throw new Error(
+										`withStageAutomations is required, is ${withStageAutomations}`
+									)
+								}
+
+								if (withStageAutomations.detail === "full") {
+									return qb.select((eb) =>
+										nestedFullAutomationsSelect(
+											eb,
+											withStageAutomations.filter
+										).as("fullAutomations")
+									)
+								}
+
+								return qb.select((eb) =>
+									nestedBaseAutomationsSelect(eb, withStageAutomations.filter).as(
+										"baseAutomations"
+									)
 								)
-							)
+							})
 							.where("pt.stageId", "is not", null)
 							.whereRef("stages.id", "=", "pt.stageId")
 							.limit(1)
@@ -2121,7 +2125,10 @@ export type FullProcessedPub = ProcessedPub<{
 	withMembers: true
 	withPubType: true
 	withStage: true
-	withStageAutomations: true
+	withStageAutomations: {
+		detail: "full"
+		filter: "all"
+	}
 }>
 
 export type FullProcessedPubWithForm = ProcessedPubWithForm<{
@@ -2129,7 +2136,10 @@ export type FullProcessedPubWithForm = ProcessedPubWithForm<{
 	withStage: true
 	withPubType: true
 	withMembers: true
-	withStageAutomations: true
+	withStageAutomations: {
+		detail: "full"
+		filter: "all"
+	}
 }>
 
 export interface SearchConfig {

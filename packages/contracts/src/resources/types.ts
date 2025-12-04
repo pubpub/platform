@@ -1,4 +1,6 @@
 import type {
+	AutomationEvent,
+	Automations,
 	CommunitiesId,
 	FormElementsId,
 	FormsId,
@@ -202,15 +204,34 @@ export const upsertPubRelationsSchema = z.record(
  * Only add the `stage` if the `withStage` option has not been set to `false
  */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
-	? Options["withStageAutomations"] extends true
+	? Options["withStageAutomations"] extends {
+			detail: infer Detail extends "count" | "full" | "base"
+		}
 		? {
 				stage:
-					| (Stages & {
-							automations: FullAutomation[]
-					  })
+					| (Stages &
+							(Detail extends "count"
+								? {
+										automationsCount: number
+										fullAutomations?: never
+										baseAutomations?: never
+									}
+								: Detail extends "full"
+									? {
+											fullAutomations: FullAutomation[]
+											automationsCount?: never
+											baseAutomations?: never
+										}
+									: {
+											baseAutomations: Automations[]
+											automationsCount?: never
+											fullAutomations?: never
+										}))
 					| null
 			}
-		: { stage: Stages | null }
+		: Options["withStageAutomations"] extends true
+			? { stage: (Stages & { automations: FullAutomation[] }) | null }
+			: { stage: Stages | null }
 	: Options["withStage"] extends false
 		? { stage?: never }
 		: { stage?: Stages | null }
@@ -257,6 +278,13 @@ type MaybePubRelatedCounts<Options extends MaybePubOptions> =
 		? { relatedPubsCount?: never }
 		: { relatedPubsCount?: number }
 
+export type DetailLevel = "count" | "full" | "base"
+
+export type StageAutomationSelectOptions = {
+	detail: DetailLevel
+	filter: AutomationEvent[] | "all"
+}
+
 /**
  * Those options of `getPubsWithRelatedValuesOptions` that affect the output of `ProcessedPub`
  *
@@ -284,10 +312,11 @@ export type MaybePubOptions = {
 	withStage?: boolean
 	/**
 	 * Whether to include action instances for pub stages.
+	 * `true` is the same as `{ detail: "full", filter: "all" }`
 	 *
 	 * @default false
 	 */
-	withStageAutomations?: boolean
+	withStageAutomations?: StageAutomationSelectOptions | boolean
 	/**
 	 * Whether to include members of the pub.
 	 *

@@ -107,14 +107,16 @@ export const getAutomationRuns = (
 		query = query.where("automations.name", "ilike", `%${options.query}%`)
 	}
 
-	const actionRuns = autoCache(
+	const automationRuns = autoCache(
 		query
 			.select((eb) => [
 				"automation_runs.id",
-				"automation_runs.config",
 				"automation_runs.createdAt",
 				"automation_runs.updatedAt",
-				"automation_runs.event",
+				"automation_runs.triggerEvent",
+				"automation_runs.triggerConfig",
+				"automation_runs.sourceAutomationRunId",
+				"automation_runs.inputJson",
 				jsonObjectFrom(
 					eb
 						.selectFrom("automations")
@@ -130,14 +132,11 @@ export const getAutomationRuns = (
 							"action_runs.actionInstanceId",
 							"action_instances.id"
 						)
-						.leftJoin("pubs", "action_runs.pubId", "pubs.id")
 						.select([
 							"action_runs.id",
 							"action_runs.actionInstanceId",
 							"action_runs.config",
 							"action_instances.action",
-							"pubs.id as pubId",
-							"pubs.title as pubTitle",
 							"action_runs.status",
 							"action_runs.result",
 							"action_runs.createdAt",
@@ -146,9 +145,9 @@ export const getAutomationRuns = (
 							"action_runs.event",
 							"action_runs.params",
 							"action_runs.json",
+							"action_runs.pubId",
 						])
 				).as("actionRuns"),
-				"automation_runs.sourceAutomationRunId",
 				jsonObjectFrom(
 					eb
 						.selectFrom("automation_runs as ar")
@@ -158,7 +157,7 @@ export const getAutomationRuns = (
 							"automation_runs.sourceAutomationRunId"
 						)
 						.whereRef("ar.id", "=", "automation_runs.sourceAutomationRunId")
-						.select(["ar.id", "ar.config"])
+						.select(["ar.id", "ar.triggerConfig"])
 				).as("sourceAutomationRun"),
 				jsonObjectFrom(
 					eb
@@ -169,9 +168,9 @@ export const getAutomationRuns = (
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
-						.whereRef("users.id", "=", "automation_runs.userId")
+						.whereRef("users.id", "=", "automation_runs.sourceUserId")
 						.select(["users.id", "users.firstName", "users.lastName"])
-				).as("user"),
+				).as("sourceUser"),
 			])
 			.orderBy(
 				options?.orderBy ?? "automation_runs.createdAt",
@@ -181,7 +180,7 @@ export const getAutomationRuns = (
 			.offset(options?.offset ?? 0)
 	)
 
-	return actionRuns
+	return automationRuns
 }
 
 export const getAutomationRunsCount = async (

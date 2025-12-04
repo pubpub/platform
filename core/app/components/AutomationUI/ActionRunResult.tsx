@@ -48,7 +48,7 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 							{typeof result.report === "string" ? <p>{result.report}</p> : null}
 						</div>
 					)}
-					{result.data &&
+					{!!result.data &&
 						typeof result.data === "object" &&
 						Object.keys(result.data).length > 0 && (
 							<Collapsible open={showData} onOpenChange={setShowData}>
@@ -81,7 +81,7 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 						<div className="font-medium text-red-700 text-sm">{result.title}</div>
 					)}
 					<div className="text-red-700 text-sm">{result.error}</div>
-					{result.cause && (
+					{!!result.cause && (
 						<Collapsible open={showCause} onOpenChange={setShowCause}>
 							<CollapsibleTrigger asChild>
 								<button

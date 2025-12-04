@@ -188,6 +188,7 @@ Table pubs {
   relatedValues pub_values [not null]
   members pub_memberships [not null]
   Invite invites [not null]
+  automationRuns automation_runs [not null]
 }
 
 Table pub_fields {
@@ -342,13 +343,16 @@ Table automation_runs {
   id String [pk]
   automation automations [not null]
   automationId String [not null]
-  event AutomationEvent [not null]
-  config Json
+  triggerEvent AutomationEvent [not null]
+  triggerConfig Json
+  sourceUserId String
+  sourceUser users
+  inputPubId String
+  inputPub pubs
+  inputJson Json [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   actionRuns action_runs [not null]
-  userId String
-  user users
   sourceAutomationRunId String
   sourceAutomationRun automation_runs
   sequentialAutomationRuns automation_runs [not null]
@@ -837,7 +841,9 @@ Ref: action_config_defaults.communityId > communities.id [delete: Cascade]
 
 Ref: automation_runs.automationId > automations.id [delete: Cascade]
 
-Ref: automation_runs.userId > users.id [delete: Cascade]
+Ref: automation_runs.sourceUserId > users.id [delete: Cascade]
+
+Ref: automation_runs.inputPubId > pubs.id [delete: Cascade]
 
 Ref: automation_runs.sourceAutomationRunId - automation_runs.id [delete: Set Null]
 

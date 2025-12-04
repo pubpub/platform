@@ -1,5 +1,6 @@
+import type { StageAutomationSelectOptions } from "contracts"
 import type { ConditionBlock } from "db/types"
-import type { ExpressionBuilder, QueryCreator } from "kysely"
+import type { ExpressionBuilder, QueryCreator, SelectQueryBuilder } from "kysely"
 import type { AutoReturnType } from "../types"
 
 import { cache } from "react"
@@ -7,7 +8,7 @@ import { sql } from "kysely"
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
 import {
-	AutomationEvent,
+	type AutomationEvent,
 	Capabilities,
 	type CommunitiesId,
 	MembershipType,
@@ -136,10 +137,11 @@ export const getStagesViewableByUser = cache(
 )
 
 type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId }
-type CommunityStageOptions = {
+
+export type CommunityStageOptions = {
 	/* AutomationEvent = "full" and filters by AutomationEvent */
-	withAutomations?: "count" | "full" | AutomationEvent | false
-	withMembers?: "count" | "full" | false
+	withAutomations?: StageAutomationSelectOptions
+	withMembers?: "count" | "all" | false
 }
 
 export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any>>(eb: EB) => {
@@ -161,6 +163,109 @@ export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any
 	)
 }
 
+export const filterAutomationsByEvent = <
+	QB extends SelectQueryBuilder<PublicSchema, "automations", any>,
+>(
+	qb: QB,
+	events: AutomationEvent[]
+) => {
+	return qb
+		.innerJoin("automation_triggers", "automation_triggers.automationId", "automations.id")
+		.where("automation_triggers.event", "in", events) as typeof qb
+}
+
+// .$if(withAutomations === "count", (qb) =>
+// 	qb.select((eb) =>
+// 		eb
+// 			.selectFrom("automations")
+// 			.whereRef("automations.stageId", "=", "stages.id")
+// 			.select((eb) =>
+// 				eb.fn.count<number>("automations.id").as("automationsCount")
+// 			)
+// 			.as("actionInstancesCount")
+// 	)
+// )
+
+export const countAutomations = <EB extends ExpressionBuilder<PublicSchema, "stages">>(
+	eb: EB,
+	filter: StageAutomationSelectOptions["filter"]
+) => {
+	return eb
+		.selectFrom("automations")
+		.whereRef("automations.stageId", "=", "stages.id")
+		.select((eb) => eb.fn.countAll<number>().as("automationsCount"))
+		.$if(filter !== "all", (qb) => filterAutomationsByEvent(qb, filter as AutomationEvent[]))
+		.as("automationsCount")
+}
+
+// types are a bit unsafe here, bc that's how kysely works
+// if you enconter issues, set the QB to
+// SelectQueryBuilder<PublicSchema, keyof PublicSchema, any>
+// to debug
+export const nestedBaseAutomationsSelect = <EB extends ExpressionBuilder<PublicSchema, "stages">>(
+	eb: EB,
+	filter: StageAutomationSelectOptions["filter"]
+) => {
+	return eb
+		.selectFrom("automations")
+		.whereRef("automations.stageId", "=", "stages.id")
+		.selectAll("automations")
+		.$if(filter !== "all", (qb) => filterAutomationsByEvent(qb, filter as AutomationEvent[]))
+}
+
+export const nestedFullAutomationsSelect = <EB extends ExpressionBuilder<PublicSchema, "stages">>(
+	eb: EB,
+	filter: StageAutomationSelectOptions["filter"]
+) => {
+	return jsonArrayFrom(
+		eb
+			.selectFrom("automations")
+			.whereRef("automations.stageId", "=", "stages.id")
+			.selectAll("automations")
+			.select((eb) => [
+				jsonArrayFrom(
+					eb
+						.selectFrom("automation_triggers")
+						.selectAll("automation_triggers")
+						.whereRef("automation_triggers.automationId", "=", "automations.id")
+				)
+					.$notNull()
+					.as("triggers"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("action_instances")
+						.selectAll("action_instances")
+						.whereRef("action_instances.automationId", "=", "automations.id")
+						.select((eb) =>
+							actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys")
+						)
+				)
+					.$notNull()
+					.as("actionInstances"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("automation_condition_blocks")
+						.whereRef("automation_condition_blocks.automationId", "=", "automations.id")
+						.where("automation_condition_blocks.automationConditionBlockId", "is", null)
+						.selectAll("automation_condition_blocks")
+						.select(sql.lit<"block">("block").as("kind"))
+						.select((eb) =>
+							// this function is what recursively builds the condition blocks and conditions
+							// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
+							eb
+								.fn<ConditionBlock[]>("get_condition_block_items", [
+									"automation_condition_blocks.id",
+								])
+								.as("items")
+						)
+				).as("condition"),
+			])
+			.$if(filter !== "all", (qb) =>
+				filterAutomationsByEvent(qb, filter as AutomationEvent[])
+			)
+	)
+}
+
 /**
  * Get all stages the given user has access to
  */
@@ -168,12 +273,13 @@ export const getStages = (
 	{ communityId, stageId, userId }: CommunityStageProps,
 	options: CommunityStageOptions = {}
 ) => {
-	const withAutomations = options.withAutomations ?? "count"
+	const withAutomations = options.withAutomations ?? { detail: "count", filter: "all" }
 
 	return autoCache(
 		db
 			.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
 			.selectFrom("stages")
+			.selectAll("stages")
 			.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
 			.where("communityId", "=", communityId)
 			.$if(Boolean(stageId), (qb) => qb.where("stages.id", "=", stageId!))
@@ -212,96 +318,22 @@ export const getStages = (
 					)
 					.as("memberCount"),
 			])
-			.$if(withAutomations === "count", (qb) =>
-				qb.select((eb) =>
-					eb
-						.selectFrom("automations")
-						.whereRef("automations.stageId", "=", "stages.id")
-						.select((eb) =>
-							eb.fn.count<number>("automations.id").as("automationsCount")
+			.$if(withAutomations && withAutomations?.detail !== "count", (qb) =>
+				qb.select((eb) => {
+					if (withAutomations.detail === "full") {
+						return nestedFullAutomationsSelect(eb, withAutomations.filter).as(
+							"fullAutomations"
 						)
-						.as("actionInstancesCount")
-				)
-			)
-			.$if(
-				withAutomations &&
-					withAutomations !== "count" &&
-					(withAutomations === "full" || Boolean(AutomationEvent[withAutomations])),
-				(qb) =>
-					qb.select((eb) =>
-						jsonArrayFrom(
-							eb
-								.selectFrom("automations")
-								.whereRef("automations.stageId", "=", "stages.id")
-								.selectAll("automations")
-								.select((eb) => [
-									jsonArrayFrom(
-										eb
-											.selectFrom("automation_triggers")
-											.selectAll("automation_triggers")
-											.whereRef(
-												"automation_triggers.automationId",
-												"=",
-												"automations.id"
-											)
-											.$if(!!options?.withAutomations, (qb) =>
-												qb.where(
-													"automation_triggers.event",
-													"=",
-													options!.withAutomations as AutomationEvent
-												)
-											)
-									)
-										.$notNull()
-										.as("triggers"),
-									jsonArrayFrom(
-										eb
-											.selectFrom("action_instances")
-											.selectAll("action_instances")
-											.whereRef(
-												"action_instances.automationId",
-												"=",
-												"automations.id"
-											)
-											.select((eb) =>
-												actionConfigDefaultsSelect(eb).as(
-													"defaultedActionConfigKeys"
-												)
-											)
-									)
-										.$notNull()
-										.as("actionInstances"),
-									jsonObjectFrom(
-										eb
-											.selectFrom("automation_condition_blocks")
-											.whereRef(
-												"automation_condition_blocks.automationId",
-												"=",
-												"automations.id"
-											)
-											.where(
-												"automation_condition_blocks.automationConditionBlockId",
-												"is",
-												null
-											)
-											.selectAll("automation_condition_blocks")
-											.select(sql.lit<"block">("block").as("kind"))
-											.select((eb) =>
-												// this function is what recursively builds the condition blocks and conditions
-												// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
-												eb
-													.fn<ConditionBlock[]>(
-														"get_condition_block_items",
-														["automation_condition_blocks.id"]
-													)
-													.as("items")
-											)
-									).as("condition"),
-								])
-						).as("automations")
+					}
+
+					return nestedBaseAutomationsSelect(eb, withAutomations.filter).as(
+						"baseAutomations"
 					)
+				})
 			)
-			.selectAll("stages")
+			.$if(withAutomations?.detail === "count", (qb) =>
+				qb.select((eb) => countAutomations(eb, withAutomations.filter))
+			)
 			.orderBy("order asc")
 	)
 }

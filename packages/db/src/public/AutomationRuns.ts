@@ -7,6 +7,7 @@ import { z } from "zod"
 
 import { type AutomationEvent, automationEventSchema } from "./AutomationEvent"
 import { type AutomationsId, automationsIdSchema } from "./Automations"
+import { type PubsId, pubsIdSchema } from "./Pubs"
 import { type UsersId, usersIdSchema } from "./Users"
 
 /** Identifier type for public.automation_runs */
@@ -18,10 +19,6 @@ export interface AutomationRunsTable {
 
 	automationId: ColumnType<AutomationsId, AutomationsId, AutomationsId>
 
-	event: ColumnType<AutomationEvent, AutomationEvent, AutomationEvent>
-
-	config: ColumnType<unknown | null, unknown | null, unknown | null>
-
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
@@ -32,7 +29,15 @@ export interface AutomationRunsTable {
 		AutomationRunsId | null
 	>
 
-	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
+	inputJson: ColumnType<unknown, unknown, unknown>
+
+	inputPubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
+
+	sourceUserId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
+
+	triggerConfig: ColumnType<unknown | null, unknown | null, unknown | null>
+
+	triggerEvent: ColumnType<AutomationEvent, AutomationEvent, AutomationEvent>
 }
 
 export type AutomationRuns = Selectable<AutomationRunsTable>
@@ -46,32 +51,38 @@ export const automationRunsIdSchema = z.string().uuid() as unknown as z.Schema<A
 export const automationRunsSchema = z.object({
 	id: automationRunsIdSchema,
 	automationId: automationsIdSchema,
-	event: automationEventSchema,
-	config: z.unknown().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	sourceAutomationRunId: automationRunsIdSchema.nullable(),
-	userId: usersIdSchema.nullable(),
+	inputJson: z.unknown(),
+	inputPubId: pubsIdSchema.nullable(),
+	sourceUserId: usersIdSchema.nullable(),
+	triggerConfig: z.unknown().nullable(),
+	triggerEvent: automationEventSchema,
 })
 
 export const automationRunsInitializerSchema = z.object({
 	id: automationRunsIdSchema.optional(),
 	automationId: automationsIdSchema,
-	event: automationEventSchema,
-	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	sourceAutomationRunId: automationRunsIdSchema.optional().nullable(),
-	userId: usersIdSchema.optional().nullable(),
+	inputJson: z.unknown(),
+	inputPubId: pubsIdSchema.optional().nullable(),
+	sourceUserId: usersIdSchema.optional().nullable(),
+	triggerConfig: z.unknown().optional().nullable(),
+	triggerEvent: automationEventSchema,
 })
 
 export const automationRunsMutatorSchema = z.object({
 	id: automationRunsIdSchema.optional(),
 	automationId: automationsIdSchema.optional(),
-	event: automationEventSchema.optional(),
-	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	sourceAutomationRunId: automationRunsIdSchema.optional().nullable(),
-	userId: usersIdSchema.optional().nullable(),
+	inputJson: z.unknown().optional(),
+	inputPubId: pubsIdSchema.optional().nullable(),
+	sourceUserId: usersIdSchema.optional().nullable(),
+	triggerConfig: z.unknown().optional().nullable(),
+	triggerEvent: automationEventSchema.optional(),
 })

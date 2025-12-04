@@ -62,12 +62,18 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		},
 	})
 
-	// runAutomation returns the full automation result, but we just need to return
-	// the first action run result for now
+	if (!result.success) {
+		return {
+			success: false,
+			error: result.error,
+			config: {},
+		}
+	}
+
 	return {
-		success: result.success ?? false,
-		title: result.title,
-		data: {},
+		success: true,
+		data: result.data,
+		report: result.report,
 		config: {},
 	}
 })

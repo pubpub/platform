@@ -84,7 +84,7 @@ test.describe("Actions SSE", () => {
 		const page2 = await loggedInPage(browser)
 		const stagePage2 = new StagesManagePage(page2, community.community.slug)
 		await stagePage2.goTo()
-		await stagePage2.openStagePanelTab(community.stages.Test.name, "Actions")
+		await stagePage2.openStagePanelTab(community.stages.Test.name, "Automations")
 
 		// check that action is there
 		await expect(page2.getByText("Log 1")).toBeVisible()

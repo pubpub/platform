@@ -46,7 +46,7 @@ const getTriggerDescription = (automationRun: AutomationRunCardProps["automation
 		return `${automationRun.user.firstName} ${automationRun.user.lastName}`
 	}
 
-	switch (automationRun.event) {
+	switch (automationRun.triggerEvent) {
 		case AutomationEvent.automationFailed:
 			return "Automation failed"
 		case AutomationEvent.automationSucceeded:
@@ -138,7 +138,7 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 			{automationRun.actionRuns.length > 0 && (
 				<div className="ml-11">
 					<Accordion type="multiple" className="w-full">
-						{automationRun.actionRuns.map((actionRun, index) => {
+						{automationRun.actionRuns.map((actionRun) => {
 							const action = actions[actionRun.action as Action]
 							return (
 								<AccordionItem key={actionRun.id} value={actionRun.id}>
