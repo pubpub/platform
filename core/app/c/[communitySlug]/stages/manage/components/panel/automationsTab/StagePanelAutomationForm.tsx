@@ -655,7 +655,7 @@ export function StagePanelAutomationForm(props: Props) {
 			{selectedTriggers.length > 0 && (
 				<>
 					<ConditionFieldSection form={form} condition={condition} />
-					{needsConditionEvaluationTiming && (
+					{condition && needsConditionEvaluationTiming && (
 						<Controller
 							control={form.control}
 							name="conditionEvaluationTiming"
