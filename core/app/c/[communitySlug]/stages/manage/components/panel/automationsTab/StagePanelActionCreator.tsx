@@ -30,38 +30,42 @@ const ActionCell = (props: ActionCellProps) => {
 
 	return (
 		<Button
-			className="flex h-20 cursor-pointer flex-col space-y-1 rounded-md border bg-accent p-3 text-black shadow-md transition-colors"
+			className="col-span-4 row-span-2 grid h-20 cursor-pointer grid-rows-subgrid flex-col items-start gap-x-3 gap-y-0 space-y-1 rounded-md border bg-accent p-3 text-black shadow-md transition-colors"
+			variant="outline"
 			onClick={onClick}
 			data-testid={`${props.action.name}-button`}
 		>
-			<div className="flex space-x-4">
-				<props.action.icon />
-				<div className="space-y-1">
-					<div className="flex items-center gap-2">
-						<h4 className="font-semibold text-sm">{props.action.niceName}</h4>
-						{props.action.experimental && (
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<Badge variant="outline" className="bg-rose-200 text-xs">
-										α
-									</Badge>
-								</TooltipTrigger>
-								<TooltipContent>
-									<p>
-										This action is experimental and may not work as expected,
-										and can change at any time.
-									</p>
-									<p> Please use at your own risk.</p>
-								</TooltipContent>
-							</Tooltip>
-						)}
-					</div>
+			<props.action.icon className="col-span-1 place-self-center" />
 
-					<p className="w-auto whitespace-normal text-left text-muted-foreground text-sm leading-tight">
-						{props.action.description}
-					</p>
-				</div>
+			<div className="col-span-3 col-start-2 flex items-center gap-2 self-center">
+				<h4 className="font-semibold text-sm">{props.action.niceName}</h4>
 			</div>
+
+			<div className="col-span-1 place-self-end">
+				{props.action.experimental ? (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Badge
+								variant="outline"
+								className="flex size-5 items-center justify-center rounded-full bg-rose-200 text-xs"
+							>
+								α
+							</Badge>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>
+								This action is experimental and may not work as expected, and can
+								change at any time.
+							</p>
+							<p> Please use at your own risk.</p>
+						</TooltipContent>
+					</Tooltip>
+				) : null}
+			</div>
+
+			<p className="col-span-3 col-start-2 row-span-1 w-auto place-self-center whitespace-normal text-left text-muted-foreground text-sm leading-tight">
+				{props.action.description}
+			</p>
 		</Button>
 	)
 }
@@ -89,14 +93,14 @@ export const StagePanelActionCreator = (props: Props) => {
 		<div className="space-y-2 py-2">
 			<Dialog open={isOpen} onOpenChange={onOpenChange}>
 				<DialogTrigger asChild>{props.children}</DialogTrigger>
-				<DialogContent data-testid={"add-action-dialog"} className="!w-[900px]">
+				<DialogContent data-testid={"add-action-dialog"}>
 					<DialogHeader>
 						<DialogTitle>Add an action</DialogTitle>
 						<DialogDescription>
 							Pick an action to add from the list below.
 						</DialogDescription>
 					</DialogHeader>
-					<div className="grid grid-cols-2 gap-4">
+					<div className="grid grid-cols-8 gap-x-4 gap-y-4">
 						{Object.values(actions)
 							.filter((action) => !action.superAdminOnly || props.isSuperAdmin)
 							.map((action) => (

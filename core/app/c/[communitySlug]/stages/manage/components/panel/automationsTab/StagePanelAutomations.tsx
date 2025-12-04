@@ -1,54 +1,38 @@
-import type { CommunitiesId, StagesId, UsersId } from "db/public"
-
-import { Suspense } from "react"
+import type { CommunitiesId, UsersId } from "db/public"
+import type { CommunityStage } from "~/lib/server/stages"
 
 import { Card, CardContent, CardTitle } from "ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "ui/empty"
 import { Bot } from "ui/icon"
 import { ItemGroup } from "ui/item"
 
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
-import { getStage, getStageAutomations } from "~/lib/db/queries"
-import { getActionConfigDefaultsFields } from "~/lib/server/actions"
 import { StagePanelCardHeader } from "../../editor/StagePanelCard"
+import { AddAutomationButton } from "./AddAutomationButton"
 import { StagePanelAutomation } from "./StagePanelAutomation"
-import { StagePanelAutomationForm } from "./StagePanelAutomationForm"
 
-type PropsInner = {
-	stageId: StagesId
+type Props = {
 	userId: UsersId
+	stage: CommunityStage
 	communityId: CommunitiesId
 }
 
-const StagePanelAutomationsInner = async (props: PropsInner) => {
-	const [stage, automations, actionConfigDefaults] = await Promise.all([
-		getStage(props.stageId, props.userId).executeTakeFirst(),
-		getStageAutomations(props.stageId),
-		getActionConfigDefaultsFields(props.communityId),
-	])
-
-	if (!stage) {
-		return <SkeletonCard />
-	}
-
+export const StagePanelAutomations = (props: Props) => {
 	return (
-		<Card>
+		<Card className="h-full">
 			<StagePanelCardHeader>
-				<CardTitle>Automations</CardTitle>
-				<StagePanelAutomationForm
-					stageId={stage.id}
-					communityId={stage.communityId as CommunitiesId}
-					automations={automations}
-					actionConfigDefaults={actionConfigDefaults ?? {}}
-				/>
+				<div className="flex items-center gap-2">
+					<Bot size={16} />
+					<CardTitle>Automations</CardTitle>
+				</div>
+				<AddAutomationButton />
 			</StagePanelCardHeader>
 			<CardContent>
 				<ItemGroup className="gap-y-2">
-					{automations.length > 0 ? (
-						automations.map((automation) => (
+					{props.stage.fullAutomations?.length > 0 ? (
+						props.stage.fullAutomations.map((automation) => (
 							<StagePanelAutomation
-								stageId={stage.id}
-								communityId={stage.communityId as CommunitiesId}
+								stageId={props.stage.id}
+								communityId={props.stage.communityId as CommunitiesId}
 								automation={automation}
 								key={automation.id}
 							/>
@@ -69,27 +53,5 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 				</ItemGroup>
 			</CardContent>
 		</Card>
-	)
-}
-
-type Props = {
-	stageId?: StagesId
-	userId: UsersId
-	communityId: CommunitiesId
-}
-
-export const StagePanelAutomations = async (props: Props) => {
-	if (props.stageId === undefined) {
-		return <SkeletonCard />
-	}
-
-	return (
-		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelAutomationsInner
-				stageId={props.stageId}
-				userId={props.userId}
-				communityId={props.communityId}
-			/>
-		</Suspense>
 	)
 }

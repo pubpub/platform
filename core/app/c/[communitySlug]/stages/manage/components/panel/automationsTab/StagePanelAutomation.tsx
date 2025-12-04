@@ -5,7 +5,6 @@ import type { FullAutomation } from "db/types"
 
 import { useCallback } from "react"
 import { Copy, Pencil, Trash2 } from "lucide-react"
-import { parseAsString, useQueryState } from "nuqs"
 
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "ui/item"
@@ -31,6 +30,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
 import { cn } from "utils"
 
 import { AutomationRunResult } from "~/app/components/AutomationUI/AutomationRunResult"
+import { useAutomationId } from "./useAutomationId"
 
 export const UpdateCircle = (
 	props: AutomationRuns & {
@@ -155,10 +155,8 @@ export const StagePanelAutomation = (props: Props) => {
 
 	const { automation } = props
 
-	const [, setEditingAutomationId] = useQueryState(
-		"automation-id",
-		parseAsString.withDefault("new-automation")
-	)
+	const { automationId: editingAutomationId, setAutomationId: setEditingAutomationId } =
+		useAutomationId()
 
 	const onEditClick = useCallback(() => {
 		setEditingAutomationId(automation.id)

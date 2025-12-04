@@ -1,7 +1,6 @@
 "use client"
 
 import type { FullAutomation } from "db/types"
-import type { ParserBuilder } from "nuqs"
 import type {
 	ControllerFieldState,
 	ControllerRenderProps,
@@ -15,8 +14,7 @@ import type { ConditionBlockFormValue } from "./ConditionBlock"
 
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ChevronRight, X } from "lucide-react"
-import { parseAsString, useQueryState } from "nuqs"
+import { Bolt, ChevronRight, Clock, X } from "lucide-react"
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
@@ -39,16 +37,9 @@ import {
 } from "db/public"
 import { Button } from "ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "ui/dialog"
 import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field"
 import { Plus } from "ui/icon"
+import { InfoButton } from "ui/info-button"
 import { Input } from "ui/input"
 import { Item, ItemContent, ItemHeader } from "ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
@@ -68,7 +59,7 @@ import {
 import { getTriggerConfigForm } from "~/actions/_lib/triggers/forms"
 import { actions } from "~/actions/api"
 import { getActionFormComponent } from "~/actions/forms"
-import { isSequentialAutomationEvent } from "~/actions/types"
+import { isSchedulableAutomationEvent, isSequentialAutomationEvent } from "~/actions/types"
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
 import { useUserOrThrow } from "~/app/components/providers/UserProvider"
 import { entries } from "~/lib/mapping"
@@ -80,10 +71,12 @@ import { IconPicker } from "./IconPicker"
 import { StagePanelActionCreator } from "./StagePanelActionCreator"
 
 type Props = {
+	currentAutomation: FullAutomation | null
 	stageId: StagesId
 	communityId: CommunitiesId
 	automations: FullAutomation[]
 	actionConfigDefaults: ActionConfigDefaultFields
+	onSuccess?: () => void
 }
 
 const AutomationSelector = ({
@@ -188,67 +181,6 @@ export type CreateAutomationsSchema = {
 		config: Record<string, unknown>
 	}
 	conditionEvaluationTiming: ConditionEvaluationTiming
-}
-
-export const StagePanelAutomationForm = (props: Props) => {
-	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] = useQueryState(
-		"automation-id",
-		parseAsString as unknown as ParserBuilder<AutomationsId>
-	)
-
-	const [isOpen, setIsOpen] = useState(false)
-
-	const open = isOpen || !!currentlyEditingAutomationId
-
-	const isExistingAutomation = !!currentlyEditingAutomationId
-
-	const handleOpenChange = useCallback(
-		(newOpen: boolean) => {
-			if (!newOpen) {
-				setCurrentlyEditingAutomationId(null)
-			}
-			setIsOpen(newOpen)
-		},
-		[setCurrentlyEditingAutomationId]
-	)
-
-	return (
-		<Dialog open={open} onOpenChange={handleOpenChange}>
-			<DialogTrigger asChild>
-				<Button
-					variant="ghost"
-					size="sm"
-					data-testid="add-automation-button"
-					className="m-0 h-6 p-0 text-neutral-700 hover:bg-transparent hover:text-neutral-900"
-				>
-					<Plus size={16} /> Add automation
-				</Button>
-			</DialogTrigger>
-			<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
-				<DialogHeader className="sticky inset-0 top-0 z-10 bg-white p-6 pb-2">
-					<DialogTitle>
-						{isExistingAutomation ? "Edit automation" : "Add automation"}
-					</DialogTitle>
-					<DialogDescription>
-						Set up an automation to run whenever a certain event is triggered.
-					</DialogDescription>
-				</DialogHeader>
-
-				<div className="p-6 pt-0">
-					{open && (
-						<Form
-							key={currentlyEditingAutomationId || "new"}
-							{...{
-								currentlyEditingAutomationId,
-								setCurrentlyEditingAutomationId,
-								...props,
-							}}
-						/>
-					)}
-				</div>
-			</DialogContent>
-		</Dialog>
-	)
 }
 
 type ConfigCardProps = {
@@ -436,14 +368,7 @@ const ConditionFieldSection = memo(
 	}
 )
 
-function Form(
-	props: Props & {
-		currentlyEditingAutomationId: AutomationsId | null
-		setCurrentlyEditingAutomationId: (id: AutomationsId | null) => void
-	}
-) {
-	const { currentlyEditingAutomationId, setCurrentlyEditingAutomationId } = props
-
+export function StagePanelAutomationForm(props: Props) {
 	const schema = useMemo(
 		() =>
 			z
@@ -550,7 +475,7 @@ function Form(
 							continue
 						}
 
-						if (trigger.sourceAutomationId === currentlyEditingAutomationId) {
+						if (trigger.sourceAutomationId === props.currentAutomation?.id) {
 							ctx.addIssue({
 								path: ["triggers", idx, "sourceAutomationId"],
 								code: z.ZodIssueCode.custom,
@@ -559,17 +484,13 @@ function Form(
 						}
 					}
 				}),
-		[currentlyEditingAutomationId]
+		[props.currentAutomation?.id]
 	)
 
 	const runUpsertAutomation = useServerAction(addOrUpdateAutomation)
 
-	const currentAutomation = props.automations.find(
-		(automation) => automation.id === currentlyEditingAutomationId
-	)
-
 	const defaultValues = useMemo(() => {
-		if (!currentAutomation) {
+		if (!props.currentAutomation) {
 			return {
 				name: "",
 				description: "",
@@ -585,27 +506,27 @@ function Form(
 			}
 		}
 
-		const actionInstance = currentAutomation.actionInstances[0]
+		const actionInstance = props.currentAutomation.actionInstances[0]
 
 		return {
-			name: currentAutomation.name,
-			description: currentAutomation.description ?? "",
-			icon: currentAutomation.icon as IconConfig | undefined,
+			name: props.currentAutomation.name,
+			description: props.currentAutomation.description ?? "",
+			icon: props.currentAutomation.icon as IconConfig | undefined,
 			action: {
 				actionInstanceId: actionInstance?.id,
 				action: actionInstance?.action,
 				config: actionInstance?.config ?? {},
 			},
-			triggers: currentAutomation.triggers.map((trigger) => ({
+			triggers: props.currentAutomation.triggers.map((trigger) => ({
 				triggerId: trigger.id,
 				event: trigger.event,
 				config: trigger.config,
 				sourceAutomationId: trigger.sourceAutomationId,
 			})),
-			conditionEvaluationTiming: currentAutomation.conditionEvaluationTiming,
-			condition: currentAutomation.condition,
+			conditionEvaluationTiming: props.currentAutomation.conditionEvaluationTiming,
+			condition: props.currentAutomation.condition,
 		} as CreateAutomationsSchema
-	}, [currentAutomation])
+	}, [props.currentAutomation])
 
 	const form = useForm<CreateAutomationsSchema>({
 		resolver: zodResolver(schema),
@@ -621,22 +542,16 @@ function Form(
 			const result = await runUpsertAutomation({
 				stageId: props.stageId,
 				data,
-				automationId: currentlyEditingAutomationId as AutomationsId | undefined,
+				automationId: props.currentAutomation?.id as AutomationsId | undefined,
 			})
 			if (!isClientException(result)) {
-				setCurrentlyEditingAutomationId(null)
+				props.onSuccess?.()
 				return
 			}
 
 			setError("root", { message: result.error })
 		},
-		[
-			currentlyEditingAutomationId,
-			props.stageId,
-			runUpsertAutomation,
-			setCurrentlyEditingAutomationId,
-			setError,
-		]
+		[props.currentAutomation?.id, props.stageId, runUpsertAutomation, props.onSuccess, setError]
 	)
 
 	const formId = useId()
@@ -675,6 +590,12 @@ function Form(
 	})
 
 	const errors = form.formState.errors
+
+	const _hasCondition = Boolean(condition)
+	const needsConditionEvaluationTiming = selectedTriggers.some((trigger) =>
+		isSchedulableAutomationEvent(trigger.event)
+	)
+	console.log(needsConditionEvaluationTiming)
 
 	return (
 		<form id={formId} onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-6">
@@ -724,7 +645,7 @@ function Form(
 					<TriggerField
 						{...controlProps}
 						automations={props.automations}
-						currentlyEditingAutomationId={currentlyEditingAutomationId}
+						currentlyEditingAutomationId={props.currentAutomation?.id ?? null}
 						form={form}
 						appendTrigger={appendTrigger}
 					/>
@@ -732,7 +653,81 @@ function Form(
 			/>
 
 			{selectedTriggers.length > 0 && (
-				<ConditionFieldSection form={form} condition={condition} />
+				<>
+					<ConditionFieldSection form={form} condition={condition} />
+					{needsConditionEvaluationTiming && (
+						<Controller
+							control={form.control}
+							name="conditionEvaluationTiming"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel className="text-xs">
+										When to evaluate the condition
+										<InfoButton>
+											<p className="text-xs">
+												For duration-based triggers, conditions can be
+												evaluated at two points: when the automation is
+												scheduled (eg, whenever as Pub enters the stage) and
+												when it actually executes (after the duration
+												passes).
+												<br />
+												<br />
+												"When scheduled" only schedules the automation if
+												the condition is met initially, useful for static
+												conditions like pub type.
+												<br />
+												<br />
+												"On execution" schedules all automations but checks
+												the condition at runtime, useful for dynamic
+												conditions that may change over time (like "author
+												has replied").
+												<br />
+												<br />
+												"Both" is the most restrictive option, requiring the
+												condition to be true at both scheduling and
+												execution time, which minimizes unnecessary
+												scheduled jobs while ensuring the condition still
+												holds when the automation runs.
+											</p>
+										</InfoButton>
+									</FieldLabel>
+									<Select
+										value={field.value ?? "both"}
+										onValueChange={field.onChange}
+										defaultValue="both"
+									>
+										<SelectTrigger>
+											<SelectValue
+												placeholder="Select condition evaluation timing"
+												className="text-xs"
+											/>
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="onTrigger">
+												<div className="flex items-center text-xs">
+													<Clock className="mr-2 inline h-4 w-4 text-xs" />
+													When the automation is scheduled
+												</div>
+											</SelectItem>
+											<SelectItem value="onExecution">
+												<div className="flex items-center text-xs">
+													<Bolt className="mr-2 inline h-4 w-4 text-xs" />
+													When the automation is executed
+												</div>
+											</SelectItem>
+											<SelectItem value="both">
+												<div className="flex items-center text-xs">
+													When the automation is scheduled and again when
+													it is executed
+												</div>
+											</SelectItem>
+										</SelectContent>
+									</Select>
+								</Field>
+							)}
+						/>
+					)}
+				</>
 			)}
 
 			{selectedTriggers.length > 0 && (
@@ -752,7 +747,7 @@ function Form(
 											}
 											form={form}
 											onChange={field.onChange}
-											isEditing={!!currentlyEditingAutomationId}
+											isEditing={!!props.currentAutomation?.id}
 										/>
 									) : null}
 									{!field.value?.action && (

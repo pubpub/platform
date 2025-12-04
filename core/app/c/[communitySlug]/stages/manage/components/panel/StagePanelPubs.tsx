@@ -2,6 +2,7 @@ import type { StagesId, UsersId } from "db/public"
 
 import { Suspense } from "react"
 import assert from "node:assert"
+import { BookOpen } from "lucide-react"
 
 import { AutomationEvent } from "db/public"
 import { Card, CardAction, CardContent, CardTitle } from "ui/card"
@@ -21,13 +22,13 @@ import { getPubsWithRelatedValues } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { StagePanelCardHeader } from "../editor/StagePanelCard"
 
-type PropsInner = {
+type Props = {
 	stageId: StagesId
 	searchParams: Record<string, unknown>
 	userId: UsersId
 }
 
-const StagePanelPubsInner = async (props: PropsInner) => {
+export const StagePanelPubs = async (props: Props) => {
 	const [community] = await Promise.all([findCommunityBySlug()])
 
 	assert(community, "Community not found")
@@ -68,9 +69,12 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 	}
 
 	return (
-		<Card>
+		<Card className="h-full">
 			<StagePanelCardHeader>
-				<CardTitle>Pubs </CardTitle>
+				<div className="flex items-center gap-2">
+					<BookOpen size={16} />
+					<CardTitle>Pubs </CardTitle>
+				</div>
 				<CardAction>
 					<Suspense fallback={<SkeletonCard />}>
 						<CreatePubButton
@@ -103,27 +107,5 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				</div>
 			</CardContent>
 		</Card>
-	)
-}
-
-type Props = {
-	stageId?: StagesId
-	searchParams: Record<string, unknown>
-	userId: UsersId
-}
-
-export const StagePanelPubs = async (props: Props) => {
-	if (props.stageId === undefined) {
-		return <SkeletonCard />
-	}
-
-	return (
-		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelPubsInner
-				stageId={props.stageId}
-				searchParams={props.searchParams}
-				userId={props.userId}
-			/>
-		</Suspense>
 	)
 }

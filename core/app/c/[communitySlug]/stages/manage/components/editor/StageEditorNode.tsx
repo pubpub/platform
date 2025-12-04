@@ -8,7 +8,7 @@ import Link from "next/link"
 import { Handle, Position } from "reactflow"
 
 import { Button } from "ui/button"
-import { Settings } from "ui/icon"
+import { BookOpen, Bot, Settings, Users } from "ui/icon"
 import { cn } from "utils"
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
@@ -107,7 +107,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 font-light text-xs"
+							className="m-0 h-auto gap-1 p-0 font-light text-xs [&_svg]:size-3"
 							asChild
 						>
 							<Link
@@ -116,15 +116,17 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 									communitySlug: community.slug,
 									tab: "pubs",
 								})}
+								aria-label={`View Pubs in ${props.data.stage.name}`}
 							>
-								{props.data.stage.pubsCount} pubs
+								{props.data.stage.pubsCount} <span className="sr-only">Pubs</span>{" "}
+								<BookOpen strokeWidth={1.2} />
 							</Link>
 						</Button>
 					</li>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 font-light text-xs"
+							className="m-0 h-auto gap-1 p-0 font-light text-xs [&_svg]:size-3.5"
 							asChild
 						>
 							<Link
@@ -133,15 +135,18 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 									communitySlug: community.slug,
 									tab: "automations",
 								})}
+								aria-label={`View Automations in ${props.data.stage.name}`}
 							>
-								{props.data.stage.automationsCount} automations
+								{props.data.stage.automationsCount}
+								<span className="sr-only">automations</span>
+								<Bot strokeWidth={1.2} />
 							</Link>
 						</Button>
 					</li>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 font-light text-xs"
+							className="m-0 h-auto gap-1 p-0 font-light text-xs [&_svg]:size-3.5"
 							asChild
 						>
 							<Link
@@ -150,8 +155,11 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 									communitySlug: community.slug,
 									tab: "members",
 								})}
+								aria-label={`View Members in ${props.data.stage.name}`}
 							>
-								{props.data.stage.memberCount} members
+								{props.data.stage.memberCount}{" "}
+								<span className="sr-only">members</span>
+								<Users strokeWidth={1.2} />
 							</Link>
 						</Button>
 					</li>

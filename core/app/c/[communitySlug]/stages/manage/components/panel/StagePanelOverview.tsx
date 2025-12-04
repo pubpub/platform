@@ -1,6 +1,6 @@
 import type { StagesId, UsersId } from "db/public"
 
-import { Suspense } from "react"
+import { List } from "lucide-react"
 
 import { Card, CardContent, CardTitle } from "ui/card"
 import { Separator } from "ui/separator"
@@ -13,12 +13,12 @@ import { StagePanelCardHeader } from "../editor/StagePanelCard"
 import { StageNameInput } from "./StageNameInput"
 import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement"
 
-type PropsInner = {
+type Props = {
 	stageId: StagesId
 	userId: UsersId
 }
 
-const StagePanelOverviewInner = async (props: PropsInner) => {
+export const StagePanelOverview = async (props: Props) => {
 	const [stage, communitySlug] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getCommunitySlug(),
@@ -33,8 +33,11 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 
 	return (
 		<Card>
-			<StagePanelCardHeader>
-				<CardTitle>Overview</CardTitle>
+			<StagePanelCardHeader className="justify-start gap-2">
+				<div className="flex items-center gap-2">
+					<List size={16} />
+					<CardTitle>Overview</CardTitle>
+				</div>
 			</StagePanelCardHeader>
 			<CardContent className="space-y-4">
 				<StageNameInput value={stage.name} onChange={onNameChange} />
@@ -46,22 +49,5 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 				/>
 			</CardContent>
 		</Card>
-	)
-}
-
-type Props = {
-	stageId: string | undefined
-	userId: UsersId
-}
-
-export const StagePanelOverview = async (props: Props) => {
-	if (props.stageId === undefined) {
-		return <SkeletonCard />
-	}
-
-	return (
-		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelOverviewInner stageId={props.stageId as StagesId} userId={props.userId} />
-		</Suspense>
 	)
 }

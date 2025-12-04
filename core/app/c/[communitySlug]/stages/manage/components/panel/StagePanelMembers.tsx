@@ -1,13 +1,12 @@
 import type { User } from "lucia"
 
-import { Suspense } from "react"
+import { Users } from "lucide-react"
 
 import { Capabilities, MembershipType, type StagesId } from "db/public"
 import { Card, CardAction, CardContent, CardTitle } from "ui/card"
 
 import { MembersList } from "~/app/components//Memberships/MembersList"
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
 import { userCan } from "~/lib/authorization/capabilities"
 import { getStageMembers } from "~/lib/db/queries"
 import { getSimpleForms } from "~/lib/server/form"
@@ -19,12 +18,12 @@ import {
 } from "../../actions"
 import { StagePanelCardHeader } from "../editor/StagePanelCard"
 
-type PropsInner = {
+type Props = {
 	stageId: StagesId
 	user: User
 }
 
-const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
+export const StagePanelMembers = async ({ stageId, user }: Props) => {
 	const [members, canManage, availableForms] = await Promise.all([
 		getStageMembers(stageId).execute(),
 		userCan(Capabilities.removeStageMember, { type: MembershipType.stage, stageId }, user.id),
@@ -32,9 +31,12 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 	])
 
 	return (
-		<Card>
+		<Card className="h-full">
 			<StagePanelCardHeader>
-				<CardTitle>Members</CardTitle>
+				<div className="flex items-center gap-2">
+					<Users size={16} />
+					<CardTitle>Members</CardTitle>
+				</div>
 				<CardAction>
 					<AddMemberDialog
 						className="m-0 h-6 border-none bg-transparent p-0 text-neutral-600 text-xs shadow-none hover:bg-transparent hover:text-neutral-900"
@@ -59,22 +61,5 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 				/>
 			</CardContent>
 		</Card>
-	)
-}
-
-type Props = {
-	stageId?: StagesId
-	user: User
-}
-
-export const StagePanelMembers = async (props: Props) => {
-	if (props.stageId === undefined) {
-		return <SkeletonCard />
-	}
-
-	return (
-		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelMembersInner stageId={props.stageId} user={props.user} />
-		</Suspense>
 	)
 }
