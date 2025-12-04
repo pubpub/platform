@@ -56,7 +56,6 @@ export function useSSEUpdates<T extends NotifyTables>({
 		withCredentials,
 		reconnect: true,
 	})
-	console.log("data", data)
 
 	const lastDataRef = useRef<ChangeNotification<T> | null>(null)
 	const [debouncedData] = useDebounce(data, debounceMs)

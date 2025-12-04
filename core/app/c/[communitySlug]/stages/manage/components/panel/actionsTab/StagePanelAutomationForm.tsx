@@ -13,7 +13,7 @@ import type { ZodTypeDef } from "zod"
 import type { ActionConfigDefaultFields } from "~/lib/server/actions"
 import type { ConditionBlockFormValue } from "./ConditionBlock"
 
-import { memo, useCallback, useEffect, useId, useMemo, useState } from "react"
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ChevronRight, X } from "lucide-react"
 import { parseAsString, useQueryState } from "nuqs"
@@ -342,11 +342,7 @@ const ConfigCard = memo(
 					</ItemHeader>
 
 					<CollapsibleContent className={cn(!hasContent ? "hidden" : "w-full")}>
-						{hasContent && (
-							<ItemContent className="m-1 overflow-visible">
-								{props.children}
-							</ItemContent>
-						)}
+						<ItemContent className="m-1 overflow-visible">{props.children}</ItemContent>
 					</CollapsibleContent>
 				</Item>
 			</Collapsible>
@@ -500,7 +496,7 @@ function Form(
 
 					action: z.discriminatedUnion(
 						"action",
-						entries(actions).map(([actionName, action]) =>
+						entries(actions).map(([actionName]) =>
 							z.object({
 								actionInstanceId: actionInstancesIdSchema,
 								action: z.literal(actionName),
@@ -622,7 +618,6 @@ function Form(
 
 	const onSubmit = useCallback(
 		async (data: CreateAutomationsSchema) => {
-			console.log("DAAATTA", data)
 			const result = await runUpsertAutomation({
 				stageId: props.stageId,
 				data,
@@ -648,18 +643,24 @@ function Form(
 
 	const selectedAction = useWatch({ control: form.control, name: "action" })
 
-	// track if we've already loaded the initial action to avoid clearing config on mount
-	const [initialActionLoaded, setInitialActionLoaded] = useState(false)
+	// track the initial action to detect when the user changes the action type
+	// using a ref to avoid triggering the effect when we update the tracking value
+	const initialActionRef = useRef<string | undefined>(defaultValues.action?.action)
 
 	useEffect(() => {
-		if (selectedAction?.action) {
-			if (!initialActionLoaded) {
-				setInitialActionLoaded(true)
-				return
-			}
-			form.setValue("action.config", {})
+		if (!selectedAction?.action) {
+			return
 		}
-	}, [selectedAction?.action, form, initialActionLoaded])
+
+		// if this is the first time we're seeing this action (matches initial), don't clear
+		if (initialActionRef.current === selectedAction.action) {
+			return
+		}
+
+		// action type changed, clear the config and update the ref
+		form.setValue("action.config", {})
+		initialActionRef.current = selectedAction.action
+	}, [selectedAction?.action, form])
 
 	const condition = form.watch("condition")
 
@@ -949,6 +950,7 @@ const ActionConfigCard = memo(
 			}, {} as TokenContext)
 		}, [actionDef.tokens])
 
+		console.log("actionDef", actionDef, ActionFormComponent)
 		if (!ActionFormComponent) {
 			return null
 		}

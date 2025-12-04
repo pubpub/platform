@@ -21,6 +21,7 @@ import { getActionFormComponent } from "~/actions/forms"
 import { didSucceed, useServerAction } from "~/lib/serverActions"
 import { useCommunity } from "../providers/CommunityProvider"
 import { SkeletonCard } from "../skeletons/SkeletonCard"
+import { isActionSuccess } from "~/actions/results"
 
 type Props = {
 	automation: FullAutomation
@@ -47,7 +48,7 @@ export const AutomationRunForm = (props: Props) => {
 				stack: [],
 			})
 
-			if (didSucceed(result)) {
+			if (isActionSuccess(result)) {
 				toast({
 					title:
 						"title" in result && typeof result.title === "string"

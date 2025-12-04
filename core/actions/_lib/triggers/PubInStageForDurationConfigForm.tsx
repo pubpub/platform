@@ -31,6 +31,7 @@ export const PubInStageForDurationConfigForm: AdditionalConfigForm = (props) => 
 									<Input
 										type="number"
 										className="bg-white"
+										defaultValue={0}
 										value={p.field.value}
 										onChange={(e) =>
 											p.field.onChange(
@@ -59,7 +60,11 @@ export const PubInStageForDurationConfigForm: AdditionalConfigForm = (props) => 
 									<FieldLabel className="text-gray-700 text-xs">
 										Interval
 									</FieldLabel>
-									<Select value={p.field.value} onValueChange={p.field.onChange}>
+									<Select
+										value={p.field.value}
+										onValueChange={p.field.onChange}
+										defaultValue={"day"}
+									>
 										<SelectTrigger className="h-9">
 											<SelectValue placeholder="Select an interval" />
 										</SelectTrigger>
