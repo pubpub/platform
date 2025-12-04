@@ -1,6 +1,6 @@
 "use client"
 
-import type { ActionRuns, AutomationRuns } from "db/public"
+import type { Action, ActionRuns, AutomationRuns } from "db/public"
 import type { IconConfig } from "ui/dynamic-icon"
 
 import Link from "next/link"
@@ -10,6 +10,7 @@ import { AutomationEvent } from "db/public"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion"
 import { DynamicIcon } from "ui/dynamic-icon"
 
+import { actions } from "~/actions/api"
 import { getAutomationRunStatus } from "~/actions/results"
 import { ActionRunResult } from "~/app/components/ActionUI/ActionRunResult"
 import { AutomationRunStatusBadge } from "~/app/components/ActionUI/AutomationRunResult"
@@ -137,31 +138,37 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 			{automationRun.actionRuns.length > 0 && (
 				<div className="ml-11">
 					<Accordion type="multiple" className="w-full">
-						{automationRun.actionRuns.map((actionRun, index) => (
-							<AccordionItem key={actionRun.id} value={actionRun.id}>
-								<AccordionTrigger className="py-2 text-sm hover:no-underline">
-									<div className="flex items-center gap-2">
-										<span className="font-medium">Action {index + 1}</span>
-										{actionRun.status && (
-											<span
-												className={`rounded px-1.5 py-0.5 text-xs ${
-													actionRun.status === "success"
-														? "bg-green-100 text-green-700"
-														: actionRun.status === "failure"
-															? "bg-red-100 text-red-700"
-															: "bg-yellow-100 text-yellow-700"
-												}`}
-											>
-												{actionRun.status}
+						{automationRun.actionRuns.map((actionRun, index) => {
+							const action = actions[actionRun.action as Action]
+							return (
+								<AccordionItem key={actionRun.id} value={actionRun.id}>
+									<AccordionTrigger className="py-2 text-sm hover:no-underline">
+										<div className="flex items-center gap-2">
+											{action && <action.icon size={16} />}
+											<span className="font-medium">
+												{action?.niceName || "Unknown Action"}
 											</span>
-										)}
-									</div>
-								</AccordionTrigger>
-								<AccordionContent>
-									<ActionRunResult actionRun={actionRun} />
-								</AccordionContent>
-							</AccordionItem>
-						))}
+											{actionRun.status && (
+												<span
+													className={`rounded px-1.5 py-0.5 text-xs ${
+														actionRun.status === "success"
+															? "bg-green-100 text-green-700"
+															: actionRun.status === "failure"
+																? "bg-red-100 text-red-700"
+																: "bg-yellow-100 text-yellow-700"
+													}`}
+												>
+													{actionRun.status}
+												</span>
+											)}
+										</div>
+									</AccordionTrigger>
+									<AccordionContent>
+										<ActionRunResult actionRun={actionRun} />
+									</AccordionContent>
+								</AccordionItem>
+							)
+						})}
 					</Accordion>
 				</div>
 			)}

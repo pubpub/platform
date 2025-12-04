@@ -8,6 +8,7 @@ import { defineAction } from "../types"
 export const action = defineAction({
 	name: Action.datacite,
 	accepts: ["pub"],
+	niceName: "Deposit to DataCite",
 	config: {
 		schema: z.object({
 			doi: z.string().optional(),

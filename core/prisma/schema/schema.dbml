@@ -364,6 +364,7 @@ Table action_runs {
   pubId String
   json Json
   config Json
+  action Action
   event AutomationEvent
   params Json
   status ActionRunStatus [not null]

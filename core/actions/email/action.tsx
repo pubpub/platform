@@ -55,6 +55,7 @@ const schema = z.object({
 export const action = defineAction({
 	accepts: ["pub"],
 	name: Action.email,
+	niceName: "Send Email",
 	config: { schema },
 	description: "Send an email to one or more users",
 	icon: Mail,

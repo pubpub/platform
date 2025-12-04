@@ -342,15 +342,21 @@ model AutomationRun {
   automationId String
 
   // event trigger
-  event      AutomationEvent
+  triggerEvent      AutomationEvent
   // trigger config
-  config     Json?
+  triggerConfig Json?
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @default(now()) @updatedAt
   actionRuns ActionRun[]
 
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceUserId String?
+  sourceUser   User?   @relation(fields: [sourceUserId], references: [id], onDelete: Cascade)
+
+// add constraint that either one of them is defined
+  inputPubId String?
+  inputPub   Pub?   @relation(fields: [inputPubId], references: [id], onDelete: Cascade)
+  inputJson  Json
+
 
   // action run that triggered this action run
   sourceAutomationRunId String?
@@ -376,6 +382,7 @@ model ActionRun {
   pubId           String?
   json            Json?
   config          Json?
+  action          Action?
   event           AutomationEvent?
   params          Json?
   status          ActionRunStatus

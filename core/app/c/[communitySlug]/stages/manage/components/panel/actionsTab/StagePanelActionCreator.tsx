@@ -30,7 +30,7 @@ const ActionCell = (props: ActionCellProps) => {
 
 	return (
 		<Button
-			className="flex cursor-pointer flex-col space-y-1 rounded-md border bg-accent p-3 shadow-md transition-colors hover:bg-background hover:text-accent-foreground hover:shadow-lg focus:bg-background focus:text-accent-foreground focus:shadow-lg"
+			className="flex h-20 cursor-pointer flex-col space-y-1 rounded-md border bg-accent p-3 text-black shadow-md transition-colors"
 			onClick={onClick}
 			data-testid={`${props.action.name}-button`}
 		>
@@ -38,7 +38,7 @@ const ActionCell = (props: ActionCellProps) => {
 				<props.action.icon />
 				<div className="space-y-1">
 					<div className="flex items-center gap-2">
-						<h4 className="font-semibold text-sm">{props.action.name}</h4>
+						<h4 className="font-semibold text-sm">{props.action.niceName}</h4>
 						{props.action.experimental && (
 							<Tooltip>
 								<TooltipTrigger asChild>
@@ -57,7 +57,7 @@ const ActionCell = (props: ActionCellProps) => {
 						)}
 					</div>
 
-					<p className="text-muted-foreground text-sm leading-tight">
+					<p className="w-auto whitespace-normal text-left text-muted-foreground text-sm leading-tight">
 						{props.action.description}
 					</p>
 				</div>
@@ -89,7 +89,7 @@ export const StagePanelActionCreator = (props: Props) => {
 		<div className="space-y-2 py-2">
 			<Dialog open={isOpen} onOpenChange={onOpenChange}>
 				<DialogTrigger asChild>{props.children}</DialogTrigger>
-				<DialogContent data-testid={"add-action-dialog"}>
+				<DialogContent data-testid={"add-action-dialog"} className="!w-[900px]">
 					<DialogHeader>
 						<DialogTitle>Add an action</DialogTitle>
 						<DialogDescription>

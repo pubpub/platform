@@ -52,7 +52,7 @@ export const AutomationRunForm = (props: Props) => {
 					title:
 						"title" in result && typeof result.title === "string"
 							? result.title
-							: `Successfully ran ${props.automation.name || action.name}`,
+							: `Successfully ran ${props.automation.name || action.niceName}`,
 					variant: "default",
 					description: (
 						<div className="max-h-40 max-w-sm overflow-auto">

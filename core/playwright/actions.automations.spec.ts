@@ -250,7 +250,7 @@ test.describe("sequential automations", () => {
 		await page.waitForTimeout(1_000)
 
 		await page.getByRole("tab", { name: "Pubs", exact: true }).click()
-		await page.getByRole("button", { name: "Run Action" }).first().click()
+		await page.getByRole("button", { name: "Run Automation" }).first().click()
 
 		await page.getByRole("button", { name: "Log 2" }).first().click()
 

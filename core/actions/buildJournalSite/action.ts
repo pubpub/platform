@@ -11,6 +11,7 @@ const schema = z.object({
 
 export const action = defineAction({
 	name: Action.buildJournalSite,
+	niceName: "Build Journal Site",
 	accepts: ["pub"],
 	superAdminOnly: true,
 	experimental: true,

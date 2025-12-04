@@ -962,7 +962,7 @@ const ActionConfigCard = memo(
 						<ConfigCard
 							isError={fieldState.invalid}
 							icon={actionDef.icon as typeof ChevronRight}
-							title={actionDef.name}
+							title={actionDef.niceName}
 							onRemove={props.removeAction}
 							showCollapseToggle={true}
 							defaultCollapsed={props.isEditing}

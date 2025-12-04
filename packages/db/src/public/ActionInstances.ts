@@ -3,13 +3,11 @@
 
 import type { ColumnType, Insertable, Selectable, Updateable } from "kysely"
 import type { BaseActionInstanceConfig } from "../types"
-import type { Action } from "./Action"
-import type { AutomationsId } from "./Automations"
 
 import { z } from "zod"
 
-import { actionSchema } from "./Action"
-import { automationsIdSchema } from "./Automations"
+import { type Action, actionSchema } from "./Action"
+import { type AutomationsId, automationsIdSchema } from "./Automations"
 
 /** Identifier type for public.action_instances */
 export type ActionInstancesId = string & { __brand: "ActionInstancesId" }

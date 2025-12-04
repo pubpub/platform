@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import type { Action, AutomationEvent, StagesId } from "db/public"
+import type { AutomationEvent, StagesId } from "db/public"
 
 import { test } from "@playwright/test"
 
@@ -61,26 +61,13 @@ export class StagesManagePage {
 		return
 	}
 
-	async openStagePanelTab(stageName: string, tab: "Overview" | "Pubs" | "Actions" | "Members") {
+	async openStagePanelTab(
+		stageName: string,
+		tab: "Overview" | "Pubs" | "Automations" | "Members"
+	) {
 		await this.openStagePanel(stageName)
 		const stagePanel = this.page.getByRole("dialog")
-		await stagePanel.getByRole("tablist").getByText(tab).click()
-	}
-
-	async addAction(stageName: string, action: Action, actionName: string) {
-		await this.openStagePanelTab(stageName, "Actions")
-		const stagePanel = this.page.getByRole("dialog")
-
-		await stagePanel.getByRole("button", { name: "Add an action", exact: true }).click()
-
-		await this.page.getByTestId("add-action-dialog").getByTestId(`${action}-button`).click()
-
-		const actionInstance = stagePanel.getByTestId(`action-instance-${action}`)
-
-		const editButton = actionInstance.getByLabel("Edit action", { exact: true })
-		await editButton.click()
-		await stagePanel.getByLabel("Edit action name", { exact: true }).fill(actionName)
-		await editButton.click()
+		await stagePanel.getByRole("tab", { name: tab }).click()
 	}
 
 	/**
@@ -94,7 +81,7 @@ export class StagesManagePage {
 			sourceActionInstanceName?: string
 		}
 	) {
-		await this.openStagePanelTab(stageName, "Actions")
+		await this.openStagePanelTab(stageName, "Automations")
 
 		await this.page.getByTestId("add-automation-button").click({ timeout: 1_000 })
 

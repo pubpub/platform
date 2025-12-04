@@ -530,6 +530,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
 			},
+			{
+				name: "action",
+				dataType: "Action",
+				dataTypeSchema: "public",
+				isNullable: true,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
 		],
 	},
 	{

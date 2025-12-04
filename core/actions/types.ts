@@ -77,6 +77,7 @@ export type Action<
 > = {
 	id?: string
 	name: N
+	niceName: string
 	description: string
 	accepts: Accepts
 	/**
