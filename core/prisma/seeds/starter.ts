@@ -7,6 +7,7 @@ import {
 	Action,
 	AutomationConditionBlockType,
 	AutomationEvent,
+	ConditionEvaluationTiming,
 	CoreSchemaType,
 	ElementType,
 	FormAccessType,
@@ -339,10 +340,45 @@ export async function seedStarter(communityId?: CommunitiesId) {
 								},
 							],
 						},
+						"Log Pub in Stage For Duration": {
+							triggers: [
+								{
+									event: AutomationEvent.pubInStageForDuration,
+									config: {
+										duration: 1,
+										interval: "minute",
+									},
+								},
+							],
+							timing: ConditionEvaluationTiming.both,
+							condition: {
+								type: AutomationConditionBlockType.OR,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: '$.pub.pubType.name = "Article"',
+									},
+								],
+							},
+							actions: [
+								{
+									action: Action.log,
+									config: {
+										text: "Pub {{ $.pub.title }} is in stage {{ $.stage.name }} for one minute",
+									},
+								},
+							],
+						},
 					},
 				},
 				Published: {
 					members: { new: MemberRole.contributor },
+				},
+			},
+			stageConnections: {
+				Draft: {
+					to: ["Published"],
 				},
 			},
 			apiTokens: {
