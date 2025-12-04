@@ -15,6 +15,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		manualActionInstancesOverrideArgs: {
 			[actionInstanceId: ActionInstancesId]: Record<string, unknown>
 		}
+		skipConditionCheck?: boolean
 	}
 ): Promise<ActionInstanceRunResult> {
 	const { user } = await getLoginData()
@@ -45,6 +46,24 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		}
 	}
 
+	// verify the user has permission to skip condition checks if requested
+	let skipConditionCheck = false
+	if (args.skipConditionCheck) {
+		const canOverrideConditions = await userCan(
+			Capabilities.overrideAutomationConditions,
+			{ type: MembershipType.community, communityId: args.communityId },
+			user.id
+		)
+		if (!canOverrideConditions) {
+			return {
+				success: false,
+				error: "Not authorized to skip condition checks",
+				config: {},
+			}
+		}
+		skipConditionCheck = true
+	}
+
 	const { json: _, pubId: __, ...rest } = args
 
 	const result = await runAutomation({
@@ -53,6 +72,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		stack: args.stack ?? [],
 		communityId: args.communityId,
 		manualActionInstancesOverrideArgs: args.manualActionInstancesOverrideArgs,
+		skipConditionCheck,
 		...(args.json ? { json: args.json } : { pubId: args.pubId! }),
 		// manual run
 		automationId: args.automationId,

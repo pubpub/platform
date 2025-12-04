@@ -4,7 +4,7 @@ import type { FieldValues, UseFormReturn } from "react-hook-form"
 import type { ZodObject, ZodOptional } from "zod"
 import type { Action } from "../types"
 
-import { createContext, useCallback, useContext, useMemo } from "react"
+import { createContext, useCallback, useContext, useMemo, useRef } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -46,20 +46,38 @@ type ActionFormProps = PropsWithChildren<{
 
 	context: ActionFormContextContext
 
-	onSubmit(values: Record<string, unknown>, form: UseFormReturn<FieldValues>): Promise<void>
+	onSubmit(
+		values: Record<string, unknown>,
+		form: UseFormReturn<FieldValues>,
+		options?: Record<string, unknown>
+	): Promise<void>
 
-	submitButton: {
-		text: string
-		pendingText?: string
-		successText?: string
-		errorText?: string
-		className?: string
-	}
-	secondaryButton?: {
-		text?: string
-		className?: string
-		onClick: () => void
-	}
+	submitButton:
+		| (({
+				formState,
+				submit,
+		  }: {
+				formState: UseFormReturn<FieldValues>["formState"]
+				submit: (options?: Record<string, unknown>) => void
+		  }) => React.ReactNode)
+		| {
+				text: string
+				pendingText?: string
+				successText?: string
+				errorText?: string
+				className?: string
+		  }
+	secondaryButton?:
+		| (({
+				formState,
+		  }: {
+				formState: UseFormReturn<FieldValues>["formState"]
+		  }) => React.ReactNode)
+		| {
+				text?: string
+				className?: string
+				onClick: () => void
+		  }
 }>
 
 export const ActionFormContext = createContext<ActionFormContext | undefined>(undefined)
@@ -90,12 +108,74 @@ export function ActionForm(props: ActionFormProps) {
 		defaultValues,
 	})
 
+	// store options for the current submission
+	const submitOptionsRef = useRef<Record<string, unknown> | undefined>(undefined)
+
 	const onSubmit = useCallback(
 		async (data: Record<string, unknown>) => {
-			await props.onSubmit(data, form)
+			const options = submitOptionsRef.current
+			submitOptionsRef.current = undefined
+			await props.onSubmit(data, form, options)
 		},
 		[props.onSubmit, form]
 	)
+
+	const submitWithOptions = useCallback(
+		(options?: Record<string, unknown>) => {
+			submitOptionsRef.current = options
+			form.handleSubmit(onSubmit)()
+		},
+		[form, onSubmit]
+	)
+
+	const secondaryButtonElement = useMemo(() => {
+		if (!props.secondaryButton) {
+			return null
+		}
+
+		if (typeof props.secondaryButton === "function") {
+			return props.secondaryButton({
+				formState: form.formState,
+			})
+		}
+
+		return (
+			<Button
+				variant="outline"
+				type="button"
+				className={props.secondaryButton?.className}
+				onClick={props.secondaryButton.onClick}
+			>
+				{props.secondaryButton?.text}
+			</Button>
+		)
+	}, [props.secondaryButton, form.formState])
+
+	const submitButton = useMemo(() => {
+		if (!props.submitButton) {
+			return null
+		}
+
+		if (typeof props.submitButton === "function") {
+			return props.submitButton({
+				formState: form.formState,
+				submit: submitWithOptions,
+			})
+		}
+
+		return (
+			<FormSubmitButton
+				data-testid="action-run-button"
+				formState={form.formState}
+				className={props.submitButton.className}
+				idleText={props.submitButton.text}
+				pendingText={props.submitButton.pendingText}
+				successText={props.submitButton.successText}
+				errorText={props.submitButton.errorText}
+				type="submit"
+			/>
+		)
+	}, [props.submitButton, form.formState, submitWithOptions])
 
 	return (
 		<ActionFormContext.Provider
@@ -112,26 +192,8 @@ export function ActionForm(props: ActionFormProps) {
 					<FieldGroup>
 						{props.children}
 						<Field orientation="horizontal" className="flex justify-end">
-							{props.secondaryButton && (
-								<Button
-									variant="outline"
-									type="button"
-									className={props.secondaryButton?.className}
-									onClick={props.secondaryButton.onClick}
-								>
-									{props.secondaryButton?.text}
-								</Button>
-							)}
-
-							<FormSubmitButton
-								data-testid="action-run-button"
-								formState={form.formState}
-								className={props.submitButton.className}
-								idleText={props.submitButton.text}
-								pendingText={props.submitButton.pendingText}
-								successText={props.submitButton.successText}
-								errorText={props.submitButton.errorText}
-							/>
+							{secondaryButtonElement}
+							{submitButton}
 						</Field>
 					</FieldGroup>
 				</form>

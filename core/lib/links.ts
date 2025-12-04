@@ -117,10 +117,12 @@ export const constructRedirectToPubDetailPage = (opts: {
 	return maybeWithSearchParams(basePath, searchParams)
 }
 
+export type StageManageTab = "overview" | "pubs" | "automations" | "members"
+
 export const constructStageMangePanel = (opts: {
 	stageId: StagesId
 	communitySlug: string
-	tab?: "overview" | "pubs" | "actions" | "members"
+	tab?: StageManageTab
 }) => {
 	const searchParams = new URLSearchParams()
 	if (opts.tab) {

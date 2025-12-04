@@ -131,7 +131,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 								href={constructStageMangePanel({
 									stageId: props.data.stage.id,
 									communitySlug: community.slug,
-									tab: "actions",
+									tab: "automations",
 								})}
 							>
 								{props.data.stage.automationsCount} automations

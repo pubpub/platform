@@ -62,6 +62,8 @@ export type RunAutomationArgs = {
 	manualActionInstancesOverrideArgs: {
 		[actionInstanceId: ActionInstancesId]: Record<string, unknown> | null
 	} | null
+	// when true, skip condition evaluation (requires overrideAutomationConditions capability)
+	skipConditionCheck?: boolean
 	userId?: UsersId
 	stack: AutomationRunsId[]
 	communityId: CommunitiesId
@@ -278,7 +280,7 @@ export async function runAutomation(
 	}
 
 	// check if we need to evaluate conditions at execution time
-	if (automation?.condition) {
+	if (automation?.condition && !args.skipConditionCheck) {
 		const automationTiming = automation.conditionEvaluationTiming as string | null | undefined
 		const shouldEvaluateNow =
 			automationTiming === "onExecution" ||

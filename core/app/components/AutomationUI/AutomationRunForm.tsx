@@ -2,7 +2,8 @@
 
 import type { CommunitiesId, PubsId } from "db/public"
 import type { FullAutomation } from "db/types"
-import type { UseFormReturn } from "react-hook-form"
+import type { LucideIcon } from "lucide-react"
+import type { FieldValues, UseFormReturn } from "react-hook-form"
 
 import { Suspense, useCallback, useState } from "react"
 
@@ -10,7 +11,9 @@ import { logger } from "logger"
 import { Button } from "ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog"
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
+import { Item, ItemContent, ItemHeader } from "ui/item"
 import { Separator } from "ui/separator"
+import { FormSubmitButton, FormSubmitButtonWithDropdown } from "ui/submit-button"
 import { TokenProvider } from "ui/tokens"
 import { toast } from "ui/use-toast"
 
@@ -22,6 +25,28 @@ import { isActionSuccess } from "~/actions/results"
 import { useServerAction } from "~/lib/serverActions"
 import { useCommunity } from "../providers/CommunityProvider"
 import { SkeletonCard } from "../skeletons/SkeletonCard"
+
+type ActionCardProps = {
+	icon: LucideIcon
+	title: string
+	children?: React.ReactNode
+}
+
+const ActionCard = (props: ActionCardProps) => {
+	const Icon = props.icon
+
+	return (
+		<Item variant="outline" className="bg-neutral-50" size="sm">
+			<ItemHeader>
+				<Icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
+				<span className="flex-1 font-medium text-neutral-900 text-sm">{props.title}</span>
+			</ItemHeader>
+			{props.children && (
+				<ItemContent className="m-1 overflow-visible">{props.children}</ItemContent>
+			)}
+		</Item>
+	)
+}
 
 type Props = {
 	automation: FullAutomation
@@ -36,8 +61,17 @@ export const AutomationRunForm = (props: Props) => {
 	const community = useCommunity()
 	const runAutomation = useServerAction(runAutomationManual)
 
+	const hasConditions = Boolean(props.automation.condition)
+	const showSkipConditionsOption = props.canOverrideAutomationConditions && hasConditions
+
 	const onSubmit = useCallback(
-		async (values: Record<string, unknown>, form: UseFormReturn<any>) => {
+		async (
+			values: Record<string, unknown>,
+			form: UseFormReturn<FieldValues>,
+			options?: Record<string, unknown>
+		) => {
+			const skipConditionCheck = Boolean(options?.skipConditions)
+
 			const result = await runAutomation({
 				automationId: props.automation.id,
 				pubId: props.pubId,
@@ -46,6 +80,7 @@ export const AutomationRunForm = (props: Props) => {
 				},
 				communityId: community.id as CommunitiesId,
 				stack: [],
+				skipConditionCheck: skipConditionCheck && hasConditions,
 			})
 
 			if (isActionSuccess(result)) {
@@ -83,7 +118,8 @@ export const AutomationRunForm = (props: Props) => {
 			props.pubId,
 			mainActionInstance.id,
 			community.id,
-			action.name,
+			action.niceName,
+			hasConditions,
 		]
 	)
 
@@ -133,27 +169,51 @@ export const AutomationRunForm = (props: Props) => {
 						<Separator />
 					</DialogHeader>
 					<div className="p-6 pt-0">
-						<ActionForm
-							action={action}
-							values={mainActionInstance.config ?? {}}
-							defaultFields={mainActionInstance.defaultedActionConfigKeys ?? []}
-							onSubmit={onSubmit}
-							submitButton={{
-								text: "Run Automation",
-								pendingText: "Running Automation...",
-								successText: "Automation Ran",
-								errorText: "Failed to run automation",
-							}}
-							secondaryButton={{
-								text: "Cancel",
-								onClick: onClose,
-							}}
-							context={{ type: "run", pubId: props.pubId }}
-						>
-							<Suspense fallback={<SkeletonCard />}>
-								<ActionFormComponent />
-							</Suspense>
-						</ActionForm>
+						<ActionCard icon={action.icon as LucideIcon} title={action.niceName}>
+							<ActionForm
+								action={action}
+								values={mainActionInstance.config ?? {}}
+								defaultFields={mainActionInstance.defaultedActionConfigKeys ?? []}
+								onSubmit={onSubmit}
+								submitButton={({ formState, submit }) =>
+									showSkipConditionsOption ? (
+										<FormSubmitButtonWithDropdown
+											formState={formState}
+											idleText="Run Automation"
+											pendingText="Running Automation..."
+											successText="Automation Ran"
+											errorText="Failed to run automation"
+											type="submit"
+											dropdownOptions={[
+												{
+													label: "Run and skip conditions",
+													onSelect: () =>
+														submit({ skipConditions: true }),
+												},
+											]}
+										/>
+									) : (
+										<FormSubmitButton
+											formState={formState}
+											idleText="Run Automation"
+											pendingText="Running Automation..."
+											successText="Automation Ran"
+											errorText="Failed to run automation"
+											type="submit"
+										/>
+									)
+								}
+								secondaryButton={{
+									text: "Cancel",
+									onClick: onClose,
+								}}
+								context={{ type: "run", pubId: props.pubId }}
+							>
+								<Suspense fallback={<SkeletonCard />}>
+									<ActionFormComponent />
+								</Suspense>
+							</ActionForm>
+						</ActionCard>
 					</div>
 				</DialogContent>
 			</Dialog>

@@ -94,6 +94,7 @@ export default async function Page(props: Props) {
 										<StageEditor />
 										{searchParams.editingStageId && (
 											<StagePanel
+												communityId={community.id}
 												stageId={searchParams.editingStageId as StagesId}
 												searchParams={searchParams}
 												user={user}
