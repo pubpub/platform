@@ -67,6 +67,7 @@
 				}
 			},
 			"suspicious": {
+				"noConsole": "error",
 				"noUnknownAtRules": {
 					"level": "error",
 					"options": {

@@ -950,7 +950,6 @@ const ActionConfigCard = memo(
 			}, {} as TokenContext)
 		}, [actionDef.tokens])
 
-		console.log("actionDef", actionDef, ActionFormComponent)
 		if (!ActionFormComponent) {
 			return null
 		}
