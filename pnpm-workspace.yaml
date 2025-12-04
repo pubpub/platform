@@ -9,9 +9,9 @@ packages:
 
 # A catalog is used to line up the package versions across workspaces
 catalog:
-    next: ^15.5.0
+    next: ^15.5.7
     katex: ^0.16.18
-    tailwindcss: 3.4.14
+    tailwindcss: ^3.4.17
     tailwind-merge: ^2.5.2
     clsx: ^2.0.0
     postcss: ^8.4.27
@@ -53,8 +53,8 @@ catalogs:
         "@types/react": ^18.3.5
         "@types/react-dom": ^18.3.0
     react19:
-        react: ^19.1.1
-        react-dom: ^19.1.1
+        react: ^19.1.2
+        react-dom: ^19.1.2
         "@types/react": ^19.1.10
         "@types/react-dom": ^19.1.7
         react-reconciler: "0.32.0"
