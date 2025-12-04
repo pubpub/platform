@@ -6,7 +6,7 @@ import { BookOpen, List, Users, Wand2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList } from "ui/tabs"
 
 import { getStage } from "~/lib/db/queries"
-import { StagePanelAutomations } from "./actionsTab/StagePanelAutomations"
+import { StagePanelAutomations } from "./automationsTab/StagePanelAutomations"
 import { StagePanelMembers } from "./StagePanelMembers"
 import { StagePanelOverview } from "./StagePanelOverview"
 import { StagePanelPubs } from "./StagePanelPubs"

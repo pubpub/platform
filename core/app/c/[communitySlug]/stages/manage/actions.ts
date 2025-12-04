@@ -1,6 +1,6 @@
 "use server"
 
-import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm"
+import type { CreateAutomationsSchema } from "./components/panel/automationsTab/StagePanelAutomationForm"
 
 import {
 	type AutomationsId,

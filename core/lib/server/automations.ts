@@ -16,7 +16,7 @@ import type { SequentialAutomationEvent } from "~/actions/types"
 import type {
 	ConditionBlockFormValue,
 	ConditionFormValue,
-} from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock"
+} from "~/app/c/[communitySlug]/stages/manage/components/panel/automationsTab/ConditionBlock"
 
 import { randomUUID } from "node:crypto"
 import { sql } from "kysely"

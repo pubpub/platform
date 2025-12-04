@@ -44,7 +44,7 @@ import type {
 import type { MaybeHas } from "utils/types"
 import type z from "zod"
 import type { actions } from "~/actions/api"
-import type { ConditionBlockFormValue } from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock"
+import type { ConditionBlockFormValue } from "~/app/c/[communitySlug]/stages/manage/components/panel/automationsTab/ConditionBlock"
 
 import { faker } from "@faker-js/faker"
 import { jsonArrayFrom } from "kysely/helpers/postgres"

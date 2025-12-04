@@ -12,7 +12,7 @@ import { StagesProvider, stagesDAO } from "ui/stages"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { tryCatch } from "utils/try-catch"
 
-import { PubsRunAutomationsDropDownMenu } from "~/app/components/ActionUI/PubsRunAutomationDropDownMenu"
+import { PubsRunAutomationsDropDownMenu } from "~/app/components/AutomationUI/PubsRunAutomationDropDownMenu"
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher"
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
 import { MembersList } from "~/app/components/Memberships/MembersList"

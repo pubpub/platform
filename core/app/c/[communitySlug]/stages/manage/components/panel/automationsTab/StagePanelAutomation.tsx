@@ -30,7 +30,7 @@ import { isAfter, parseISO } from "date-fns"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
 import { cn } from "utils"
 
-import { AutomationRunResult } from "~/app/components/ActionUI/AutomationRunResult"
+import { AutomationRunResult } from "~/app/components/AutomationUI/AutomationRunResult"
 
 export const UpdateCircle = (
 	props: AutomationRuns & {

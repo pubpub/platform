@@ -3,7 +3,7 @@ import type { FullProcessedPubWithForm } from "~/lib/server"
 import { Info } from "ui/icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
 
-import { PubsRunAutomationsDropDownMenu } from "~/app/components/ActionUI/PubsRunAutomationDropDownMenu"
+import { PubsRunAutomationsDropDownMenu } from "~/app/components/AutomationUI/PubsRunAutomationDropDownMenu"
 import { RelatedPubsTable } from "./RelatedPubsTable"
 
 const NoActions = () => {

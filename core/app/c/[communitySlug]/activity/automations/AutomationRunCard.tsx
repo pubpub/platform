@@ -12,8 +12,8 @@ import { DynamicIcon } from "ui/dynamic-icon"
 
 import { actions } from "~/actions/api"
 import { getAutomationRunStatus } from "~/actions/results"
-import { ActionRunResult } from "~/app/components/ActionUI/ActionRunResult"
-import { AutomationRunStatusBadge } from "~/app/components/ActionUI/AutomationRunResult"
+import { ActionRunResult } from "~/app/components/AutomationUI/ActionRunResult"
+import { AutomationRunStatusBadge } from "~/app/components/AutomationUI/AutomationRunResult"
 import { formatDateAsPossiblyDistance } from "~/lib/dates"
 
 type AutomationRunCardProps = {
