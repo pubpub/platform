@@ -102,4 +102,3 @@ export const getActionRunStatusFromResult = (result: unknown): ActionRunStatus =
 
 	return ActionRunStatus.scheduled
 }
-

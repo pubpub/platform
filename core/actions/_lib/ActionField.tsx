@@ -2,7 +2,12 @@
 
 import type React from "react"
 import type { PropsWithChildren } from "react"
-import type { ControllerFieldState, ControllerProps, ControllerRenderProps, FormState } from "react-hook-form"
+import type {
+	ControllerFieldState,
+	ControllerProps,
+	ControllerRenderProps,
+	FormState,
+} from "react-hook-form"
 import type z from "zod"
 import type { Action } from "../types"
 import type { InputState } from "./ActionFieldJsonataInput"
@@ -161,10 +166,9 @@ const InnerActionField = memo(
 			formState: FormState<any>
 		}
 	) {
-
 		const innerSchema =
 			"innerType" in props.schema._def
-				? props.schema._def?.innerType as z.ZodObject<z.ZodRawShape>
+				? (props.schema._def?.innerType as z.ZodObject<z.ZodRawShape>)
 				: (props.schema as z.ZodObject<z.ZodRawShape>)
 		const schemaShape = innerSchema?.shape ?? {}
 		const fieldSchema = schemaShape[props.name] as z.ZodType<any>
