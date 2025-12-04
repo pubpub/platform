@@ -51,7 +51,7 @@ export const GET = (req: NextRequest) => {
 		let timeoutId: NodeJS.Timeout | undefined
 
 		const cleanup = async () => {
-			logger.info({ connectionId, msg: "closing sse connection" })
+			logger.debug({ connectionId, msg: "closing sse connection" })
 
 			if (interval) {
 				clearInterval(interval)
@@ -74,7 +74,7 @@ export const GET = (req: NextRequest) => {
 				}
 
 				try {
-					logger.info({ connectionId, msg: "releasing client" })
+					logger.debug({ connectionId, msg: "releasing client" })
 					client.release()
 				} catch (err) {
 					logger.error({ connectionId, msg: "error releasing client", err })
@@ -88,7 +88,7 @@ export const GET = (req: NextRequest) => {
 		onClose(cleanup)
 
 		if (!listen?.length) {
-			logger.info({
+			logger.debug({
 				msg: "no listen tables, closing sse connection",
 				connectionId,
 			})
@@ -96,7 +96,7 @@ export const GET = (req: NextRequest) => {
 			return
 		}
 
-		logger.info({ connectionId, msg: "opening sse connection" })
+		logger.debug({ connectionId, msg: "opening sse connection" })
 
 		try {
 			const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()])
@@ -124,7 +124,7 @@ export const GET = (req: NextRequest) => {
 
 			// setup heartbeat interval
 			interval = setInterval(() => {
-				logger.info({ connectionId, msg: "sending heartbeat" })
+				logger.debug({ connectionId, msg: "sending heartbeat" })
 				send("heartbeat", connectionId)
 			}, HEARTBEAT_INTERVAL)
 
@@ -146,7 +146,7 @@ export const GET = (req: NextRequest) => {
 						return
 					}
 
-					logger.info({
+					logger.debug({
 						connectionId,
 						msg: "notification",
 						notification,
@@ -167,7 +167,7 @@ export const GET = (req: NextRequest) => {
 
 			// setup max idle timeout
 			timeoutId = setTimeout(async () => {
-				logger.info({
+				logger.debug({
 					connectionId,
 					msg: "closing sse connection after max idle time",
 					userId: user.id,
