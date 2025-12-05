@@ -646,7 +646,7 @@ export function StagePanelAutomationForm(props: Props) {
 					<TriggerField
 						{...controlProps}
 						automations={props.automations}
-						currentlyEditingAutomationId={props.currentAutomation?.id ?? null}
+						currentAutomation={props.currentAutomation}
 						form={form}
 						appendTrigger={appendTrigger}
 					/>
@@ -814,7 +814,6 @@ const TriggerConfigCard = memo(
 		community: Communities
 		removeTrigger: () => void
 		currentAutomation: FullAutomation | null
-		currentlyEditingAutomationId: AutomationsId | null
 		stageAutomations: Automations[]
 		isEditing: boolean
 	}) {
@@ -844,7 +843,7 @@ const TriggerConfigCard = memo(
 						props.currentAutomation
 							? humanReadableEventHydrated(props.trigger.event, props.community, {
 									automation: props.currentAutomation,
-									config: props.trigger.config,
+									config: (props.trigger.config as any) ?? null,
 									sourceAutomation: props.trigger.sourceAutomationId
 										? props.stageAutomations.find(
 												(a) => a.id === props.trigger.sourceAutomationId
@@ -878,7 +877,7 @@ const TriggerConfigCard = memo(
 								fieldState={fieldState}
 								label="After"
 								placeholder="Select automation to watch"
-								disabledAutomationId={props.currentlyEditingAutomationId}
+								disabledAutomationId={props.currentAutomation?.id ?? undefined}
 								dataTestIdPrefix="watched-automation"
 								automations={props.stageAutomations}
 							/>
@@ -901,7 +900,7 @@ const TriggerConfigCard = memo(
 			prevProps.trigger.triggerId === nextProps.trigger.triggerId &&
 			prevProps.idx === nextProps.idx &&
 			prevProps.isEditing === nextProps.isEditing &&
-			prevProps.currentlyEditingAutomationId === nextProps.currentlyEditingAutomationId
+			prevProps.currentAutomation?.id === nextProps.currentAutomation?.id
 		)
 	}
 )
@@ -1017,8 +1016,8 @@ const ActionConfigCard = memo(
 export const TriggerField = (props: {
 	field: ControllerRenderProps<CreateAutomationsSchema, "triggers">
 	fieldState: ControllerFieldState
-	automations: { id: AutomationsId; name: string }[]
-	currentlyEditingAutomationId: AutomationsId | null
+	automations: Automations[]
+	currentAutomation: FullAutomation | null
 	form: UseFormReturn<CreateAutomationsSchema>
 	appendTrigger: (trigger: CreateAutomationsSchema["triggers"][number]) => void
 }) => {
@@ -1063,9 +1062,7 @@ export const TriggerField = (props: {
 									key={field.triggerId}
 									render={({ field }) => (
 										<TriggerConfigCard
-											currentlyEditingAutomationId={
-												props.currentlyEditingAutomationId ?? undefined
-											}
+											currentAutomation={props.currentAutomation}
 											stageAutomations={props.automations}
 											trigger={field.value}
 											form={props.form}
@@ -1078,7 +1075,7 @@ export const TriggerField = (props: {
 													)
 												)
 											}}
-											isEditing={!!props.currentlyEditingAutomationId}
+											isEditing={!!props.currentAutomation?.id}
 										/>
 									)}
 								/>

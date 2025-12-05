@@ -196,7 +196,7 @@ export const humanReadableEventHydrated = <T extends AutomationEvent>(
 		automation: Automations
 		config?: (typeof triggers)[T]["config"] extends undefined
 			? never
-			: z.infer<NonNullable<(typeof triggers)[T]["config"]>>
+			: z.infer<NonNullable<(typeof triggers)[T]["config"]>> | null
 		sourceAutomation?: Automations
 	}
 ) => {
