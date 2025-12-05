@@ -349,7 +349,7 @@ Table automation_runs {
   sourceUser users
   inputPubId String
   inputPub pubs
-  inputJson Json [not null]
+  inputJson Json
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   actionRuns action_runs [not null]
@@ -855,7 +855,7 @@ Ref: action_runs.pubId > pubs.id
 
 Ref: action_runs.userId > users.id [delete: Set Null]
 
-Ref: automations.stageId > stages.id [delete: Set Null]
+Ref: automations.stageId > stages.id [delete: Cascade]
 
 Ref: automations.communityId > communities.id [delete: Cascade]
 

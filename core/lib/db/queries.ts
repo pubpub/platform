@@ -1,9 +1,10 @@
+import type { Database } from "db/Database"
 import type { AutomationEvent, AutomationsId, StagesId, UsersId } from "db/public"
 import type { ConditionBlock, FullAutomation } from "db/types"
 import type { IconConfig } from "ui/dynamic-icon"
 
 import { cache } from "react"
-import { sql } from "kysely"
+import { type Kysely, sql } from "kysely"
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
 import { getAutomationRunStatus } from "~/actions/results"
@@ -133,7 +134,9 @@ export const getStageMembers = cache((stageId: StagesId) => {
 })
 
 export type GetEventAutomationOptions =
+	| { trx: Kysely<Database>; event?: never; sourceAutomationId?: never }
 	| {
+			trx?: Kysely<Database>
 			event:
 				| AutomationEvent.pubInStageForDuration
 				| AutomationEvent.webhook
@@ -141,12 +144,14 @@ export type GetEventAutomationOptions =
 			sourceAutomationId?: never
 	  }
 	| {
+			trx?: Kysely<Database>
 			event: AutomationEvent.automationFailed | AutomationEvent.automationSucceeded
 			sourceAutomationId: AutomationsId
 	  }
 
 export const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
-	return db
+	const trx = options?.trx ?? db
+	return trx
 		.selectFrom("automations")
 		.select([
 			"automations.id",

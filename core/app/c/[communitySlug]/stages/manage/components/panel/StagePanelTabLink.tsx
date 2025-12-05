@@ -20,16 +20,16 @@ export function TabLink({ tab, children }: { tab: StageManageTab; children: Reac
 	}
 
 	return (
-		<TabsTrigger value={tab} onClick={handleClick}>
-			<Tooltip>
+		<Tooltip>
+			<TabsTrigger value={tab} onClick={handleClick} asChild>
 				<TooltipTrigger>
-					<>
+					<div>
 						{children}
 						<span className="sr-only">{capitalize(tab)}</span>
-					</>
+					</div>
 				</TooltipTrigger>
-				<TooltipContent>{capitalize(tab)}</TooltipContent>
-			</Tooltip>
-		</TabsTrigger>
+			</TabsTrigger>
+			<TooltipContent>{capitalize(tab)}</TooltipContent>
+		</Tooltip>
 	)
 }

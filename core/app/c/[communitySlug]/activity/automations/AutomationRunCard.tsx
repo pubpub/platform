@@ -1,6 +1,7 @@
 "use client"
 
-import type { Action, ActionRuns, AutomationRuns, Pubs } from "db/public"
+import type { ProcessedPub } from "contracts"
+import type { Action, ActionRuns, AutomationRuns } from "db/public"
 import type { IconConfig } from "ui/dynamic-icon"
 
 import Link from "next/link"
@@ -21,7 +22,7 @@ import { formatDateAsPossiblyDistance } from "~/lib/dates"
 
 type AutomationRunCardProps = {
 	automationRun: AutomationRuns & {
-		inputPub: Pubs | null
+		inputPub: Omit<ProcessedPub<{ withPubType: true; withStage: false }>, "depth"> | null
 		actionRuns: (ActionRuns & {
 			pubId: string | null
 			pubTitle: string | null
@@ -71,14 +72,12 @@ const getTriggerDescription = (automationRun: AutomationRunCardProps["automation
 }
 
 const getInputDescription = (
-	automationRun: AutomationRunCardProps["automationRun"],
-	communitySlug: string
+	automationRun: AutomationRunCardProps["automationRun"]
 ): React.ReactNode => {
 	if (automationRun.inputPub) {
 		return (
 			<PubCardClient
-				pub={automationRun.inputPub}
-				communitySlug={communitySlug}
+				pub={{ ...automationRun.inputPub, stageId: null }}
 				showCheckbox={false}
 			/>
 		)
@@ -96,7 +95,9 @@ const getInputDescription = (
 export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRunCardProps) => {
 	const status = getAutomationRunStatus(automationRun)
 	const triggerDescription = getTriggerDescription(automationRun)
-	const inputDescription = getInputDescription(automationRun, communitySlug)
+	const inputDescription = getInputDescription(automationRun)
+
+	const stage = automationRun.stage
 
 	return (
 		<div
@@ -121,29 +122,29 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 							</h3>
 							<AutomationRunStatusBadge status={status} />
 						</div>
-						<EllipsisMenu orientation="horizontal" triggerSize="icon">
-							<EllipsisMenuButton>
-								<Link
-									href={`/c/${communitySlug}/stages/${automationRun.stage?.id}`}
-								>
-									View Stage
-								</Link>
-							</EllipsisMenuButton>
-							<EllipsisMenuButton>
-								<Link
-									href={`/c/${communitySlug}/stages/manage?editingStageId=${automationRun.stage?.id}&tab=automations`}
-								>
-									Edit Stage
-								</Link>
-							</EllipsisMenuButton>
-							<EllipsisMenuButton asChild>
-								<Link
-									href={`/c/${communitySlug}/stages/manage?editingStageId=${automationRun.stage.id}&tab=automations&automation-id=${automationRun.automation?.id}`}
-								>
-									Edit Automation
-								</Link>
-							</EllipsisMenuButton>
-						</EllipsisMenu>
+						{stage && (
+							<EllipsisMenu orientation="horizontal" triggerSize="icon">
+								<EllipsisMenuButton asChild>
+									<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
+										View Stage
+									</Link>
+								</EllipsisMenuButton>
+								<EllipsisMenuButton asChild>
+									<Link
+										href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}&tab=automations`}
+									>
+										Edit Stage
+									</Link>
+								</EllipsisMenuButton>
+								<EllipsisMenuButton asChild>
+									<Link
+										href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}&tab=automations&automation-id=${automationRun.automation?.id}`}
+									>
+										Edit Automation
+									</Link>
+								</EllipsisMenuButton>
+							</EllipsisMenu>
+						)}
 					</div>
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-1.5 text-gray-600 text-xs">

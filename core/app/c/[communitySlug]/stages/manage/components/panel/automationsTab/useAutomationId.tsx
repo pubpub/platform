@@ -6,7 +6,7 @@ import { parseAsString, useQueryState } from "nuqs"
 
 export function useAutomationId() {
 	const [automationId, setAutomationId] = useQueryState(
-		"automation-id",
+		"automationId",
 		parseAsString.withOptions({
 			shallow: true,
 		})

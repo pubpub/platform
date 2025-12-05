@@ -207,7 +207,11 @@ export const AutomationRunForm = (props: Props) => {
 									text: "Cancel",
 									onClick: onClose,
 								}}
-								context={{ type: "run", pubId: props.pubId }}
+								context={{
+									type: "run",
+									pubId: props.pubId,
+									stageId: props.automation.stageId,
+								}}
 							>
 								<Suspense fallback={<SkeletonCard />}>
 									<ActionFormComponent />

@@ -21,8 +21,8 @@ import { useStageEditor } from "./StageEditorContext"
 
 export const StageEditorMenubar = () => {
 	const { zoomIn, zoomOut, fitView } = useReactFlow()
-	const { createStage } = useStages()
-	const { deleteSelection, hasSelection } = useStageEditor()
+	const { createStage, duplicateStages } = useStages()
+	const { deleteSelection, hasSelection, selectedStages } = useStageEditor()
 	const { resetLayout } = useStageEditor()
 
 	const onZoomInClick = useCallback(() => {
@@ -61,6 +61,12 @@ export const StageEditorMenubar = () => {
 						<MenubarShortcut>⇧⌘Z</MenubarShortcut>
 					</MenubarItem>
 					<MenubarSeparator />
+					<MenubarItem
+						disabled={!hasSelection}
+						onClick={() => duplicateStages(selectedStages.map((s) => s.id))}
+					>
+						Duplicate
+					</MenubarItem>
 					<MenubarItem disabled={!hasSelection} onClick={deleteSelection}>
 						Delete
 					</MenubarItem>

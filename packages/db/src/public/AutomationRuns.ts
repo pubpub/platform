@@ -29,7 +29,7 @@ export interface AutomationRunsTable {
 		AutomationRunsId | null
 	>
 
-	inputJson: ColumnType<unknown, unknown, unknown>
+	inputJson: ColumnType<unknown | null, unknown | null, unknown | null>
 
 	inputPubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
 
@@ -54,7 +54,7 @@ export const automationRunsSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	sourceAutomationRunId: automationRunsIdSchema.nullable(),
-	inputJson: z.unknown(),
+	inputJson: z.unknown().nullable(),
 	inputPubId: pubsIdSchema.nullable(),
 	sourceUserId: usersIdSchema.nullable(),
 	triggerConfig: z.unknown().nullable(),
@@ -67,7 +67,7 @@ export const automationRunsInitializerSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	sourceAutomationRunId: automationRunsIdSchema.optional().nullable(),
-	inputJson: z.unknown(),
+	inputJson: z.unknown().optional().nullable(),
 	inputPubId: pubsIdSchema.optional().nullable(),
 	sourceUserId: usersIdSchema.optional().nullable(),
 	triggerConfig: z.unknown().optional().nullable(),
@@ -80,7 +80,7 @@ export const automationRunsMutatorSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	sourceAutomationRunId: automationRunsIdSchema.optional().nullable(),
-	inputJson: z.unknown().optional(),
+	inputJson: z.unknown().optional().nullable(),
 	inputPubId: pubsIdSchema.optional().nullable(),
 	sourceUserId: usersIdSchema.optional().nullable(),
 	triggerConfig: z.unknown().optional().nullable(),

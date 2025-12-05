@@ -1,5 +1,5 @@
 import type { ProcessedPub } from "contracts"
-import type { Action as ActionEnum, PubsId } from "db/public"
+import type { Action as ActionEnum, PubsId, StagesId } from "db/public"
 import type z from "zod"
 import type { ActionFormContextContextValue } from "./ActionForm"
 
@@ -12,6 +12,7 @@ import { interpolate } from "@pubpub/json-interpolate"
 import { Alert, AlertDescription } from "ui/alert"
 import { Button } from "ui/button"
 import { Label } from "ui/label"
+import { useStages } from "ui/stages"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs"
 import { Textarea } from "ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
@@ -49,6 +50,7 @@ export function ActionFieldJsonataTestPanel(props: {
 	pubId: PubsId | undefined
 	contextType: ActionFormContextContextValue
 	actionAccepts: readonly string[]
+	stageId: StagesId | null
 	mode?: "template" | "jsonata"
 }) {
 	const [inputType, setInputType] = useState<TestInputType>(() =>
@@ -131,15 +133,20 @@ export function ActionFieldJsonataTestPanel(props: {
 		return rest
 	}, [values, props.configKey])
 
+	const stages = useStages()
+	const stage = stages.find((s) => s.id === props.stageId)
+	console.log("stage", stage, props.stageId, stages)
+
 	const bodyWithAction = useMemo(() => {
 		return {
 			...bodyForTest,
+			stage,
 			action: {
 				...action,
 				config: valuesMinusCurrent,
 			},
 		}
-	}, [bodyForTest, valuesMinusCurrent, action])
+	}, [bodyForTest, valuesMinusCurrent, action, stage])
 
 	const canTest = useMemo(() => {
 		if (inputType === "current-pub") {

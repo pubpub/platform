@@ -976,7 +976,7 @@ export const databaseTables = [
 				name: "inputJson",
 				dataType: "jsonb",
 				dataTypeSchema: "pg_catalog",
-				isNullable: false,
+				isNullable: true,
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
 			},

@@ -350,7 +350,7 @@ model AutomationRun {
   // db constraint: at least one of inputPubId or non-empty inputJson must be defined
   inputPubId String?
   inputPub   Pub?    @relation(fields: [inputPubId], references: [id], onDelete: Cascade)
-  inputJson  Json
+  inputJson  Json?
 
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @default(now()) @updatedAt
@@ -370,7 +370,7 @@ model AutomationRun {
 // once we allow running multiple actions in a single automation run
 model ActionRun {
   id               String          @id @default(dbgenerated("gen_random_uuid()"))
-  actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: SetNull)
   actionInstanceId String?
 
   automationRun   AutomationRun? @relation(fields: [automationRunId], references: [id])
@@ -414,7 +414,7 @@ model Automation {
   watchedAutomations AutomationTrigger[] @relation("source_automation")
 
   // stage is nullable to allow one dummy automation per community for re-parenting deleted automation runs
-  stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: Cascade)
   stageId String?
 
   // community is required for all automations, allows dummy automations with null stageId to be community-scoped

@@ -1,4 +1,4 @@
-import type { PubsId } from "db/public"
+import type { PubsId, StagesId } from "db/public"
 import type { PropsWithChildren } from "react"
 import type { FieldValues, UseFormReturn } from "react-hook-form"
 import type { ZodObject, ZodOptional } from "zod"
@@ -21,10 +21,12 @@ export type ActionFormContextContext =
 	| {
 			type: "run"
 			pubId: PubsId
+			stageId: StagesId | null
 	  }
 	| {
 			type: Exclude<ActionFormContextContextValue, "run">
 			pubId?: never
+			stageId: StagesId | null
 	  }
 
 type ActionFormContext = {

@@ -34,6 +34,7 @@ import { insertStageMemberships } from "~/lib/server/member"
 import {
 	createMoveConstraint as createMoveConstraintDb,
 	createStage as createStageDb,
+	duplicateStages as duplicateStagesDb,
 	removeStages,
 	updateStage,
 } from "~/lib/server/stages"
@@ -107,6 +108,42 @@ export const createStage = defineServerAction(async function createStage(
 	}
 })
 
+export const duplicateStages = defineServerAction(async function createStage(
+	communityId: CommunitiesId,
+	stageIds: StagesId[],
+	newStageIds: StagesId[]
+) {
+	const loginData = await getLoginData()
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN
+	}
+
+	const { user } = loginData
+
+	const authorized = await userCan(
+		Capabilities.createStage,
+		{ type: MembershipType.community, communityId },
+		user.id
+	)
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED
+	}
+
+	const validatedStageIds = stageIds.map((id) => stagesIdSchema.parse(id))
+	const validatedNewStageIds = newStageIds.map((id) => stagesIdSchema.parse(id))
+
+	try {
+		await duplicateStagesDb(communityId, validatedStageIds, validatedNewStageIds)
+	} catch (error) {
+		logger.error(error)
+		return {
+			error: "Failed to duplicate stages",
+			cause: error,
+		}
+	}
+})
+
 export const deleteStage = defineServerAction(async function deleteStage(stageId: StagesId) {
 	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
@@ -128,12 +165,11 @@ export const deleteStage = defineServerAction(async function deleteStage(stageId
 	try {
 		await removeStages([stageId]).executeTakeFirstOrThrow()
 	} catch (error) {
+		logger.error(error)
 		return {
 			error: "Failed to delete stage",
 			cause: error,
 		}
-	} finally {
-		await revalidateTagsForCommunity(["stages", "PubsInStages"])
 	}
 })
 
@@ -172,8 +208,6 @@ export const createMoveConstraint = defineServerAction(async function createMove
 			error: "Failed to connect stages",
 			cause: error,
 		}
-	} finally {
-		await revalidateTagsForCommunity(["move_constraint"])
 	}
 })
 
@@ -216,8 +250,6 @@ export const deleteStagesAndMoveConstraints = defineServerAction(
 				error: "Failed to delete stages and/or connections",
 				cause: error,
 			}
-		} finally {
-			await revalidateTagsForCommunity(["move_constraint"])
 		}
 	}
 )
@@ -251,8 +283,6 @@ export const updateStageName = defineServerAction(async function updateStageName
 			error: "Failed to update stage name",
 			cause: error,
 		}
-	} finally {
-		await revalidateTagsForCommunity(["stages"])
 	}
 })
 
@@ -264,104 +294,6 @@ export const revalidateStages = defineServerAction(async function revalidateStag
 
 	await revalidateTagsForCommunity(["stages", "PubsInStages"])
 })
-
-// export const addAction = defineServerAction(async function addAction(
-// 	stageId: StagesId,
-// 	actionName: Action
-// ) {
-// 	const loginData = await getLoginData()
-// 	if (!loginData || !loginData.user) {
-// 		return ApiError.NOT_LOGGED_IN
-// 	}
-
-// 	const { user } = loginData
-
-// 	const authorized = await userCan(
-// 		Capabilities.manageStage,
-// 		{ type: MembershipType.stage, stageId },
-// 		user.id
-// 	)
-
-// 	if (!authorized) {
-// 		return ApiError.UNAUTHORIZED
-// 	}
-// 	try {
-// 		await createActionInstance({
-// 			action: actionName,
-// 		}).executeTakeFirstOrThrow()
-// 	} catch (error) {
-// 		return {
-// 			error: "Failed to add action",
-// 			cause: error,
-// 		}
-// 	}
-// })
-
-// export const updateAction = defineServerAction(async function updateAction(
-// 	actionInstanceId: ActionInstancesId,
-// 	stageId: StagesId,
-// 	props:
-// 		| {
-// 				config: Record<string, any>
-// 				name?: undefined
-// 		  }
-// 		| { name: string; config?: undefined }
-// ) {
-// 	const loginData = await getLoginData()
-// 	if (!loginData || !loginData.user) {
-// 		return ApiError.NOT_LOGGED_IN
-// 	}
-
-// 	const authorized = await userCan(
-// 		Capabilities.manageStage,
-// 		{ type: MembershipType.stage, stageId },
-// 		loginData.user.id
-// 	)
-
-// 	if (!authorized) {
-// 		return ApiError.UNAUTHORIZED
-// 	}
-
-// 	await updateActionInstance(actionInstanceId, {
-// 		config: props.config,
-// 	}).executeTakeFirstOrThrow()
-
-// 	return {
-// 		success: true,
-// 		report: "Action updated",
-// 	}
-// })
-
-// export const deleteAction = defineServerAction(async function deleteAction(
-// 	actionId: ActionInstancesId,
-// 	stageId: StagesId
-// ) {
-// 	const loginData = await getLoginData()
-// 	if (!loginData || !loginData.user) {
-// 		return ApiError.NOT_LOGGED_IN
-// 	}
-
-// 	const authorized = await userCan(
-// 		Capabilities.manageStage,
-// 		{ type: MembershipType.stage, stageId },
-// 		loginData.user.id
-// 	)
-
-// 	if (!authorized) {
-// 		return ApiError.UNAUTHORIZED
-// 	}
-
-// 	try {
-// 		await removeActionInstance(actionId).executeTakeFirstOrThrow()
-// 	} catch (error) {
-// 		return {
-// 			error: "Failed to delete action",
-// 			cause: error,
-// 		}
-// 	} finally {
-// 		await revalidateTagsForCommunity(["action_instances"])
-// 	}
-// })
 
 export const addOrUpdateAutomation = defineServerAction(async function addOrUpdateAutomation({
 	stageId,

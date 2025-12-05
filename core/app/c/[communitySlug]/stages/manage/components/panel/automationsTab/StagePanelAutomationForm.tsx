@@ -595,7 +595,6 @@ export function StagePanelAutomationForm(props: Props) {
 	const needsConditionEvaluationTiming = selectedTriggers.some((trigger) =>
 		isSchedulableAutomationEvent(trigger.event)
 	)
-	console.log(needsConditionEvaluationTiming)
 
 	return (
 		<form id={formId} onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-6">
@@ -741,6 +740,7 @@ export function StagePanelAutomationForm(props: Props) {
 								<div className="space-y-2">
 									{field.value?.action ? (
 										<ActionConfigCardWrapper
+											stageId={props.stageId}
 											action={field.value.action}
 											defaults={
 												props.actionConfigDefaults[field.value.action]
@@ -893,6 +893,7 @@ const TriggerConfigCard = memo(
 
 function ActionConfigCardWrapper(props: {
 	action: Action
+	stageId: StagesId | null
 	form: UseFormReturn<CreateAutomationsSchema>
 	onChange: (value: {
 		actionInstanceId?: ActionInstancesId
@@ -912,6 +913,7 @@ function ActionConfigCardWrapper(props: {
 
 	return (
 		<ActionConfigCard
+			stageId={props.stageId}
 			action={props.action}
 			form={props.form}
 			removeAction={removeAction}
@@ -927,6 +929,7 @@ const ActionConfigCard = memo(
 		form: UseFormReturn<CreateAutomationsSchema>
 		removeAction: () => void
 		isEditing: boolean
+		stageId: StagesId | null
 		defaults?: string[]
 	}) {
 		const actionDef = actions[props.action]
@@ -973,6 +976,7 @@ const ActionConfigCard = memo(
 										defaultFields: translatedDefaults,
 										context: {
 											type: "automation",
+											stageId: props.stageId,
 										},
 									}}
 								>

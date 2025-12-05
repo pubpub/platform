@@ -20,10 +20,13 @@ import {
 	type StagesUpdate,
 	type UsersId,
 } from "db/public"
+import { expect } from "utils"
 
 import { db } from "~/kysely/database"
+import { duplicateAutomation } from "./automations"
 import { autoCache } from "./cache/autoCache"
 import { autoRevalidate } from "./cache/autoRevalidate"
+import { maybeWithTrx } from "./maybeWithTrx"
 
 export const createStage = (props: NewStages) =>
 	autoRevalidate(db.insertInto("stages").values(props))
@@ -363,4 +366,67 @@ export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
 			.insertInto("PubsInStages")
 			.values([{ pubId, stageId }])
 	)
+}
+
+export const duplicateStages = async (
+	communityId: CommunitiesId,
+	stageIds: StagesId[],
+	newStageIds: StagesId[]
+) => {
+	const res = await maybeWithTrx(db, async (trx) => {
+		const newStages = await autoRevalidate(
+			trx.insertInto("stages").values(
+				stageIds.map((oldStageId, idx) => ({
+					id: newStageIds[idx],
+					communityId,
+					name: trx
+						.selectFrom("stages")
+						.select(sql<string>`'Copy of ' || name`.as("name"))
+						.where("id", "=", oldStageId),
+					order: "aa",
+				}))
+			)
+		).execute()
+
+		const existingAutomations = await autoCache(
+			trx.selectFrom("automations").where("stageId", "in", stageIds).selectAll("automations")
+		).execute()
+
+		const duplicateAutomations = await Promise.all(
+			existingAutomations.map((automation) =>
+				duplicateAutomation(
+					automation.id,
+					newStageIds[stageIds.indexOf(expect(automation.stageId))],
+					trx
+				)
+			)
+		)
+
+		const existingMembers = await autoCache(
+			trx
+				.selectFrom("stage_memberships")
+				.where("stageId", "in", stageIds)
+				.selectAll("stage_memberships")
+		).execute()
+
+		const duplicateMembers = await autoRevalidate(
+			trx
+				.insertInto("stage_memberships")
+				.values(
+					existingMembers.map(({ id, ...member }) => ({
+						...member,
+						stageId: newStageIds[stageIds.indexOf(member.stageId)],
+					}))
+				)
+				.returningAll()
+		).execute()
+
+		return {
+			newStages,
+			duplicateAutomations,
+			duplicateMembers,
+		}
+	})
+
+	return res
 }

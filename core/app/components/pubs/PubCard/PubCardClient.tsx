@@ -16,7 +16,7 @@ import { getPubTitle } from "~/lib/pubs"
 import { useCommunity } from "../../providers/CommunityProvider"
 
 export type PubCardClientProps = {
-	pub: ProcessedPub<{ withPubType: true; withStage?: boolean }>
+	pub: Omit<ProcessedPub<{ withPubType: true; withStage?: boolean }>, "depth">
 	selected?: boolean
 	onSelect?: (pub: ProcessedPub, selected: boolean) => void
 	disabled?: boolean

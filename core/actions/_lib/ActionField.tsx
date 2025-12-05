@@ -294,6 +294,7 @@ const InnerActionField = memo(
 				)}
 				{isTestOpen && showTestButton && (
 					<ActionFieldJsonTestPanel
+						stageId={props.context.stageId}
 						actionName={props.action?.name ?? ""}
 						configKey={props.name}
 						value={props.field.value ?? ""}

@@ -10,6 +10,7 @@ import type {
 	NewActionInstances,
 	NewAutomations,
 	NewAutomationTriggers,
+	StagesId,
 } from "db/public"
 import type { ZodError } from "zod"
 import type { SequentialAutomationEvent } from "~/actions/types"
@@ -313,8 +314,12 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 export const removeAutomation = (automationId: AutomationsId) =>
 	autoRevalidate(db.deleteFrom("automations").where("id", "=", automationId))
 
-export const duplicateAutomation = async (automationId: AutomationsId) => {
-	const automation = await getAutomation(automationId)
+export const duplicateAutomation = async (
+	automationId: AutomationsId,
+	newStageId?: StagesId,
+	trx = db
+) => {
+	const automation = await getAutomation(automationId, { trx })
 	if (!automation) {
 		throw new Error(`Automation ${automationId} not found`)
 	}
@@ -330,17 +335,21 @@ export const duplicateAutomation = async (automationId: AutomationsId) => {
 			: `${automation.name} (Copy)`
 
 	// const newAutomationId = randomUUID() as AutomationsId
-	const newAutomation = await upsertAutomationWithCycleCheck({
-		actionInstances: automation.actionInstances.map(({ id, automationId, ...ai }) => ai),
-		communityId: automation.communityId,
-		name: copyName,
-		triggers: automation.triggers.map(({ id, automationId, ...trigger }) => trigger),
-		condition: automation.condition ?? undefined,
-		conditionEvaluationTiming: automation.conditionEvaluationTiming,
-		icon: automation.icon,
-		description: automation.description,
-		stageId: automation.stageId,
-	})
+	const newAutomation = await upsertAutomationWithCycleCheck(
+		{
+			actionInstances: automation.actionInstances.map(({ id, automationId, ...ai }) => ai),
+			communityId: automation.communityId,
+			name: copyName,
+			triggers: automation.triggers.map(({ id, automationId, ...trigger }) => trigger),
+			condition: automation.condition ?? undefined,
+			conditionEvaluationTiming: automation.conditionEvaluationTiming,
+			icon: automation.icon,
+			description: automation.description,
+			stageId: newStageId ?? automation.stageId,
+		},
+		MAX_STACK_DEPTH,
+		trx
+	)
 
 	return newAutomation
 }
@@ -360,7 +369,8 @@ export const MAX_STACK_DEPTH = 10
 async function wouldCreateCycle(
 	toBeRunAutomationId: AutomationsId,
 	sourceAutomationId: AutomationsId,
-	maxStackDepth = MAX_STACK_DEPTH
+	maxStackDepth = MAX_STACK_DEPTH,
+	trx = db
 ): Promise<
 	| { hasCycle: true; exceedsMaxDepth: false; path: Automations[] }
 	| { hasCycle: false; exceedsMaxDepth: true; path: Automations[] }
@@ -368,7 +378,7 @@ async function wouldCreateCycle(
 > {
 	// check if there's a path from toBeRunAutomationId back to sourceAutomationId (cycle)
 	// or if any path would exceed MAX_STACK_DEPTH
-	const result = await db
+	const result = await trx
 		.withRecursive("automation_path", (cte) =>
 			cte
 				.selectFrom("automations")
@@ -437,7 +447,7 @@ async function wouldCreateCycle(
 	const fullPath = [sourceAutomationId, toBeRunAutomationId, ...pathResult.path]
 
 	// get the automations for the path
-	const automations = await db
+	const automations = await trx
 		.selectFrom("automations")
 		.selectAll()
 		.where("id", "in", fullPath)
@@ -472,7 +482,8 @@ export async function upsertAutomationWithCycleCheck(
 	data: AutomationUpsertProps & {
 		id?: AutomationsId
 	},
-	maxStackDepth = MAX_STACK_DEPTH
+	maxStackDepth = MAX_STACK_DEPTH,
+	trx = db
 ) {
 	// validate trigger configs
 	for (const trigger of data.triggers) {
@@ -502,7 +513,8 @@ export async function upsertAutomationWithCycleCheck(
 			const result = await wouldCreateCycle(
 				data.id,
 				trigger.sourceAutomationId,
-				maxStackDepth
+				maxStackDepth,
+				trx
 			)
 
 			if (result.hasCycle) {
@@ -515,6 +527,6 @@ export async function upsertAutomationWithCycleCheck(
 		}
 	}
 
-	const res = await upsertAutomation(data)
+	const res = await upsertAutomation(data, trx)
 	return res
 }

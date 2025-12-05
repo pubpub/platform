@@ -9,7 +9,7 @@ import { ChevronLeft } from "lucide-react"
 
 import { Button } from "ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
-import { DynamicIcon } from "ui/dynamic-icon"
+import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
 
 import { StagePanelAutomationForm } from "./StagePanelAutomationForm"
 import { StagePanelAutomations } from "./StagePanelAutomations"
@@ -64,7 +64,10 @@ export function StagePanelAutomationsContent(props: Props) {
 						<CardTitle className="flex items-center gap-2">
 							{currentAutomation ? (
 								<>
-									<DynamicIcon icon={currentAutomation.icon} size={16} />
+									<DynamicIcon
+										icon={currentAutomation.icon as IconConfig | null}
+										size={16}
+									/>
 									<h2>{currentAutomation.name}</h2>
 								</>
 							) : (
