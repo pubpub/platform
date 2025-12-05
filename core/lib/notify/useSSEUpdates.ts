@@ -1,6 +1,6 @@
 import type { ChangeNotification, NotifyTables } from "~/app/api/v0/c/[communitySlug]/sse/route"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useDebounce } from "use-debounce"
 import { useSSE } from "use-next-sse"
 
@@ -58,20 +58,22 @@ export function useSSEUpdates<T extends NotifyTables>({
 	})
 
 	const lastDataRef = useRef<ChangeNotification<T> | null>(null)
+	const connectionStateRef = useRef<"connecting" | "open" | "closed" | null>(null)
+	connectionStateRef.current = connectionState
+
 	const [debouncedData] = useDebounce(data, debounceMs)
 
-	const [connectionBrokenToast, setConnectionBrokenToast] = useState<ReturnType<
-		typeof toast
-	> | null>(null)
-	const [isReloading, setIsReloading] = useState(false)
+	const connectionBrokenToastRef = useRef<ReturnType<typeof toast> | null>(null)
+	const isReloadingRef = useRef(false)
 
 	const beforeUnload = useCallback(() => {
-		if (isReloading) return
-		setIsReloading(true)
+		if (isReloadingRef.current) return
+		isReloadingRef.current = true
 		window.location.reload()
-	}, [isReloading])
+	}, [])
 
-	// we don't want to show the error toast when reloading
+	// we don't want to show the error toast when user
+	// refreshes the page/navigates away
 	useEffect(() => {
 		window.addEventListener("beforeunload", beforeUnload)
 
@@ -84,32 +86,30 @@ export function useSSEUpdates<T extends NotifyTables>({
 		if (error) {
 			// it shows an error when reloading (it lost the connection)
 			// but we don't want to show that error obvs
-			if (isReloading) {
+			if (isReloadingRef.current) {
 				return
 			}
 
-			if (connectionState === "closed") {
+			if (connectionStateRef.current === "closed") {
 				logger.error({
 					msg: "SSE connection closed unexpectedly",
 					connectionId,
-					connectionState,
+					connectionState: connectionStateRef.current,
 					error,
 				})
 				// TODO: handle actual closure
-				setConnectionBrokenToast(
-					toast({
-						variant: "default",
-						title: "SSE connection closed unexpectedly",
-						description: "Will try to reconnect in 5 seconds",
-					})
-				)
+				connectionBrokenToastRef.current = toast({
+					variant: "default",
+					title: "SSE connection closed unexpectedly",
+					description: "Will try to reconnect in 5 seconds",
+				})
 				return
 			}
 
 			logger.error({
 				msg: "Unexpected error fetching SSE updates",
 				connectionId,
-				connectionState,
+				connectionState: connectionStateRef.current,
 				error,
 			})
 			toast({
@@ -120,9 +120,9 @@ export function useSSEUpdates<T extends NotifyTables>({
 			return
 		}
 
-		if (connectionBrokenToast) {
-			connectionBrokenToast.dismiss()
-			setConnectionBrokenToast(null)
+		if (connectionBrokenToastRef.current) {
+			connectionBrokenToastRef.current.dismiss()
+			connectionBrokenToastRef.current = null
 		}
 
 		if (!debouncedData) return
@@ -139,19 +139,18 @@ export function useSSEUpdates<T extends NotifyTables>({
 
 		return () => {
 			lastDataRef.current = null
-			close()
+			if (connectionStateRef.current !== "closed") {
+				close()
+			}
 		}
 	}, [
 		debouncedData,
-		error,
+		// if we use error we get infinite re-renders
+		error?.message,
 		eventName,
-		onNewData,
-		connectionState,
-		isReloading,
-		close,
-		connectionBrokenToast,
 		connectionId,
 		listenFilter,
+		// we don't include close bc it's not properly memoized by useSSE
 	])
 
 	return { data, error }

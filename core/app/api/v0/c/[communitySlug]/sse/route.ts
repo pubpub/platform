@@ -37,7 +37,7 @@ const constructChangeChannel = (communityId: string, table: NotifyTables) => {
 }
 
 const HEARTBEAT_INTERVAL = 15_000 // 15 seconds
-const MAX_IDLE_TIME = 60 * 60 * 1_000
+const MAX_IDLE_TIME = 60 * 60 * 1_000 // 1 hour
 
 // bit awkward since we want to read the search params here, but the next-use-sse does not expose the request
 export const GET = (req: NextRequest) => {
@@ -125,7 +125,7 @@ export const GET = (req: NextRequest) => {
 			// setup heartbeat interval
 			interval = setInterval(() => {
 				logger.debug({ connectionId, msg: "sending heartbeat" })
-				send("heartbeat", connectionId)
+				send(connectionId, "heartbeat")
 			}, HEARTBEAT_INTERVAL)
 
 			// handle postgres notifications
@@ -173,6 +173,8 @@ export const GET = (req: NextRequest) => {
 					userId: user.id,
 					community: community.slug,
 				})
+
+				send(connectionId, "max-idle-timeout")
 				await cleanup()
 			}, MAX_IDLE_TIME)
 		} catch (err) {
