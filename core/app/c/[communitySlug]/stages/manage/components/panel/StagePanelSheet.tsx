@@ -29,7 +29,7 @@ export const StagePanelSheet = (props: Props) => {
 				<SheetTitle>Stage edit panel</SheetTitle>
 				<SheetDescription>Edit the stage settings and actions.</SheetDescription>
 			</SheetHeader>
-			<SheetContent className="[&>button]:!top-8 [&>button]:!right-6 w-screen overflow-y-auto p-6 sm:max-w-lg">
+			<SheetContent className="[&>button]:!top-5 [&>button]:!right-4 md:[&>button]:!top-8 md:[&>button]:!right-6 w-screen overflow-y-auto p-2 sm:max-w-lg md:p-6">
 				<SheetTitle className="sr-only">Edit Stage</SheetTitle>
 				{props.children}
 			</SheetContent>

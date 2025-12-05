@@ -29,9 +29,9 @@ export const pubInStageForDuration = defineAutomation({
 	}),
 	display: {
 		icon: CalendarClock,
-		base: "a pub stays in this stage for...",
+		base: "a Pub stays in this stage for...",
 		hydrated: ({ config: { duration, interval } }) =>
-			`a pub stays in this stage for ${duration} ${interval}s`,
+			`a Pub stays in this stage for ${duration} ${interval}s`,
 	},
 })
 export type PubInStageForDuration = typeof pubInStageForDuration
@@ -41,7 +41,7 @@ export const pubLeftStage = defineAutomation({
 	config: undefined,
 	display: {
 		icon: ArrowRightFromLine,
-		base: "a pub leaves this stage",
+		base: "a Pub leaves this stage",
 	},
 })
 export type PubLeftStage = typeof pubLeftStage
@@ -51,7 +51,7 @@ export const pubEnteredStage = defineAutomation({
 	config: undefined,
 	display: {
 		icon: ArrowRightToLine,
-		base: "a pub enters this stage",
+		base: "a Pub enters this stage",
 	},
 })
 export type PubEnteredStage = typeof pubEnteredStage
@@ -62,7 +62,10 @@ export const automationSucceeded = defineAutomation({
 	display: {
 		icon: CheckCircle,
 		base: "a specific automation succeeds",
-		// hydrated: ({ config }) => `${config.name} succeeds`,
+		hydrated: ({ sourceAutomation }) =>
+			sourceAutomation
+				? `${sourceAutomation.name} succeeds`
+				: "a specific automation succeeds",
 	},
 })
 export type AutomationSucceeded = typeof automationSucceeded
@@ -72,8 +75,9 @@ export const automationFailed = defineAutomation({
 	config: undefined,
 	display: {
 		icon: XCircle,
-		base: "a specific action fails",
-		// hydrated: ({ config }) => `${config.name} fails`,
+		base: "a specific automation fails",
+		hydrated: ({ sourceAutomation }) =>
+			sourceAutomation ? `${sourceAutomation.name} fails` : "a specific automation fails",
 	},
 })
 export type AutomationFailed = typeof automationFailed

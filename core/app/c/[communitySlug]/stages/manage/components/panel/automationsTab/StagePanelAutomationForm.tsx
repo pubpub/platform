@@ -24,6 +24,7 @@ import {
 	AutomationConditionBlockType,
 	AutomationConditionType,
 	AutomationEvent,
+	type Automations,
 	type AutomationsId,
 	type AutomationTriggersId,
 	actionInstancesIdSchema,
@@ -53,6 +54,7 @@ import {
 	type AdditionalConfigFormReturn,
 	getTriggerByName,
 	humanReadableEventBase,
+	humanReadableEventHydrated,
 	isTriggerWithConfig,
 	triggers,
 } from "~/actions/_lib/triggers"
@@ -811,8 +813,9 @@ const TriggerConfigCard = memo(
 		idx: number
 		community: Communities
 		removeTrigger: () => void
-		currentlyEditingAutomationId: AutomationsId | undefined
-		stageAutomations: { id: AutomationsId; name: string }[]
+		currentAutomation: FullAutomation | null
+		currentlyEditingAutomationId: AutomationsId | null
+		stageAutomations: Automations[]
 		isEditing: boolean
 	}) {
 		const trigger = getTriggerByName(props.trigger.event)
@@ -837,7 +840,19 @@ const TriggerConfigCard = memo(
 			return (
 				<ConfigCard
 					icon={trigger.display.icon}
-					title={humanReadableEventBase(props.trigger.event, props.community)}
+					title={
+						props.currentAutomation
+							? humanReadableEventHydrated(props.trigger.event, props.community, {
+									automation: props.currentAutomation,
+									config: props.trigger.config,
+									sourceAutomation: props.trigger.sourceAutomationId
+										? props.stageAutomations.find(
+												(a) => a.id === props.trigger.sourceAutomationId
+											)
+										: undefined,
+								})
+							: humanReadableEventBase(props.trigger.event, props.community)
+					}
 					onRemove={props.removeTrigger}
 					showCollapseToggle={false}
 					defaultCollapsed={true}
