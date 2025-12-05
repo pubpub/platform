@@ -11,9 +11,9 @@ import { Button } from "ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
 
+import { useAutomationId } from "../usePanelQueryParams"
 import { StagePanelAutomationForm } from "./StagePanelAutomationForm"
 import { StagePanelAutomations } from "./StagePanelAutomations"
-import { useAutomationId } from "./useAutomationId"
 
 type Props = {
 	userId: UsersId

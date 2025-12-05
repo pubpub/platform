@@ -2,31 +2,29 @@
 
 import type { PropsWithChildren } from "react"
 
-import { useEffect, useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
-
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "ui/sheet"
 
+import { useClosePanel, useEditingStageId } from "./usePanelQueryParams"
+
 type Props = PropsWithChildren<{
-	open: boolean
+	defaultOpen?: boolean
 }>
 
 export const StagePanelSheet = (props: Props) => {
-	const [open, setOpen] = useState(false)
-	const router = useRouter()
-	const pathname = usePathname()
+	const { editingStageId } = useEditingStageId()
+	const closePanel = useClosePanel()
 	const onOpenChange = (open: boolean) => {
 		if (!open) {
-			router.push(pathname!)
+			closePanel()
 		}
 	}
 
-	useEffect(() => {
-		setOpen(props.open)
-	}, [props.open])
-
 	return (
-		<Sheet open={open} onOpenChange={onOpenChange}>
+		<Sheet
+			defaultOpen={props.defaultOpen}
+			open={Boolean(editingStageId)}
+			onOpenChange={onOpenChange}
+		>
 			<SheetHeader className="sr-only">
 				<SheetTitle>Stage edit panel</SheetTitle>
 				<SheetDescription>Edit the stage settings and actions.</SheetDescription>

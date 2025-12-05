@@ -23,23 +23,21 @@ type Props = {
 }
 
 export const StagePanel = async (props: Props) => {
-	let open = Boolean(props.stageId)
-
 	if (!props.stageId) {
 		return null
 	}
 
 	if (props.stageId) {
 		const stage = await getStage(props.stageId, props.user.id).executeTakeFirst()
-		if (stage === null) {
-			open = false
+		if (!stage) {
+			return null
 		}
 	}
 
 	const defaultTab = props.searchParams.tab || "overview"
 
 	return (
-		<StagePanelSheet open={open}>
+		<StagePanelSheet defaultOpen={Boolean(props.stageId)}>
 			<Tabs defaultValue={defaultTab} className="h-full">
 				<TabsList className="mb-2 grid grid-cols-4">
 					<TabLink tab="overview">

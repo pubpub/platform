@@ -1,15 +1,17 @@
 "use client"
 
-import { parseAsString, useQueryState } from "nuqs"
+import type { AutomationsId } from "db/public"
 
 import { Button } from "ui/button"
 import { Plus } from "ui/icon"
 
+import { useAutomationId } from "../usePanelQueryParams"
+
 export function AddAutomationButton() {
-	const [, setAutomationId] = useQueryState("automation-id", parseAsString)
+	const { setAutomationId } = useAutomationId()
 
 	const handleClick = () => {
-		setAutomationId("new")
+		setAutomationId("new" as AutomationsId)
 	}
 
 	return (

@@ -4,12 +4,12 @@ import type { StagesId } from "db/public"
 
 import Link from "next/link"
 import { Copy, Trash2 } from "lucide-react"
-import { parseAsString, useQueryState } from "nuqs"
 
 import { Button } from "ui/button"
 
 import { useStages } from "../../StagesContext"
 import { StageDeletionDialog } from "./StageDeletionDialog"
+import { useClosePanel } from "./usePanelQueryParams"
 
 type Props = {
 	onDelete(): void
@@ -18,12 +18,12 @@ type Props = {
 }
 
 export const StagePanelOverviewManagement = (props: Props) => {
-	const [, setCurrentlyEditingStageId] = useQueryState("currentlyEditingStageId", parseAsString)
+	const closePanel = useClosePanel()
 	const { duplicateStages } = useStages()
-	const onDeleteClick = () => {
-		props.onDelete()
+	const onDeleteClick = async () => {
+		closePanel()
+		await props.onDelete()
 		// close sheet
-		setCurrentlyEditingStageId(null)
 	}
 
 	return (

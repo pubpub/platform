@@ -33,7 +33,7 @@ import { cn } from "utils"
 import { AutomationRunResult } from "~/app/components/AutomationUI/AutomationRunResult"
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
 import { constructAutomationRunPage } from "~/lib/links"
-import { useAutomationId } from "./useAutomationId"
+import { useAutomationId } from "../usePanelQueryParams"
 
 export const UpdateCircle = (
 	props: AutomationRuns & {
