@@ -18,19 +18,17 @@ import { useAutomationId } from "./useAutomationId"
 type Props = {
 	userId: UsersId
 	communityId: CommunitiesId
-	stage: CommunityStage & { fullAutomations: FullAutomation[] }
+	stage: CommunityStage
+	automations: FullAutomation[]
 	actionConfigDefaults: ActionConfigDefaultFields
 }
 
 export function StagePanelAutomationsContent(props: Props) {
 	const { automationId, setAutomationId } = useAutomationId()
-	const currentAutomation = props.stage.fullAutomations.find(
-		(automation) => automation.id === automationId
-	)
+	const currentAutomation = props.automations.find((automation) => automation.id === automationId)
 
 	return (
 		<div className="relative flex h-full w-full">
-			{/* <div className="relative inset-0 h-full w-full">background</div> */}
 			<div
 				className="absolute inset-0 w-full space-y-2 transition-transform duration-300 ease-in-out"
 				style={{
@@ -38,6 +36,7 @@ export function StagePanelAutomationsContent(props: Props) {
 				}}
 			>
 				<StagePanelAutomations
+					automations={props.automations}
 					stage={props.stage}
 					userId={props.userId}
 					communityId={props.communityId}
@@ -78,7 +77,7 @@ export function StagePanelAutomationsContent(props: Props) {
 							key={automationId}
 							stageId={props.stage.id}
 							communityId={props.communityId}
-							automations={props.stage.fullAutomations}
+							automations={props.automations}
 							actionConfigDefaults={props.actionConfigDefaults}
 							currentAutomation={currentAutomation ?? null}
 							onSuccess={() => setAutomationId(null)}

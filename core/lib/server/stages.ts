@@ -136,7 +136,13 @@ export const getStagesViewableByUser = cache(
 	}
 )
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId }
+type CommunityStageProps = {
+	communityId: CommunitiesId
+	stageId?: StagesId
+	// use null if you want to specifically circument the viewableStages CTE
+	// eg when fetching stages in a non-user context, such as running an automation
+	userId: UsersId | null
+}
 
 export type CommunityStageOptions = {
 	/* AutomationEvent = "full" and filters by AutomationEvent */
@@ -275,12 +281,22 @@ export const getStages = (
 ) => {
 	const withAutomations = options.withAutomations ?? { detail: "count", filter: "all" }
 
+	const basicStart = db.selectFrom("stages").selectAll("stages")
+
+	const start = userId
+		? (db
+				.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
+				.selectFrom("stages")
+				.selectAll("stages")
+				.innerJoin(
+					"viewableStages",
+					"viewableStages.stageId",
+					"stages.id"
+				) as typeof basicStart)
+		: basicStart
+
 	return autoCache(
-		db
-			.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
-			.selectFrom("stages")
-			.selectAll("stages")
-			.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
+		start
 			.where("communityId", "=", communityId)
 			.$if(Boolean(stageId), (qb) => qb.where("stages.id", "=", stageId!))
 			.select((eb) => [

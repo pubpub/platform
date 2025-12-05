@@ -1,6 +1,6 @@
 "use client"
 
-import type { Action, ActionRuns, AutomationRuns } from "db/public"
+import type { Action, ActionRuns, AutomationRuns, Pubs } from "db/public"
 import type { IconConfig } from "ui/dynamic-icon"
 
 import Link from "next/link"
@@ -8,16 +8,20 @@ import { User, Zap } from "lucide-react"
 
 import { AutomationEvent } from "db/public"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
 import { DynamicIcon } from "ui/dynamic-icon"
 
 import { actions } from "~/actions/api"
 import { getAutomationRunStatus } from "~/actions/results"
 import { ActionRunResult } from "~/app/components/AutomationUI/ActionRunResult"
 import { AutomationRunStatusBadge } from "~/app/components/AutomationUI/AutomationRunResult"
+import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu"
+import { PubCardClient } from "~/app/components/pubs/PubCard/PubCardClient"
 import { formatDateAsPossiblyDistance } from "~/lib/dates"
 
 type AutomationRunCardProps = {
 	automationRun: AutomationRuns & {
+		inputPub: Pubs | null
 		actionRuns: (ActionRuns & {
 			pubId: string | null
 			pubTitle: string | null
@@ -70,25 +74,18 @@ const getInputDescription = (
 	automationRun: AutomationRunCardProps["automationRun"],
 	communitySlug: string
 ): React.ReactNode => {
-	const firstActionRun = automationRun.actionRuns[0]
-
-	if (!firstActionRun) {
-		return <span className="text-gray-500">No input</span>
-	}
-
-	if (firstActionRun.pubId && firstActionRun.pubTitle) {
+	if (automationRun.inputPub) {
 		return (
-			<Link
-				href={`/c/${communitySlug}/pubs/${firstActionRun.pubId}`}
-				className="text-blue-600 underline hover:text-blue-800"
-			>
-				{firstActionRun.pubTitle}
-			</Link>
+			<PubCardClient
+				pub={automationRun.inputPub}
+				communitySlug={communitySlug}
+				showCheckbox={false}
+			/>
 		)
 	}
 
-	if (firstActionRun.json) {
-		const jsonString = JSON.stringify(firstActionRun.json)
+	if (automationRun.inputJson) {
+		const jsonString = JSON.stringify(automationRun.inputJson)
 		const preview = jsonString.length > 50 ? `${jsonString.slice(0, 50)}...` : jsonString
 		return <code className="rounded bg-gray-100 px-1 text-xs">{preview}</code>
 	}
@@ -103,13 +100,13 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 
 	return (
 		<div
-			className="grid grid-cols-1 items-baseline gap-4 rounded-md border border-gray-200 bg-white p-4 lg:grid-cols-2"
+			className="grid grid-cols-1 items-center gap-4 rounded-md border border-gray-200 bg-white p-4 lg:grid-cols-2"
 			style={{ gridTemplateRows: "auto auto" }}
 			data-testid={`automation-run-card-${automationRun.id}`}
 		>
 			{/* Header - spans both columns on large screens */}
-			<div className="flex items-center gap-3 lg:col-span-2">
-				<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border">
+			<Collapsible className="flex items-center gap-3 lg:col-span-2">
+				<div className="flex h-8 w-8 items-center justify-center rounded-md border p-0">
 					{automationRun.automation?.icon ? (
 						<DynamicIcon icon={automationRun.automation.icon} size={16} />
 					) : (
@@ -117,66 +114,102 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 					)}
 				</div>
 				<div className="flex flex-1 flex-col gap-1">
-					<div className="flex flex-wrap items-center gap-2">
-						<h3 className="font-medium text-sm">
-							{automationRun.automation?.name || "Unknown Automation"}
-						</h3>
-						<AutomationRunStatusBadge status={status} />
+					<div className="flex items-center justify-between">
+						<div className="flex flex-wrap items-center gap-2">
+							<h3 className="font-medium text-sm">
+								{automationRun.automation?.name || "Unknown Automation"}
+							</h3>
+							<AutomationRunStatusBadge status={status} />
+						</div>
+						<EllipsisMenu orientation="horizontal" triggerSize="icon">
+							<EllipsisMenuButton>
+								<Link
+									href={`/c/${communitySlug}/stages/${automationRun.stage?.id}`}
+								>
+									View Stage
+								</Link>
+							</EllipsisMenuButton>
+							<EllipsisMenuButton>
+								<Link
+									href={`/c/${communitySlug}/stages/manage?editingStageId=${automationRun.stage?.id}&tab=automations`}
+								>
+									Edit Stage
+								</Link>
+							</EllipsisMenuButton>
+							<EllipsisMenuButton asChild>
+								<Link
+									href={`/c/${communitySlug}/stages/manage?editingStageId=${automationRun.stage.id}&tab=automations&automation-id=${automationRun.automation?.id}`}
+								>
+									Edit Automation
+								</Link>
+							</EllipsisMenuButton>
+						</EllipsisMenu>
 					</div>
-					<div className="flex items-center gap-1.5 text-gray-600 text-xs">
-						<User size={12} />
-						<span>{triggerDescription}</span>
-						<span>·</span>
-						<span>
-							{formatDateAsPossiblyDistance(new Date(automationRun.createdAt))}
-						</span>
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-1.5 text-gray-600 text-xs">
+							<User size={12} />
+							<span>{triggerDescription}</span>
+							<span>·</span>
+							<time
+								dateTime={new Date(automationRun.createdAt).toISOString()}
+								title={new Date(automationRun.createdAt).toLocaleString()}
+							>
+								{formatDateAsPossiblyDistance(new Date(automationRun.createdAt))}
+							</time>
+						</div>
+						<CollapsibleTrigger className="text-end text-muted-foreground text-xs">
+							Show details
+						</CollapsibleTrigger>
 					</div>
 				</div>
-			</div>
 
-			{/* Actions - left side */}
-			{automationRun.actionRuns.length > 0 && (
-				<div className="ml-11">
-					<Accordion type="multiple" className="w-full">
-						{automationRun.actionRuns.map((actionRun) => {
-							const action = actions[actionRun.action as Action]
-							return (
-								<AccordionItem key={actionRun.id} value={actionRun.id}>
-									<AccordionTrigger className="py-2 text-sm hover:no-underline">
-										<div className="flex items-center gap-2">
-											{action && <action.icon size={16} />}
-											<span className="font-medium">
-												{action?.niceName || "Unknown Action"}
-											</span>
-											{actionRun.status && (
-												<span
-													className={`rounded px-1.5 py-0.5 text-xs ${
-														actionRun.status === "success"
-															? "bg-green-100 text-green-700"
-															: actionRun.status === "failure"
-																? "bg-red-100 text-red-700"
-																: "bg-yellow-100 text-yellow-700"
-													}`}
-												>
-													{actionRun.status}
-												</span>
-											)}
-										</div>
-									</AccordionTrigger>
-									<AccordionContent>
-										<ActionRunResult actionRun={actionRun} />
-									</AccordionContent>
-								</AccordionItem>
-							)
-						})}
-					</Accordion>
-				</div>
-			)}
+				<CollapsibleContent>
+					{/* Actions - left side */}
 
-			{/* Input - right side on desktop, below on mobile */}
-			<div className="flex flex-col gap-1.5 border-gray-200 border-t pt-3 lg:col-start-2 lg:w-64 lg:border-t-0 lg:pt-0">
-				<div className="text-sm">{inputDescription}</div>
-			</div>
+					{automationRun.actionRuns.length > 0 && (
+						<div className="ml-11">
+							<Accordion type="multiple" className="w-full">
+								{automationRun.actionRuns.map((actionRun) => {
+									const action = actions[actionRun.action as Action]
+									return (
+										<AccordionItem key={actionRun.id} value={actionRun.id}>
+											<AccordionTrigger className="py-2 text-sm hover:no-underline">
+												<div className="flex items-center gap-2">
+													{action && <action.icon size={16} />}
+													<span className="font-medium">
+														{action?.niceName || "Unknown Action"}
+													</span>
+													{actionRun.status && (
+														<span
+															className={`rounded px-1.5 py-0.5 text-xs ${
+																actionRun.status === "success"
+																	? "bg-green-100 text-green-700"
+																	: actionRun.status === "failure"
+																		? "bg-red-100 text-red-700"
+																		: "bg-yellow-100 text-yellow-700"
+															}`}
+														>
+															{actionRun.status}
+														</span>
+													)}
+												</div>
+											</AccordionTrigger>
+											<AccordionContent>
+												<ActionRunResult actionRun={actionRun} />
+											</AccordionContent>
+										</AccordionItem>
+									)
+								})}
+							</Accordion>
+						</div>
+					)}
+
+					{/* Input - right side on desktop, below on mobile */}
+					<div className="flex flex-col gap-1.5 border-gray-200 border-t pt-3 lg:col-start-2 lg:w-64 lg:border-t-0 lg:pt-0">
+						{inputDescription}
+					</div>
+				</CollapsibleContent>
+			</Collapsible>
 		</div>
 	)
 }

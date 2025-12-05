@@ -1,5 +1,6 @@
 import type { CommunitiesId, StagesId, UsersId } from "db/public"
 
+import { getStageAutomations } from "~/lib/db/queries"
 import { getActionConfigDefaultsFields } from "~/lib/server/actions"
 import { getStages } from "~/lib/server/stages"
 import { StagePanelAutomationsContent } from "./StagePanelAutomationsContent"
@@ -11,7 +12,7 @@ type Props = {
 }
 
 export async function StagePanelAutomationsLoader(props: Props) {
-	const [stage, actionConfigDefaults] = await Promise.all([
+	const [stage, actionConfigDefaults, automations] = await Promise.all([
 		getStages(
 			{ stageId: props.stageId, userId: props.userId, communityId: props.communityId },
 			{
@@ -22,6 +23,7 @@ export async function StagePanelAutomationsLoader(props: Props) {
 			}
 		).executeTakeFirst(),
 		getActionConfigDefaultsFields(props.communityId),
+		getStageAutomations(props.stageId),
 	])
 
 	if (!stage) {
@@ -34,6 +36,7 @@ export async function StagePanelAutomationsLoader(props: Props) {
 			communityId={props.communityId}
 			stage={stage}
 			actionConfigDefaults={actionConfigDefaults}
+			automations={automations}
 		/>
 	)
 }

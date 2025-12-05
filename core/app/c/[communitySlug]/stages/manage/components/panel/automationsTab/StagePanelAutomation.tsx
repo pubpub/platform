@@ -4,7 +4,7 @@ import type { ActionRuns, AutomationRuns, CommunitiesId, StagesId } from "db/pub
 import type { FullAutomation } from "db/types"
 
 import { useCallback } from "react"
-import { Copy, Pencil, Trash2 } from "lucide-react"
+import { Bolt, Copy, Pencil, Trash2 } from "lucide-react"
 
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "ui/item"
@@ -24,12 +24,15 @@ type Props = {
 }
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { isAfter, parseISO } from "date-fns"
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
 import { cn } from "utils"
 
 import { AutomationRunResult } from "~/app/components/AutomationUI/AutomationRunResult"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { constructAutomationRunPage } from "~/lib/links"
 import { useAutomationId } from "./useAutomationId"
 
 export const UpdateCircle = (
@@ -140,7 +143,7 @@ export const UpdateCircle = (
 export const StagePanelAutomation = (props: Props) => {
 	const [initTime, setInitTime] = useState(new Date())
 	const [isStale, setIsStale] = useState(false)
-
+	const community = useCommunity()
 	useEffect(() => {
 		if (!props.automation.lastAutomationRun) return
 
@@ -155,8 +158,7 @@ export const StagePanelAutomation = (props: Props) => {
 
 	const { automation } = props
 
-	const { automationId: editingAutomationId, setAutomationId: setEditingAutomationId } =
-		useAutomationId()
+	const { setAutomationId: setEditingAutomationId } = useAutomationId()
 
 	const onEditClick = useCallback(() => {
 		setEditingAutomationId(automation.id)
@@ -183,7 +185,6 @@ export const StagePanelAutomation = (props: Props) => {
 	}, [props.stageId, runDuplicateAutomation, automation.id])
 
 	const triggerIcons = automation.triggers.map((trigger) => getTriggerByName(trigger.event))
-	console.log(automation.lastAutomationRun)
 
 	return (
 		<Item variant="outline" size="sm">
@@ -214,6 +215,17 @@ export const StagePanelAutomation = (props: Props) => {
 					</EllipsisMenuButton>
 					<EllipsisMenuButton onClick={onDuplicateClick}>
 						<Copy size={14} /> Duplicate
+					</EllipsisMenuButton>
+					<EllipsisMenuButton asChild>
+						<Link
+							href={constructAutomationRunPage({
+								automationId: automation.id,
+								communitySlug: community.slug,
+							})}
+						>
+							<Bolt size={14} />
+							View run log
+						</Link>
 					</EllipsisMenuButton>
 					<EllipsisMenuButton onClick={onDeleteClick} className="text-destructive">
 						<Trash2 size={14} /> Delete

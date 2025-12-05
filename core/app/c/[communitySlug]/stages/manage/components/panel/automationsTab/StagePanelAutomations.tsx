@@ -1,4 +1,5 @@
 import type { CommunitiesId, UsersId } from "db/public"
+import type { FullAutomation } from "db/types"
 import type { CommunityStage } from "~/lib/server/stages"
 
 import { Card, CardContent, CardTitle } from "ui/card"
@@ -14,6 +15,7 @@ type Props = {
 	userId: UsersId
 	stage: CommunityStage
 	communityId: CommunitiesId
+	automations: FullAutomation[]
 }
 
 export const StagePanelAutomations = (props: Props) => {
@@ -28,8 +30,8 @@ export const StagePanelAutomations = (props: Props) => {
 			</StagePanelCardHeader>
 			<CardContent>
 				<ItemGroup className="gap-y-2">
-					{props.stage.fullAutomations?.length > 0 ? (
-						props.stage.fullAutomations.map((automation) => (
+					{props.automations.length > 0 ? (
+						props.automations.map((automation) => (
 							<StagePanelAutomation
 								stageId={props.stage.id}
 								communityId={props.stage.communityId as CommunitiesId}

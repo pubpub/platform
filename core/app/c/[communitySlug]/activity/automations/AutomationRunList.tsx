@@ -1,9 +1,9 @@
-import type { CommunitiesId } from "db/public"
 import type { AutoReturnType } from "~/lib/types"
 
 import { Suspense } from "react"
 import { Activity } from "lucide-react"
 
+import { Action, type CommunitiesId } from "db/public"
 import {
 	Empty,
 	EmptyContent,
@@ -14,8 +14,11 @@ import {
 } from "ui/empty"
 import { cn } from "utils"
 
+import { db } from "~/kysely/database"
 import { getAutomationRuns, getAutomationRunsCount } from "~/lib/server/actions"
+import { autoCache } from "~/lib/server/cache/autoCache"
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { getStages } from "~/lib/server/stages"
 import { AutomationRunCard } from "./AutomationRunCard"
 import { AutomationRunListSkeleton } from "./AutomationRunListSkeleton"
 import { AutomationRunSearchFooter } from "./AutomationRunSearchFooter"
@@ -42,7 +45,6 @@ const PaginatedAutomationRunListInner = async (
 		}
 	}
 ) => {
-	const { getAutomationRunStatus } = await import("~/actions/results")
 	let automationRuns = await props.automationRunsPromise
 
 	// client-side filtering for status (since we need to compute it from actionRuns)
@@ -151,17 +153,14 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 		query: filterParams.query,
 	}).execute()
 
-	const { db } = await import("~/kysely/database")
-	const { getStages } = await import("~/lib/server/stages")
-	const { Action } = await import("db/public")
-
 	const [availableAutomations, stages] = await Promise.all([
-		db
-			.selectFrom("automations")
-			.where("communityId", "=", props.communityId)
-			.select(["id", "name", "icon"])
-			.orderBy("name", "asc")
-			.execute(),
+		autoCache(
+			db
+				.selectFrom("automations")
+				.where("communityId", "=", props.communityId)
+				.select(["id", "name", "icon"])
+				.orderBy("name", "asc")
+		).execute(),
 		getStages({ communityId: props.communityId, userId: null }).execute(),
 	])
 

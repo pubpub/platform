@@ -3,6 +3,7 @@
 import type { ProcessedPub } from "contracts"
 
 import { useCallback } from "react"
+import Link from "next/link"
 
 import { Badge } from "ui/badge"
 import { Card, CardFooter, CardTitle } from "ui/card"
@@ -12,6 +13,7 @@ import { cn } from "utils"
 
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates"
 import { getPubTitle } from "~/lib/pubs"
+import { useCommunity } from "../../providers/CommunityProvider"
 
 export type PubCardClientProps = {
 	pub: ProcessedPub<{ withPubType: true; withStage?: boolean }>
@@ -20,7 +22,12 @@ export type PubCardClientProps = {
 	disabled?: boolean
 	showCheckbox?: boolean
 	className?: string
+	/* should the whole card be a link?*/
+	bigLink?: boolean
 }
+
+const LINK_AFTER =
+	"after:content-[''] after:z-0 after:absolute after:left-0 after:top-0 after:bottom-0 after:right-0"
 
 export const PubCardClient = ({
 	pub,
@@ -29,6 +36,7 @@ export const PubCardClient = ({
 	disabled = false,
 	showCheckbox = true,
 	className,
+	bigLink = false,
 }: PubCardClientProps) => {
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle)
 	const showMatchingValues = matchingValues && matchingValues.length !== 0
@@ -41,20 +49,22 @@ export const PubCardClient = ({
 		},
 		[onSelect, disabled, pub]
 	)
+	const community = useCommunity()
 
 	return (
 		<Card
 			className={cn(
-				"group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 transition-colors",
+				"group relative flex flex-row items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 transition-colors",
 				selected && "border-blue-500 bg-blue-50",
 				disabled && "cursor-not-allowed opacity-50",
 				!disabled && onSelect && "cursor-pointer hover:border-gray-300",
+				showCheckbox ? "justify-between" : "justify-start",
 				className
 			)}
 			data-testid={`pub-card-${pub.id}`}
 		>
 			<div className="flex min-w-0 flex-1 flex-col space-y-[6px]">
-				<div className="z-10 flex flex-row gap-2 p-0 font-semibold leading-4">
+				<div className="flex flex-row gap-2 p-0 font-semibold leading-4">
 					<Badge variant="outline" className="text-xs">
 						{pub.pubType.name}
 					</Badge>
@@ -66,10 +76,15 @@ export const PubCardClient = ({
 				</div>
 				<CardTitle className="font-bold text-sm">
 					<h3 className="min-w-0 truncate">
-						<div
-							className="[&_mark]:bg-yellow-300"
-							dangerouslySetInnerHTML={{ __html: getPubTitle(pub) }}
-						/>
+						<Link
+							href={`/c/${community.slug}/pubs/${pub.id}`}
+							className={cn("hover:underline", LINK_AFTER, "focus-within:underline")}
+						>
+							<div
+								className="[&_mark]:bg-yellow-300"
+								dangerouslySetInnerHTML={{ __html: getPubTitle(pub) }}
+							/>
+						</Link>
 					</h3>
 				</CardTitle>
 				{showMatchingValues && (

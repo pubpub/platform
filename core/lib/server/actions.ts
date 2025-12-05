@@ -15,6 +15,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 import { db } from "~/kysely/database"
 import { autoCache } from "./cache/autoCache"
 import { autoRevalidate } from "./cache/autoRevalidate"
+import { pubType } from "./pub"
 
 export const getActionInstance = (actionInstanceId: ActionInstancesId) =>
 	autoCache(db.selectFrom("action_instances").selectAll().where("id", "=", actionInstanceId))
@@ -90,11 +91,12 @@ export const getAutomationRuns = (
 		query?: string
 	}
 ) => {
-	let query = db
+	const startQuery = db
 		.selectFrom("automation_runs")
 		.innerJoin("automations", "automation_runs.automationId", "automations.id")
 		.where("automations.communityId", "=", communityId)
 
+	let query = startQuery
 	if (options?.automations && options.automations.length > 0) {
 		query = query.where("automation_runs.automationId", "in", options.automations)
 	}
@@ -148,6 +150,19 @@ export const getAutomationRuns = (
 							"action_runs.pubId",
 						])
 				).as("actionRuns"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("pubs")
+						.whereRef("pubs.id", "=", "automation_runs.inputPubId")
+						.select([
+							"pubs.id",
+							"pubs.title",
+							"pubs.pubTypeId",
+							"pubs.createdAt",
+							"pubs.updatedAt",
+						])
+						.select(pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
+				).as("inputPub"),
 				jsonObjectFrom(
 					eb
 						.selectFrom("automation_runs as ar")

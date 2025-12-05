@@ -42,6 +42,7 @@ import { getActionConfigDefaults, getAutomationRunById } from "~/lib/server/acti
 import { MAX_STACK_DEPTH } from "~/lib/server/automations"
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
 import { getCommunity } from "~/lib/server/community"
+import { type CommunityStage, getStages } from "~/lib/server/stages"
 import { isClientExceptionOptions } from "~/lib/serverActions"
 import { getActionByName } from "../api"
 import { ActionConfigBuilder } from "./ActionConfigBuilder"
@@ -74,6 +75,7 @@ export type RunAutomationArgs = {
 export type RunActionInstanceArgs = {
 	automation: FullAutomation
 	community: Communities
+	stage: CommunityStage
 	actionInstance: FullAutomation["actionInstances"][number]
 	/**
 	 * extra params passed to the action instance
@@ -86,7 +88,7 @@ export type RunActionInstanceArgs = {
 		| ProcessedPub<{
 				withPubType: true
 				withRelatedPubs: true
-				withStage: true
+				withStage: false
 				withValues: true
 		  }>
 		| undefined
@@ -147,10 +149,10 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 	const interpolationData = pub
 		? {
 				pub: createPubProxy(pub, args.community.slug),
-
+				stage: args.stage,
 				action: actionForInterpolation,
 			}
-		: { json: args.json, action: actionForInterpolation }
+		: { json: args.json, action: actionForInterpolation, stage: args.stage }
 
 	const interpolated = await actionConfigBuilder.interpolate(interpolationData)
 
@@ -253,7 +255,7 @@ export async function runAutomation(
 					{
 						withPubType: true,
 						withRelatedPubs: true,
-						withStage: true,
+						withStage: false,
 						withValues: true,
 						depth: 3,
 					}
@@ -266,6 +268,13 @@ export async function runAutomation(
 	if (!automation) {
 		throw new Error(`Automation ${args.automationId} not found`)
 	}
+	// annoying that this requires an extra await
+
+	const stage = await getStages({
+		communityId: args.communityId,
+		stageId: expect(automation.stageId, "Can't run automation without a stage"),
+		userId: null,
+	}).executeTakeFirstOrThrow(() => new Error(`Stage ${automation.stageId} not found`))
 
 	if (
 		automation.actionInstances.some((ai) =>
@@ -362,12 +371,21 @@ export async function runAutomation(
 
 	const isActionUserInitiated = "userId" in args
 
+	const existingAutomationRun = args.scheduledAutomationRunId
+		? await getAutomationRunById(
+				args.communityId,
+				args.scheduledAutomationRunId
+			).executeTakeFirstOrThrow(
+				() => new Error(`Automation run ${args.scheduledAutomationRunId} not found`)
+			)
+		: null
 	// we need to first create the action run,
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
 	// which in this case would be `action-run:<action-run-id>`
 	const automationRun = await insertAutomationRun(trx, {
 		automationId: args.automationId,
 		actionRuns: automation.actionInstances.map((ai) => ({
+			id: existingAutomationRun?.actionRuns.find((ar) => ar.actionInstanceId === ai.id)?.id,
 			actionInstanceId: ai.id,
 			config: ai.config,
 			result: { scheduled: `Action to be run immediately` },
@@ -402,6 +420,7 @@ export async function runAutomation(
 				manualActionInstanceOverrideArgs:
 					args.manualActionInstancesOverrideArgs?.[ai.id] ?? null,
 				json: args.json,
+				stage,
 				pub: pub ?? undefined,
 				automation,
 			})
@@ -434,9 +453,6 @@ export async function runAutomation(
 		})
 	)
 
-	console.log("resultsSSSSSSSSSSSSSSS")
-	console.dir(results, { depth: null })
-	console.log("_______________")
 	const finalAutomationRun = await insertAutomationRun(trx, {
 		automationId: args.automationId,
 		actionRuns: results.map(({ actionRunId, actionInstance, ...result }) => ({
@@ -502,7 +518,8 @@ export async function insertAutomationRun(
 		userId?: UsersId
 	}
 ) {
-	console.log({ args })
+	console.log("args.actionRuns _________________")
+	console.log(args.actionRuns)
 	const automatonRun = await autoRevalidate(
 		trx
 			.with("automationRun", (trx) =>
