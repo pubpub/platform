@@ -6,7 +6,7 @@ import { ActionRunStatus } from "db/public"
 export type ActionRunResultSuccess = {
 	success: true
 	title?: string
-	report?: string | string
+	report?: string | React.ReactNode
 	data: unknown
 	config: BaseActionInstanceConfig
 }

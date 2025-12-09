@@ -80,8 +80,8 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 					{result.title && (
 						<div className="font-medium text-red-700 text-sm">{result.title}</div>
 					)}
-					<div className="text-red-700 text-sm">{result.error}</div>
-					{!!result.cause && (
+					<div className="text-red-700 text-sm">{result.report}</div>
+					{!!result.error && typeof result.error === "string" && (
 						<Collapsible open={showCause} onOpenChange={setShowCause}>
 							<CollapsibleTrigger asChild>
 								<button
@@ -98,9 +98,9 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 							</CollapsibleTrigger>
 							<CollapsibleContent>
 								<pre className="mt-2 max-h-40 overflow-auto rounded border border-red-200 bg-red-50 p-2 font-mono text-red-800 text-xs">
-									{typeof result.cause === "string"
-										? result.cause
-										: JSON.stringify(result.cause, null, 2)}
+									{typeof result.error === "string"
+										? result.error
+										: JSON.stringify(result.error, null, 2)}
 								</pre>
 							</CollapsibleContent>
 						</Collapsible>

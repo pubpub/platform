@@ -83,9 +83,7 @@ export const AutomationRunForm = (props: Props) => {
 				skipConditionCheck: skipConditionCheck && hasConditions,
 			})
 
-			console.log(result)
 			if (isActionSuccess(result)) {
-				console.log(result)
 				toast({
 					title:
 						"title" in result && typeof result.title === "string"

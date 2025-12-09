@@ -236,7 +236,6 @@ export const StagePanelAutomation = (props: Props) => {
 								communitySlug: community.slug,
 							})}
 						>
-							{/* <Bot size={14} /> */}
 							View run log
 						</Link>
 					</EllipsisMenuButton>

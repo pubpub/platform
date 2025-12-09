@@ -128,7 +128,10 @@ export type ActionSuccess = {
 	/**
 	 * Optionally provide a report to be displayed to the user
 	 */
-	report?: string
+	report?: string | React.ReactNode
+	/**
+	 * The data is something stored in the action log, like a URL or a file
+	 */
 	data: unknown
 }
 

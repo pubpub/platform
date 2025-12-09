@@ -87,7 +87,11 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 	if (!result.success) {
 		return {
 			success: false,
-			error: result.report ?? formatReport(result.actionRuns),
+			error: result.actionRuns
+				.map((r) => r.success === false && r.error)
+				.filter(Boolean)
+				.join(", "),
+			report: result.report ?? formatReport(result.actionRuns),
 			config: result.actionRuns,
 		}
 	}
