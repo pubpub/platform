@@ -139,7 +139,7 @@ test.describe("Sending an email to an email address", () => {
 			community.pubs[1].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
+		await pubDetailsPage.runAutomation(ACTION_NAME, async (runActionDialog) => {
 			await runActionDialog.getByLabel("Recipient Email").fill(community.users.user2.email)
 			await runActionDialog
 				.getByRole("textbox", { name: "Subject" })
@@ -148,12 +148,12 @@ test.describe("Sending an email to an email address", () => {
 				.getByRole("textbox", { name: "Body" })
 				.fill("Greetings", { timeout: 2_000 })
 		})
-	})
-	test("Static email address recipient recieves the email", async () => {
-		const { message } = await (
-			await inbucketClient.getMailbox(community.users.user2.email.split("@")[0])
-		).getLatestMessage()
-		expect(message.body.html?.trim()).toBe("<p>Greetings</p>")
+		await test.step("Static email address recipient recieves the email", async () => {
+			const { message } = await (
+				await inbucketClient.getMailbox(community.users.user2.email.split("@")[0])
+			).getLatestMessage()
+			expect(message.body.html?.trim()).toBe("<p>Greetings</p>")
+		})
 	})
 })
 
@@ -165,7 +165,7 @@ test.describe("Sending an email containing a MemberId field from a related pub",
 			community.pubs[0].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
+		await pubDetailsPage.runAutomation(ACTION_NAME, async (runActionDialog) => {
 			await runActionDialog.getByLabel("Recipient Email").fill(community.users.user2.email)
 			await runActionDialog.getByRole("textbox", { name: "Subject" }).fill("Hello")
 			await runActionDialog

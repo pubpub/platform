@@ -244,27 +244,33 @@ test.describe("sequential automations", () => {
 
 		await stagesManagePage.addAutomation("Test", {
 			event: AutomationEvent.automationSucceeded,
-			actionInstanceName: "Log 1",
-			sourceActionInstanceName: "Log 2",
+			actions: {
+				action: Action.log,
+				configureAction: async () => {
+					await page.getByLabel("Log Text").fill("Log 1")
+				},
+			},
+			sourceAutomationName: "2",
+			name: "log something after log 2",
 		})
 		await page.waitForTimeout(1_000)
 
 		await page.getByRole("tab", { name: "Pubs", exact: true }).click()
-		await page.getByRole("button", { name: "Run Automation" }).first().click()
+		await page.getByRole("button", { name: "Run automations for Test" }).first().click()
 
-		await page.getByRole("button", { name: "Log 2" }).first().click()
+		await page.getByRole("button", { name: "2" }).first().click()
 
 		await page.getByRole("button", { name: "Run" }).first().click()
 
 		await page.waitForTimeout(1000)
 
-		await page.goto(`/c/${community.community.slug}/activity/actions`)
+		await page.goto(`/c/${community.community.slug}/activity/automations`)
 
-		await page.getByText("Log 1").waitFor({ timeout: 5000 })
+		await page.getByText("2", { exact: true }).waitFor({ timeout: 5000 })
+		await page.getByText("Automation (2 succeeded)", { exact: true }).waitFor({ timeout: 5000 })
 		await page
-			.getByText("Automation (Log 2 succeeded)", { exact: true })
+			.getByText("log something after log 2", { exact: true })
 			.waitFor({ timeout: 5000 })
-		await page.getByText("Log 2", { exact: true }).waitFor({ timeout: 5000 })
 
 		const success = await page.getByText("success").all()
 		test.expect(success).toHaveLength(2)

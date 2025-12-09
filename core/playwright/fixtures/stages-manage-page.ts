@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test"
 import type { AutomationEvent, StagesId } from "db/public"
+import type { IconConfig } from "ui/dynamic-icon"
+import type { Action } from "~/actions/types"
 
 import { test } from "@playwright/test"
 
@@ -76,37 +78,65 @@ export class StagesManagePage {
 	async addAutomation(
 		stageName: string,
 		automation: {
+			name: string
+			icon?: IconConfig
 			event: AutomationEvent
-			actionInstanceName: string
-			sourceActionInstanceName?: string
+			actions: Action extends Action
+				? {
+						action: Action["name"]
+						// config: Action['config']['schema']['_input']
+						configureAction: () => Promise<void>
+					}
+				: never
+			sourceAutomationName?: string
 		}
 	) {
 		await this.openStagePanelTab(stageName, "Automations")
 
 		await this.page.getByTestId("add-automation-button").click({ timeout: 1_000 })
 
-		await this.page.getByTestId("action-selector-select-trigger").click({
-			timeout: 2_000,
-		})
-		await this.page
-			.getByTestId(`action-selector-select-item-${automation.actionInstanceName}`)
-			.click({
-				timeout: 1_000,
-			})
+		await this.page.getByRole("textbox", { name: "Automation name" }).fill(automation.name)
+
+		if (automation.icon) {
+			await this.page.getByTestId("icon-picker-button").click({ timeout: 1_000 })
+			await this.page
+				.getByTestId(`icon-picker-item-${automation.icon.name}`)
+				.click({ timeout: 1_000 })
+			if (automation.icon.color) {
+				await this.page.getByTestId("color-picker-button").click({ timeout: 1_000 })
+				await this.page.getByTestId(`color-picker-input`).fill(automation.icon.color)
+			}
+		}
 
 		await this.page.getByTestId("event-select-trigger").click({
 			timeout: 1_000,
 		})
-		await this.page.getByTestId(`event-select-item-${automation.event}`).click({
+		await this.page.getByTestId(`trigger-select-item-${automation.event}`).click({
 			timeout: 1_000,
 		})
 
-		if (automation.sourceActionInstanceName) {
-			await this.page.getByTestId("watched-action-select-trigger").click({
+		await this.page.getByTestId("action-selector-select-trigger").click({
+			timeout: 2_000,
+		})
+		await this.page.getByTestId(`${automation.actions.action}-button`).click({
+			timeout: 1_000,
+		})
+
+		if (automation.actions.configureAction) {
+			// await this.page
+			// 	.getByTestId(`action-config-card-${automation.actions.action}-collapse-trigger`)
+			// 	.click({
+			// 		timeout: 1_000,
+			// 	})
+			await automation.actions.configureAction()
+		}
+
+		if (automation.sourceAutomationName) {
+			await this.page.getByTestId(`watched-automation-select-trigger`).click({
 				timeout: 1_000,
 			})
 			await this.page
-				.getByTestId(`watched-action-select-item-${automation.sourceActionInstanceName}`)
+				.getByTestId(`watched-automation-select-item-${automation.sourceAutomationName}`)
 				.click({
 					timeout: 1_000,
 				})

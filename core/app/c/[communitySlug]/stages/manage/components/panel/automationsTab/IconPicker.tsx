@@ -33,7 +33,12 @@ export const IconPicker = ({
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
-				<Button variant="outline" className="h-9 w-9 p-0" type="button">
+				<Button
+					variant="outline"
+					className="h-9 w-9 p-0"
+					type="button"
+					data-testid="icon-picker-button"
+				>
 					<DynamicIcon icon={value} size={16} />
 				</Button>
 			</PopoverTrigger>
@@ -71,6 +76,7 @@ export const IconPickerContent = ({
 						)}
 						type="button"
 						onClick={() => onChange({ name, color: value?.color })}
+						data-testid={`icon-picker-item-${name}`}
 					>
 						<Icon
 							size={16}
@@ -79,6 +85,7 @@ export const IconPickerContent = ({
 								fill: value?.variant === "solid" ? value?.color : "transparent",
 							}}
 						/>
+						<span className="sr-only">{name}</span>
 					</Button>
 				))}
 			</>

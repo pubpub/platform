@@ -121,7 +121,7 @@ const AutomationSelector = ({
 								value={automation.id}
 								className="hover:bg-gray-100"
 								disabled={isDisabled}
-								data-testid={`${dataTestIdPrefix}-select-item-${automation.id}`}
+								data-testid={`${dataTestIdPrefix}-select-item-${automation.name}`}
 							>
 								<div className="flex flex-row items-center gap-x-2">
 									<span>{automation.name}</span>
@@ -193,6 +193,7 @@ type ConfigCardProps = {
 	showCollapseToggle?: boolean
 	isError?: boolean
 	defaultCollapsed?: boolean
+	dataTestIdPrefix?: string
 }
 
 const ConfigCard = memo(
@@ -208,10 +209,12 @@ const ConfigCard = memo(
 				defaultOpen={!props.defaultCollapsed}
 			>
 				<Item variant="outline" className="bg-neutral-50" size="sm">
-					{/* <div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2"> */}
 					<ItemHeader className={cn(props.isError && "text-destructive")}>
 						{props.showCollapseToggle && hasContent ? (
-							<CollapsibleTrigger asChild>
+							<CollapsibleTrigger
+								data-testid={`${props.dataTestIdPrefix}-collapse-trigger`}
+								asChild
+							>
 								<Button
 									type="button"
 									variant="ghost"
@@ -697,7 +700,7 @@ export function StagePanelAutomationForm(props: Props) {
 										onValueChange={field.onChange}
 										defaultValue="both"
 									>
-										<SelectTrigger>
+										<SelectTrigger data-testid="condition-evaluation-timing-select-trigger">
 											<SelectValue
 												placeholder="Select condition evaluation timing"
 												className="text-xs"
@@ -839,6 +842,7 @@ const TriggerConfigCard = memo(
 			return (
 				<ConfigCard
 					icon={trigger.display.icon}
+					dataTestIdPrefix={`trigger-config-card-${props.trigger.event}`}
 					title={
 						props.currentAutomation
 							? humanReadableEventHydrated(props.trigger.event, props.community, {
@@ -974,6 +978,7 @@ const ActionConfigCard = memo(
 					return (
 						<ConfigCard
 							isError={fieldState.invalid}
+							dataTestIdPrefix={`action-config-card-${actionDef.name}`}
 							icon={actionDef.icon as typeof ChevronRight}
 							title={actionDef.niceName}
 							onRemove={props.removeAction}

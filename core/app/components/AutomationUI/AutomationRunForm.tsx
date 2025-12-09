@@ -176,6 +176,7 @@ export const AutomationRunForm = (props: Props) => {
 								submitButton={({ formState, submit }) =>
 									showSkipConditionsOption ? (
 										<FormSubmitButtonWithDropdown
+											data-testid="action-run-button"
 											formState={formState}
 											idleText="Run "
 											pendingText="Running ..."
@@ -193,6 +194,7 @@ export const AutomationRunForm = (props: Props) => {
 									) : (
 										<FormSubmitButton
 											formState={formState}
+											data-testid="action-run-button"
 											idleText="Run"
 											pendingText="Running ..."
 											successText="Done"

@@ -34,6 +34,7 @@ export const ColorPickerPopover = ({
 				<Button
 					variant="outline"
 					className="flex h-full items-center gap-2"
+					data-testid="color-picker-button"
 					aria-label={`Select color: currently ${label || color}`}
 				>
 					<span className="sr-only">Pick a color</span>

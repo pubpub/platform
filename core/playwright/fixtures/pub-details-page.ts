@@ -17,27 +17,30 @@ export class PubDetailsPage {
 		}
 	}
 
-	async runAction(
-		actionName: string,
-		configureCallback?: (runActionDialog: Locator) => Promise<void>,
+	async runAutomation(
+		automationName: string,
+		configureCallback?: (runAutomationDialog: Locator) => Promise<void>,
 		waitForSuccess = true
 	) {
 		await this.page.getByTestId("run-action-primary").click()
-		await this.page.getByRole("button", { name: actionName }).click()
+		await this.page.getByRole("button", { name: automationName }).click()
 
-		const runActionDialog = this.page.getByRole("dialog", { name: actionName, exact: true })
-		await runActionDialog.waitFor()
+		const runAutomationDialog = this.page.getByRole("dialog", {
+			name: automationName,
+			exact: true,
+		})
+		await runAutomationDialog.waitFor()
 
-		await configureCallback?.(runActionDialog)
+		await configureCallback?.(runAutomationDialog)
 
-		await runActionDialog.getByTestId("action-run-button").click()
+		await runAutomationDialog.getByTestId("action-run-button").click()
 		if (waitForSuccess) {
 			await this.page
 				.getByRole("status")
-				.filter({ hasText: `Successfully ran ${actionName}` })
+				.filter({ hasText: `Successfully ran ${automationName}` })
 				.waitFor()
-			await runActionDialog.getByRole("button", { name: "Cancel", exact: true }).click()
-			await runActionDialog.waitFor({ state: "hidden" })
+			await runAutomationDialog.getByRole("button", { name: "Cancel", exact: true }).click()
+			await runAutomationDialog.waitFor({ state: "hidden" })
 		}
 	}
 

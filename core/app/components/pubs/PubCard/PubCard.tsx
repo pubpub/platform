@@ -311,7 +311,7 @@ const PubCardActions = async ({
 					canOverrideAutomationConditions={canOverrideAutomationConditions}
 					automations={manualAutomations}
 					pubId={pub.id}
-					buttonText={`Run actions for ${pubTitle}`}
+					buttonText={`Run automations for ${pubTitle}`}
 					iconOnly
 					variant="ghost"
 					className={cn(

@@ -219,7 +219,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 			community.pubs[0].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction(ACTION_NAME_USER, async (runActionDialog) => {
+		await pubDetailsPage.runAutomation(ACTION_NAME_USER, async (runActionDialog) => {
 			// Clear the default recipient email field
 			await runActionDialog.getByLabel("Recipient Email").clear()
 			// Invite a new user to fill out the form
@@ -334,7 +334,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		)
 		await pubDetailsPage.goTo()
 
-		await pubDetailsPage.runAction(
+		await pubDetailsPage.runAutomation(
 			ACTION_NAME_EMAIL,
 			async (runActionDialog) => {
 				await runActionDialog
@@ -345,7 +345,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 			},
 			false
 		)
-		await page.getByText("Failed to Send Email", { exact: true }).waitFor()
+		await page.getByText("Error", { exact: true }).first().waitFor()
 		await expect(
 			page
 				.getByLabel("Notifications (F8)")
@@ -364,7 +364,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 			community.pubs[0].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction(ACTION_NAME_USER, async (dialog) => {
+		await pubDetailsPage.runAutomation(ACTION_NAME_USER, async (dialog) => {
 			await dialog.getByLabel("Recipient Email").fill(email1)
 			await dialog
 				.getByRole("textbox", { name: "Body" })
@@ -398,7 +398,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 			)
 			await pubDetailsPage.goTo()
 
-			await pubDetailsPage.runAction(ACTION_NAME_EMAIL)
+			await pubDetailsPage.runAutomation(ACTION_NAME_EMAIL)
 		})
 
 		await test.step("user clicks link in email", async () => {

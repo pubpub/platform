@@ -87,7 +87,7 @@ test.describe("actions interpolation", () => {
 			community.pubs[0].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction("Log", async (runActionDialog) => {
+		await pubDetailsPage.runAutomation("Log", async (runActionDialog) => {
 			await runActionDialog.getByRole("button", { name: "Run action" }).click()
 		})
 		await page
@@ -106,7 +106,7 @@ test.describe("actions interpolation", () => {
 			community.pubs[0].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction("Log", async (runActionDialog) => {
+		await pubDetailsPage.runAutomation("Log", async (runActionDialog) => {
 			await runActionDialog.getByTestId("toggle-jsonata-text").click()
 			// wait for thing to load
 			await page.waitForTimeout(1000)
@@ -128,7 +128,7 @@ test.describe("actions interpolation", () => {
 			community.pubs[0].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction("Log", async (runActionDialog) => {
+		await pubDetailsPage.runAutomation("Log", async (runActionDialog) => {
 			await runActionDialog.getByTestId("toggle-jsonata-text").click()
 
 			await runActionDialog.getByTestId("toggle-jsonata-test-button-text").click()
