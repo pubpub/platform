@@ -19,9 +19,11 @@ import { useDebouncedCallback } from "use-debounce"
 
 import { automationRunSearchParsers } from "./automationRunQuery"
 
+export type AvailableAutomation = Pick<Automations, "id" | "name" | "icon">
+
 type Props = {
 	children: React.ReactNode
-	availableAutomations: Automations[]
+	availableAutomations: AvailableAutomation[]
 	availableStages: Stages[]
 	availableActions: { id: string; name: string }[]
 }
@@ -30,7 +32,7 @@ type FullAutomationRunSearchParams = Omit<
 	AutomationRunSearchParams,
 	"automations" | "statuses" | "stages" | "actions"
 > & {
-	automations: Automations[]
+	automations: AvailableAutomation[]
 	statuses: AutomationRunComputedStatus[]
 	stages: Stages[]
 	actions: { id: string; name: string }[]
@@ -38,7 +40,7 @@ type FullAutomationRunSearchParams = Omit<
 
 type AutomationRunSearchContextType = {
 	queryParams: FullAutomationRunSearchParams
-	availableAutomations: Automations[]
+	availableAutomations: AvailableAutomation[]
 	availableStages: Stages[]
 	availableActions: { id: string; name: string }[]
 	inputValues: AutomationRunSearchParams

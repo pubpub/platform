@@ -14,8 +14,13 @@ import {
 } from "ui/empty"
 import { cn } from "utils"
 
+import { getAutomationRunStatus } from "~/actions/results"
 import { db } from "~/kysely/database"
-import { getAutomationRuns, getAutomationRunsCount } from "~/lib/server/actions"
+import {
+	type FullAutomationRun,
+	getAutomationRuns,
+	getAutomationRunsCount,
+} from "~/lib/server/actions"
 import { autoCache } from "~/lib/server/cache/autoCache"
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
 import { getStages } from "~/lib/server/stages"
@@ -38,7 +43,7 @@ type PaginatedAutomationRunListProps = {
 const PaginatedAutomationRunListInner = async (
 	props: PaginatedAutomationRunListProps & {
 		communitySlug: string
-		automationRunsPromise: Promise<AutoReturnType<typeof getAutomationRuns>["execute"]>
+		automationRunsPromise: Promise<FullAutomationRun[]>
 		filterParams: {
 			statuses?: string[]
 			actions?: string[]

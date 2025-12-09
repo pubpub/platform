@@ -9,6 +9,7 @@ import type {
 	NewActionInstances,
 	StagesId,
 } from "db/public"
+import type { AutoReturnType } from "../types"
 
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
@@ -76,6 +77,8 @@ export const setActionConfigDefaults = (
 			)
 	)
 }
+
+export type FullAutomationRun = AutoReturnType<typeof getAutomationRuns>["execute"][number]
 
 export const getAutomationRuns = (
 	communityId: CommunitiesId,

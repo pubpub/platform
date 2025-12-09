@@ -1,9 +1,9 @@
 "use client"
 
-import type { ProcessedPub } from "contracts"
-import type { Action, ActionRuns, AutomationRuns } from "db/public"
-import type { IconConfig } from "ui/dynamic-icon"
+import type { Action } from "db/public"
+import type { FullAutomationRun } from "~/lib/server/actions"
 
+import { useState } from "react"
 import Link from "next/link"
 import { User, Zap } from "lucide-react"
 
@@ -21,28 +21,7 @@ import { PubCardClient } from "~/app/components/pubs/PubCard/PubCardClient"
 import { formatDateAsPossiblyDistance } from "~/lib/dates"
 
 type AutomationRunCardProps = {
-	automationRun: AutomationRuns & {
-		inputPub: Omit<ProcessedPub<{ withPubType: true; withStage: false }>, "depth"> | null
-		actionRuns: (ActionRuns & {
-			pubId: string | null
-			pubTitle: string | null
-			json: unknown
-		})[]
-		automation: {
-			id: string
-			name: string
-			icon: IconConfig | null
-		} | null
-		user: {
-			id: string
-			firstName: string | null
-			lastName: string | null
-		} | null
-		stage: {
-			id: string
-			name: string
-		} | null
-	}
+	automationRun: FullAutomationRun
 	communitySlug: string
 }
 
@@ -98,77 +77,89 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 	const inputDescription = getInputDescription(automationRun)
 
 	const stage = automationRun.stage
+	const [isOpen, setIsOpen] = useState(false)
 
 	return (
 		<div
-			className="grid grid-cols-1 items-center gap-4 rounded-md border border-gray-200 bg-white p-4 lg:grid-cols-2"
+			className="gap-4 rounded-md border border-gray-200 bg-white p-4"
 			style={{ gridTemplateRows: "auto auto" }}
 			data-testid={`automation-run-card-${automationRun.id}`}
 		>
 			{/* Header - spans both columns on large screens */}
-			<Collapsible className="flex items-center gap-3 lg:col-span-2">
-				<div className="flex h-8 w-8 items-center justify-center rounded-md border p-0">
-					{automationRun.automation?.icon ? (
-						<DynamicIcon icon={automationRun.automation.icon} size={16} />
-					) : (
-						<Zap size={16} />
-					)}
-				</div>
-				<div className="flex flex-1 flex-col gap-1">
-					<div className="flex items-center justify-between">
-						<div className="flex flex-wrap items-center gap-2">
-							<h3 className="font-medium text-sm">
-								{automationRun.automation?.name || "Unknown Automation"}
-							</h3>
-							<AutomationRunStatusBadge status={status} />
-						</div>
-						{stage && (
-							<EllipsisMenu orientation="horizontal" triggerSize="icon">
-								<EllipsisMenuButton asChild>
-									<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
-										View Stage
-									</Link>
-								</EllipsisMenuButton>
-								<EllipsisMenuButton asChild>
-									<Link
-										href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}&tab=automations`}
-									>
-										Edit Stage
-									</Link>
-								</EllipsisMenuButton>
-								<EllipsisMenuButton asChild>
-									<Link
-										href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}&tab=automations&automation-id=${automationRun.automation?.id}`}
-									>
-										Edit Automation
-									</Link>
-								</EllipsisMenuButton>
-							</EllipsisMenu>
+			<Collapsible className="flex flex-col gap-3" onOpenChange={setIsOpen}>
+				<div className="flex items-center gap-3">
+					<div className="flex h-8 w-8 items-center justify-center rounded-md border p-0">
+						{automationRun.automation?.icon ? (
+							<DynamicIcon icon={automationRun.automation.icon} size={16} />
+						) : (
+							<Zap size={16} />
 						)}
 					</div>
-					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-1.5 text-gray-600 text-xs">
-							<User size={12} />
-							<span>{triggerDescription}</span>
-							<span>·</span>
-							<time
-								dateTime={new Date(automationRun.createdAt).toISOString()}
-								title={new Date(automationRun.createdAt).toLocaleString()}
-							>
-								{formatDateAsPossiblyDistance(new Date(automationRun.createdAt))}
-							</time>
+					<div className="flex flex-1 flex-col gap-1">
+						<div className="flex items-center justify-between">
+							<div className="flex flex-wrap items-center gap-2">
+								<h3 className="font-medium text-sm">
+									{automationRun.automation?.name || "Unknown Automation"}
+								</h3>
+								<AutomationRunStatusBadge
+									status={status}
+									className="px-2 py-0 text-xs"
+								/>
+							</div>
+							{stage && (
+								<EllipsisMenu orientation="horizontal" triggerSize="icon">
+									<EllipsisMenuButton asChild>
+										<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
+											View Stage
+										</Link>
+									</EllipsisMenuButton>
+									<EllipsisMenuButton asChild>
+										<Link
+											href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}&tab=automations`}
+										>
+											Edit Stage
+										</Link>
+									</EllipsisMenuButton>
+									<EllipsisMenuButton asChild>
+										<Link
+											href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}&tab=automations&automation-id=${automationRun.automation?.id}`}
+										>
+											Edit Automation
+										</Link>
+									</EllipsisMenuButton>
+								</EllipsisMenu>
+							)}
 						</div>
-						<CollapsibleTrigger className="text-end text-muted-foreground text-xs">
-							Show details
-						</CollapsibleTrigger>
+						<div className="flex items-center justify-between">
+							<div className="flex items-center gap-1.5 text-gray-600 text-xs">
+								<User size={12} />
+								<span>{triggerDescription}</span>
+								<span>·</span>
+								<time
+									dateTime={new Date(automationRun.createdAt).toISOString()}
+									title={new Date(automationRun.createdAt).toLocaleString()}
+								>
+									{formatDateAsPossiblyDistance(
+										new Date(automationRun.createdAt)
+									)}
+								</time>
+							</div>
+							<CollapsibleTrigger className="text-end text-muted-foreground text-xs">
+								{isOpen ? "Hide details" : "Show details"}
+							</CollapsibleTrigger>
+						</div>
 					</div>
 				</div>
-
-				<CollapsibleContent>
+				<CollapsibleContent className="flex flex-col gap-3">
+					<div className="flex flex-col gap-2 border-gray-200 border-t pt-3 lg:col-start-2 lg:w-64 lg:border-t-0 lg:pt-0">
+						<h4 className="font-medium text-xs">Input</h4>
+						{inputDescription}
+					</div>
 					{/* Actions - left side */}
 
-					{automationRun.actionRuns.length > 0 && (
-						<div className="ml-11">
+					<div className="flex flex-col gap-2 border-gray-200 border-t pt-3 lg:border-t-0 lg:pt-0">
+						<h4 className="font-medium text-xs">Actions</h4>
+						{automationRun.actionRuns.length > 0 && (
 							<Accordion type="multiple" className="w-full">
 								{automationRun.actionRuns.map((actionRun) => {
 									const action = actions[actionRun.action as Action]
@@ -202,12 +193,7 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 									)
 								})}
 							</Accordion>
-						</div>
-					)}
-
-					{/* Input - right side on desktop, below on mobile */}
-					<div className="flex flex-col gap-1.5 border-gray-200 border-t pt-3 lg:col-start-2 lg:w-64 lg:border-t-0 lg:pt-0">
-						{inputDescription}
+						)}
 					</div>
 				</CollapsibleContent>
 			</Collapsible>

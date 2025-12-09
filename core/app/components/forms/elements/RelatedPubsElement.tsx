@@ -1,8 +1,8 @@
 "use client"
 
-import type { ProcessedPub } from "contracts"
 import type { InputComponent, PubsId, PubValuesId } from "db/public"
 import type { FieldErrors } from "react-hook-form"
+import type { PubCardClientPub } from "~/app/components/pubs/PubCard/PubCardClient"
 import type { PubFieldFormElementProps } from "../PubFieldFormElement"
 import type {
 	ElementProps,
@@ -227,14 +227,16 @@ export const RelatedPubsElement = ({
 			? [
 					{
 						id: v.relatedPubId,
-						pub: v.relatedPub as ProcessedPub<{ withPubType: true }>,
+						pub: v.relatedPub as PubCardClientPub,
 					},
 				]
 			: []
 	)
 	// Keep track of related pubs in state, as we either have 'full' pubs from the initial values,
 	// or from the table when they are added
-	const [relatedPubs, setRelatedPubs] = useState(initialRelatedPubs.map((p) => p.pub))
+	const [relatedPubs, setRelatedPubs] = useState<PubCardClientPub[]>(
+		initialRelatedPubs.map((p) => p.pub)
+	)
 
 	const pubTitles = useMemo(() => {
 		return Object.fromEntries(relatedPubs.map((p) => [p.id, getPubTitle(p)]))
@@ -310,9 +312,7 @@ export const RelatedPubsElement = ({
 					setRelatedPubs(relatedPubs.filter((p) => p.id !== item.relatedPubId))
 				}
 
-				const handleChangeRelatedPubs = (
-					newPubs: ProcessedPub<{ withPubType: true }>[]
-				) => {
+				const handleChangeRelatedPubs = (newPubs: PubCardClientPub[]) => {
 					for (const [index, value] of field.value.entries()) {
 						const removed = !newPubs.find((p) => p.id === value.relatedPubId)
 						if (removed) {

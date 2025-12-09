@@ -12,7 +12,7 @@ import { cn } from "utils"
 import { isActionFailure, isActionSuccess } from "~/actions/results"
 
 type Props = {
-	actionRun: ActionRuns
+	actionRun: Pick<ActionRuns, "result" | "status" | "action" | "config" | "updatedAt" | "json">
 	className?: string
 }
 

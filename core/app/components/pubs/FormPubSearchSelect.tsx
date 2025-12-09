@@ -1,6 +1,6 @@
 "use client"
 
-import type { NonGenericProcessedPub, ProcessedPub } from "contracts"
+import type { ProcessedPub } from "contracts"
 import type { PubsId, PubTypesId } from "db/public"
 
 import { useCallback, useRef, useState } from "react"
@@ -14,14 +14,14 @@ import { cn } from "utils"
 
 import { client } from "~/lib/api"
 import { useCommunity } from "../providers/CommunityProvider"
-import { PubCardClient } from "./PubCard/PubCardClient"
+import { PubCardClient, type PubCardClientPub } from "./PubCard/PubCardClient"
 
 export type FormPubSearchSelectProps = {
 	formSlug: string
 	fieldSlug: string
 	currentPubId?: PubsId
-	selectedPubs?: NonGenericProcessedPub[]
-	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void
+	selectedPubs?: PubCardClientPub[]
+	onSelectedPubsChange?: (pubs: PubCardClientPub[]) => void
 	disabledPubIds?: PubsId[]
 	pubTypeIds?: PubTypesId[]
 	mode?: "single" | "multi"
@@ -97,7 +97,7 @@ export const FormPubSearchSelect = ({
 	})
 
 	const handlePubSelect = useCallback(
-		(pub: NonGenericProcessedPub, isSelected: boolean) => {
+		(pub: PubCardClientPub, isSelected: boolean) => {
 			if (!onSelectedPubsChange) {
 				return
 			}

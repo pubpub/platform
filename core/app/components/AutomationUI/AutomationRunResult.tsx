@@ -94,7 +94,13 @@ export const AutomationRunResult = ({
 	)
 }
 
-export const AutomationRunStatusBadge = ({ status }: { status: AutomationRunComputedStatus }) => {
+export const AutomationRunStatusBadge = ({
+	status,
+	className,
+}: {
+	status: AutomationRunComputedStatus
+	className?: string
+}) => {
 	const getStatusVariant = () => {
 		switch (status) {
 			case "success":
@@ -115,6 +121,7 @@ export const AutomationRunStatusBadge = ({ status }: { status: AutomationRunComp
 			variant={getStatusVariant()}
 			className={cn(
 				"capitalize",
+				className,
 				status === "scheduled" && "bg-yellow-500 hover:bg-yellow-600",
 				status === "partial" &&
 					"border-orange-500 bg-orange-500 text-white hover:bg-orange-600"

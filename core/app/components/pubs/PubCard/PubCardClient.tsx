@@ -15,10 +15,15 @@ import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/da
 import { getPubTitle } from "~/lib/pubs"
 import { useCommunity } from "../../providers/CommunityProvider"
 
+export type PubCardClientPub = Omit<
+	ProcessedPub<{ withPubType: true; withStage?: boolean }>,
+	"depth" | "communityId" | "values"
+>
+
 export type PubCardClientProps = {
-	pub: Omit<ProcessedPub<{ withPubType: true; withStage?: boolean }>, "depth">
+	pub: PubCardClientPub
 	selected?: boolean
-	onSelect?: (pub: ProcessedPub, selected: boolean) => void
+	onSelect?: (pub: PubCardClientPub, selected: boolean) => void
 	disabled?: boolean
 	showCheckbox?: boolean
 	className?: string
@@ -78,7 +83,11 @@ export const PubCardClient = ({
 					<h3 className="min-w-0 truncate">
 						<Link
 							href={`/c/${community.slug}/pubs/${pub.id}`}
-							className={cn("hover:underline", LINK_AFTER, "focus-within:underline")}
+							className={cn(
+								"hover:underline",
+								bigLink && LINK_AFTER,
+								"focus-within:underline"
+							)}
 						>
 							<div
 								className="[&_mark]:bg-yellow-300"

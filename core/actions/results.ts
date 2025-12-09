@@ -67,9 +67,9 @@ export type AutomationRunWithStatus = AutomationRuns & {
 	status: AutomationRunComputedStatus
 }
 
-export const getAutomationRunStatus = (
-	automationRun: AutomationRuns & { actionRuns: ActionRuns[] }
-): AutomationRunComputedStatus => {
+export const getAutomationRunStatus = (automationRun: {
+	actionRuns: { status: ActionRunStatus }[]
+}): AutomationRunComputedStatus => {
 	if (!automationRun.actionRuns || automationRun.actionRuns.length === 0) {
 		return ActionRunStatus.scheduled
 	}
