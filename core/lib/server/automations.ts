@@ -95,21 +95,9 @@ export class SequentialAutomationAlreadyExistsError extends AutomationAlreadyExi
 	}
 }
 
-export class RegularAutomationAlreadyExistsError extends AutomationAlreadyExistsError {
-	constructor(
-		public event: AutomationEvent,
-		public actionInstanceId: ActionInstancesId
-	) {
-		super(
-			` ${event} automation for ${actionInstanceId} already exists`,
-			event,
-			actionInstanceId
-		)
-	}
-}
-
 type AutomationUpsertProps = NewAutomations & {
 	id?: AutomationsId
+	stageId: StagesId | null
 	condition?: ConditionBlockFormValue
 	actionInstances: Omit<NewActionInstances, "automationId">[]
 	triggers: Omit<NewAutomationTriggers, "automationId" | "id" | "createdAt" | "updatedAt">[]
@@ -433,18 +421,16 @@ async function wouldCreateCycle(
 		)
 		.orderBy(["isCycle desc", "depth desc"])
 		.limit(1)
-		.execute()
+		.executeTakeFirst()
 
-	if (result.length === 0) {
+	if (!result) {
 		return {
 			hasCycle: false,
 			exceedsMaxDepth: false,
 		}
 	}
 
-	const pathResult = result[0]
-
-	const fullPath = [sourceAutomationId, toBeRunAutomationId, ...pathResult.path]
+	const fullPath = [sourceAutomationId, ...result.path]
 
 	// get the automations for the path
 	const automations = await trx
@@ -462,8 +448,8 @@ async function wouldCreateCycle(
 	})
 
 	return {
-		hasCycle: pathResult.isCycle,
-		exceedsMaxDepth: !pathResult.isCycle && pathResult.depth >= maxStackDepth,
+		hasCycle: result.isCycle,
+		exceedsMaxDepth: !result.isCycle && result.depth >= maxStackDepth,
 		path: filledInPath,
 	} as
 		| {

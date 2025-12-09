@@ -34,34 +34,19 @@ const seed = createSeed({
 	},
 	stages: {
 		"Stage 1": {
-			actions: {
-				"1": {
-					action: Action.log,
-					name: "1",
-					config: {},
-				},
-				"2": {
-					action: Action.log,
-					name: "2",
-					config: {},
-				},
-				"3": {
-					action: Action.log,
-					name: "3",
-					config: {},
-				},
-				"4": {
-					action: Action.log,
-					name: "4",
-					config: {},
-				},
-			},
 			automations: {
-				"1": {
+				// need to be ordered like this unfortunately
+				"3": {
 					triggers: [
 						{
-							event: AutomationEvent.automationSucceeded,
-							sourceAutomation: "2",
+							event: AutomationEvent.pubInStageForDuration,
+							config: {
+								duration: 1000,
+								interval: "minute",
+							},
+						},
+						{
+							event: AutomationEvent.pubLeftStage,
 							config: {},
 						},
 					],
@@ -72,7 +57,6 @@ const seed = createSeed({
 						},
 					],
 				},
-
 				"2": {
 					triggers: [
 						{
@@ -88,17 +72,11 @@ const seed = createSeed({
 						},
 					],
 				},
-				"3": {
+				"1": {
 					triggers: [
 						{
-							event: AutomationEvent.pubInStageForDuration,
-							config: {
-								duration: 1000,
-								interval: "s",
-							},
-						},
-						{
-							event: AutomationEvent.pubLeftStage,
+							event: AutomationEvent.automationSucceeded,
+							sourceAutomation: "2",
 							config: {},
 						},
 					],
@@ -165,46 +143,10 @@ describe("automations.db", () => {
 				},
 			],
 			communityId: community.community.id,
+			stageId: community.stages["Stage 1"].id,
 		})
 
 		expect(automation).toBeDefined()
-	})
-
-	it("should throw a RegularAutomationAlreadyExistsError if a regular automation already exists", async () => {
-		const {
-			upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
-			RegularAutomationAlreadyExistsError,
-		} = await import("./automations")
-		await expect(
-			createOrUpdateAutomationWithCycleCheck({
-				id: community.stages["Stage 1"].automations["3"].id,
-				name: "3",
-				actionInstances: community.stages["Stage 1"].automations["3"].actionInstances,
-				triggers: [
-					{
-						event: AutomationEvent.pubLeftStage,
-						config: {},
-					},
-				],
-				communityId: community.community.id,
-			})
-		).rejects.toThrow(RegularAutomationAlreadyExistsError)
-	})
-
-	it("should throw a SequentialAutomationAlreadyExistsError if a sequential automation already exists", async () => {
-		const {
-			upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
-			SequentialAutomationAlreadyExistsError,
-		} = await import("./automations")
-		await expect(
-			createOrUpdateAutomationWithCycleCheck({
-				id: community.stages["Stage 1"].automations["1"].id,
-				name: "1",
-				actionInstances: community.stages["Stage 1"].automations["1"].actionInstances,
-				triggers: community.stages["Stage 1"].automations["1"].triggers,
-				communityId: community.community.id,
-			})
-		).rejects.toThrow(SequentialAutomationAlreadyExistsError)
 	})
 
 	it("should throw a AutomationConfigError if the config is invalid", async () => {
@@ -217,7 +159,16 @@ describe("automations.db", () => {
 				id: community.stages["Stage 1"].automations["1"].id,
 				name: "1",
 				actionInstances: community.stages["Stage 1"].automations["1"].actionInstances,
-				triggers: community.stages["Stage 1"].automations["1"].triggers,
+				stageId: community.stages["Stage 1"].id,
+				triggers: [
+					{
+						event: AutomationEvent.pubInStageForDuration,
+						config: {
+							duration: "invalid",
+							interval: "s",
+						},
+					},
+				],
 				communityId: community.community.id,
 			})
 		).rejects.toThrowError(AutomationConfigError)
@@ -232,8 +183,16 @@ describe("automations.db", () => {
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					name: "3",
+					id: community.stages["Stage 1"].automations["3"].id,
+					stageId: community.stages["Stage 1"].id,
 					actionInstances: community.stages["Stage 1"].automations["3"].actionInstances,
-					triggers: community.stages["Stage 1"].automations["3"].triggers,
+					triggers: [
+						{
+							event: AutomationEvent.automationSucceeded,
+							sourceAutomationId: community.stages["Stage 1"].automations["1"].id,
+							config: {},
+						},
+					],
 					communityId: community.community.id,
 				})
 			).rejects.toThrow(AutomationCycleError)
@@ -241,9 +200,17 @@ describe("automations.db", () => {
 			// should also happen for ActionFailed
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
+					id: community.stages["Stage 1"].automations["3"].id,
+					stageId: community.stages["Stage 1"].id,
 					name: "3",
 					actionInstances: community.stages["Stage 1"].automations["3"].actionInstances,
-					triggers: community.stages["Stage 1"].automations["3"].triggers,
+					triggers: [
+						{
+							event: AutomationEvent.automationFailed,
+							sourceAutomationId: community.stages["Stage 1"].automations["1"].id,
+							config: {},
+						},
+					],
 					communityId: community.community.id,
 				})
 			).rejects.toThrow(AutomationCycleError)
@@ -251,9 +218,17 @@ describe("automations.db", () => {
 			// just to check that if we have 2->1, 1->2 will create a cycle
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
+					id: community.stages["Stage 1"].automations["2"].id,
+					stageId: community.stages["Stage 1"].id,
 					name: "2",
 					actionInstances: community.stages["Stage 1"].automations["2"].actionInstances,
-					triggers: community.stages["Stage 1"].automations["2"].triggers,
+					triggers: [
+						{
+							event: AutomationEvent.automationSucceeded,
+							sourceAutomationId: community.stages["Stage 1"].automations["1"].id,
+							config: {},
+						},
+					],
 					communityId: community.community.id,
 				})
 			).rejects.toThrow(AutomationCycleError)
@@ -266,6 +241,7 @@ describe("automations.db", () => {
 				createOrUpdateAutomationWithCycleCheck({
 					name: "1",
 					actionInstances: community.stages["Stage 1"].automations["1"].actionInstances,
+					stageId: community.stages["Stage 1"].id,
 					triggers: community.stages["Stage 1"].automations["1"].triggers,
 					communityId: community.community.id,
 				})
@@ -277,13 +253,23 @@ describe("automations.db", () => {
 				upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
 				AutomationMaxDepthError,
 			} = await import("./automations")
+			// we edit "3" to complete the 4->3->2->1
+			// and set max_stack_depth to 3
 			await expect(
 				createOrUpdateAutomationWithCycleCheck(
 					{
+						id: community.stages["Stage 1"].automations["3"].id,
 						name: "3",
+						stageId: community.stages["Stage 1"].id,
 						actionInstances:
 							community.stages["Stage 1"].automations["3"].actionInstances,
-						triggers: community.stages["Stage 1"].automations["3"].triggers,
+						triggers: [
+							{
+								event: AutomationEvent.automationSucceeded,
+								sourceAutomationId: community.stages["Stage 1"].automations["4"].id,
+								config: {},
+							},
+						],
 						communityId: community.community.id,
 					},
 					3

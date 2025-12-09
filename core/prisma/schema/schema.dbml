@@ -847,7 +847,7 @@ Ref: automation_runs.inputPubId > pubs.id [delete: Cascade]
 
 Ref: automation_runs.sourceAutomationRunId - automation_runs.id [delete: Set Null]
 
-Ref: action_runs.actionInstanceId > action_instances.id [delete: Cascade]
+Ref: action_runs.actionInstanceId > action_instances.id [delete: Set Null]
 
 Ref: action_runs.automationRunId > automation_runs.id
 

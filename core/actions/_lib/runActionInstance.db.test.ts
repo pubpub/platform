@@ -124,13 +124,16 @@ describe("runAutomation", () => {
 			stack: [],
 			automationId: stages.Submission.automations["1"].id,
 		})
+		expect(result.actionRuns).toHaveLength(1)
 
 		expect(result).toMatchObject({
 			success: true,
-			report: {
-				report: "Logged out some data, check your console.",
-				data: {},
-			},
+			actionRuns: [
+				{
+					report: "Logged out some data, check your console.",
+					data: {},
+				},
+			],
 		})
 
 		const actionRuns = await getTrx()

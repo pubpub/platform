@@ -1347,34 +1347,48 @@ export async function seedCommunity<
 			continue
 		}
 
-		for (const [automationName, automation] of Object.entries(stage.automations)) {
+		const automations = Object.entries(stage.automations).map(
+			([automationName, automation]) => {
+				return {
+					name: automationName,
+					id: crypto.randomUUID() as AutomationsId,
+					...automation,
+					actions: automation.actions.map((action) => ({
+						id: crypto.randomUUID() as ActionInstancesId,
+						...action,
+					})),
+				}
+			}
+		)
+
+		// this is really silly, but since some automations can be referential it makes sense to run them twice to make sure the reference is valid
+		const automationsTwice = [...automations, ...automations]
+		for (const automation of automationsTwice) {
 			const createdAutomation = await upsertAutomation(
 				{
-					name: automationName,
+					id: automation.id,
+					name: automation.name,
 					communityId: communityId,
-					// description: automation.description,
 					actionInstances: automation.actions.map((action) => ({
 						id: action.id,
 						config: action.config,
 						action: action.action,
 					})),
 					conditionEvaluationTiming: automation.timing,
-
-					// TODO: do this differetly
-					// sourceAutomationId:
 					stageId: stage.id,
-					// sourceActionInstanceId: createdActions.find(
-					// 	(action) => action.name === automation.sourceAction
-					// )?.id,
-					triggers: automation.triggers.map((trigger) => ({
-						event: trigger.event,
-						config: trigger.config,
-						sourceAutomationId: trigger.sourceAutomation
-							? initialCreatedAutomations.find(
+					triggers: automation.triggers.map((trigger) => {
+						const sourceAutomation = trigger.sourceAutomation
+							? initialCreatedAutomations.findLast(
 									(automation) => automation.name === trigger.sourceAutomation
-								)?.id
-							: undefined,
-					})),
+								)
+							: undefined
+
+						return {
+							event: trigger.event,
+							config: trigger.config,
+							sourceAutomationId: sourceAutomation?.id,
+						}
+					}),
 					condition: automation.condition
 						? {
 								// this cast is just to set the rank type, it's annoying to have to specify the rank manually in the seed
