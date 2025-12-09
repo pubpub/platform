@@ -2,16 +2,18 @@
 
 import type { FormElements, PubFieldElement } from "~/app/components/forms/types"
 
-import { useEffect } from "react"
+import { useEffect, useId, useState } from "react"
 import { skipToken } from "@tanstack/react-query"
+import { Braces } from "lucide-react"
 import { Controller, useWatch } from "react-hook-form"
 
-import { Action } from "db/public"
+import { Button } from "ui/button"
+import { ButtonGroup } from "ui/button-group"
 import { Checkbox } from "ui/checkbox"
 import { Confidence } from "ui/customRenderers/confidence/confidence"
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload"
 import { DatePicker } from "ui/date-picker"
-import { FieldLabel, FieldSet } from "ui/field"
+import { Field, FieldError, FieldLabel, FieldSet } from "ui/field"
 import { Input } from "ui/input"
 import { MultiValueInput } from "ui/multivalue-input"
 import { RadioGroup, RadioGroupItem } from "ui/radio-group"
@@ -19,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { Skeleton } from "ui/skeleton"
 import { StagesSelect } from "ui/stages"
 import { Textarea } from "ui/textarea"
+import { cn } from "utils"
 
 import { upload } from "~/app/components/forms/actions"
 import { FileUploadPreview } from "~/app/components/forms/FileUpload"
@@ -27,8 +30,9 @@ import { useCommunity } from "~/app/components/providers/CommunityProvider"
 import { client } from "~/lib/api"
 import { useServerAction } from "~/lib/serverActions"
 import { ActionField } from "../_lib/ActionField"
+import { ActionFieldJsonataInput } from "../_lib/ActionFieldJsonataInput"
 import { useActionForm } from "../_lib/ActionForm"
-import { JsonataFieldWrapper } from "../_lib/JsonataFieldWrapper"
+import { isJsonTemplate } from "../_lib/schemaWithJsonFields"
 
 const getDefaultValueForComponent = (component: string | null): unknown => {
 	switch (component) {
@@ -115,28 +119,94 @@ type CreatePubFormFieldProps = {
 	renderInput: (field: any) => React.ReactNode
 }
 
+type InputState = {
+	mode: "normal" | "jsonata"
+	jsonValue: string
+	normalValue: unknown
+}
+
 const CreatePubFormField = ({ element, control, renderInput }: CreatePubFormFieldProps) => {
 	const fieldName = `pubValues.${element.id}`
+	const labelId = useId()
 	const val = useWatch({ control, name: fieldName })
+
+	// Initialize state based on whether the current value is a JSONata template
+	const [inputState, setInputState] = useState<InputState>(() => {
+		const isJsonata = isJsonTemplate(val)
+		return {
+			mode: isJsonata ? "jsonata" : "normal",
+			jsonValue: isJsonata ? (val as string) : "",
+			normalValue: isJsonata ? "" : val,
+		}
+	})
+
+	// Sync state when external value changes
+	useEffect(() => {
+		setInputState((prev) => ({
+			...prev,
+			jsonValue: prev.mode === "jsonata" ? val : prev.jsonValue,
+			normalValue: prev.mode === "normal" ? val : prev.normalValue,
+		}))
+	}, [val])
 
 	return (
 		<Controller
 			name={fieldName}
 			control={control}
 			render={({ field, fieldState }) => (
-				<JsonataFieldWrapper
-					fieldName={field.name}
-					value={val}
-					label={element.label ?? element.fieldName}
-					required={!!element.required}
-					actionName={Action.createPub}
-					configKey={`pubValues.${element.id}`}
-					actionAccepts={["pub", "json"]}
-					contextType="configure"
-					field={field}
-					fieldState={fieldState}
-					renderInput={renderInput}
-				/>
+				<Field data-invalid={fieldState.invalid}>
+					<div className="flex flex-row items-center justify-between space-x-2">
+						<FieldLabel
+							htmlFor={field.name}
+							aria-required={!!element.required}
+							id={labelId}
+						>
+							{element.label ?? element.fieldName}
+							{element.required && <span className="-ml-1 text-red-500">*</span>}
+						</FieldLabel>
+						<ButtonGroup>
+							<Button
+								variant="ghost"
+								size="icon"
+								type="button"
+								aria-label={`Toggle JSONata mode for ${element.label ?? element.fieldName}`}
+								data-testid={`toggle-jsonata-${field.name}`}
+								className={cn(
+									"font-mono font-semibold text-gray-900 hover:bg-amber-50",
+									"transition-colors duration-200",
+									inputState.mode === "jsonata" &&
+										"border-orange-400 bg-orange-50 text-orange-900"
+								)}
+								onClick={() => {
+									const newMode =
+										inputState.mode === "jsonata" ? "normal" : "jsonata"
+									field.onChange(
+										newMode === "jsonata"
+											? inputState.jsonValue
+											: inputState.normalValue
+									)
+									setInputState((prev) => ({
+										...prev,
+										mode: newMode,
+									}))
+								}}
+							>
+								<Braces size={14} />
+							</Button>
+						</ButtonGroup>
+					</div>
+					{inputState.mode === "jsonata" ? (
+						<ActionFieldJsonataInput
+							aria-labelledby={labelId}
+							field={field}
+							isDefaultField={false}
+							actionAccepts={["pub", "json"]}
+						/>
+					) : (
+						renderInput(field)
+					)}
+					{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+				</Field>
 			)}
 		/>
 	)
