@@ -128,7 +128,7 @@ export type ActionSuccess = {
 	/**
 	 * Optionally provide a report to be displayed to the user
 	 */
-	report?: React.ReactNode
+	report?: string
 	data: unknown
 }
 
@@ -146,14 +146,14 @@ export type SequentialAutomationEvent = (typeof sequentialAutomationEvents)[numb
 
 export const isSequentialAutomationEvent = (
 	event: AutomationEvent
-): event is SequentialAutomationEvent => sequentialAutomationEvents.includes(event as any)
+): event is SequentialAutomationEvent => sequentialAutomationEvents.some((e) => e === event)
 
 export const schedulableAutomationEvents = [AutomationEvent.pubInStageForDuration] as const
 export type SchedulableAutomationEvent = (typeof schedulableAutomationEvents)[number]
 
 export const isSchedulableAutomationEvent = (
 	event: AutomationEvent
-): event is SchedulableAutomationEvent => schedulableAutomationEvents.includes(event as any)
+): event is SchedulableAutomationEvent => schedulableAutomationEvents.some((e) => e === event)
 
 export type EventAutomationOptionsBase<
 	E extends AutomationEvent,

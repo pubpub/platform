@@ -83,7 +83,9 @@ export const AutomationRunForm = (props: Props) => {
 				skipConditionCheck: skipConditionCheck && hasConditions,
 			})
 
+			console.log(result)
 			if (isActionSuccess(result)) {
+				console.log(result)
 				toast({
 					title:
 						"title" in result && typeof result.title === "string"
@@ -91,9 +93,7 @@ export const AutomationRunForm = (props: Props) => {
 							: `Successfully ran ${props.automation.name || action.niceName}`,
 					variant: "default",
 					description: (
-						<div className="max-h-40 max-w-sm overflow-auto">
-							{result.report?.report}
-						</div>
+						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>
 					),
 				})
 				return
@@ -179,10 +179,10 @@ export const AutomationRunForm = (props: Props) => {
 									showSkipConditionsOption ? (
 										<FormSubmitButtonWithDropdown
 											formState={formState}
-											idleText="Run Automation"
-											pendingText="Running Automation..."
-											successText="Automation Ran"
-											errorText="Failed to run automation"
+											idleText="Run "
+											pendingText="Running ..."
+											successText="Done"
+											errorText="Error"
 											type="submit"
 											dropdownOptions={[
 												{
@@ -195,10 +195,10 @@ export const AutomationRunForm = (props: Props) => {
 									) : (
 										<FormSubmitButton
 											formState={formState}
-											idleText="Run Automation"
-											pendingText="Running Automation..."
-											successText="Automation Ran"
-											errorText="Failed to run automation"
+											idleText="Run"
+											pendingText="Running ..."
+											successText="Done"
+											errorText="Error"
 											type="submit"
 										/>
 									)

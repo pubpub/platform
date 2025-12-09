@@ -2,6 +2,8 @@ import type * as React from "react"
 import type { DefaultValues } from "react-hook-form"
 import type { z } from "zod"
 
+import { fromError } from "zod-validation-error/v3"
+
 // TODO: This should support recursive ZodEffects but TypeScript doesn't allow circular type definitions.
 type ZodObjectOrWrappedBase = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>
 type ZodObjectOrWrappedBaseOptional = z.ZodOptional<ZodObjectOrWrappedBase>
@@ -176,4 +178,11 @@ export function zodToHtmlInputProps(
 	}
 
 	return inputProps
+}
+
+/**
+ * To be replaced with zod v4's prettifyZodError once we upgrade
+ */
+export const prettifyZodError = (error: unknown) => {
+	return fromError(error).toString()
 }

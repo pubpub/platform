@@ -14,9 +14,7 @@ import type {
 } from "db/public"
 import type { BaseActionInstanceConfig, FullAutomation, Json } from "db/types"
 import type { Kysely } from "kysely"
-import type { ZodError } from "zod"
 import type { run as logRun } from "../log/run"
-import type { ActionSuccess } from "../types"
 
 import { captureException } from "@sentry/nextjs"
 import { jsonArrayFrom } from "kysely/helpers/postgres"
@@ -44,6 +42,7 @@ import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
 import { getCommunity } from "~/lib/server/community"
 import { type CommunityStage, getStages } from "~/lib/server/stages"
 import { isClientExceptionOptions } from "~/lib/serverActions"
+import { prettifyZodError } from "~/lib/zod"
 import { getActionByName } from "../api"
 import { ActionConfigBuilder } from "./ActionConfigBuilder"
 import { evaluateConditions } from "./evaluateConditions"
@@ -117,7 +116,7 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 		})
 		return {
 			success: false,
-			error: "No input found",
+			report: "No input found",
 			config: args.actionInstance.config as BaseActionInstanceConfig,
 		}
 	}
@@ -130,7 +129,7 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 		})
 		return {
 			success: false,
-			error: "Action not found",
+			report: "Action not found",
 			config: args.actionInstance.config as BaseActionInstanceConfig,
 		}
 	}
@@ -173,7 +172,9 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			success: false,
 			title: "Invalid action configuration",
 			error: result.error.message,
-			cause: result.error.zodError as ZodError<any>,
+			report: result.error.zodError
+				? prettifyZodError(result.error.zodError)
+				: "Something went wrong while validating the action configuration, but no error was provided",
 			config: resultConfig,
 		}
 	}
@@ -211,8 +212,8 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			return {
 				success: false,
 				title: result.title,
-				error: result.error,
-				cause: result.cause,
+				error: result.cause,
+				report: result.error,
 				config,
 			}
 		}
@@ -220,8 +221,8 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 		// handle legacy ActionSuccess format
 		return {
 			success: true,
-			report: (result as ActionSuccess).report,
-			data: (result as ActionSuccess).data,
+			report: result.report,
+			data: result.data,
 			config,
 		}
 	} catch (error) {
@@ -231,8 +232,7 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 		return {
 			success: false,
 			title: "Failed to run action",
-			error: error.message,
-			cause: error,
+			report: "Something unexpected happened",
 			config: config,
 		}
 	}
@@ -339,7 +339,7 @@ export async function runAutomation(
 				return {
 					success: false,
 					title: "Failed to evaluate conditions",
-					error: error.message,
+					report: error.message,
 					stack: args.stack,
 					actionRuns: [],
 				}
@@ -357,7 +357,7 @@ export async function runAutomation(
 					success: false,
 					actionRuns: [],
 					title: "Automation condition not met",
-					error: evaluationResult.flatMessages.map((m) => m.message).join(", "),
+					report: evaluationResult.flatMessages.map((m) => m.message).join(", "),
 					stack: args.stack,
 				}
 			}
@@ -400,58 +400,59 @@ export async function runAutomation(
 		userId: isActionUserInitiated ? args.userId : undefined,
 	})
 
+	// run all action instances sequentially
 	const results: (ActionRunResult & {
 		actionInstance: FullAutomation["actionInstances"][number]
 		actionRunId: ActionRunsId
-	})[] = await Promise.all(
-		automation.actionInstances.map(async (ai) => {
-			const correcspondingActionRun = automationRun.actionRuns.find(
-				(ar) => ar.actionInstanceId === ai.id
-			)
-			if (!correcspondingActionRun) {
-				throw new Error(`Action run not found for action instance ${ai.id}`)
-			}
-			const result = await runActionInstance({
-				...args,
-				actionInstance: ai,
-				actionRunId: correcspondingActionRun.id,
-				stageId: expect(automation.stageId),
-				community,
-				manualActionInstanceOverrideArgs:
-					args.manualActionInstancesOverrideArgs?.[ai.id] ?? null,
-				json: args.json,
-				stage,
-				pub: pub ?? undefined,
-				automation,
-			})
-
-			logger[result.success === false ? "error" : "info"]({
-				msg: "Automation run finished",
-				pubId: args.pubId,
-				actionInstanceId: ai.id,
-				status: result.success ? ActionRunStatus.success : ActionRunStatus.failure,
-				result,
-			})
-
-			if (result.success === false) {
-				return {
-					success: false,
-					title: "Failed to run action",
-					error: result.error,
-					cause: result.cause,
-					config: result.config,
-					actionInstance: ai,
-					actionRunId: correcspondingActionRun.id,
-				}
-			}
-
-			return {
-				...result,
-				actionInstance: ai,
-				actionRunId: correcspondingActionRun.id,
-			}
+	})[] = []
+	for (const ai of automation.actionInstances) {
+		const correcspondingActionRun = automationRun.actionRuns.find(
+			(ar) => ar.actionInstanceId === ai.id
+		)
+		if (!correcspondingActionRun) {
+			throw new Error(`Action run not found for action instance ${ai.id}`)
+		}
+		const result = await runActionInstance({
+			...args,
+			actionInstance: ai,
+			actionRunId: correcspondingActionRun.id,
+			stageId: expect(automation.stageId),
+			community,
+			manualActionInstanceOverrideArgs:
+				args.manualActionInstancesOverrideArgs?.[ai.id] ?? null,
+			json: args.json,
+			stage,
+			pub: pub ?? undefined,
+			automation,
 		})
-	)
+
+		logger[result.success === false ? "error" : "info"]({
+			msg: "Automation run finished",
+			pubId: args.pubId,
+			actionInstanceId: ai.id,
+			status: result.success ? ActionRunStatus.success : ActionRunStatus.failure,
+			result,
+		})
+
+		if (result.success === false) {
+			results.push({
+				success: false,
+				title: "Failed to run action",
+				error: result.error,
+				report: result.report,
+				config: result.config,
+				actionInstance: ai,
+				actionRunId: correcspondingActionRun.id,
+			})
+			continue
+		}
+
+		results.push({
+			...result,
+			actionInstance: ai,
+			actionRunId: correcspondingActionRun.id,
+		})
+	}
 
 	const finalAutomationRun = await insertAutomationRun(trx, {
 		automationId: args.automationId,
@@ -477,7 +478,7 @@ export async function runAutomation(
 		return {
 			success: false,
 			title: "Automation run failed",
-			error: `${results
+			report: `${results
 				.filter((r) => r.success === false)
 				.map((r) => r.error)
 				.join(", ")}`,
@@ -491,7 +492,6 @@ export async function runAutomation(
 		title: "Automation run finished",
 		stack: [...args.stack, finalAutomationRun.id],
 		actionRuns: results,
-		data: results.map((r) => r.data).reduce((acc, curr) => ({ ...acc, ...curr }), {}),
 	}
 }
 

@@ -1,7 +1,8 @@
 "use server"
 
 import type { ActionInstancesId, UsersId } from "db/public"
-import type { ActionInstanceRunResult, RunAutomationArgs } from "../_lib/runAutomation"
+import type { RunAutomationArgs } from "../_lib/runAutomation"
+import type { AutomationRunResult } from "../results"
 
 import { AutomationEvent, Capabilities, MembershipType } from "db/public"
 
@@ -9,6 +10,7 @@ import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
 import { defineServerAction } from "~/lib/server/defineServerAction"
 import { runAutomation } from "../_lib/runAutomation"
+import { getActionByName } from "."
 
 export const runAutomationManual = defineServerAction(async function runActionInstance(
 	args: Omit<RunAutomationArgs, "userId" | "trigger"> & {
@@ -17,7 +19,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 		}
 		skipConditionCheck?: boolean
 	}
-): Promise<ActionInstanceRunResult> {
+) {
 	const { user } = await getLoginData()
 
 	if (!user) {
@@ -85,15 +87,31 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 	if (!result.success) {
 		return {
 			success: false,
-			error: result.error,
-			config: {},
+			error: result.report ?? formatReport(result.actionRuns),
+			config: result.actionRuns,
 		}
 	}
 
 	return {
 		success: true,
-		data: result.data,
-		report: result.report,
-		config: {},
+		report: result.report ?? formatReport(result.actionRuns),
+		config: result.actionRuns,
 	}
 })
+
+function formatReport(actionRuns: AutomationRunResult["actionRuns"]) {
+	return (
+		<ul className="prose-sm dark:prose-invert">
+			{actionRuns.map((r) => {
+				const action = getActionByName(r.actionInstance.action)
+
+				return (
+					<li key={r.actionInstance.id}>
+						<strong>{action.niceName}</strong> <br />
+						{r.report}
+					</li>
+				)
+			})}
+		</ul>
+	)
+}
