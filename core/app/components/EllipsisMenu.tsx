@@ -1,13 +1,16 @@
 "use client"
 
-import type { ReactNode } from "react"
-import type { ButtonProps } from "ui/button"
+import type { ComponentProps, ReactNode } from "react"
 
-import { createContext, forwardRef, useContext, useState } from "react"
 import { type LucideIcon, MoreHorizontal, MoreVertical } from "lucide-react"
 
 import { Button } from "ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "ui/dropdown-menu"
 import { cn } from "utils"
 
 /**
@@ -44,49 +47,35 @@ interface EllipsisMenuProps {
  * menu item that renders as a button. need forwardRef to pass on asChild
  * or else the menu won't close when the button is clicked
  */
-export const EllipsisMenuButton = forwardRef<
-	HTMLButtonElement,
-	ButtonProps & {
-		closeOnClick?: boolean
-		icon?: LucideIcon
-	}
->(({ children, className, onClick, closeOnClick = true, ...props }, ref) => {
-	const { setOpen } = useContext(EllipsisMenuContext)
+export const EllipsisMenuButton = ({
+	children,
+	className,
+	onClick,
+	closeOnClick = true,
+	...props
+}: ComponentProps<typeof DropdownMenuItem> & { closeOnClick?: boolean; icon?: LucideIcon }) => {
 	return (
-		<Button
-			onClick={async (e) => {
-				await onClick?.(e)
-				if (closeOnClick) {
-					setOpen(false)
+		<DropdownMenuItem
+			onClick={(e) => {
+				if (!closeOnClick) {
+					e.preventDefault()
 				}
+				onClick?.(e)
 			}}
-			variant="ghost"
-			size="sm"
-			className={cn("flex w-full justify-between", className)}
+			className={cn("flex w-full justify-start", !props.icon && "pl-8", className)}
 			{...props}
-			ref={ref}
 		>
 			{props.icon ? (
 				<>
+					<props.icon className="h-3 w-3" />
 					{children}
-					<props.icon className="h-4 w-4" size={14} />
 				</>
 			) : (
 				children
 			)}
-		</Button>
+		</DropdownMenuItem>
 	)
-})
-
-EllipsisMenuButton.displayName = "EllipsisMenuButton"
-
-export const EllipsisMenuContext = createContext<{
-	open: boolean
-	setOpen: (open: boolean) => void
-}>({
-	open: false,
-	setOpen: () => {},
-})
+}
 
 export const EllipsisMenu = ({
 	children,
@@ -96,43 +85,38 @@ export const EllipsisMenu = ({
 	side = "bottom",
 	sideOffset = 4,
 	triggerSize = "sm",
-	orientation = "vertical",
+	orientation = "horizontal",
 	disabled = false,
 }: EllipsisMenuProps) => {
-	const [open, setOpen] = useState(false)
-
 	return (
-		<EllipsisMenuContext.Provider value={{ open, setOpen }}>
-			<DropdownMenu open={open} onOpenChange={setOpen}>
-				<DropdownMenuTrigger asChild disabled={disabled}>
-					<Button
-						variant="ghost"
-						onClick={() => setOpen((prev) => !prev)}
-						size={triggerSize}
-						className={cn(
-							"h-8 w-8 p-0",
-							"hover:bg-gray-100 focus:bg-gray-100",
-							"transition-colors duration-150",
-							triggerClassName
-						)}
-					>
-						<span className="sr-only">Open menu</span>
-						{orientation === "horizontal" ? (
-							<MoreHorizontal className="h-4 w-4" />
-						) : (
-							<MoreVertical className="h-4 w-4" />
-						)}
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent
-					align={align}
-					side={side}
-					sideOffset={sideOffset}
-					className={cn("min-w-[160px] p-1", contentClassName)}
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild disabled={disabled}>
+				<Button
+					variant="ghost"
+					size={triggerSize}
+					className={cn(
+						"h-8 w-8 p-0",
+						"hover:bg-gray-100 focus:bg-gray-100",
+						"transition-colors duration-150",
+						triggerClassName
+					)}
 				>
-					{children}
-				</DropdownMenuContent>
-			</DropdownMenu>
-		</EllipsisMenuContext.Provider>
+					<span className="sr-only">Open menu</span>
+					{orientation === "horizontal" ? (
+						<MoreHorizontal className="h-4 w-4" />
+					) : (
+						<MoreVertical className="h-4 w-4" />
+					)}
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent
+				align={align}
+				side={side}
+				sideOffset={sideOffset}
+				className={cn("min-w-[160px] p-1", contentClassName)}
+			>
+				{children}
+			</DropdownMenuContent>
+		</DropdownMenu>
 	)
 }

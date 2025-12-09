@@ -4,7 +4,7 @@ import type { ActionRuns, AutomationRuns, CommunitiesId, StagesId } from "db/pub
 import type { FullAutomation } from "db/types"
 
 import { useCallback } from "react"
-import { Bot, Copy, Pencil, Trash2 } from "lucide-react"
+import { Copy, Pencil, Trash2 } from "lucide-react"
 
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "ui/item"
@@ -236,15 +236,11 @@ export const StagePanelAutomation = (props: Props) => {
 								communitySlug: community.slug,
 							})}
 						>
+							{/* <Bot size={14} /> */}
 							View run log
-							<Bot size={14} />
 						</Link>
 					</EllipsisMenuButton>
-					<EllipsisMenuButton
-						icon={Trash2}
-						onClick={onDeleteClick}
-						className="text-destructive"
-					>
+					<EllipsisMenuButton variant="destructive" icon={Trash2} onClick={onDeleteClick}>
 						Delete
 					</EllipsisMenuButton>
 				</EllipsisMenu>
