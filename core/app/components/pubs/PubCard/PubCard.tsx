@@ -47,7 +47,7 @@ export type PubCardProps = {
 	communitySlug: string
 	moveFrom?: CommunityStage["moveConstraintSources"]
 	moveTo?: CommunityStage["moveConstraints"]
-	manualAutomations?: FullAutomation[]
+	manualAutomations?: Omit<FullAutomation, "lastAutomationRun">[]
 	withSelection?: boolean
 	userId: UsersId
 	/* if true, overrides the view stage capability check */
@@ -251,7 +251,7 @@ const PubCardActions = async ({
 	canArchiveAllPubs,
 	canRunActionsAllPubs,
 }: {
-	manualAutomations: FullAutomation[]
+	manualAutomations: Omit<FullAutomation, "lastAutomationRun">[]
 	pub: ProcessedPub<{
 		withPubType: true
 		withRelatedPubs: false

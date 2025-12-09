@@ -15,13 +15,17 @@ type SortOption = {
 	label: string
 }
 
-type SortDropdownProps = {
-	options: SortOption[]
-	currentSort?: { id: string; desc: boolean }
-	onSortChange: (sortId: string, desc: boolean) => void
+type SortDropdownProps<T extends SortOption[]> = {
+	options: T
+	currentSort?: { id: T[number]["id"]; desc: boolean }
+	onSortChange: (sortId: T[number]["id"], desc: boolean) => void
 }
 
-export const SortDropdown = ({ options, currentSort, onSortChange }: SortDropdownProps) => {
+export const SortDropdown = <const T extends SortOption[]>({
+	options,
+	currentSort,
+	onSortChange,
+}: SortDropdownProps<T>) => {
 	const currentOption = options.find((opt) => opt.id === currentSort?.id)
 
 	return (

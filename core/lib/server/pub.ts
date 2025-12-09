@@ -1883,14 +1883,11 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						eb
 							.selectFrom("stages")
 							.selectAll("stages")
-							.$if(Boolean(withStageAutomations), (qb) => {
-								if (!withStageAutomations) {
-									throw new Error(
-										`withStageAutomations is required, is ${withStageAutomations}`
-									)
-								}
-
-								if (withStageAutomations.detail === "full") {
+							.$if(
+								withStageAutomations && withStageAutomations.detail === "full",
+								(qb) => {
+									if (!withStageAutomations)
+										throw new Error("withStageAutomations is required")
 									return qb.select((eb) =>
 										nestedFullAutomationsSelect(
 											eb,
@@ -1898,13 +1895,20 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 										).as("fullAutomations")
 									)
 								}
-
-								return qb.select((eb) =>
-									nestedBaseAutomationsSelect(eb, withStageAutomations.filter).as(
-										"baseAutomations"
+							)
+							.$if(
+								withStageAutomations && withStageAutomations.detail === "base",
+								(qb) => {
+									if (!withStageAutomations)
+										throw new Error("withStageAutomations is required")
+									return qb.select((eb) =>
+										nestedBaseAutomationsSelect(
+											eb,
+											withStageAutomations.filter
+										).as("baseAutomations")
 									)
-								)
-							})
+								}
+							)
 							.where("pt.stageId", "is not", null)
 							.whereRef("stages.id", "=", "pt.stageId")
 							.limit(1)

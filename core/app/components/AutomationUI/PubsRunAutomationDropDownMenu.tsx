@@ -12,7 +12,7 @@ import { cn } from "utils"
 import { AutomationRunForm } from "./AutomationRunForm"
 
 export type PubsRunAutomationDropDownMenuProps = {
-	automations: FullAutomation[]
+	automations: Omit<FullAutomation, "lastAutomationRun">[]
 	pubId: PubsId
 	testId?: string
 	/* accessible text for the button */

@@ -229,7 +229,6 @@ export const InitialCreatePubForm = ({
 						idleText="Create Pub"
 						successText="Redirecting..."
 						pendingText="Redirecting..."
-						isSubmitting={form.formState.isSubmitSuccessful}
 					/>
 				</div>
 			</form>

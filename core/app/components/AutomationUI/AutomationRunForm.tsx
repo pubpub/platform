@@ -49,7 +49,7 @@ const ActionCard = (props: ActionCardProps) => {
 }
 
 type Props = {
-	automation: FullAutomation
+	automation: Omit<FullAutomation, "lastAutomationRun">
 	pubId: PubsId
 	canOverrideAutomationConditions: boolean
 }

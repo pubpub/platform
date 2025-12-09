@@ -171,7 +171,7 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 					.selectAll("automation_triggers")
 					.whereRef("automation_triggers.automationId", "=", "automations.id")
 					.$if(!!options?.event, (qb) =>
-						qb.where("automation_triggers.event", "=", options!.event)
+						qb.where("automation_triggers.event", "=", options!.event!)
 					)
 					.$if(!!options?.sourceAutomationId, (qb) =>
 						qb.where(
@@ -233,7 +233,7 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 					eb
 						.selectFrom("automation_triggers")
 						.whereRef("automation_triggers.automationId", "=", "automations.id")
-						.where("automation_triggers.event", "=", options!.event)
+						.where("automation_triggers.event", "=", options!.event!)
 						.$if(!!options?.sourceAutomationId, (qb) =>
 							qb.where(
 								"automation_triggers.sourceAutomationId",

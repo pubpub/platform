@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 import type { ButtonProps } from "ui/button"
 
 import { createContext, forwardRef, useContext, useState } from "react"
-import { MoreHorizontal, MoreVertical } from "lucide-react"
+import { type LucideIcon, MoreHorizontal, MoreVertical } from "lucide-react"
 
 import { Button } from "ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu"
@@ -48,6 +48,7 @@ export const EllipsisMenuButton = forwardRef<
 	HTMLButtonElement,
 	ButtonProps & {
 		closeOnClick?: boolean
+		icon?: LucideIcon
 	}
 >(({ children, className, onClick, closeOnClick = true, ...props }, ref) => {
 	const { setOpen } = useContext(EllipsisMenuContext)
@@ -65,7 +66,14 @@ export const EllipsisMenuButton = forwardRef<
 			{...props}
 			ref={ref}
 		>
-			{children}
+			{props.icon ? (
+				<>
+					{children}
+					<props.icon className="h-4 w-4" size={14} />
+				</>
+			) : (
+				children
+			)}
 		</Button>
 	)
 })

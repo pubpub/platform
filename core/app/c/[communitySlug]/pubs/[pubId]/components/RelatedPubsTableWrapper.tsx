@@ -28,10 +28,10 @@ const getRelatedPubRunActionsDropdowns = (
 	row: FullProcessedPubWithForm,
 	userCanOverrideAutomationConditions: boolean
 ) => {
-	return row.stage && row.stage?.automations.length > 0 ? (
+	return row.stage && row.stage?.fullAutomations.length > 0 ? (
 		<PubsRunAutomationsDropDownMenu
 			canOverrideAutomationConditions={userCanOverrideAutomationConditions}
-			automations={row.stage.automations}
+			automations={row.stage.fullAutomations}
 			pubId={row.id}
 		/>
 	) : (

@@ -135,7 +135,6 @@ export function ActionFieldJsonataTestPanel(props: {
 
 	const stages = useStages()
 	const stage = stages.find((s) => s.id === props.stageId)
-	console.log("stage", stage, props.stageId, stages)
 
 	const bodyWithAction = useMemo(() => {
 		return {

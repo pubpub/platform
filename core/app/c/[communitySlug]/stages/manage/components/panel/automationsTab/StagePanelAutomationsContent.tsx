@@ -10,6 +10,7 @@ import { ChevronLeft } from "lucide-react"
 import { Button } from "ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
+import { cn } from "utils"
 
 import { useAutomationId } from "../usePanelQueryParams"
 import { StagePanelAutomationForm } from "./StagePanelAutomationForm"
@@ -30,10 +31,10 @@ export function StagePanelAutomationsContent(props: Props) {
 	return (
 		<div className="relative flex h-full w-full">
 			<div
-				className="absolute inset-0 w-full space-y-2 transition-transform duration-300 ease-in-out"
-				style={{
-					transform: automationId ? "translateX(-110%)" : "translateX(0)",
-				}}
+				className={cn(
+					"absolute inset-0 w-full space-y-2 transition-transform duration-300 ease-in-out",
+					automationId ? "-translate-x-full" : "translate-x-0"
+				)}
 			>
 				<StagePanelAutomations
 					automations={props.automations}
@@ -44,10 +45,11 @@ export function StagePanelAutomationsContent(props: Props) {
 			</div>
 
 			<div
-				className="absolute inset-0 w-full transition-transform duration-300 ease-in-out"
-				style={{
-					transform: automationId ? "translateX(0)" : "translateX(110%)",
-				}}
+				className={cn(
+					"absolute inset-0 w-full transition-[transform,opacity] duration-300 ease-in-out",
+					automationId ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+				)}
+				aria-hidden={!automationId}
 			>
 				<Card className="h-full overflow-y-auto pt-0">
 					<CardHeader className="sticky top-0 z-10 flex items-center gap-3 bg-white pt-6 pb-4">

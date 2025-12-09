@@ -42,7 +42,6 @@ const meta: Meta<typeof PubCard> = {
 			{
 				id: "1" as AutomationsId,
 				name: "test",
-				lastAutomationRun: null,
 				triggers: [
 					{
 						event: AutomationEvent.manual,

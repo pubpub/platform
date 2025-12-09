@@ -6,13 +6,11 @@ import { MultiSelect } from "ui/multi-select"
 import { Separator } from "ui/separator"
 import { cn } from "utils"
 
-import { FilterPopover } from "~/app/c/[communitySlug]/_components/FilterPopover"
-import { SearchBar } from "~/app/c/[communitySlug]/_components/SearchBar"
-import { SortDropdown } from "~/app/c/[communitySlug]/_components/SortDropdown"
+import { FilterPopover } from "~/app/components/Search/FilterPopover"
+import { SearchBar } from "~/app/components/Search/SearchBar"
+import { SortDropdown } from "~/app/components/Search/SortDropdown"
 import { entries } from "~/lib/mapping"
 import { useAutomationRunSearch } from "./AutomationRunSearchProvider"
-
-const sortOptions = [{ id: "createdAt", label: "Created" }]
 
 const statuses = {
 	success: "Success",
@@ -128,10 +126,14 @@ export const AutomationRunSearch = (props: AutomationRunSearchProps) => {
 						</FilterPopover>
 
 						<SortDropdown
-							options={sortOptions}
+							options={[{ id: "createdAt", label: "Created" }]}
 							currentSort={queryParams.sort[0]}
 							onSortChange={(id, desc) =>
-								setFilters((old) => ({ ...old, sort: [{ id, desc }] }))
+								setFilters((old) => {
+									id
+
+									return { ...old, sort: [{ id, desc }] }
+								})
 							}
 						/>
 					</>

@@ -26,8 +26,8 @@ type AutomationRunCardProps = {
 }
 
 const getTriggerDescription = (automationRun: AutomationRunCardProps["automationRun"]): string => {
-	if (automationRun.user) {
-		return `${automationRun.user.firstName} ${automationRun.user.lastName}`
+	if (automationRun.sourceUser) {
+		return `${automationRun.sourceUser.firstName} ${automationRun.sourceUser.lastName}`
 	}
 
 	switch (automationRun.triggerEvent) {

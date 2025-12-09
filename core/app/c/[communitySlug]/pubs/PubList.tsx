@@ -130,7 +130,7 @@ const PaginatedPubListInner = async (
 						communitySlug={props.communitySlug}
 						moveFrom={stageForPub?.moveConstraintSources}
 						moveTo={stageForPub?.moveConstraints}
-						manualAutomations={stageForPub?.automations?.filter((automation) =>
+						manualAutomations={stageForPub?.fullAutomations?.filter((automation) =>
 							automation?.triggers.some(
 								(trigger) => trigger.event === AutomationEvent.manual
 							)
@@ -245,7 +245,7 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 		}),
 		getStages(
 			{ communityId: props.communityId, userId: props.userId },
-			{ withAutomations: AutomationEvent.manual }
+			{ withAutomations: { detail: "full", filter: [AutomationEvent.manual] } }
 		).execute(),
 		getPubFields({ communityId: props.communityId }).executeTakeFirstOrThrow(),
 	])

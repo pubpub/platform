@@ -69,7 +69,7 @@ test.describe.fixme("email action", () => {
 	const goToConfigureEmail = async (page: Page) => {
 		const stagesManagePage = new StagesManagePage(page, community.community.slug)
 		await stagesManagePage.goTo()
-		await stagesManagePage.openStagePanelTab("Test", "Actions")
+		await stagesManagePage.openStagePanelTab("Test", "Automations")
 		await page
 			.getByTestId("action-instance-Email")
 			.getByRole("button", { name: "Edit action" })

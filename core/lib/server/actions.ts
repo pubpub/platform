@@ -9,6 +9,7 @@ import type {
 	NewActionInstances,
 	StagesId,
 } from "db/public"
+import type { IconConfig } from "ui/dynamic-icon"
 import type { AutoReturnType } from "../types"
 
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
@@ -127,6 +128,7 @@ export const getAutomationRuns = (
 						.selectFrom("automations")
 						.whereRef("automations.id", "=", "automation_runs.automationId")
 						.select(["automations.id", "automations.name", "automations.icon"])
+						.$narrowType<{ icon: IconConfig | null }>()
 				).as("automation"),
 				jsonArrayFrom(
 					eb

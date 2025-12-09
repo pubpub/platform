@@ -215,11 +215,15 @@ export const nestedBaseAutomationsSelect = <EB extends ExpressionBuilder<PublicS
 	eb: EB,
 	filter: StageAutomationSelectOptions["filter"]
 ) => {
-	return eb
-		.selectFrom("automations")
-		.whereRef("automations.stageId", "=", "stages.id")
-		.selectAll("automations")
-		.$if(filter !== "all", (qb) => filterAutomationsByEvent(qb, filter as AutomationEvent[]))
+	return jsonArrayFrom(
+		eb
+			.selectFrom("automations")
+			.whereRef("automations.stageId", "=", "stages.id")
+			.selectAll("automations")
+			.$if(filter !== "all", (qb) =>
+				filterAutomationsByEvent(qb, filter as AutomationEvent[])
+			)
+	)
 }
 
 export const nestedFullAutomationsSelect = <EB extends ExpressionBuilder<PublicSchema, "stages">>(
@@ -337,18 +341,16 @@ export const getStages = (
 					)
 					.as("memberCount"),
 			])
-			.$if(withAutomations && withAutomations?.detail !== "count", (qb) =>
-				qb.select((eb) => {
-					if (withAutomations.detail === "full") {
-						return nestedFullAutomationsSelect(eb, withAutomations.filter).as(
-							"fullAutomations"
-						)
-					}
+			.$if(withAutomations && withAutomations?.detail === "full", (qb) =>
+				qb.select((eb) =>
+					nestedFullAutomationsSelect(eb, withAutomations.filter).as("fullAutomations")
+				)
+			)
 
-					return nestedBaseAutomationsSelect(eb, withAutomations.filter).as(
-						"baseAutomations"
-					)
-				})
+			.$if(withAutomations && withAutomations?.detail === "base", (qb) =>
+				qb.select((eb) =>
+					nestedBaseAutomationsSelect(eb, withAutomations.filter).as("baseAutomations")
+				)
 			)
 			.$if(withAutomations?.detail === "count", (qb) =>
 				qb.select((eb) => countAutomations(eb, withAutomations.filter))

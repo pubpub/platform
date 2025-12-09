@@ -125,7 +125,7 @@ export const GET = (req: NextRequest) => {
 			// setup heartbeat interval
 			interval = setInterval(() => {
 				logger.debug({ connectionId, msg: "sending heartbeat" })
-				send(connectionId, "heartbeat")
+				send({}, "heartbeat")
 			}, HEARTBEAT_INTERVAL)
 
 			// handle postgres notifications
@@ -174,7 +174,7 @@ export const GET = (req: NextRequest) => {
 					community: community.slug,
 				})
 
-				send(connectionId, "max-idle-timeout")
+				send({}, "max-idle-timeout")
 				await cleanup()
 			}, MAX_IDLE_TIME)
 		} catch (err) {

@@ -4,7 +4,7 @@ import type { ActionRuns, AutomationRuns, CommunitiesId, StagesId } from "db/pub
 import type { FullAutomation } from "db/types"
 
 import { useCallback } from "react"
-import { Bolt, Copy, Pencil, Trash2 } from "lucide-react"
+import { Bot, Copy, Pencil, Trash2 } from "lucide-react"
 
 import { DynamicIcon, type IconConfig } from "ui/dynamic-icon"
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "ui/item"
@@ -60,7 +60,7 @@ export const UpdateCircle = (
 					data-testid={`automation-run-${props.id}-update-circle`}
 					data-status={status}
 					className={cn(
-						"relative m-1 h-3 w-3 rounded-full transition-colors duration-200",
+						"relative m-1 h-2 w-2 rounded-full transition-colors duration-200",
 						{
 							"bg-green-500": status === "success",
 							"bg-red-500": status === "failure",
@@ -75,7 +75,7 @@ export const UpdateCircle = (
 					{props.stale && (
 						<span
 							data-testid={`automation-run-${props.id}-update-circle-stale`}
-							className="-top-0.5 absolute right-0 block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-800"
+							className="-top-0.5 absolute right-0 block h-1 w-1 animate-pulse rounded-full bg-blue-800"
 						></span>
 					)}
 				</div>
@@ -187,34 +187,47 @@ export const StagePanelAutomation = (props: Props) => {
 	const triggerIcons = automation.triggers.map((trigger) => getTriggerByName(trigger.event))
 
 	return (
-		<Item variant="outline" size="sm">
+		<Item variant="outline" size="sm" className="relative">
 			<ItemMedia>
 				<DynamicIcon icon={automation.icon as IconConfig} size={16} />
 			</ItemMedia>
-			<ItemContent className="w-full flex-row items-center justify-between">
-				<ItemTitle>{automation.name}</ItemTitle>
-				<div className="flex items-center gap-2 rounded-full border bg-gray-50 p-2">
-					{triggerIcons.map((icon) => (
-						<icon.display.icon key={icon.event} className="h-3 w-3 text-xs" />
-					))}
-				</div>
+			<ItemContent className="flex-row items-center justify-between truncate">
+				<ItemTitle title={automation.name} className="line-clamp-1 truncate font-normal">
+					<Link
+						href={`/c/${community.slug}/stages/manage?editingStageId=${props.stageId}&tab=automations&automationId=${automation.id}`}
+						onClick={(e) => {
+							// slightly nicer behavior, does not trigger server reload
+							e.preventDefault()
+							onEditClick()
+						}}
+					>
+						{automation.name}
+					</Link>
+				</ItemTitle>
 			</ItemContent>
 
 			<ItemActions>
-				{props.automation.lastAutomationRun && (
-					<UpdateCircle
-						{...props.automation.lastAutomationRun}
-						stale={isStale}
-						setStale={setIsStale}
-						setInitTime={setInitTime}
-					/>
-				)}
+				<div className="flex items-center gap-2 rounded-full">
+					{triggerIcons.map((icon) => (
+						<icon.display.icon key={icon.event} className="size-2.5 text-xs" />
+					))}
+				</div>
+				<div className="absolute top-0.5 left-0.5">
+					{props.automation.lastAutomationRun && (
+						<UpdateCircle
+							{...props.automation.lastAutomationRun}
+							stale={isStale}
+							setStale={setIsStale}
+							setInitTime={setInitTime}
+						/>
+					)}
+				</div>
 				<EllipsisMenu>
-					<EllipsisMenuButton onClick={onEditClick}>
-						<Pencil size={14} /> Edit
+					<EllipsisMenuButton icon={Pencil} onClick={onEditClick}>
+						Edit
 					</EllipsisMenuButton>
-					<EllipsisMenuButton onClick={onDuplicateClick}>
-						<Copy size={14} /> Duplicate
+					<EllipsisMenuButton icon={Copy} onClick={onDuplicateClick}>
+						Duplicate
 					</EllipsisMenuButton>
 					<EllipsisMenuButton asChild>
 						<Link
@@ -223,12 +236,16 @@ export const StagePanelAutomation = (props: Props) => {
 								communitySlug: community.slug,
 							})}
 						>
-							<Bolt size={14} />
 							View run log
+							<Bot size={14} />
 						</Link>
 					</EllipsisMenuButton>
-					<EllipsisMenuButton onClick={onDeleteClick} className="text-destructive">
-						<Trash2 size={14} /> Delete
+					<EllipsisMenuButton
+						icon={Trash2}
+						onClick={onDeleteClick}
+						className="text-destructive"
+					>
+						Delete
 					</EllipsisMenuButton>
 				</EllipsisMenu>
 			</ItemActions>

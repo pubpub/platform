@@ -518,8 +518,6 @@ export async function insertAutomationRun(
 		userId?: UsersId
 	}
 ) {
-	console.log("args.actionRuns _________________")
-	console.log(args.actionRuns)
 	const automatonRun = await autoRevalidate(
 		trx
 			.with("automationRun", (trx) =>
