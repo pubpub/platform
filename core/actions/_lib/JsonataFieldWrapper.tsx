@@ -34,41 +34,25 @@ const ActionFieldJsonTestPanel = dynamic(
 	}
 );
 
-// checks if value contains template syntax {{ }}
 const hasTemplateSyntax = (value: unknown): boolean => {
 	return typeof value === "string" && value.includes("{{");
 };
 
 export type JsonataFieldWrapperProps = {
-	/** The field name for identification */
 	fieldName: string;
-	/** The current field value (used to detect initial JSONata state) */
 	value: unknown;
-	/** Label to display for the field */
 	label?: string;
-	/** Whether the field is required */
 	required?: boolean;
-	/** Custom label ID (auto-generated if not provided) */
 	labelId?: string;
-	/** The action name for the test panel */
 	actionName: Action;
-	/** The config key for the test panel */
 	configKey: string;
-	/** What the action accepts (e.g., ["pub", "json"]) */
 	actionAccepts: readonly string[];
-	/** The context type for determining test panel behavior */
 	contextType: "run" | "configure" | "automation" | "default";
-	/** The pub ID if in run context */
 	pubId?: PubsId;
-	/** Whether this is a default field */
 	isDefaultField?: boolean;
-	/** The react-hook-form field object */
 	field: ControllerRenderProps<FieldValues, any>;
-	/** The react-hook-form field state */
 	fieldState: ControllerFieldState;
-	/** Render function for the normal (non-JSONata) input */
 	renderInput: (field: ControllerRenderProps<FieldValues, any>) => ReactNode;
-	/** Additional content to render after the input (e.g., description) */
 	children?: ReactNode;
 };
 

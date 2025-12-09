@@ -30,9 +30,6 @@ import { ActionField } from "../_lib/ActionField"
 import { useActionForm } from "../_lib/ActionForm"
 import { JsonataFieldWrapper } from "../_lib/JsonataFieldWrapper"
 
-/**
- * Get the default value for a form element based on its component type
- */
 const getDefaultValueForComponent = (component: string | null): unknown => {
 	switch (component) {
 		case "textInput":
@@ -61,9 +58,6 @@ const getDefaultValueForComponent = (component: string | null): unknown => {
 	}
 }
 
-/**
- * Create a map of element IDs to their default values based on component types
- */
 const createDefaultValuesFromElements = (elements: FormElements[]): Record<string, unknown> => {
 	const defaults: Record<string, unknown> = {}
 
@@ -79,10 +73,6 @@ const createDefaultValuesFromElements = (elements: FormElements[]): Record<strin
 	return defaults
 }
 
-/**
- * File upload input component for the createPub form.
- * Handles file uploads without a pubId (since we're creating a new pub).
- */
 const FileUploadInput = ({ field, elementId }: { field: any; elementId: string }) => {
 	const runUpload = useServerAction(upload)
 
@@ -125,10 +115,6 @@ type CreatePubFormFieldProps = {
 	renderInput: (field: any) => React.ReactNode
 }
 
-/**
- * Form field wrapper that provides JSONata interpolation support for pub field values.
- * Uses the shared JsonataFieldWrapper component for consistent JSONata UI.
- */
 const CreatePubFormField = ({ element, control, renderInput }: CreatePubFormFieldProps) => {
 	const fieldName = `pubValues.${element.id}`
 	const val = useWatch({ control, name: fieldName })
