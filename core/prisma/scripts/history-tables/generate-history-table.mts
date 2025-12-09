@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/suspicious/noConsole: is cli tool */
+
 import { spawnSync } from "node:child_process"
 import fs from "node:fs"
 import readline from "node:readline/promises"

@@ -71,7 +71,9 @@ const _result2 = (
 
 // approach 3: the pattern kysely's $if uses - accept any, return with typed output
 // this works because $if already expects SelectQueryBuilder<any, any, O & O2>
-export const addAutomationsSelection = <EB extends ExpressionBuilder<PublicSchema, 'stages'>>(eb: EB) => {
+export const addAutomationsSelection = <EB extends ExpressionBuilder<PublicSchema, "stages">>(
+	eb: EB
+) => {
 	// the explicit cast is needed because `any` types cause selectAll to lose type info
 	return jsonArrayFrom(
 		eb
@@ -86,7 +88,7 @@ const _result3 = (
 		.selectFrom("stages")
 		.innerJoin("PubsInStages", "PubsInStages.stageId", "stages.id")
 		.select("stages.id")
-		.$if(9+4 === 13, (qb) => qb.select(eb=>addAutomationsSelection(eb)))
+		.$if(9 + 4 === 13, (qb) => qb.select((eb) => addAutomationsSelection(eb)))
 		.executeTakeFirstOrThrow()
 ).automations
 // ^?
@@ -244,5 +246,3 @@ const _result5 = (
 		.executeTakeFirstOrThrow()
 ).automations
 // ^?
-
-

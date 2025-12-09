@@ -26,6 +26,3 @@ export function AddAutomationButton() {
 		</Button>
 	)
 }
-
-
-
