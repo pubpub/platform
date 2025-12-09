@@ -342,6 +342,12 @@ model AutomationRun {
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
   automationId String
 
+  // status is automatically computed by database trigger compute_automation_run_status()
+  // based on the aggregate status of all child action_runs
+  // null means no action_runs have been created yet
+  // 'scheduled' = all actions scheduled, 'pending' = mixed states, 'success' = all succeeded, 'failure' = any failed
+  status ActionRunStatus?
+
   triggerEvent  AutomationEvent
   triggerConfig Json?
   sourceUserId  String?
@@ -399,6 +405,7 @@ model ActionRun {
 
 enum ActionRunStatus {
   scheduled
+  pending
   success
   failure
 }

@@ -39,7 +39,6 @@ import { ApiError, getPubsWithRelatedValues } from "~/lib/server"
 import { getActionConfigDefaults, getAutomationRunById } from "~/lib/server/actions"
 import { MAX_STACK_DEPTH } from "~/lib/server/automations"
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
-import { getCommunity } from "~/lib/server/community"
 import { type CommunityStage, getStages } from "~/lib/server/stages"
 import { isClientExceptionOptions } from "~/lib/serverActions"
 import { prettifyZodError } from "~/lib/zod"
@@ -94,6 +93,247 @@ export type RunActionInstanceArgs = {
 	json: Json | undefined
 	stageId: StagesId
 	userId?: UsersId
+}
+
+type AutomationContext = {
+	pub: ProcessedPub<{
+		withPubType: true
+		withRelatedPubs: true
+		withStage: false
+		withValues: true
+	}> | null
+	automation: FullAutomation
+	community: Communities
+	stage: CommunityStage
+}
+
+/**
+ * load all necessary context for running an automation
+ * includes pub data, automation config, community info, and stage details
+ */
+async function loadAutomationContext(args: {
+	automationId: AutomationsId
+	pubId?: PubsId
+	communityId: CommunitiesId
+}): Promise<AutomationContext> {
+	const [pub, automation, community] = await Promise.all([
+		args.pubId
+			? await getPubsWithRelatedValues(
+					{ pubId: args.pubId, communityId: args.communityId },
+					{
+						withPubType: true,
+						withRelatedPubs: true,
+						withStage: false,
+						withValues: true,
+						depth: 3,
+					}
+				)
+			: null,
+		getAutomation(args.automationId),
+		// query community directly from db instead of using memoized getCommunity
+		// to avoid cache issues in tests
+		db
+			.selectFrom("communities")
+			.selectAll()
+			.where("id", "=", args.communityId)
+			.executeTakeFirst(),
+	])
+
+	if (!automation) {
+		throw new Error(`Automation ${args.automationId} not found`)
+	}
+
+	if (!community) {
+		throw new Error(`Community ${args.communityId} not found`)
+	}
+
+	const stage = await getStages({
+		communityId: args.communityId,
+		stageId: expect(automation.stageId, "Can't run automation without a stage"),
+		userId: null,
+	}).executeTakeFirstOrThrow(() => new Error(`Stage ${automation.stageId} not found`))
+
+	return { pub, automation, community, stage }
+}
+
+/**
+ * evaluate automation conditions at execution time if required
+ * returns null if conditions pass, or an error result if they fail
+ */
+async function evaluateAutomationConditions(args: {
+	automation: FullAutomation
+	skipConditionCheck?: boolean
+	pub: AutomationContext["pub"]
+	json?: Json
+	communitySlug: string
+	scheduledAutomationRunId?: AutomationRunsId
+	existingAutomationRun: {
+		actionRuns: { id: ActionRunsId; actionInstanceId: string | null; config: any }[]
+	} | null
+	stack: AutomationRunsId[]
+	trigger: { event: AutomationEvent; config: Record<string, unknown> | null }
+	communityId: CommunitiesId
+	userId?: UsersId
+	trx: Kysely<Database>
+}): Promise<AutomationRunResult | null> {
+	if (!args.automation?.condition || args.skipConditionCheck) {
+		return null
+	}
+
+	const automationTiming = args.automation.conditionEvaluationTiming as string | null | undefined
+	const shouldEvaluateNow =
+		automationTiming === "onExecution" ||
+		automationTiming === "both" ||
+		// if no timing is set, default to evaluating at execution time for backwards compatibility
+		!automationTiming
+
+	if (!shouldEvaluateNow) {
+		return null
+	}
+
+	const input = args.pub
+		? { pub: createPubProxy(args.pub, args.communitySlug) }
+		: { json: args.json ?? ({} as Json) }
+
+	const [error, evaluationResult] = await tryCatch(
+		evaluateConditions(args.automation.condition, input)
+	)
+
+	if (error) {
+		if (args.scheduledAutomationRunId && args.existingAutomationRun) {
+			await insertAutomationRun(args.trx, {
+				automationId: args.automation.id,
+				actionRuns: args.existingAutomationRun.actionRuns.map((ar) => ({
+					config: ar.config as BaseActionInstanceConfig,
+					result: { error: error.message },
+					status: ActionRunStatus.failure,
+					actionInstanceId: expect(
+						ar.actionInstanceId,
+						`Action instance id is required for action run ${ar.id} when creating automation run`
+					),
+					id: ar.id,
+				})),
+				pubId: args.pub?.id,
+				json: args.json,
+				communityId: args.communityId,
+				stack: args.stack,
+				scheduledAutomationRunId: args.scheduledAutomationRunId,
+				trigger: args.trigger,
+				userId: args.userId,
+			})
+		}
+
+		return {
+			success: false,
+			title: "Failed to evaluate conditions",
+			report: error.message,
+			stack: args.stack,
+			actionRuns: [],
+		}
+	}
+
+	if (!evaluationResult.passed) {
+		logger.debug("Automation condition not met at execution time", {
+			automationId: args.automation.id,
+			conditionEvaluationTiming: automationTiming,
+			condition: args.automation.condition,
+			failureReason: evaluationResult.failureReason,
+			failureMessages: evaluationResult.flatMessages,
+		})
+		return {
+			success: false,
+			actionRuns: [],
+			title: "Automation condition not met",
+			report: evaluationResult.flatMessages.map((m) => m.message).join(", "),
+			stack: args.stack,
+		}
+	}
+
+	logger.debug("Automation condition met at execution time", {
+		automationId: args.automation.id,
+		conditionEvaluationTiming: automationTiming,
+	})
+
+	return null
+}
+
+/**
+ * execute all action instances in an automation sequentially
+ * returns results for each action instance
+ */
+async function executeActionInstances(args: {
+	automation: FullAutomation
+	automationRun: {
+		id: AutomationRunsId
+		actionRuns: { id: ActionRunsId; actionInstanceId: string | null }[]
+	}
+	community: Communities
+	stage: CommunityStage
+	pub: AutomationContext["pub"]
+	json?: Json
+	manualActionInstancesOverrideArgs: RunAutomationArgs["manualActionInstancesOverrideArgs"]
+	userId?: UsersId
+}): Promise<
+	(ActionRunResult & {
+		actionInstance: FullAutomation["actionInstances"][number]
+		actionRunId: ActionRunsId
+	})[]
+> {
+	const results: (ActionRunResult & {
+		actionInstance: FullAutomation["actionInstances"][number]
+		actionRunId: ActionRunsId
+	})[] = []
+
+	for (const ai of args.automation.actionInstances) {
+		const correcspondingActionRun = args.automationRun.actionRuns.find(
+			(ar) => ar.actionInstanceId === ai.id
+		)
+		if (!correcspondingActionRun) {
+			throw new Error(`Action run not found for action instance ${ai.id}`)
+		}
+
+		const result = await runActionInstance({
+			automation: args.automation,
+			actionInstance: ai,
+			actionRunId: correcspondingActionRun.id,
+			stageId: expect(args.automation.stageId),
+			community: args.community,
+			manualActionInstanceOverrideArgs:
+				args.manualActionInstancesOverrideArgs?.[ai.id] ?? null,
+			json: args.json,
+			stage: args.stage,
+			pub: args.pub ?? undefined,
+			userId: args.userId,
+		})
+
+		logger[result.success === false ? "error" : "info"]({
+			msg: "Action instance finished",
+			actionInstanceId: ai.id,
+			status: result.success ? ActionRunStatus.success : ActionRunStatus.failure,
+			result,
+		})
+
+		if (result.success === false) {
+			results.push({
+				success: false,
+				title: "Failed to run action",
+				error: result.error,
+				report: result.report,
+				config: result.config,
+				actionInstance: ai,
+				actionRunId: correcspondingActionRun.id,
+			})
+			continue
+		}
+
+		results.push({
+			...result,
+			actionInstance: ai,
+			actionRunId: correcspondingActionRun.id,
+		})
+	}
+
+	return results
 }
 
 /**
@@ -238,6 +478,14 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 	}
 }
 
+/**
+ * run an automation with all its action instances
+ *
+ * NOTE: automation_run.status is automatically computed by the database trigger
+ * compute_automation_run_status() when action_runs are inserted/updated.
+ * the trigger computes status as the aggregate of all action_runs and emits
+ * events for sequential automations when the automation succeeds or fails.
+ */
 export async function runAutomation(
 	args: RunAutomationArgs,
 	trx = db
@@ -248,34 +496,14 @@ export async function runAutomation(
 		)
 	}
 
-	const [pub, automation, community] = await Promise.all([
-		args.pubId
-			? await getPubsWithRelatedValues(
-					{ pubId: args.pubId, communityId: args.communityId },
-					{
-						withPubType: true,
-						withRelatedPubs: true,
-						withStage: false,
-						withValues: true,
-						depth: 3,
-					}
-				)
-			: null,
-		getAutomation(args.automationId),
-		getCommunity(args.communityId),
-	])
-
-	if (!automation) {
-		throw new Error(`Automation ${args.automationId} not found`)
-	}
-	// annoying that this requires an extra await
-
-	const stage = await getStages({
+	// load automation context (pub, automation config, community, stage)
+	const { pub, automation, community, stage } = await loadAutomationContext({
+		automationId: args.automationId,
+		pubId: args.pubId,
 		communityId: args.communityId,
-		stageId: expect(automation.stageId, "Can't run automation without a stage"),
-		userId: null,
-	}).executeTakeFirstOrThrow(() => new Error(`Stage ${automation.stageId} not found`))
+	})
 
+	// check for disabled actions
 	if (
 		automation.actionInstances.some((ai) =>
 			env.FLAGS?.get("disabled-actions").includes(ai.action)
@@ -284,93 +512,7 @@ export async function runAutomation(
 		return { ...ApiError.FEATURE_DISABLED, stack: args.stack, actionRuns: [], success: false }
 	}
 
-	if (!community) {
-		throw new Error(`Community ${args.communityId} not found`)
-	}
-
-	// check if we need to evaluate conditions at execution time
-	if (automation?.condition && !args.skipConditionCheck) {
-		const automationTiming = automation.conditionEvaluationTiming as string | null | undefined
-		const shouldEvaluateNow =
-			automationTiming === "onExecution" ||
-			automationTiming === "both" ||
-			// if no timing is set, default to evaluating at execution time for backwards compatibility
-			!automationTiming
-
-		if (shouldEvaluateNow) {
-			const input = pub
-				? { pub: createPubProxy(pub, community?.slug) }
-				: { json: args.json ?? ({} as Json) }
-			const [error, evaluationResult] = await tryCatch(
-				evaluateConditions(automation.condition, input)
-			)
-
-			if (error) {
-				if (args.scheduledAutomationRunId) {
-					const existingAutomationRun = await getAutomationRunById(
-						args.communityId,
-						args.scheduledAutomationRunId
-					).executeTakeFirstOrThrow(
-						() => new Error(`Automation run ${args.scheduledAutomationRunId} not found`)
-					)
-
-					await insertAutomationRun(trx, {
-						automationId: automation.id,
-						actionRuns: existingAutomationRun.actionRuns.map((ar) => ({
-							config: ar.config as BaseActionInstanceConfig,
-							result: { error: error.message },
-							status: ActionRunStatus.failure,
-							actionInstanceId: expect(
-								ar.actionInstanceId,
-								`Action instance id is required for action run ${ar.id} when creating automation run`
-							),
-							id: ar.id,
-						})),
-						pubId: pub?.id,
-						json: args.json,
-						communityId: args.communityId,
-						stack: args.stack,
-						scheduledAutomationRunId: args.scheduledAutomationRunId,
-						trigger: args.trigger,
-						userId: "userId" in args ? args.userId : undefined,
-					})
-				}
-
-				return {
-					success: false,
-					title: "Failed to evaluate conditions",
-					report: error.message,
-					stack: args.stack,
-					actionRuns: [],
-				}
-			}
-
-			if (!evaluationResult.passed) {
-				logger.debug("Automation condition not met at execution time", {
-					automationId: automation.id,
-					conditionEvaluationTiming: automationTiming,
-					condition: automation.condition,
-					failureReason: evaluationResult.failureReason,
-					failureMessages: evaluationResult.flatMessages,
-				})
-				return {
-					success: false,
-					actionRuns: [],
-					title: "Automation condition not met",
-					report: evaluationResult.flatMessages.map((m) => m.message).join(", "),
-					stack: args.stack,
-				}
-			}
-
-			logger.debug("Automation condition met at execution time", {
-				automationId: automation.id,
-				conditionEvaluationTiming: automationTiming,
-			})
-		}
-	}
-
-	const isActionUserInitiated = "userId" in args
-
+	// load existing automation run if this is a scheduled execution
 	const existingAutomationRun = args.scheduledAutomationRunId
 		? await getAutomationRunById(
 				args.communityId,
@@ -379,9 +521,32 @@ export async function runAutomation(
 				() => new Error(`Automation run ${args.scheduledAutomationRunId} not found`)
 			)
 		: null
-	// we need to first create the action run,
-	// in case the action modifies the pub and needs to pass the lastModifiedBy field
-	// which in this case would be `action-run:<action-run-id>`
+
+	// evaluate conditions at execution time if required
+	const conditionResult = await evaluateAutomationConditions({
+		automation,
+		skipConditionCheck: args.skipConditionCheck,
+		pub,
+		json: args.json,
+		communitySlug: community.slug,
+		scheduledAutomationRunId: args.scheduledAutomationRunId,
+		existingAutomationRun,
+		stack: args.stack,
+		trigger: args.trigger,
+		communityId: args.communityId,
+		userId: "userId" in args ? args.userId : undefined,
+		trx,
+	})
+
+	if (conditionResult) {
+		return conditionResult
+	}
+
+	const isActionUserInitiated = "userId" in args
+
+	// create the automation run with scheduled action runs
+	// we need to create action runs first in case the action modifies the pub
+	// and needs to pass the lastModifiedBy field (action-run:<action-run-id>)
 	const automationRun = await insertAutomationRun(trx, {
 		automationId: args.automationId,
 		actionRuns: automation.actionInstances.map((ai) => ({
@@ -400,60 +565,21 @@ export async function runAutomation(
 		userId: isActionUserInitiated ? args.userId : undefined,
 	})
 
-	// run all action instances sequentially
-	const results: (ActionRunResult & {
-		actionInstance: FullAutomation["actionInstances"][number]
-		actionRunId: ActionRunsId
-	})[] = []
-	for (const ai of automation.actionInstances) {
-		const correcspondingActionRun = automationRun.actionRuns.find(
-			(ar) => ar.actionInstanceId === ai.id
-		)
-		if (!correcspondingActionRun) {
-			throw new Error(`Action run not found for action instance ${ai.id}`)
-		}
-		const result = await runActionInstance({
-			...args,
-			actionInstance: ai,
-			actionRunId: correcspondingActionRun.id,
-			stageId: expect(automation.stageId),
-			community,
-			manualActionInstanceOverrideArgs:
-				args.manualActionInstancesOverrideArgs?.[ai.id] ?? null,
-			json: args.json,
-			stage,
-			pub: pub ?? undefined,
-			automation,
-		})
+	// execute all action instances sequentially
+	const results = await executeActionInstances({
+		automation,
+		automationRun,
+		community,
+		stage,
+		pub,
+		json: args.json,
+		manualActionInstancesOverrideArgs: args.manualActionInstancesOverrideArgs,
+		userId: isActionUserInitiated ? args.userId : undefined,
+	})
 
-		logger[result.success === false ? "error" : "info"]({
-			msg: "Automation run finished",
-			pubId: args.pubId,
-			actionInstanceId: ai.id,
-			status: result.success ? ActionRunStatus.success : ActionRunStatus.failure,
-			result,
-		})
-
-		if (result.success === false) {
-			results.push({
-				success: false,
-				title: "Failed to run action",
-				error: result.error,
-				report: result.report,
-				config: result.config,
-				actionInstance: ai,
-				actionRunId: correcspondingActionRun.id,
-			})
-			continue
-		}
-
-		results.push({
-			...result,
-			actionInstance: ai,
-			actionRunId: correcspondingActionRun.id,
-		})
-	}
-
+	// update automation run with final results
+	// NOTE: the database trigger will automatically compute and set the automation_run.status
+	// based on the aggregate of all action_run statuses when we update the action_runs here
 	const finalAutomationRun = await insertAutomationRun(trx, {
 		automationId: args.automationId,
 		actionRuns: results.map(({ actionRunId, actionInstance, ...result }) => ({

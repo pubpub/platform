@@ -343,6 +343,7 @@ Table automation_runs {
   id String [pk]
   automation automations [not null]
   automationId String [not null]
+  status ActionRunStatus
   triggerEvent AutomationEvent [not null]
   triggerConfig Json
   sourceUserId String
@@ -675,6 +676,7 @@ Enum Action {
 
 Enum ActionRunStatus {
   scheduled
+  pending
   success
   failure
 }

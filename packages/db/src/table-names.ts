@@ -1012,6 +1012,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
 			},
+			{
+				name: "status",
+				dataType: "ActionRunStatus",
+				dataTypeSchema: "public",
+				isNullable: true,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
 		],
 	},
 	{

@@ -5,6 +5,7 @@ import type { ColumnType, Insertable, Selectable, Updateable } from "kysely"
 
 import { z } from "zod"
 
+import { type ActionRunStatus, actionRunStatusSchema } from "./ActionRunStatus"
 import { type AutomationEvent, automationEventSchema } from "./AutomationEvent"
 import { type AutomationsId, automationsIdSchema } from "./Automations"
 import { type PubsId, pubsIdSchema } from "./Pubs"
@@ -38,6 +39,8 @@ export interface AutomationRunsTable {
 	triggerConfig: ColumnType<unknown | null, unknown | null, unknown | null>
 
 	triggerEvent: ColumnType<AutomationEvent, AutomationEvent, AutomationEvent>
+
+	status: ColumnType<ActionRunStatus | null, ActionRunStatus | null, ActionRunStatus | null>
 }
 
 export type AutomationRuns = Selectable<AutomationRunsTable>
@@ -59,6 +62,7 @@ export const automationRunsSchema = z.object({
 	sourceUserId: usersIdSchema.nullable(),
 	triggerConfig: z.unknown().nullable(),
 	triggerEvent: automationEventSchema,
+	status: actionRunStatusSchema.nullable(),
 })
 
 export const automationRunsInitializerSchema = z.object({
@@ -72,6 +76,7 @@ export const automationRunsInitializerSchema = z.object({
 	sourceUserId: usersIdSchema.optional().nullable(),
 	triggerConfig: z.unknown().optional().nullable(),
 	triggerEvent: automationEventSchema,
+	status: actionRunStatusSchema.optional().nullable(),
 })
 
 export const automationRunsMutatorSchema = z.object({
@@ -85,4 +90,5 @@ export const automationRunsMutatorSchema = z.object({
 	sourceUserId: usersIdSchema.optional().nullable(),
 	triggerConfig: z.unknown().optional().nullable(),
 	triggerEvent: automationEventSchema.optional(),
+	status: actionRunStatusSchema.optional().nullable(),
 })
