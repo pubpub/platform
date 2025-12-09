@@ -30,7 +30,7 @@ function SheetOverlay({
 		<SheetPrimitive.Overlay
 			data-slot="sheet-overlay"
 			className={cn(
-				"data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=open]:animate-in",
+				"data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/10 backdrop-blur-[3px] data-[state=closed]:animate-out data-[state=open]:animate-in",
 				className
 			)}
 			{...props}
@@ -42,13 +42,15 @@ function SheetContent({
 	className,
 	children,
 	side = "right",
+	overlayStyle,
 	...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
 	side?: "top" | "right" | "bottom" | "left"
+	overlayStyle?: React.CSSProperties
 }) {
 	return (
 		<SheetPortal>
-			<SheetOverlay />
+			<SheetOverlay style={overlayStyle} />
 			<SheetPrimitive.Content
 				data-slot="sheet-content"
 				className={cn(
@@ -127,4 +129,5 @@ export {
 	SheetFooter,
 	SheetTitle,
 	SheetDescription,
+	SheetOverlay,
 }

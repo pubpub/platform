@@ -19,6 +19,13 @@ import * as actions from "./actions"
 
 export type StagesContext = {
 	stages: CommunityStage[]
+	activeStageCooridnates: { x: number; y: number; width: number; height: number } | undefined
+	setActiveStageCooridnates: (coordinates: {
+		x: number
+		y: number
+		width: number
+		height: number
+	}) => void
 	deleteStages: (stageIds: StagesId[]) => void
 	createMoveConstraint: (sourceStageId: StagesId, destinationStageId: StagesId) => void
 	deleteMoveConstraints: (moveConstraintIds: StagesId[]) => void
@@ -31,6 +38,8 @@ export type StagesContext = {
 
 export const StagesContext = createContext<StagesContext>({
 	stages: [],
+	activeStageCooridnates: undefined,
+	setActiveStageCooridnates: () => {},
 	deleteStages: () => {},
 	createMoveConstraint: () => {},
 	deleteMoveConstraints: () => {},
@@ -299,8 +308,14 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 		}
 	}, [deleteBatch, deleteStagesAndMoveConstraints])
 
+	const [activeStageCooridnates, setActiveStageCooridnates] = useState<
+		{ x: number; y: number; width: number; height: number } | undefined
+	>(undefined)
+
 	const value = {
 		stages,
+		activeStageCooridnates,
+		setActiveStageCooridnates,
 		deleteStages,
 		createMoveConstraint,
 		deleteMoveConstraints,

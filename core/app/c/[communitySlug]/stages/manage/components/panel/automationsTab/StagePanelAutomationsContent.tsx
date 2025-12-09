@@ -29,7 +29,7 @@ export function StagePanelAutomationsContent(props: Props) {
 	const currentAutomation = props.automations.find((automation) => automation.id === automationId)
 
 	return (
-		<div className="relative flex h-full w-full">
+		<div className="relative flex h-full w-full overflow-hidden">
 			<div
 				className={cn(
 					"absolute inset-0 w-full space-y-2 transition-transform duration-300 ease-in-out",

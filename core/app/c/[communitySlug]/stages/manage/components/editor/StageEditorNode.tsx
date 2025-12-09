@@ -3,7 +3,7 @@ import type { KeyboardEvent } from "react"
 import type { NodeProps } from "reactflow"
 import type { CommunityStage } from "~/lib/server/stages"
 
-import { memo, useCallback, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Handle, Position } from "reactflow"
 
@@ -15,13 +15,14 @@ import { useCommunity } from "~/app/components/providers/CommunityProvider"
 import { constructStageMangePanel } from "~/lib/links"
 import { slugifyString } from "~/lib/string"
 import { useStages } from "../../StagesContext"
+import { useEditingStageId } from "../panel/usePanelQueryParams"
 
 export const STAGE_NODE_WIDTH = 250
 export const STAGE_NODE_HEIGHT = 50
 
 export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>) => {
 	const community = useCommunity()
-	const { updateStageName } = useStages()
+	const { updateStageName, setActiveStageCooridnates } = useStages()
 	const [isEditingName, setIsEditingName] = useState(false)
 	const nodeRef = useRef<HTMLDivElement>(null)
 	const nameRef = useRef<HTMLHeadingElement>(null)
@@ -58,12 +59,28 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 		}
 	}, [isEditingName])
 
+	const { editingStageId } = useEditingStageId()
+	const isCurrentStage = props.data.stage.id === editingStageId
+	useEffect(() => {
+		if (isCurrentStage) {
+			const coordinates = nodeRef.current?.getBoundingClientRect()
+			if (coordinates) {
+				setActiveStageCooridnates({
+					x: coordinates.left,
+					y: coordinates.top,
+					width: coordinates.width,
+					height: coordinates.height,
+				})
+			}
+		}
+	}, [isCurrentStage, setActiveStageCooridnates, nodeRef])
+
 	return (
-		// biome-ignore lint/a11y/useSemanticElements: it has buttons in it, can't be a button
 		<div
 			className={cn(
-				"flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
-				props.selected ? "border-gray-800" : "border-gray-300"
+				"relative flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
+				props.selected ? "border-gray-800" : "border-gray-300",
+				isCurrentStage ? "" : ""
 			)}
 			// Can't use Tailwind for dynamically computed styles
 			style={{
