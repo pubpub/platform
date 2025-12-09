@@ -607,6 +607,7 @@ Enum Action {
   googleDriveImport
   datacite
   buildJournalSite
+  createPub
 }
 
 Enum ActionRunStatus {
@@ -671,6 +672,7 @@ Enum ApiAccessScope {
   stage
   member
   pubType
+  form
 }
 
 Enum InviteStatus {

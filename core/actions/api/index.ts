@@ -13,6 +13,7 @@ import {
 	webhook,
 } from "../_lib/automations"
 import * as buildJournalSite from "../buildJournalSite/action"
+import * as createPub from "../createPub/action"
 import * as datacite from "../datacite/action"
 import * as email from "../email/action"
 import * as googleDriveImport from "../googleDriveImport/action"
@@ -29,6 +30,7 @@ export const actions = {
 	[googleDriveImport.action.name]: googleDriveImport.action,
 	[datacite.action.name]: datacite.action,
 	[buildJournalSite.action.name]: buildJournalSite.action,
+	[createPub.action.name]: createPub.action,
 } as const
 
 export const getActionByName = <N extends keyof typeof actions>(name: N) => {

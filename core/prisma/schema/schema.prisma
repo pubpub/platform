@@ -321,6 +321,7 @@ enum Action {
   googleDriveImport
   datacite
   buildJournalSite
+  createPub
 }
 
 model ActionConfigDefault {
@@ -551,6 +552,7 @@ enum ApiAccessScope {
   stage
   member
   pubType
+  form
 }
 
 /// Status of an invite

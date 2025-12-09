@@ -15,6 +15,7 @@ import { stageConstraintSchema } from "db/types"
 import {
 	CreatePubRequestBodyWithNullsNew,
 	filterSchema,
+	formSchema,
 	ftsReturnSchema,
 	getPubQuerySchema,
 	jsonSchema,
@@ -133,6 +134,33 @@ export const siteApi = contract.router(
 			},
 		},
 		forms: {
+			getForm: {
+				method: "GET",
+				path: "/forms/:formSlug",
+				summary: "Gets a form",
+				description: "Get a form by its slug.",
+				pathParams: z.object({
+					formSlug: z.string().describe("The slug of the form"),
+				}),
+				responses: {
+					200: formSchema,
+				},
+			},
+			getForms: {
+				method: "GET",
+				path: "/forms",
+				summary: "Gets a list of forms",
+				description: "Get a list of forms available in the community.",
+				responses: {
+					200: z.array(
+						z.object({
+							slug: z.string(),
+							name: z.string(),
+							fields: z.unknown(),
+						})
+					),
+				},
+			},
 			getPubsForFormField: {
 				method: "GET",
 				path: "/forms/:formSlug/:fieldSlug/pubs",
