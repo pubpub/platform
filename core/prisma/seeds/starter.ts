@@ -45,6 +45,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 				Evaluations: { schemaName: CoreSchemaType.Null, relation: true },
 				Submissions: { schemaName: CoreSchemaType.Null, relation: true },
 				Color: { schemaName: CoreSchemaType.Color },
+				Body: { schemaName: CoreSchemaType.String },
 			},
 			pubTypes: {
 				Article: {
@@ -72,6 +73,11 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					Confidence: { isTitle: false },
 					"Published At": { isTitle: false },
 					Color: { isTitle: false },
+				},
+				"Review Offer": {
+					Title: { isTitle: true },
+					Content: { isTitle: false },
+					URL: { isTitle: false },
 				},
 			},
 			users: {
@@ -143,6 +149,15 @@ export async function seedStarter(communityId?: CommunitiesId) {
 						],
 					},
 					stage: "Draft",
+				},
+				{
+					pubType: "Review Offer",
+					values: {
+						Title: "First big review offer",
+						Body: "{}",
+						URL: "https://pubpub.org",
+					},
+					stage: "Inbox",
 				},
 			],
 			forms: {
@@ -374,6 +389,103 @@ export async function seedStarter(communityId?: CommunitiesId) {
 				},
 				Published: {
 					members: { new: MemberRole.contributor },
+				},
+				Inbox: {
+					automations: {
+						"Respond to Activity": {
+							triggers: [
+								{
+									event: AutomationEvent.webhook,
+									config: {
+										path: "inbox",
+									},
+								},
+							],
+
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: '"Announce" in $.json.type',
+									},
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: '"coar-notify:ReviewAction" in $.json.type',
+									},
+								],
+							},
+							actions: [
+								{
+									action: Action.createPub,
+
+									config: {
+										stage: "Inbox",
+										formSlug: "inbox-form",
+										pubType: "Review Offer",
+										pubValues: {
+											Title: "Incoming {{ $.json.id }}",
+											Body: "{{ $.json.body }}",
+											URL: "{{ $.json.object.id }}",
+										},
+									},
+								},
+							],
+						},
+						"Send Review Offer email": {
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.http,
+									config: {
+										url: "https://postman-echo.com/post",
+										method: "POST",
+										body: `
+{
+  "id": "urn:uuid:{{ $.automationRun.id }}",
+  "updated": "2024-11-28T15:20:58.780000",
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    "https://purl.org/coar/notify"
+  ],
+  "type": [
+    "Announce",
+    "coar-notify:ReviewAction"
+  ],
+  "origin": {
+    "id": "{{ $.community.url }}",
+    "inbox": "{{ $.community.url }}/api/v0/c/{{ $.community.slug }}/site/webhook/inbox",
+    "type": "Service"
+  },
+  "target": {
+    "id": "{{ $.community.url }}",
+    "inbox": "{{ $.community.url }}/api/v0/c/{{ $.community.slug }}/site/webhook/inbox",
+    "type": "Service"
+  },
+  "object": {
+    "id": "{{ $.pub.id }}",
+    "object": {{ $.pub }},
+    "type": "preprint",
+    "ietf:cite-as": null,
+    "url": {{ $.pub.url ? ('"' & $.pub.url & '"') ?? null }}
+  },
+  "actor": {{ $.user.id ? ('"' & $.user.id & '"') ?? null }},
+  "context": null,
+  "inReplyTo": null
+}`,
+										response: "json",
+									},
+								},
+							],
+						},
+					},
 				},
 			},
 			stageConnections: {
