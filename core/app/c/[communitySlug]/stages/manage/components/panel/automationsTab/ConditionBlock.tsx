@@ -96,7 +96,7 @@ const ConditionItem = memo(
 							{...control.register(slug)}
 							placeholder="Enter JSONata expression (e.g., $.fieldName = 'value')"
 							defaultValue={expression}
-							className={cn("text-sm", invalid && "border-red-300")}
+							className={cn("font-mono text-sm", invalid && "border-red-300")}
 						/>
 						{invalid && error && (
 							<p className="text-destructive text-xs">
@@ -277,12 +277,9 @@ export const ConditionBlock = memo(
 							name={`${slug}.type`}
 							render={({ field }) => (
 								<Select
-									value={blockType}
+									value={field.value}
 									onValueChange={(value) =>
-										field.onChange(
-											`${slug}.type`,
-											value as AutomationConditionBlockType
-										)
+										field.onChange(value as AutomationConditionBlockType)
 									}
 								>
 									<SelectTrigger className="h-8 w-24 text-xs">
@@ -312,7 +309,7 @@ export const ConditionBlock = memo(
 					)}
 				</ItemHeader>
 				<ItemContent className="flex w-full items-start gap-2">
-					<div className="space-y-2">
+					<div className="w-full space-y-2">
 						<DndContext
 							id={itemId}
 							modifiers={[restrictToVerticalAxis, restrictToParentElement]}

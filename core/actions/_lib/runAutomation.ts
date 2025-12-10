@@ -269,7 +269,7 @@ async function executeActionInstances(args: {
 	automation: FullAutomation
 	automationRun: {
 		id: AutomationRunsId
-		actionRuns: { id: ActionRunsId; actionInstanceId: string | null }[]
+		actionRuns: { id: ActionRunsId; actionInstanceId: ActionInstancesId | null }[]
 	}
 	community: Communities
 	stage: CommunityStage

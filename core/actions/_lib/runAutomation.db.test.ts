@@ -1,9 +1,17 @@
+import type { Database } from "db/Database"
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import { sql } from "kysely"
+import { type Kysely, sql } from "kysely"
 import { beforeAll, describe, expect, it } from "vitest"
 
-import { Action, ActionRunStatus, AutomationEvent, CoreSchemaType, MemberRole } from "db/public"
+import {
+	Action,
+	ActionRunStatus,
+	AutomationEvent,
+	type AutomationRunsId,
+	CoreSchemaType,
+	MemberRole,
+} from "db/public"
 
 import { mockServerCode } from "~/lib/__tests__/utils"
 import { createSeed } from "~/prisma/seed/createSeed"
@@ -140,14 +148,11 @@ describe("runAutomation - status computation", () => {
 
 		// check that automation_run status was set by trigger
 		const automationRunId = result.stack[result.stack.length - 1]
-		console.log("automationRunId", automationRunId)
-		console.log("automationRun", result)
 		const automationRun = await trx
 			.selectFrom("automation_runs")
 			.selectAll()
 			.where("id", "=", automationRunId)
-			.executeTakeFirst()
-		console.log("automationRun", automationRun)
+			.executeTakeFirstOrThrow()
 
 		expect(automationRun).toBeDefined()
 		expect(automationRun?.status).toBe(ActionRunStatus.success)
@@ -304,20 +309,19 @@ describe("runAutomation - sequential automation triggering", () => {
 			.executeTakeFirst()
 
 		expect(automationRun).toBeDefined()
-		console.log("automationRun", automationRun)
 		expect(automationRun?.status).toBe(ActionRunStatus.success)
 
 		const jobs = await getEmitEventJob(trx)
-		console.log("jobs", jobs)
 		expect(jobs.length).toBeGreaterThan(0)
 
 		// find the job for our watcher automation
 		const watcherJob = jobs.find((job) => {
 			const payload = job.payload
+			const trigger = payload.trigger as { event: AutomationEvent }
 			return (
 				payload.automationId ===
 					community.stages["Test Stage"].automations["watcher-on-success"].id &&
-				payload.trigger?.event === AutomationEvent.automationSucceeded
+				trigger.event === AutomationEvent.automationSucceeded
 			)
 		})
 
@@ -370,10 +374,11 @@ describe("runAutomation - sequential automation triggering", () => {
 
 		const failureWatcherJob = jobs.find((job) => {
 			const payload = job.payload
+			const trigger = payload as { event: AutomationEvent }
 			return (
 				payload.automationId ===
 					community.stages["Test Stage"].automations["watcher-on-failure"].id &&
-				payload.trigger?.event === AutomationEvent.automationFailed
+				trigger?.event === AutomationEvent.automationFailed
 			)
 		})
 
@@ -434,8 +439,6 @@ describe("runAutomation - sequential automation triggering", () => {
 		// check that the job includes the full stack
 		const jobs = await getEmitEventJob(trx)
 
-		console.log("jobs", jobs)
-
 		const watcherJob = jobs.find((job) => {
 			const payload = job.payload
 			return (
@@ -448,11 +451,11 @@ describe("runAutomation - sequential automation triggering", () => {
 
 		if (watcherJob) {
 			const payload = watcherJob.payload
-			console.log("payload", payload)
+			const stack = payload.stack as AutomationRunsId[]
 			// stack should include existing stack plus the new automation run
-			expect(payload.stack).toHaveLength(existingStack.length + 1)
-			expect(payload.stack.slice(0, existingStack.length)).toEqual(existingStack)
-			expect(payload.stack[existingStack.length]).toBe(result.stack[result.stack.length - 1])
+			expect(stack).toHaveLength(existingStack.length + 1)
+			expect(stack.slice(0, existingStack.length)).toEqual(existingStack)
+			expect(stack[existingStack.length]).toBe(result.stack[result.stack.length - 1])
 		}
 	})
 })

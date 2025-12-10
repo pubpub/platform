@@ -312,7 +312,6 @@ export const getAutomationsByTriggerConfig = cache(
 				)
 			)
 		).execute()
-		console.log(automations)
 
 		return automations.map((automation) => ({
 			...automation,

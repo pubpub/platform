@@ -28,7 +28,7 @@ export type FullAutomation = Automations & {
 	condition: ConditionBlock | null
 	icon: IconConfig | null
 	lastAutomationRun:
-		| (AutomationRuns & {
+		| (Omit<AutomationRuns, "status"> & {
 				actionRuns: ActionRuns[]
 				status: ActionRunStatus | "partial"
 		  })

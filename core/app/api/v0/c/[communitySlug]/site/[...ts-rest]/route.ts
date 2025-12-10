@@ -786,7 +786,6 @@ const handler = createNextHandler(
 				)
 			}
 
-			console.log("BODY", body)
 			try {
 				for (const automation of automations) {
 					await runAutomation({
