@@ -9,6 +9,7 @@ export const action = defineAction({
 	name: Action.createPub,
 	icon: Edit,
 	accepts: ["pub", "json"],
+	niceName: "Create Pub",
 	description: "Create a new pub",
 	config: {
 		schema: z.object({
