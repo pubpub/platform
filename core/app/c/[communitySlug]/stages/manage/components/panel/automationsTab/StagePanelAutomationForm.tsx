@@ -208,7 +208,7 @@ const ConfigCard = memo(
 				onOpenChange={(open) => setIsCollapsed(!open)}
 				defaultOpen={!props.defaultCollapsed}
 			>
-				<Item variant="outline" className="bg-neutral-50" size="sm">
+				<Item variant="outline" className="rounded-lg bg-neutral-50" size="sm">
 					<ItemHeader className={cn(props.isError && "text-destructive")}>
 						{props.showCollapseToggle && hasContent ? (
 							<CollapsibleTrigger
@@ -219,7 +219,7 @@ const ConfigCard = memo(
 									type="button"
 									variant="ghost"
 									size="sm"
-									className="h-6 w-full items-center justify-start p-0 hover:bg-transparent"
+									className="h-6 items-center justify-start p-0 hover:bg-transparent has-[>svg]:px-0"
 								>
 									<span className="sr-only">
 										{isCollapsed ? "Expand" : "Collapse"}
@@ -1099,7 +1099,7 @@ export const TriggerField = (props: {
 				>
 					<SelectTrigger
 						data-testid={`event-select-trigger`}
-						className="h-12 w-full justify-start border-dashed"
+						className="h-12 w-full justify-start rounded-lg border-dashed"
 					>
 						<div className="flex items-center gap-2 py-1">
 							<Plus size={16} className="text-neutral-500" />

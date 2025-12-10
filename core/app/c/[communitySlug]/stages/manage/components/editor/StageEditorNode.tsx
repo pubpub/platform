@@ -78,7 +78,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 	return (
 		<div
 			className={cn(
-				"relative flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
+				"relative flex items-center justify-between rounded-lg border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
 				props.selected ? "border-gray-800" : "border-gray-300",
 				isCurrentStage ? "" : ""
 			)}
@@ -120,11 +120,11 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 						{props.data.stage.name}
 					</p>
 				</div>
-				<ul className="m-0 flex list-none gap-2 p-0">
+				<ul className="m-0 flex list-none items-center justify-start gap-2 p-0">
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto gap-1 p-0 font-light text-xs [&_svg]:size-3"
+							className="!p-0 m-0 h-auto gap-1 font-light text-xs [&_svg]:size-3"
 							asChild
 						>
 							<Link
@@ -143,7 +143,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto gap-1 p-0 font-light text-xs [&_svg]:size-3.5"
+							className="!p-0 m-0 h-auto gap-1 font-light text-xs [&_svg]:size-3.5"
 							asChild
 						>
 							<Link
@@ -163,7 +163,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto gap-1 p-0 font-light text-xs [&_svg]:size-3.5"
+							className="!p-0 m-0 h-auto gap-1 font-light text-xs [&_svg]:size-3.5"
 							asChild
 						>
 							<Link
