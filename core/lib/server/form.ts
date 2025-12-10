@@ -103,6 +103,19 @@ export const getForm = (
 
 export type Form = Awaited<ReturnType<ReturnType<typeof getForm>["executeTakeFirstOrThrow"]>>
 
+export const getFormsForCommunity = (
+	communityId: CommunitiesId,
+	trx: typeof db | QueryCreator<PublicSchema> = db
+) =>
+	autoCache(
+		trx
+			.selectFrom("forms")
+			.where("forms.communityId", "=", communityId)
+			.selectAll("forms")
+			.orderBy("forms.isDefault", "desc")
+			.orderBy("forms.updatedAt", "desc")
+	)
+
 export const userHasPermissionToForm = async (
 	props: XOR<{ formId: FormsId }, { formSlug: string }> &
 		XOR<{ userId: UsersId }, { email: string }> & { pubId?: PubsId }

@@ -10,6 +10,7 @@ export enum ApiAccessScope {
 	stage = "stage",
 	member = "member",
 	pubType = "pubType",
+	form = "form",
 }
 
 /** Zod schema for ApiAccessScope */

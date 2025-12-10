@@ -50,7 +50,7 @@ import {
 	upsertPubRelations,
 } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
-import { getForm } from "~/lib/server/form"
+import { getForm, getFormsForCommunity } from "~/lib/server/form"
 import { validateFilter } from "~/lib/server/pub-filters-validate"
 import { getStages } from "~/lib/server/stages"
 import { getMember, getSuggestedUsers } from "~/lib/server/user"
@@ -633,6 +633,50 @@ const handler = createNextHandler(
 			},
 		},
 		forms: {
+			getForm: async ({ params }) => {
+				const { user, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.form, type: ApiAccessType.read },
+					cookies: "community-member",
+				})
+
+				const [form, userCanAccessForm] = await Promise.all([
+					getForm({
+						slug: params.formSlug,
+						communityId: community.id,
+					}).executeTakeFirst(),
+					userHasAccessToForm({
+						userId: user.id,
+						communityId: community.id,
+						formSlug: params.formSlug,
+					}),
+				])
+
+				if (!form) {
+					throw new NotFoundError()
+				}
+
+				if (!userCanAccessForm) {
+					throw new ForbiddenError()
+				}
+
+				return {
+					status: 200,
+					body: form,
+				}
+			},
+			getForms: async () => {
+				const { user, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.form, type: ApiAccessType.read },
+					cookies: "community-member",
+				})
+
+				const forms = await getFormsForCommunity(community.id).execute()
+
+				return {
+					status: 200,
+					body: forms,
+				}
+			},
 			getPubsForFormField: async ({ params, query }, { responseHeaders }) => {
 				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
