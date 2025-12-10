@@ -91,7 +91,9 @@ export const AutomationRunForm = (props: Props) => {
 							: `Successfully ran ${props.automation.name || action.niceName}`,
 					variant: "default",
 					description: (
-						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>
+						<div className="max-h-screen max-w-sm overflow-auto text-xs">
+							{result.report}
+						</div>
 					),
 				})
 				return

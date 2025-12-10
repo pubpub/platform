@@ -115,6 +115,7 @@ const FileUploadInput = ({ field, elementId }: { field: any; elementId: string }
 
 type CreatePubFormFieldProps = {
 	element: PubFieldElement
+	path?: string
 	control: any
 	renderInput: (field: any) => React.ReactNode
 }
@@ -125,8 +126,8 @@ type InputState = {
 	normalValue: unknown
 }
 
-const CreatePubFormField = ({ element, control, renderInput }: CreatePubFormFieldProps) => {
-	const fieldName = `pubValues.${element.id}`
+const CreatePubFormField = ({ element, path, control, renderInput }: CreatePubFormFieldProps) => {
+	const fieldName = path ? `${path}.pubValues.${element.id}` : `pubValues.${element.id}`
 	const labelId = useId()
 	const val = useWatch({ control, name: fieldName })
 
@@ -217,18 +218,20 @@ type CreatePubFormInnerProps = {
 }
 
 const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
-	const { form: actionForm } = useActionForm()
+	const { form: actionForm, path } = useActionForm()
 	const elements = props.elements.filter((e): e is PubFieldElement => e.type === "pubfield")
 
 	// Set default values for all pub field elements when elements change
 	useEffect(() => {
+		const fullPath = path ? `${path}.pubValues` : "pubValues"
+
 		const defaultValues = createDefaultValuesFromElements(props.elements)
 		const currentPubValues = actionForm.getValues("pubValues") || {}
 
 		// Only set defaults for fields that don't already have a value
 		for (const [elementId, defaultValue] of Object.entries(defaultValues)) {
 			if (currentPubValues[elementId] === undefined) {
-				actionForm.setValue(`pubValues.${elementId}`, defaultValue, {
+				actionForm.setValue(`${fullPath}.${elementId}`, defaultValue, {
 					shouldValidate: false,
 					shouldDirty: false,
 				})
@@ -237,6 +240,8 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 	}, [props.elements, actionForm])
 
 	const components: React.ReactNode[] = []
+	console.log("path", path)
+	console.log("fullPath", actionForm.getValues())
 
 	for (const element of elements) {
 		switch (element.component) {
@@ -246,6 +251,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<Input
 								{...field}
@@ -262,6 +268,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<Textarea
 								{...field}
@@ -278,6 +285,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<div className="flex flex-row items-center gap-2">
 								<Checkbox
@@ -297,6 +305,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<DatePicker date={field.value} setDate={field.onChange} />
 						)}
@@ -314,6 +323,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<Select onValueChange={field.onChange} defaultValue={field.value}>
 								<SelectTrigger id={element.id}>
@@ -346,6 +356,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
 								{radioConfig?.options?.map((option) => (
@@ -372,6 +383,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<div className="flex flex-col gap-2">
 								{checkboxConfig?.options?.map((option) => (
@@ -411,6 +423,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<MultiValueInput
 								value={field.value || []}
@@ -429,6 +442,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<div className="flex gap-2">
 								<input
@@ -450,6 +464,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<MemberSelectClientFetch
 								name={element.id}
@@ -467,6 +482,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<div className="mb-6">
 								<Confidence
@@ -489,6 +505,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={(field) => (
 							<FileUploadInput field={field} elementId={element.id} />
 						)}
@@ -503,6 +520,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={() => (
 							<div className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
 								{element.component} component - implementation pending
@@ -519,6 +537,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						key={element.id}
 						element={element}
 						control={actionForm.control}
+						path={path}
 						renderInput={() => (
 							<div className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
 								Unknown component type: {element.component}
@@ -536,7 +555,9 @@ type CreatePubFormProps = {}
 
 export default function CreatePubForm(props: CreatePubFormProps) {
 	const community = useCommunity()
-	const { form } = useActionForm()
+	const { form, path } = useActionForm()
+
+	const fullFormSlug = path ? `${path}.formSlug` : "formSlug"
 
 	const { data: forms, isLoading: formsAreLoading } = client.forms.getForms.useQuery({
 		queryKey: ["forms", community.slug],
@@ -547,7 +568,7 @@ export default function CreatePubForm(props: CreatePubFormProps) {
 		},
 	})
 
-	const selectedFormSlug = form.watch("formSlug")
+	const selectedFormSlug = useWatch({ control: form.control, name: fullFormSlug })
 
 	const { data: selectedForm, isLoading: selectedFormIsLoading } = client.forms.getForm.useQuery({
 		queryData: selectedFormSlug
@@ -561,6 +582,7 @@ export default function CreatePubForm(props: CreatePubFormProps) {
 		initialData: undefined,
 		queryKey: ["forms", "getForm", community.id, selectedFormSlug],
 	})
+	console.log("rrrr", form.formState.errors)
 
 	return (
 		<FieldSet>
@@ -573,35 +595,45 @@ export default function CreatePubForm(props: CreatePubFormProps) {
 				<Skeleton className="flex flex-col gap-2">
 					<Skeleton className="h-4" />
 				</Skeleton>
-			) : (
+			) : forms?.body ? (
 				<ActionField
 					name="formSlug"
 					label="Form"
-					render={({ field, fieldState }) => (
-						<Select
-							onValueChange={(value) => {
-								field.onChange(value)
-							}}
-							value={field.value ?? ""}
-						>
-							<SelectTrigger
-								id="form"
-								aria-label="Select a form"
-								aria-describedby="Form"
-								aria-invalid={fieldState.invalid}
+					render={({ field, fieldState }) => {
+						return (
+							<Select
+								onValueChange={(value) => {
+									field.onChange(value)
+									console.log("value", value)
+								}}
+								value={field.value ?? ""}
 							>
-								<SelectValue placeholder="Select a form" />
-							</SelectTrigger>
-							<SelectContent>
-								{forms?.body.map((form) => (
-									<SelectItem key={form.slug} value={form.slug}>
-										{form.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					)}
+								<SelectTrigger
+									id="form"
+									aria-label="Select a form"
+									aria-describedby="Form"
+									aria-invalid={fieldState.invalid}
+								>
+									<SelectValue placeholder="Select a form" />
+								</SelectTrigger>
+								<SelectContent>
+									{forms?.body.map((form) => (
+										<SelectItem key={form.slug} value={form.slug}>
+											{form.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						)
+					}}
 				/>
+			) : (
+				<div className="flex flex-col items-center justify-center gap-2 rounded-md border border-gray-300 border-dashed bg-gray-50 p-6 text-center">
+					<p className="font-medium text-gray-900 text-sm">No forms available</p>
+					<p className="text-gray-500 text-xs">
+						This action requires at least one form to be configured in this community.
+					</p>
+				</div>
 			)}
 			{selectedFormIsLoading ? (
 				<Skeleton className="mt-4 flex flex-col gap-2">

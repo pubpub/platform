@@ -74,7 +74,10 @@ export const ActionField = memo(
 	) {
 		const { action, schema, defaultFields, context, path, form } = useActionForm()
 
+		console.log("props", props)
+
 		const fieldName = path ? `${path}.${props.name}` : props.name
+		console.log("fieldName", fieldName)
 		return (
 			<Controller
 				name={fieldName}

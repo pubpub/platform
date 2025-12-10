@@ -12,13 +12,13 @@ import { getCommunity } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
 import { createPubRecursiveNew } from "~/lib/server/pub"
 import { createPubProxy } from "../_lib/pubProxy"
-import { extractJsonata, isJsonTemplate } from "../_lib/schemaWithJsonFields"
+import { extractJsonata, needsInterpolation } from "../_lib/schemaWithJsonFields"
 import { defineRun } from "../types"
 
 type PubValueEntry = Json | Date | { value: Json | Date; relatedPubId: PubsId }[]
 
 export const run = defineRun<typeof action>(async (props) => {
-	const { config, communityId, lastModifiedBy, actionInstance } = props
+	const { config, communityId, lastModifiedBy, automation } = props
 	const { stage, formSlug, pubValues } = config
 
 	try {
@@ -38,13 +38,13 @@ export const run = defineRun<typeof action>(async (props) => {
 		// Build the interpolation data based on what input was provided (pub or json)
 		const interpolationData =
 			"pub" in props && props.pub
-				? { pub: createPubProxy(props.pub, community.slug), action: actionInstance }
-				: { json: "json" in props ? props.json : {}, action: actionInstance }
+				? { pub: createPubProxy(props.pub, community.slug), action: automation }
+				: { json: "json" in props ? props.json : {}, action: automation }
 
 		// Interpolate any JSONata templates in pubValues
 		const interpolatedPubValues: Record<string, unknown> = {}
 		for (const [key, value] of Object.entries(pubValues)) {
-			if (typeof value === "string" && isJsonTemplate(value)) {
+			if (typeof value === "string" && needsInterpolation(value)) {
 				const expression = extractJsonata(value)
 				try {
 					interpolatedPubValues[key] = await interpolate(expression, interpolationData)
