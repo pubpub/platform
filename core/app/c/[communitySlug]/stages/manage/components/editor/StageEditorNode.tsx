@@ -63,19 +63,26 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 	const isCurrentStage = props.data.stage.id === editingStageId
 	useEffect(() => {
 		if (isCurrentStage) {
-			const coordinates = nodeRef.current?.getBoundingClientRect()
-			if (coordinates) {
-				setActiveStageCooridnates({
-					x: coordinates.left,
-					y: coordinates.top,
-					width: coordinates.width,
-					height: coordinates.height,
-				})
+			const updateCoordinates = () => {
+				const coordinates = nodeRef.current?.getBoundingClientRect()
+				if (coordinates) {
+					setActiveStageCooridnates({
+						x: coordinates.left,
+						y: coordinates.top,
+						width: coordinates.width,
+						height: coordinates.height,
+					})
+				}
 			}
+
+			const timeoutId = setTimeout(updateCoordinates, 100)
+
+			return () => clearTimeout(timeoutId)
 		}
 	}, [isCurrentStage, setActiveStageCooridnates, nodeRef])
 
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: cant nest buttons man
 		<div
 			className={cn(
 				"relative flex items-center justify-between rounded-lg border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
