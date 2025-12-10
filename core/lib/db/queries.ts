@@ -290,3 +290,38 @@ export const getAutomation = cache(
 		}
 	}
 )
+
+export const getAutomationsByTriggerConfig = cache(
+	async (
+		configPath: string,
+		configValue: unknown,
+		options?: GetEventAutomationOptions
+	): Promise<FullAutomation[]> => {
+		const automations = await autoCache(
+			getAutomationBase(options).where((eb) =>
+				eb.exists(
+					eb
+						.selectFrom("automation_triggers")
+						.whereRef("automation_triggers.automationId", "=", "automations.id")
+						.where(
+							// sql`automation_triggers.config->${configPath}=${JSON.stringify(configValue)}::jsonb`
+							sql`automation_triggers.config->${sql.lit(configPath)}`,
+							"=",
+							sql`${sql.lit(JSON.stringify(configValue))}::jsonb`
+						)
+				)
+			)
+		).execute()
+		console.log(automations)
+
+		return automations.map((automation) => ({
+			...automation,
+			lastAutomationRun: automation.lastAutomationRun
+				? {
+						...automation.lastAutomationRun,
+						status: getAutomationRunStatus(automation.lastAutomationRun),
+					}
+				: null,
+		}))
+	}
+)

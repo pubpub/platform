@@ -72,6 +72,10 @@ export type RunAutomationArgs = {
 
 export type RunActionInstanceArgs = {
 	automation: FullAutomation
+	automationRun: {
+		id: AutomationRunsId
+		actionRuns: { id: ActionRunsId; actionInstanceId: ActionInstancesId | null }[]
+	}
 	community: Communities
 	stage: CommunityStage
 	actionInstance: FullAutomation["actionInstances"][number]
@@ -168,7 +172,7 @@ async function evaluateAutomationConditions(args: {
 	communitySlug: string
 	scheduledAutomationRunId?: AutomationRunsId
 	existingAutomationRun: {
-		actionRuns: { id: ActionRunsId; actionInstanceId: string | null; config: any }[]
+		actionRuns: { id: ActionRunsId; actionInstanceId: ActionInstancesId | null; config: any }[]
 	} | null
 	stack: AutomationRunsId[]
 	trigger: { event: AutomationEvent; config: Record<string, unknown> | null }
@@ -295,6 +299,7 @@ async function executeActionInstances(args: {
 		const result = await runActionInstance({
 			automation: args.automation,
 			actionInstance: ai,
+			automationRun: args.automationRun,
 			actionRunId: correcspondingActionRun.id,
 			stageId: expect(args.automation.stageId),
 			community: args.community,
@@ -390,8 +395,14 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 				pub: createPubProxy(pub, args.community.slug),
 				stage: args.stage,
 				action: actionForInterpolation,
+				automationRun: args.automationRun,
 			}
-		: { json: args.json, action: actionForInterpolation, stage: args.stage }
+		: {
+				json: args.json,
+				action: actionForInterpolation,
+				stage: args.stage,
+				automationRun: args.automationRun,
+			}
 
 	const interpolated = await actionConfigBuilder.interpolate(interpolationData)
 

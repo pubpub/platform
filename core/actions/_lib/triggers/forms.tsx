@@ -16,6 +16,13 @@ const triggerConfigForms = {
 			loading: () => <Skeleton className="h-20 w-full" />,
 		}
 	),
+	[AutomationEvent.webhook]: dynamic(
+		() => import("./WebhookConfigForm").then((mod) => mod.WebhookConfigForm),
+		{
+			ssr: false,
+			loading: () => <Skeleton className="h-20 w-full" />,
+		}
+	),
 } as const satisfies Record<TriggersWithConfig, any>
 
 export const getTriggerConfigForm = (trigger: AutomationEvent) => {

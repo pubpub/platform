@@ -415,12 +415,12 @@ export const siteApi = contract.router(
 			},
 		},
 		webhook: {
-			path: "/webhook/:automationId",
+			path: "/webhook/:path",
 			method: "POST",
 			summary: "Receive a webhook",
 			description: "Receive a webhook from a automation",
 			pathParams: z.object({
-				automationId: z.string().uuid(),
+				path: z.string(),
 			}),
 			body: jsonSchema,
 			responses: {

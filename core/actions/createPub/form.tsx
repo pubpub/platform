@@ -38,19 +38,18 @@ const getDefaultValueForComponent = (component: string | null): unknown => {
 	switch (component) {
 		case "textInput":
 		case "textArea":
-		case "colorPicker":
 			return ""
+		case "colorPicker":
+			return "#000000"
 		case "checkbox":
 			return false
-		case "datePicker":
-			return undefined
 		case "checkboxGroup":
 		case "multivalueInput":
 			return []
 		case "radioGroup":
 		case "selectDropdown":
-		case "memberSelect":
 			return ""
+		case "memberSelect":
 		case "fileUpload":
 		case "richText":
 		case "relationBlock":
@@ -226,7 +225,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 		const fullPath = path ? `${path}.pubValues` : "pubValues"
 
 		const defaultValues = createDefaultValuesFromElements(props.elements)
-		const currentPubValues = actionForm.getValues("pubValues") || {}
+		const currentPubValues = actionForm.getValues(fullPath) || {}
 
 		// Only set defaults for fields that don't already have a value
 		for (const [elementId, defaultValue] of Object.entries(defaultValues)) {
@@ -240,8 +239,6 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 	}, [props.elements, actionForm])
 
 	const components: React.ReactNode[] = []
-	console.log("path", path)
-	console.log("fullPath", actionForm.getValues())
 
 	for (const element of elements) {
 		switch (element.component) {
@@ -256,6 +253,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 							<Input
 								{...field}
 								placeholder={(element.config as any)?.placeholder || ""}
+								className="bg-white"
 							/>
 						)}
 					/>
@@ -273,6 +271,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 							<Textarea
 								{...field}
 								placeholder={(element.config as any)?.placeholder || ""}
+								className="bg-white"
 							/>
 						)}
 					/>
@@ -582,7 +581,6 @@ export default function CreatePubForm(props: CreatePubFormProps) {
 		initialData: undefined,
 		queryKey: ["forms", "getForm", community.id, selectedFormSlug],
 	})
-	console.log("rrrr", form.formState.errors)
 
 	return (
 		<FieldSet>
@@ -604,7 +602,6 @@ export default function CreatePubForm(props: CreatePubFormProps) {
 							<Select
 								onValueChange={(value) => {
 									field.onChange(value)
-									console.log("value", value)
 								}}
 								value={field.value ?? ""}
 							>

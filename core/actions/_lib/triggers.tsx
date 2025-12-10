@@ -87,17 +87,14 @@ export const constructWebhookUrl = (automationId: AutomationsId, communitySlug: 
 
 export const webhook = defineAutomation({
 	event: AutomationEvent.webhook,
-	config: undefined,
+	config: z.object({
+		path: z.string().default(() => {
+			return crypto.randomUUID()
+		}),
+	}),
 	display: {
 		icon: Globe,
-		base: ({ community }) => (
-			<span>
-				a request is made to{" "}
-				<code>
-					{constructWebhookUrl("<automationId>" as AutomationsId, community.slug)}
-				</code>
-			</span>
-		),
+		base: ({ community }) => <span>a webhook is triggered</span>,
 		hydrated: ({ automation, community }) => (
 			<span>
 				a request is made to{" "}
@@ -205,7 +202,7 @@ export const humanReadableEventHydrated = <T extends AutomationEvent>(
 		return automationConf.display.hydrated({
 			automation: options.automation,
 			community,
-			config: options.config,
+			config: options.config as any,
 		})
 	}
 	if (
@@ -256,16 +253,17 @@ export const isTriggerWithConfig = (trigger: AutomationEvent): trigger is Trigge
 	return trigger in triggers && triggers[trigger].config !== undefined
 }
 
-export type AdditionalConfigFormReturn = UseFormReturn<{
-	triggers: Trigger extends infer T extends Trigger
-		? {
-				event: T["event"]
-				config: z.infer<NonNullable<T["config"]>>
-			}[]
-		: never
-}>
+export type AdditionalConfigFormReturn<A extends AutomationEvent = AutomationEvent> =
+	UseFormReturn<{
+		triggers: A extends AutomationEvent
+			? {
+					event: A
+					config: z.infer<NonNullable<(typeof triggers)[A]["config"]>>
+				}[]
+			: never
+	}>
 
-export type AdditionalConfigForm = React.FC<{
-	form: AdditionalConfigFormReturn
+export type AdditionalConfigForm<A extends AutomationEvent = AutomationEvent> = React.FC<{
+	form: AdditionalConfigFormReturn<A>
 	idx: number
 }>

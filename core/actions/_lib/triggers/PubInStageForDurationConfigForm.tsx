@@ -1,3 +1,4 @@
+import type { AutomationEvent } from "db/public"
 import type { AdditionalConfigForm } from "../triggers"
 
 import { Controller } from "react-hook-form"
@@ -8,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 
 import { intervals } from "../triggers"
 
-export const PubInStageForDurationConfigForm: AdditionalConfigForm = (props) => {
+export const PubInStageForDurationConfigForm: AdditionalConfigForm<
+	AutomationEvent.pubInStageForDuration
+> = (props) => {
 	return (
 		<Controller
 			name={`triggers.${props.idx}.config`}

@@ -1,11 +1,4 @@
-import type {
-	AutomationsId,
-	CommunitiesId,
-	CommunityMembershipsId,
-	PubsId,
-	PubTypesId,
-	StagesId,
-} from "db/public"
+import type { CommunitiesId, CommunityMembershipsId, PubsId, PubTypesId, StagesId } from "db/public"
 
 import { createNextHandler } from "@ts-rest/serverless/next"
 
@@ -29,7 +22,7 @@ import {
 	shouldReturnRepresentation,
 } from "~/lib/authentication/api"
 import { userHasAccessToForm } from "~/lib/authorization/capabilities"
-import { getAutomation, getStage } from "~/lib/db/queries"
+import { getAutomationsByTriggerConfig, getStage } from "~/lib/db/queries"
 import {
 	BadRequestError,
 	createPubRecursiveNew,
@@ -777,12 +770,14 @@ const handler = createNextHandler(
 				throw new NotFoundError(`Community not found`)
 			}
 
-			const automationId = params.automationId as AutomationsId
+			const path = params.path as string
 
-			const automation = await getAutomation(automationId)
+			const automations = await getAutomationsByTriggerConfig("path", path, {
+				event: AutomationEvent.webhook,
+			})
 
-			if (!automation) {
-				throw new NotFoundError(`Automation ${automationId} not found`)
+			if (!automations || automations.length === 0) {
+				throw new NotFoundError(`No webhoook automations found for path ${path}`)
 			}
 
 			if (!body) {
@@ -791,18 +786,23 @@ const handler = createNextHandler(
 				)
 			}
 
+			console.log("BODY", body)
 			try {
-				await runAutomation({
-					automationId,
-					json: body,
-					trigger: {
-						event: AutomationEvent.webhook,
-						config: null,
-					},
-					manualActionInstancesOverrideArgs: null,
-					communityId: community.id as CommunitiesId,
-					stack: [],
-				})
+				for (const automation of automations) {
+					await runAutomation({
+						automationId: automation.id,
+						json: body,
+						trigger: {
+							event: AutomationEvent.webhook,
+							config: automation.triggers.find(
+								(t) => t.event === AutomationEvent.webhook
+							)?.config as Record<string, unknown> | null,
+						},
+						manualActionInstancesOverrideArgs: null,
+						communityId: community.id as CommunitiesId,
+						stack: [],
+					})
+				}
 
 				return {
 					status: 201,
