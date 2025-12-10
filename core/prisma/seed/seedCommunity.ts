@@ -41,6 +41,7 @@ import type {
 	componentsBySchema,
 	InputTypeForCoreSchemaType,
 } from "schemas"
+import type { IconConfig } from "ui/dynamic-icon"
 import type { MaybeHas } from "utils/types"
 import type z from "zod"
 import type { actions } from "~/actions/api"
@@ -132,6 +133,7 @@ export type UsersInitializer = Record<
 export type AutomationInitializer = {
 	[AutomationName in string]: {
 		id?: AutomationsId
+		icon?: IconConfig
 		sourceAutomation?: AutomationName
 		timing?: ConditionEvaluationTiming
 		condition?: {
@@ -1376,6 +1378,7 @@ export async function seedCommunity<
 					})),
 					conditionEvaluationTiming: automation.timing,
 					stageId: stage.id,
+					icon: automation.icon,
 					triggers: automation.triggers.map((trigger) => {
 						const sourceAutomation = trigger.sourceAutomation
 							? initialCreatedAutomations.findLast(

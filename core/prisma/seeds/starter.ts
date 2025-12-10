@@ -393,6 +393,10 @@ export async function seedStarter(communityId?: CommunitiesId) {
 				Inbox: {
 					automations: {
 						"Respond to Activity": {
+							icon: {
+								name: "activity",
+								color: "#3b82f6",
+							},
 							triggers: [
 								{
 									event: AutomationEvent.webhook,
@@ -434,7 +438,11 @@ export async function seedStarter(communityId?: CommunitiesId) {
 								},
 							],
 						},
-						"Send Review Offer email": {
+						"Send Review Offer": {
+							icon: {
+								name: "alert-circle",
+								color: "#f59e0b",
+							},
 							triggers: [
 								{
 									event: AutomationEvent.manual,
