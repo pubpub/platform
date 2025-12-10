@@ -238,7 +238,7 @@ const InnerActionField = memo(
 					{required && <span className="-ml-1 text-destructive">*</span>}
 				</FieldLabel>
 			)
-		}, [props.label, required, labelId])
+		}, [props.label, required, labelId, props.field.name])
 
 		return (
 			<Field data-invalid={props.fieldState.invalid}>
@@ -313,7 +313,14 @@ const InnerActionField = memo(
 			prevProps.fieldState.invalid === nextProps.fieldState.invalid &&
 			prevProps.fieldState.error === nextProps.fieldState.error &&
 			prevProps.fieldState.isTouched === nextProps.fieldState.isTouched &&
-			prevProps.fieldState.isDirty === nextProps.fieldState.isDirty
+			prevProps.fieldState.isDirty === nextProps.fieldState.isDirty &&
+			prevProps.action === nextProps.action &&
+			prevProps.context === nextProps.context &&
+			prevProps.description === nextProps.description &&
+			prevProps.name === nextProps.name &&
+			prevProps.label === nextProps.label &&
+			prevProps.schema === nextProps.schema &&
+			prevProps.defaultFields === nextProps.defaultFields
 		)
 	}
 )
