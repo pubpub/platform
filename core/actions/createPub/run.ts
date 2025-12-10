@@ -4,21 +4,66 @@ import type { Json } from "contracts"
 import type { PubsId, PubTypesId, StagesId } from "db/public"
 import type { action } from "./action"
 
+import { interpolate } from "@pubpub/json-interpolate"
 import { logger } from "logger"
 
 import { db } from "~/kysely/database"
+import { getCommunity } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
 import { createPubRecursiveNew } from "~/lib/server/pub"
+import { createPubProxy } from "../_lib/pubProxy"
+import { extractJsonata, isJsonTemplate } from "../_lib/schemaWithJsonFields"
 import { defineRun } from "../types"
 
 type PubValueEntry = Json | Date | { value: Json | Date; relatedPubId: PubsId }[]
 
-export const run = defineRun<typeof action>(async ({ config, communityId, lastModifiedBy }) => {
+export const run = defineRun<typeof action>(async (props) => {
+	const { config, communityId, lastModifiedBy, actionInstance } = props
 	const { stage, formSlug, pubValues } = config
 
 	try {
-		// Get the form to determine the pub type and map element IDs to field slugs
-		const form = await getForm({ slug: formSlug, communityId }, db).executeTakeFirstOrThrow()
+		// Get the form and community to determine the pub type and for interpolation
+		const [form, community] = await Promise.all([
+			getForm({ slug: formSlug, communityId }, db).executeTakeFirstOrThrow(),
+			getCommunity(communityId),
+		])
+
+		if (!community) {
+			return {
+				title: "Failed to create pub",
+				error: "Community not found",
+			}
+		}
+
+		// Build the interpolation data based on what input was provided (pub or json)
+		const interpolationData =
+			"pub" in props && props.pub
+				? { pub: createPubProxy(props.pub, community.slug), action: actionInstance }
+				: { json: "json" in props ? props.json : {}, action: actionInstance }
+
+		// Interpolate any JSONata templates in pubValues
+		const interpolatedPubValues: Record<string, unknown> = {}
+		for (const [key, value] of Object.entries(pubValues)) {
+			if (typeof value === "string" && isJsonTemplate(value)) {
+				const expression = extractJsonata(value)
+				try {
+					interpolatedPubValues[key] = await interpolate(expression, interpolationData)
+				} catch (error) {
+					logger.error({
+						msg: "createPub: Failed to interpolate value",
+						key,
+						expression,
+						error,
+					})
+					return {
+						title: "Failed to create pub",
+						error: `Failed to interpolate value for field: ${error instanceof Error ? error.message : "Unknown error"}`,
+					}
+				}
+			} else {
+				interpolatedPubValues[key] = value
+			}
+		}
 
 		// Build a map from element ID to field slug for pubfield elements
 		const elementIdToFieldSlug = new Map<string, string>()
@@ -30,7 +75,7 @@ export const run = defineRun<typeof action>(async ({ config, communityId, lastMo
 
 		// Transform pubValues from element IDs to field slugs
 		const values: Record<string, PubValueEntry> = {}
-		for (const [elementId, value] of Object.entries(pubValues)) {
+		for (const [elementId, value] of Object.entries(interpolatedPubValues)) {
 			const fieldSlug = elementIdToFieldSlug.get(elementId)
 			if (fieldSlug) {
 				values[fieldSlug] = value as PubValueEntry
