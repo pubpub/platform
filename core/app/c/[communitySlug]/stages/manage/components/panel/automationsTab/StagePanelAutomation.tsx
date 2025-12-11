@@ -1,6 +1,12 @@
 "use client"
 
-import type { ActionRuns, AutomationRuns, CommunitiesId, StagesId } from "db/public"
+import type {
+	ActionRunStatus,
+	ActionRuns,
+	AutomationRuns,
+	CommunitiesId,
+	StagesId,
+} from "db/public"
 import type { FullAutomation } from "db/types"
 
 import { useCallback } from "react"
@@ -18,9 +24,7 @@ import { deleteAutomation, duplicateAutomation } from "../../../actions"
 type Props = {
 	stageId: StagesId
 	communityId: CommunitiesId
-	automation: FullAutomation & {
-		lastAutomationRun: (AutomationRuns & { actionRuns: ActionRuns[] }) | null
-	}
+	automation: FullAutomation
 }
 
 import { useEffect, useState } from "react"
@@ -36,9 +40,9 @@ import { constructAutomationRunPage } from "~/lib/links"
 import { useAutomationId } from "../usePanelQueryParams"
 
 export const UpdateCircle = (
-	props: AutomationRuns & {
+	props: Omit<AutomationRuns, "status"> & {
 		actionRuns: ActionRuns[]
-		status: "success" | "failure" | "scheduled" | "partial"
+		status: ActionRunStatus | "partial"
 		stale: boolean
 		setStale: (stale: boolean) => void
 		setInitTime: (initTime: Date) => void
@@ -128,7 +132,9 @@ export const UpdateCircle = (
 								data-testid={`automation-run-${props.id}-update-circle-result`}
 							>
 								<AutomationRunResult
-									automationRun={props}
+									automationRun={
+										props as AutomationRuns & { actionRuns: ActionRuns[] }
+									}
 									showOverallStatus={false}
 								/>
 							</div>

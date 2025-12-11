@@ -10,6 +10,7 @@ import type {
 	CommunitiesId,
 	PubsId,
 	StagesId,
+	Users,
 	UsersId,
 } from "db/public"
 import type { BaseActionInstanceConfig, FullAutomation, Json } from "db/types"
@@ -46,7 +47,7 @@ import { getActionByName } from "../api"
 import { ActionConfigBuilder } from "./ActionConfigBuilder"
 import { evaluateConditions } from "./evaluateConditions"
 import { getActionRunByName } from "./getRuns"
-import { createPubProxy } from "./pubProxy"
+import { buildInterpolationContext } from "./interpolationContext"
 
 export type ActionInstanceRunResult = ActionRunResult
 
@@ -63,7 +64,7 @@ export type RunAutomationArgs = {
 	} | null
 	// when true, skip condition evaluation (requires overrideAutomationConditions capability)
 	skipConditionCheck?: boolean
-	userId?: UsersId
+	user?: Users
 	stack: AutomationRunsId[]
 	communityId: CommunitiesId
 	pubId?: PubsId
@@ -86,6 +87,7 @@ export type RunActionInstanceArgs = {
 	manualActionInstanceOverrideArgs: Record<string, unknown> | null
 	// stack: ActionRunsId[];
 	actionRunId: ActionRunsId
+	user?: Users
 	pub:
 		| ProcessedPub<{
 				withPubType: true
@@ -96,7 +98,6 @@ export type RunActionInstanceArgs = {
 		| undefined
 	json: Json | undefined
 	stageId: StagesId
-	userId?: UsersId
 }
 
 type AutomationContext = {
@@ -169,15 +170,14 @@ async function evaluateAutomationConditions(args: {
 	skipConditionCheck?: boolean
 	pub: AutomationContext["pub"]
 	json?: Json
-	communitySlug: string
+	community: Communities
 	scheduledAutomationRunId?: AutomationRunsId
 	existingAutomationRun: {
 		actionRuns: { id: ActionRunsId; actionInstanceId: ActionInstancesId | null; config: any }[]
 	} | null
 	stack: AutomationRunsId[]
 	trigger: { event: AutomationEvent; config: Record<string, unknown> | null }
-	communityId: CommunitiesId
-	userId?: UsersId
+	user?: Users
 	trx: Kysely<Database>
 }): Promise<AutomationRunResult | null> {
 	if (!args.automation?.condition || args.skipConditionCheck) {
@@ -195,9 +195,29 @@ async function evaluateAutomationConditions(args: {
 		return null
 	}
 
-	const input = args.pub
-		? { pub: createPubProxy(args.pub, args.communitySlug) }
-		: { json: args.json ?? ({} as Json) }
+	if (!args.automation.stageId) {
+		throw new Error("Cannot evaluate conditions for automation without a stage")
+	}
+
+	const stage = await getStages({
+		communityId: args.community.id,
+		stageId: args.automation.stageId,
+		userId: null,
+	}).executeTakeFirstOrThrow()
+
+	const input = buildInterpolationContext({
+		env: {
+			PUBPUB_URL: env.PUBPUB_URL,
+		},
+		community: args.community,
+		stage,
+		automation: args.automation,
+		automationRun: {
+			id: args.scheduledAutomationRunId ?? ("pending-evaluation" as AutomationRunsId),
+		},
+		user: args.user,
+		...(args.pub ? { pub: args.pub } : { json: args.json ?? ({} as Json) }),
+	})
 
 	const [error, evaluationResult] = await tryCatch(
 		evaluateConditions(args.automation.condition, input)
@@ -219,11 +239,11 @@ async function evaluateAutomationConditions(args: {
 				})),
 				pubId: args.pub?.id,
 				json: args.json,
-				communityId: args.communityId,
+				communityId: args.community.id,
 				stack: args.stack,
 				scheduledAutomationRunId: args.scheduledAutomationRunId,
 				trigger: args.trigger,
-				userId: args.userId,
+				userId: args.user?.id,
 			})
 		}
 
@@ -276,7 +296,7 @@ async function executeActionInstances(args: {
 	pub: AutomationContext["pub"]
 	json?: Json
 	manualActionInstancesOverrideArgs: RunAutomationArgs["manualActionInstancesOverrideArgs"]
-	userId?: UsersId
+	user?: Users
 }): Promise<
 	(ActionRunResult & {
 		actionInstance: FullAutomation["actionInstances"][number]
@@ -308,7 +328,7 @@ async function executeActionInstances(args: {
 			json: args.json,
 			stage: args.stage,
 			pub: args.pub ?? undefined,
-			userId: args.userId,
+			user: args.user,
 		})
 
 		logger[result.success === false ? "error" : "info"]({
@@ -385,24 +405,23 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 		.withDefaults(actionDefaults?.config as Record<string, any>)
 		.validate()
 	const mergedConfig = actionConfigBuilder.getMergedConfig()
-	const actionForInterpolation = {
-		...args.actionInstance,
-		config: mergedConfig,
-	}
 
-	const interpolationData = pub
-		? {
-				pub: createPubProxy(pub, args.community.slug),
-				stage: args.stage,
-				action: actionForInterpolation,
-				automationRun: args.automationRun,
-			}
-		: {
-				json: args.json,
-				action: actionForInterpolation,
-				stage: args.stage,
-				automationRun: args.automationRun,
-			}
+	const interpolationData = buildInterpolationContext({
+		env: {
+			PUBPUB_URL: env.PUBPUB_URL,
+		},
+		community: args.community,
+		stage: args.stage,
+		automation: {
+			...args.automation,
+			actionInstances: args.automation.actionInstances.map((ai) =>
+				ai.id === args.actionInstance.id ? { ...ai, config: mergedConfig } : ai
+			),
+		},
+		automationRun: args.automationRun,
+		user: args.user,
+		...(pub ? { pub } : { json: args.json ?? ({} as Json) }),
+	})
 
 	const interpolated = await actionConfigBuilder.interpolate(interpolationData)
 
@@ -446,8 +465,10 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			communityId: args.community.id,
 			lastModifiedBy,
 			actionRunId: args.actionRunId,
-			userId: args.userId,
+			userId: args.user?.id,
 			automation: args.automation,
+			automationRunId: args.automationRun.id,
+			actionInstanceId: args.actionInstance.id,
 		})
 
 		if (isActionSuccess(result)) {
@@ -539,13 +560,12 @@ export async function runAutomation(
 		skipConditionCheck: args.skipConditionCheck,
 		pub,
 		json: args.json,
-		communitySlug: community.slug,
+		community,
 		scheduledAutomationRunId: args.scheduledAutomationRunId,
 		existingAutomationRun,
 		stack: args.stack,
 		trigger: args.trigger,
-		communityId: args.communityId,
-		userId: "userId" in args ? args.userId : undefined,
+		userId: args.user?.id,
 		trx,
 	})
 
@@ -573,7 +593,7 @@ export async function runAutomation(
 		stack: args.stack,
 		scheduledAutomationRunId: args.scheduledAutomationRunId,
 		trigger: args.trigger,
-		userId: isActionUserInitiated ? args.userId : undefined,
+		userId: isActionUserInitiated ? args.user?.id : undefined,
 	})
 
 	// execute all action instances sequentially
@@ -585,7 +605,7 @@ export async function runAutomation(
 		pub,
 		json: args.json,
 		manualActionInstancesOverrideArgs: args.manualActionInstancesOverrideArgs,
-		userId: isActionUserInitiated ? args.userId : undefined,
+		user: isActionUserInitiated ? args.user : undefined,
 	})
 
 	// update automation run with final results
@@ -606,7 +626,7 @@ export async function runAutomation(
 		communityId: args.communityId,
 		stack: args.stack,
 		scheduledAutomationRunId: automationRun.id,
-		userId: isActionUserInitiated ? args.userId : undefined,
+		userId: isActionUserInitiated ? args.user?.id : undefined,
 	})
 
 	const success = results.every((r) => r.success === true)

@@ -6,26 +6,29 @@ import type { action } from "./action"
 
 import { interpolate } from "@pubpub/json-interpolate"
 import { logger } from "logger"
+import { expect } from "utils"
 
 import { db } from "~/kysely/database"
 import { getCommunity } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
 import { createPubRecursiveNew } from "~/lib/server/pub"
-import { createPubProxy } from "../_lib/pubProxy"
+import { getStages } from "~/lib/server/stages"
+import { buildInterpolationContext } from "../_lib/interpolationContext"
 import { extractJsonata, needsInterpolation } from "../_lib/schemaWithJsonFields"
 import { defineRun } from "../types"
 
 type PubValueEntry = Json | Date | { value: Json | Date; relatedPubId: PubsId }[]
 
 export const run = defineRun<typeof action>(async (props) => {
-	const { config, communityId, lastModifiedBy, automation } = props
+	const { config, communityId, lastModifiedBy, automation, stageId } = props
 	const { stage, formSlug, pubValues } = config
 
 	try {
-		// Get the form and community to determine the pub type and for interpolation
-		const [form, community] = await Promise.all([
+		// Get the form, community, and stage to determine the pub type and for interpolation
+		const [form, community, stageData] = await Promise.all([
 			getForm({ slug: formSlug, communityId }, db).executeTakeFirstOrThrow(),
 			getCommunity(communityId),
+			getStages({ communityId, stageId, userId: null }).executeTakeFirstOrThrow(),
 		])
 
 		if (!community) {
@@ -35,13 +38,24 @@ export const run = defineRun<typeof action>(async (props) => {
 			}
 		}
 
-		// Build the interpolation data based on what input was provided (pub or json)
-		const interpolationData =
-			"pub" in props && props.pub
-				? { pub: createPubProxy(props.pub, community.slug), action: automation }
-				: { json: "json" in props ? props.json : {}, action: automation }
+		// build interpolation context with all available data
+		const interpolationData = buildInterpolationContext({
+			community,
+			stage: stageData,
+			automation,
+			automationRun: { id: props.automationRunId },
+			action: {
+				id: props.actionInstanceId,
+				action: expect(
+					props.automation.actionInstances.find((ai) => ai.id === props.actionInstanceId)
+				).action,
+				config,
+			},
+			userId: props.userId ?? null,
+			...(props.pub ? { pub: props.pub } : { json: props.json ?? {} }),
+		})
 
-		// Interpolate any JSONata templates in pubValues
+		// interpolate any jsonata templates in pubValues
 		const interpolatedPubValues: Record<string, unknown> = {}
 		for (const [key, value] of Object.entries(pubValues)) {
 			if (typeof value === "string" && needsInterpolation(value)) {

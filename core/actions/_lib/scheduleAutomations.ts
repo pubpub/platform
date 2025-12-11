@@ -13,7 +13,7 @@ import { findCommunityBySlug } from "~/lib/server/community"
 import { getJobsClient, getScheduledAutomationJobKey } from "~/lib/server/jobs"
 import { getPubsWithRelatedValues } from "~/lib/server/pub"
 import { evaluateConditions } from "./evaluateConditions"
-import { createPubProxy } from "./pubProxy"
+import { buildInterpolationContext } from "./interpolationContext"
 import { insertAutomationRun } from "./runAutomation"
 
 export const scheduleDelayedAutomation = async ({
@@ -81,7 +81,22 @@ export const scheduleDelayedAutomation = async ({
 			throw new Error(`Pub ${pubId} not found`)
 		}
 
-		const input = { pub: createPubProxy(pub, community.slug) }
+		if (!pub.stage) {
+			throw new Error(`Pub ${pubId} has no stage`)
+		}
+
+		const input = buildInterpolationContext({
+			community,
+			stage: pub.stage,
+			automation,
+			automationRun: { id: "pending-scheduling" },
+			action: {
+				action: "pending-scheduling",
+				config: {},
+			},
+			userId: null,
+			pub,
+		})
 		const evaluationResult = await evaluateConditions(condition, input)
 
 		if (!evaluationResult.passed) {

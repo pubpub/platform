@@ -1,5 +1,7 @@
 import type {
+	ActionInstancesId,
 	ActionRunsId,
+	AutomationRunsId,
 	AutomationsId,
 	CommunitiesId,
 	PubFieldsId,
@@ -148,6 +150,8 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 		description: null,
 		lastAutomationRun: null,
 	},
+	automationRunId: "" as AutomationRunsId,
+	actionInstanceId: "" as ActionInstancesId,
 	actionRunId: "" as ActionRunsId,
 	stageId: "" as StagesId,
 	communityId: "" as CommunitiesId,

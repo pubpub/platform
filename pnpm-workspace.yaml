@@ -23,6 +23,7 @@ catalog:
     "@babel/core": 7.27.4
     tsx: ^4.19.0
     typescript: ^5.9.2
+    "@typescript/native-preview": "latest"
     vitest: ^3.1.4
     vite: "^6.0.0"
     vite-tsconfig-paths: "^5.1.4"

@@ -1,5 +1,5 @@
 import type { ProcessedPub } from "contracts"
-import type { Action as ActionEnum, PubsId, StagesId } from "db/public"
+import type { Action as ActionEnum, ActionInstancesId, PubsId, StagesId } from "db/public"
 import type z from "zod"
 import type { ActionFormContextContextValue } from "./ActionForm"
 
@@ -24,7 +24,7 @@ import { PubSearchSelect } from "~/app/components/pubs/PubSearchSelect"
 import { client } from "~/lib/api"
 import { getActionByName } from "../api"
 import { useActionForm } from "./ActionForm"
-import { createPubProxy } from "./pubProxy"
+import { buildInterpolationContext } from "./interpolationContext"
 import { extractJsonata } from "./schemaWithJsonFields"
 
 export type TestInputType = "current-pub" | "select-pub" | "json-blob"
@@ -105,26 +105,6 @@ export function ActionFieldJsonataTestPanel(props: {
 		}
 	}, [])
 
-	const bodyForTest = useMemo(() => {
-		if (inputType === "current-pub" && selectedPubId && data?.body) {
-			return { pub: createPubProxy(data.body as ProcessedPub, community.slug) }
-		}
-		if (inputType === "select-pub") {
-			if (selectedPubId && data?.body) {
-				return { pub: createPubProxy(data.body as ProcessedPub, community.slug) }
-			}
-			return {}
-		}
-		if (inputType === "json-blob") {
-			try {
-				return { json: JSON.parse(jsonBlob) }
-			} catch {
-				return null
-			}
-		}
-		return null
-	}, [inputType, selectedPubId, jsonBlob, data?.body, community.slug])
-
 	const values = useWatch({ control: form.control, ...(path ? { name: path } : {}) })
 
 	const valuesMinusCurrent = useMemo(() => {
@@ -137,15 +117,56 @@ export function ActionFieldJsonataTestPanel(props: {
 	const stage = stages.find((s) => s.id === props.stageId)
 
 	const bodyWithAction = useMemo(() => {
-		return {
-			...bodyForTest,
+		if (!data?.body && inputType !== "json-blob") {
+			return null
+		}
+
+		const pubOrJson =
+			inputType === "json-blob"
+				? (() => {
+						try {
+							return { json: JSON.parse(jsonBlob) }
+						} catch {
+							return null
+						}
+					})()
+				: data?.body
+					? { pub: data.body as ProcessedPub }
+					: null
+
+		if (!pubOrJson) {
+			return null
+		}
+
+		return buildInterpolationContext({
+			community: {
+				id: community.id,
+				name: community.name,
+				slug: community.slug,
+				avatar: community.avatar,
+			},
 			stage,
 			action: {
-				...action,
+				id: "<dummy-action-id>" as ActionInstancesId,
+				action: action.name,
 				config: valuesMinusCurrent,
 			},
-		}
-	}, [bodyForTest, valuesMinusCurrent, action, stage])
+			env: {
+				PUBPUB_URL: typeof window !== "undefined" ? window.location.origin : "",
+			},
+			useDummyValues: true,
+			...pubOrJson,
+		})
+	}, [
+		data?.body,
+		inputType,
+		jsonBlob,
+		community,
+		stage,
+		action.name,
+		valuesMinusCurrent,
+		community.avatar,
+	])
 
 	const canTest = useMemo(() => {
 		if (inputType === "current-pub") {
@@ -488,14 +509,6 @@ export const InputSelector = (props: {
 					<p className="text-gray-600 text-xs">Test using the current pub context</p>
 				</TabsContent>
 				<TabsContent value="select-pub" className="mt-2 space-y-2">
-					{/* <Input
-								type="text"
-								placeholder="Enter pub ID"
-								value={selectedPubId}
-								onChange={(e) => setSelectedPubId(e.target.value)}
-								className="text-xs"
-							/> */}
-
 					<div className="flex max-w-xs flex-col gap-2">
 						<PubSearchSelect
 							onSelectedPubsChange={(pubs) => {

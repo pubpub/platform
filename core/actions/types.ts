@@ -1,8 +1,10 @@
 import type { Prettify } from "@ts-rest/core"
 import type { ProcessedPub } from "contracts"
 import type {
+	ActionInstancesId,
 	Action as ActionName,
 	ActionRunsId,
+	AutomationRunsId,
 	Automations,
 	Communities,
 	CommunitiesId,
@@ -46,6 +48,14 @@ export type RunProps<T extends Action> = T extends Action<
 				 */
 				userId?: UsersId
 				automation: FullAutomation
+				/**
+				 * The automation run context
+				 */
+				automationRunId: AutomationRunsId
+				/**
+				 * The action instance being run
+				 */
+				actionInstanceId: ActionInstancesId
 			} & ("pub" | "json" extends Acc[number] // if only one's accepted, it's only that one // if both are accepted, it's one or the other.
 				? XOR<{ pub: ActionPub }, { json: Json }>
 				: ("pub" extends Acc[number]
