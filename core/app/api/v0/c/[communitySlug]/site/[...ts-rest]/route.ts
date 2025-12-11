@@ -800,6 +800,7 @@ const handler = createNextHandler(
 						manualActionInstancesOverrideArgs: null,
 						communityId: community.id as CommunitiesId,
 						stack: [],
+						user: null,
 					})
 				}
 

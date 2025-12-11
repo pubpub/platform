@@ -1,8 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import type { FormsId } from "db/public"
 
-import { ArchiveFormButton } from "app/components/FormBuilder/ArchiveFormButton"
-
 import { Button } from "ui/button"
 import { Checkbox } from "ui/checkbox"
 import { DataTableColumnHeader } from "ui/data-table"
@@ -14,6 +12,7 @@ import {
 } from "ui/dropdown-menu"
 import { Ellipsis, History, ToyBrick } from "ui/icon"
 
+import { ArchiveFormButton } from "~/app/components/FormBuilder/ArchiveFormButton"
 import { RestoreFormButton } from "~/app/components/FormBuilder/RestoreFormButton"
 
 export type TableForm = {

@@ -139,6 +139,7 @@ describe("runAutomation - status computation", () => {
 				communityId: community.community.id,
 				stack: [],
 				manualActionInstancesOverrideArgs: null,
+				user: null,
 			},
 			trx
 		)
@@ -182,6 +183,7 @@ describe("runAutomation - status computation", () => {
 				communityId: community.community.id,
 				stack: [],
 				manualActionInstancesOverrideArgs: null,
+				user: null,
 			},
 			trx
 		)
@@ -231,6 +233,7 @@ describe("runAutomation - status computation", () => {
 						// actually, log always succeeds, so let's check the http action instead
 					},
 				},
+				user: null,
 			},
 			trx
 		)
@@ -257,6 +260,7 @@ describe("runAutomation - status computation", () => {
 				automationId: community.stages["Test Stage"].automations["single-action"].id,
 				triggerEvent: AutomationEvent.manual,
 				inputPubId: community.pubs[0].id,
+				sourceUserId: null,
 			})
 			.returning("id")
 			.executeTakeFirstOrThrow()
@@ -293,6 +297,7 @@ describe("runAutomation - sequential automation triggering", () => {
 				communityId: community.community.id,
 				stack: [],
 				manualActionInstancesOverrideArgs: null,
+				user: null,
 			},
 			trx
 		)
@@ -363,6 +368,7 @@ describe("runAutomation - sequential automation triggering", () => {
 				communityId: community.community.id,
 				stack: [],
 				manualActionInstancesOverrideArgs: null,
+				user: null,
 			},
 			trx
 		)
@@ -404,6 +410,7 @@ describe("runAutomation - sequential automation triggering", () => {
 				communityId: community.community.id,
 				stack: [],
 				manualActionInstancesOverrideArgs: null,
+				user: null,
 			},
 			trx
 		)
@@ -416,6 +423,7 @@ describe("runAutomation - sequential automation triggering", () => {
 				communityId: community.community.id,
 				stack: [result1.stack[result1.stack.length - 1]],
 				manualActionInstancesOverrideArgs: null,
+				user: null,
 			},
 			trx
 		)
@@ -430,6 +438,7 @@ describe("runAutomation - sequential automation triggering", () => {
 				communityId: community.community.id,
 				stack: existingStack,
 				manualActionInstancesOverrideArgs: null,
+				user: null,
 			},
 			trx
 		)
@@ -473,6 +482,7 @@ describe("runAutomation - status transitions", () => {
 				communityId: community.community.id,
 				stack: [],
 				manualActionInstancesOverrideArgs: null,
+				user: null,
 			},
 			trx
 		)
@@ -524,6 +534,7 @@ describe("runAutomation - status transitions", () => {
 				communityId: community.community.id,
 				stack: [],
 				manualActionInstancesOverrideArgs: null,
+				user: null,
 			},
 			trx
 		)

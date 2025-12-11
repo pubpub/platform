@@ -51,14 +51,12 @@ import { cn } from "utils"
 import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder"
 import { ActionFormContext } from "~/actions/_lib/ActionForm"
 import {
-	type AdditionalConfigFormReturn,
 	getTriggerByName,
 	humanReadableEventBase,
 	humanReadableEventHydrated,
-	isTriggerWithConfig,
 	triggers,
 } from "~/actions/_lib/triggers"
-import { getTriggerConfigForm } from "~/actions/_lib/triggers/forms"
+import { isTriggerWithConfigForm, TriggerConfigForm } from "~/actions/_lib/triggers/forms"
 import { actions } from "~/actions/api"
 import { getActionFormComponent } from "~/actions/forms"
 import { isSchedulableAutomationEvent, isSequentialAutomationEvent } from "~/actions/types"
@@ -174,7 +172,7 @@ export type CreateAutomationsSchema = {
 	triggers: {
 		triggerId: AutomationTriggersId
 		event: AutomationEvent
-		config?: Record<string, unknown>
+		config: Record<string, unknown>
 		sourceAutomationId?: AutomationsId | undefined
 	}[]
 	action: {
@@ -393,6 +391,7 @@ export function StagePanelAutomationForm(props: Props) {
 						.array(
 							z.discriminatedUnion(
 								"event",
+
 								entries(triggers).map(([event, automation]) =>
 									z.object({
 										triggerId: automationTriggersIdSchema,
@@ -822,20 +821,27 @@ const TriggerConfigCard = memo(
 	}) {
 		const trigger = getTriggerByName(props.trigger.event)
 
-		const TriggerForm = useMemo(() => {
-			if (!isTriggerWithConfig(props.trigger.event)) {
+		const triggerForm = useMemo(() => {
+			const pr = {
+				event: props.trigger.event,
+				// FIXME: terrible typescript going on here, overcomplicated
+				form: props.form as UseFormReturn<any>,
+				idx: props.idx,
+			}
+
+			if (!isTriggerWithConfigForm(pr, props.trigger.event)) {
 				return null
 			}
 
-			return getTriggerConfigForm(props.trigger.event)
-		}, [props.trigger.event])
+			return <TriggerConfigForm {...pr} />
+		}, [props.trigger.event, props.form, props.idx])
 
 		if (!trigger) {
 			return null
 		}
 
 		const hasConfig = Boolean(
-			isSequentialAutomationEvent(props.trigger.event) || (trigger?.config && TriggerForm)
+			isSequentialAutomationEvent(props.trigger.event) || (trigger?.config && triggerForm)
 		)
 
 		if (!hasConfig) {
@@ -847,7 +853,7 @@ const TriggerConfigCard = memo(
 						props.currentAutomation
 							? humanReadableEventHydrated(props.trigger.event, props.community, {
 									automation: props.currentAutomation,
-									config: (props.trigger.config as any) ?? null,
+									config: props.trigger.config ?? null,
 									sourceAutomation: props.trigger.sourceAutomationId
 										? props.stageAutomations.find(
 												(a) => a.id === props.trigger.sourceAutomationId
@@ -888,13 +894,7 @@ const TriggerConfigCard = memo(
 						)}
 					/>
 				)}
-				{trigger.config && TriggerForm && (
-					<TriggerForm
-						// FIXME: this is not very safe, watch out for subtle bugs
-						form={props.form as unknown as AdditionalConfigFormReturn}
-						idx={props.idx}
-					/>
-				)}
+				{triggerForm}
 			</ConfigCard>
 		)
 	},

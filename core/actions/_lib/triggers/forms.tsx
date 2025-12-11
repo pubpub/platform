@@ -1,34 +1,58 @@
-import type { TriggersWithConfig } from "../triggers"
-
 import dynamic from "next/dynamic"
 
 import { AutomationEvent } from "db/public"
 import { Skeleton } from "ui/skeleton"
 
-const triggerConfigForms = {
-	[AutomationEvent.pubInStageForDuration]: dynamic(
-		() =>
-			import("./PubInStageForDurationConfigForm").then(
-				(mod) => mod.PubInStageForDurationConfigForm
-			),
-		{
-			ssr: false,
-			loading: () => <Skeleton className="h-20 w-full" />,
-		}
-	),
-	[AutomationEvent.webhook]: dynamic(
-		() => import("./WebhookConfigForm").then((mod) => mod.WebhookConfigForm),
-		{
-			ssr: false,
-			loading: () => <Skeleton className="h-20 w-full" />,
-		}
-	),
-} as const satisfies Record<TriggersWithConfig, any>
+import { type AdditionalConfigFormReturn, isTriggerWithConfig } from "../triggers"
 
-export const getTriggerConfigForm = (trigger: AutomationEvent) => {
-	if (!(trigger in triggerConfigForms)) {
-		return null
+const PubInStageForDurationConfigForm = dynamic(
+	() =>
+		import("./PubInStageForDurationConfigForm").then(
+			(mod) => mod.PubInStageForDurationConfigForm
+		),
+	{
+		ssr: false,
+		loading: () => <Skeleton className="h-20 w-full" />,
 	}
+)
 
-	return triggerConfigForms[trigger as TriggersWithConfig]
+const WebhookConfigForm = dynamic(
+	() => import("./WebhookConfigForm").then((mod) => mod.WebhookConfigForm),
+	{
+		ssr: false,
+		loading: () => <Skeleton className="h-20 w-full" />,
+	}
+)
+
+type TriggerWithConfigForm<T extends AutomationEvent> = T extends T
+	? {
+			event: T
+			form: AdditionalConfigFormReturn<T>
+			idx: number
+		}
+	: never
+
+export const isTriggerWithConfigForm = <T extends AutomationEvent>(
+	props: TriggerWithConfigForm<any>,
+	// only used for typesafety
+	_event: T
+): props is TriggerWithConfigForm<T> => {
+	return isTriggerWithConfig(props.event)
+}
+
+export const TriggerConfigForm = <T extends AutomationEvent>(
+	props: TriggerWithConfigForm<T>
+): React.ReactNode => {
+	if (isTriggerWithConfigForm(props, AutomationEvent.pubInStageForDuration)) {
+		return (
+			<PubInStageForDurationConfigForm
+				event={props.event}
+				form={props.form}
+				idx={props.idx}
+			/>
+		)
+	} else if (isTriggerWithConfigForm(props, AutomationEvent.webhook)) {
+		return <WebhookConfigForm event={props.event} form={props.form} idx={props.idx} />
+	}
+	return null
 }

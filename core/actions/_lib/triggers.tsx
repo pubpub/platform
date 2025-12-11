@@ -263,7 +263,10 @@ export type AdditionalConfigFormReturn<A extends AutomationEvent = AutomationEve
 			: never
 	}>
 
-export type AdditionalConfigForm<A extends AutomationEvent = AutomationEvent> = React.FC<{
-	form: AdditionalConfigFormReturn<A>
-	idx: number
-}>
+export type AdditionalConfigForm<A extends AutomationEvent = AutomationEvent> = A extends A
+	? React.FC<{
+			event: A
+			form: AdditionalConfigFormReturn<A>
+			idx: number
+		}>
+	: never

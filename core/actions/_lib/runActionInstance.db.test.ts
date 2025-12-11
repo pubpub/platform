@@ -123,6 +123,7 @@ describe("runAutomation", () => {
 			communityId: community.id,
 			stack: [],
 			automationId: stages.Submission.automations["1"].id,
+			user: null,
 		})
 		expect(result.actionRuns).toHaveLength(1)
 

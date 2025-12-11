@@ -8,6 +8,7 @@ import { expect } from "utils"
 import { db } from "~/kysely/database"
 import { addDuration } from "~/lib/dates"
 import { getAutomation } from "~/lib/db/queries"
+import { env } from "~/lib/env/env"
 import { getAutomationRunById } from "~/lib/server/actions"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getJobsClient, getScheduledAutomationJobKey } from "~/lib/server/jobs"
@@ -64,6 +65,7 @@ export const scheduleDelayedAutomation = async ({
 		automationTiming === ConditionEvaluationTiming.both
 
 	const condition = automation.condition
+	const automationRunId = crypto.randomUUID() as AutomationRunsId
 
 	if (shouldEvaluateNow && condition) {
 		const pub = await getPubsWithRelatedValues(
@@ -89,13 +91,10 @@ export const scheduleDelayedAutomation = async ({
 			community,
 			stage: pub.stage,
 			automation,
-			automationRun: { id: "pending-scheduling" },
-			action: {
-				action: "pending-scheduling",
-				config: {},
-			},
-			userId: null,
+			automationRun: { id: automationRunId },
+			user: null,
 			pub,
+			env,
 		})
 		const evaluationResult = await evaluateConditions(condition, input)
 
@@ -122,6 +121,7 @@ export const scheduleDelayedAutomation = async ({
 	}).toISOString()
 
 	const scheduleAutomationRun = await insertAutomationRun(db, {
+		scheduledAutomationRunId: automationRunId,
 		automationId,
 		actionRuns: automation.actionInstances.map((ai) => ({
 			actionInstanceId: ai.id,
@@ -132,7 +132,6 @@ export const scheduleDelayedAutomation = async ({
 		pubId,
 		communityId: community.id,
 		stack,
-		scheduledAutomationRunId: undefined,
 		trigger: {
 			event: AutomationEvent.pubInStageForDuration,
 			config: trigger.config as Record<string, unknown> | null,

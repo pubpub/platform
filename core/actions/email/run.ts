@@ -77,7 +77,7 @@ const resolveRecipient = async (
 }
 
 export const run = defineRun<typeof action>(
-	async ({ pub, config, communityId, actionRunId, userId }) => {
+	async ({ pub, config, communityId, actionRunId, user }) => {
 		try {
 			const result = await maybeWithTrx(db, async (trx) => {
 				const communitySlug = await getCommunitySlug()
@@ -104,7 +104,7 @@ export const run = defineRun<typeof action>(
 					recipient,
 					pub,
 					inviter: {
-						userId,
+						userId: user?.id,
 						actionRunId,
 					},
 					trx,

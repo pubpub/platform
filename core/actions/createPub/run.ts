@@ -6,9 +6,9 @@ import type { action } from "./action"
 
 import { interpolate } from "@pubpub/json-interpolate"
 import { logger } from "logger"
-import { expect } from "utils"
 
 import { db } from "~/kysely/database"
+import { env } from "~/lib/env/env"
 import { getCommunity } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
 import { createPubRecursiveNew } from "~/lib/server/pub"
@@ -42,16 +42,20 @@ export const run = defineRun<typeof action>(async (props) => {
 		const interpolationData = buildInterpolationContext({
 			community,
 			stage: stageData,
-			automation,
-			automationRun: { id: props.automationRunId },
-			action: {
-				id: props.actionInstanceId,
-				action: expect(
-					props.automation.actionInstances.find((ai) => ai.id === props.actionInstanceId)
-				).action,
-				config,
+			automation: {
+				...automation,
+				actionInstances: automation.actionInstances.map((ai) =>
+					ai.id === props.actionInstanceId
+						? {
+								...ai,
+								config: config,
+							}
+						: ai
+				),
 			},
-			userId: props.userId ?? null,
+			automationRun: { id: props.automationRunId },
+			user: props.user ?? null,
+			env,
 			...(props.pub ? { pub: props.pub } : { json: props.json ?? {} }),
 		})
 

@@ -1,5 +1,5 @@
 import type { ProcessedPub } from "contracts"
-import type { Action as ActionEnum, ActionInstancesId, PubsId, StagesId } from "db/public"
+import type { Action as ActionEnum, PubsId, StagesId } from "db/public"
 import type z from "zod"
 import type { ActionFormContextContextValue } from "./ActionForm"
 
@@ -146,11 +146,6 @@ export function ActionFieldJsonataTestPanel(props: {
 				avatar: community.avatar,
 			},
 			stage,
-			action: {
-				id: "<dummy-action-id>" as ActionInstancesId,
-				action: action.name,
-				config: valuesMinusCurrent,
-			},
 			env: {
 				PUBPUB_URL: typeof window !== "undefined" ? window.location.origin : "",
 			},

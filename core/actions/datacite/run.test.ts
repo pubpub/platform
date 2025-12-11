@@ -150,6 +150,7 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 		description: null,
 		lastAutomationRun: null,
 	},
+	user: null,
 	automationRunId: "" as AutomationRunsId,
 	actionInstanceId: "" as ActionInstancesId,
 	actionRunId: "" as ActionRunsId,

@@ -1,6 +1,6 @@
 "use server"
 
-import type { ActionInstancesId, UsersId } from "db/public"
+import type { ActionInstancesId } from "db/public"
 import type { RunAutomationArgs } from "../_lib/runAutomation"
 import type { AutomationRunResult } from "../results"
 
@@ -13,7 +13,7 @@ import { runAutomation } from "../_lib/runAutomation"
 import { getActionByName } from "."
 
 export const runAutomationManual = defineServerAction(async function runActionInstance(
-	args: Omit<RunAutomationArgs, "userId" | "trigger"> & {
+	args: Omit<RunAutomationArgs, "user" | "trigger"> & {
 		manualActionInstancesOverrideArgs: {
 			[actionInstanceId: ActionInstancesId]: Record<string, unknown>
 		}
@@ -70,7 +70,7 @@ export const runAutomationManual = defineServerAction(async function runActionIn
 
 	const result = await runAutomation({
 		...rest,
-		userId: user.id as UsersId,
+		user,
 		stack: args.stack ?? [],
 		communityId: args.communityId,
 		manualActionInstancesOverrideArgs: args.manualActionInstancesOverrideArgs,

@@ -9,9 +9,9 @@ import type {
 	Communities,
 	CommunitiesId,
 	StagesId,
-	UsersId,
 } from "db/public"
 import type { FullAutomation, Json, LastModifiedBy } from "db/types"
+import type { User } from "lucia"
 import type React from "react"
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form"
 import type * as Icons from "ui/icon"
@@ -43,10 +43,6 @@ export type RunProps<T extends Action> = T extends Action<
 				 */
 				lastModifiedBy: LastModifiedBy
 				actionRunId: ActionRunsId
-				/**
-				 * The user ID of the user who initiated the action, if any
-				 */
-				userId?: UsersId
 				automation: FullAutomation
 				/**
 				 * The automation run context
@@ -56,6 +52,10 @@ export type RunProps<T extends Action> = T extends Action<
 				 * The action instance being run
 				 */
 				actionInstanceId: ActionInstancesId
+				/**
+				 * The user who is running the action, if any
+				 */
+				user: User | null
 			} & ("pub" | "json" extends Acc[number] // if only one's accepted, it's only that one // if both are accepted, it's one or the other.
 				? XOR<{ pub: ActionPub }, { json: Json }>
 				: ("pub" extends Acc[number]

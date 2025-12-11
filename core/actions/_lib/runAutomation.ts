@@ -10,11 +10,11 @@ import type {
 	CommunitiesId,
 	PubsId,
 	StagesId,
-	Users,
 	UsersId,
 } from "db/public"
 import type { BaseActionInstanceConfig, FullAutomation, Json } from "db/types"
 import type { Kysely } from "kysely"
+import type { User } from "lucia"
 import type { run as logRun } from "../log/run"
 
 import { captureException } from "@sentry/nextjs"
@@ -64,7 +64,7 @@ export type RunAutomationArgs = {
 	} | null
 	// when true, skip condition evaluation (requires overrideAutomationConditions capability)
 	skipConditionCheck?: boolean
-	user?: Users
+	user: User | null
 	stack: AutomationRunsId[]
 	communityId: CommunitiesId
 	pubId?: PubsId
@@ -87,7 +87,7 @@ export type RunActionInstanceArgs = {
 	manualActionInstanceOverrideArgs: Record<string, unknown> | null
 	// stack: ActionRunsId[];
 	actionRunId: ActionRunsId
-	user?: Users
+	user: User | null
 	pub:
 		| ProcessedPub<{
 				withPubType: true
@@ -177,7 +177,7 @@ async function evaluateAutomationConditions(args: {
 	} | null
 	stack: AutomationRunsId[]
 	trigger: { event: AutomationEvent; config: Record<string, unknown> | null }
-	user?: Users
+	user: User | null
 	trx: Kysely<Database>
 }): Promise<AutomationRunResult | null> {
 	if (!args.automation?.condition || args.skipConditionCheck) {
@@ -206,6 +206,7 @@ async function evaluateAutomationConditions(args: {
 	}).executeTakeFirstOrThrow()
 
 	const input = buildInterpolationContext({
+		useDummyValues: false,
 		env: {
 			PUBPUB_URL: env.PUBPUB_URL,
 		},
@@ -215,7 +216,7 @@ async function evaluateAutomationConditions(args: {
 		automationRun: {
 			id: args.scheduledAutomationRunId ?? ("pending-evaluation" as AutomationRunsId),
 		},
-		user: args.user,
+		user: args.user ?? null,
 		...(args.pub ? { pub: args.pub } : { json: args.json ?? ({} as Json) }),
 	})
 
@@ -296,7 +297,7 @@ async function executeActionInstances(args: {
 	pub: AutomationContext["pub"]
 	json?: Json
 	manualActionInstancesOverrideArgs: RunAutomationArgs["manualActionInstancesOverrideArgs"]
-	user?: Users
+	user: User | null
 }): Promise<
 	(ActionRunResult & {
 		actionInstance: FullAutomation["actionInstances"][number]
@@ -419,7 +420,7 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			),
 		},
 		automationRun: args.automationRun,
-		user: args.user,
+		user: args.user ?? null,
 		...(pub ? { pub } : { json: args.json ?? ({} as Json) }),
 	})
 
@@ -465,7 +466,7 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 			communityId: args.community.id,
 			lastModifiedBy,
 			actionRunId: args.actionRunId,
-			userId: args.user?.id,
+			user: args.user,
 			automation: args.automation,
 			automationRunId: args.automationRun.id,
 			actionInstanceId: args.actionInstance.id,
@@ -565,7 +566,7 @@ export async function runAutomation(
 		existingAutomationRun,
 		stack: args.stack,
 		trigger: args.trigger,
-		userId: args.user?.id,
+		user: args.user,
 		trx,
 	})
 
@@ -605,7 +606,7 @@ export async function runAutomation(
 		pub,
 		json: args.json,
 		manualActionInstancesOverrideArgs: args.manualActionInstancesOverrideArgs,
-		user: isActionUserInitiated ? args.user : undefined,
+		user: isActionUserInitiated ? args.user : null,
 	})
 
 	// update automation run with final results

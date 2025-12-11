@@ -53,6 +53,7 @@ const handler = createNextHandler(
 				},
 				communityId: community.id as CommunitiesId,
 				stack: stack as unknown as AutomationRunsId[],
+				user: null,
 			})
 
 			return {
@@ -119,6 +120,7 @@ const handler = createNextHandler(
 				communityId: community.id as CommunitiesId,
 				stack: stack as unknown as AutomationRunsId[],
 				scheduledAutomationRunId: automationRunId,
+				user: null,
 			})
 
 			return {
@@ -177,6 +179,7 @@ const handler = createNextHandler(
 				manualActionInstancesOverrideArgs: null,
 				communityId: community.id as CommunitiesId,
 				stack: stack as unknown as AutomationRunsId[],
+				user: null,
 			})
 
 			return {
