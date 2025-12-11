@@ -1,3 +1,5 @@
+-- This adds back the status column on the automation run stable. This is computed from the status of the action runs. And when it changes, it will trigger an automation run finished event which might trigger sending like an emit event to the job skew. So other automations can like run based on the success or failure of a certain automation.
+--
 -- add 'pending' status to ActionRunStatus enum
 ALTER TYPE "ActionRunStatus"
   ADD VALUE 'pending';
@@ -8,37 +10,52 @@ ALTER TABLE "automation_runs"
 
 -- function to build automation run stack by recursively following sourceAutomationRunId
 CREATE OR REPLACE FUNCTION build_automation_run_stack(run_id text)
-  RETURNS jsonb
+  RETURNS text[]
   AS $$
 DECLARE
-  stack jsonb := '[]'::jsonb;
+  path text[];
   current_run_id text := run_id;
   source_run_id text;
 BEGIN
   -- recursively build stack by following sourceAutomationRunId backwards
+  -- returns array of ancestor run IDs (not including the current run)
   WITH RECURSIVE automation_run_stack AS (
+    -- base case: start with the immediate source if it exists
     SELECT
-      "sourceAutomationRunId" AS "automationRunId",
-      '[]'::jsonb AS "stack"
+      source_ar.id,
+      source_ar."sourceAutomationRunId",
+      ARRAY[source_ar.id] AS "path",
+      0 AS "depth"
     FROM
-      automation_runs
+      automation_runs ar
+      INNER JOIN automation_runs source_ar ON source_ar.id = ar."sourceAutomationRunId"
     WHERE
-      id = run_id
+      ar.id = run_id
+      -- recursive case: walk backwards through the chain
     UNION ALL
     SELECT
-      "sourceAutomationRunId" AS "automationRunId",
-      "automation_run_stack"."stack" || jsonb_build_array(id) AS "stack"
+      ar.id,
+      ar."sourceAutomationRunId",
+      ARRAY[ar.id] || "automation_run_stack"."path" AS "path",
+      "automation_run_stack"."depth" + 1 AS "depth"
     FROM
-      automation_runs
-      INNER JOIN automation_run_stack ON "sourceAutomationRunId" = "automation_run_stack"."automationRunId"
-)
+      automation_runs ar
+      INNER JOIN automation_run_stack ON ar."id" = "automation_run_stack"."sourceAutomationRunId"
+    WHERE
+      "automation_run_stack"."depth" < 20
+      AND NOT ar."id" = ANY ("automation_run_stack"."path"))
   SELECT
-    automation_run_stack."stack" INTO stack
+    automation_run_stack."path" INTO path
   FROM
     automation_run_stack
-  WHERE
-    "automationRunId" = run_id;
-  RETURN stack;
+  ORDER BY
+    automation_run_stack."depth" DESC
+  LIMIT 1;
+  -- if no path found, return empty array
+  IF path IS NULL THEN
+    path := ARRAY[]::text[];
+  END IF;
+  RETURN path;
 END;
 $$
 LANGUAGE plpgsql
@@ -54,8 +71,9 @@ DECLARE
   old_status "ActionRunStatus";
   target_event "AutomationEvent";
   community RECORD;
-  action_stack jsonb;
+  action_stack text[];
   source_automation_id text;
+  source_automation_run_id text := NULL;
   watched_automation RECORD;
 BEGIN
   -- early returns: skip if no automation run or status unchanged
@@ -108,6 +126,12 @@ BEGIN
     ELSE
       'automationFailed'
     END;
+    SELECT
+      ar."sourceAutomationRunId" INTO source_automation_run_id
+    FROM
+      automation_runs ar
+    WHERE
+      ar.id = NEW."automationRunId";
     -- get automation and community info
     SELECT
       "automationId" INTO source_automation_id
@@ -139,7 +163,7 @@ BEGIN
       at."sourceAutomationId" = source_automation_id
       AND at.event = target_event LOOP
         PERFORM
-          graphile_worker.add_job('emitEvent', json_build_object('type', 'RunAutomation', 'automationId', watched_automation."automationId", 'pubId', NEW."pubId", 'stageId', watched_automation."stageId", 'trigger', json_build_object('event', target_event, 'config', NULL), 'community', community, 'stack', action_stack || jsonb_build_array(NEW."automationRunId")));
+          graphile_worker.add_job('emitEvent', json_build_object('type', 'RunAutomation', 'automationId', watched_automation."automationId", 'sourceAutomationRunId', source_automation_run_id, 'automationRunId', NEW."automationRunId", 'pubId', NEW."pubId", 'stageId', watched_automation."stageId", 'trigger', json_build_object('event', target_event, 'config', NULL), 'community', community, 'stack', action_stack || ARRAY[NEW."automationRunId"]));
       END LOOP;
   END IF;
   RETURN NEW;

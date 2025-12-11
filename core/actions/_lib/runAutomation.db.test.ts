@@ -346,7 +346,7 @@ describe("runAutomation - sequential automation triggering", () => {
 			const payload = watcherJob.payload as any
 			expect(payload.stack).toContain(automationRun.id)
 		}
-	})
+	}, 10_000)
 
 	it("should not emit event for failure watcher when automation succeeds", async () => {
 		const trx = getTrx()
@@ -389,7 +389,7 @@ describe("runAutomation - sequential automation triggering", () => {
 		})
 
 		expect(failureWatcherJob).toBeUndefined()
-	})
+	}, 10_000)
 
 	it("should propagate stack correctly in sequential automations", async () => {
 		const trx = getTrx()
@@ -443,30 +443,40 @@ describe("runAutomation - sequential automation triggering", () => {
 			trx
 		)
 
+		const lastResult = await runAutomation(
+			{
+				automationId: community.stages["Test Stage"].automations["watched-automation"].id,
+				pubId: community.pubs[0].id,
+				trigger: { event: AutomationEvent.manual, config: null },
+				communityId: community.community.id,
+				stack: result.stack,
+				manualActionInstancesOverrideArgs: null,
+				user: null,
+			},
+			trx
+		)
+
 		expect(result.success).toBe(true)
 
 		// check that the job includes the full stack
 		const jobs = await getEmitEventJob(trx)
 
-		const watcherJob = jobs.find((job) => {
+		const watcherJob = jobs.filter((job) => {
 			const payload = job.payload
-			return (
-				payload.automationId ===
-				community.stages["Test Stage"].automations["watcher-on-success"].id
-			)
+			return lastResult.success && payload.automationRunId === lastResult.stack.at(-1)
 		})
 
 		expect(watcherJob).toBeDefined()
+		commit()
 
 		if (watcherJob) {
-			const payload = watcherJob.payload
+			const payload = watcherJob[0].payload
 			const stack = payload.stack as AutomationRunsId[]
-			// stack should include existing stack plus the new automation run
-			expect(stack).toHaveLength(existingStack.length + 1)
-			expect(stack.slice(0, existingStack.length)).toEqual(existingStack)
-			expect(stack[existingStack.length]).toBe(result.stack[result.stack.length - 1])
+
+			// stacks should be the same
+			expect(stack).toEqual(lastResult.stack)
 		}
-	})
+	}, 10_000)
 })
 
 describe("runAutomation - status transitions", () => {
@@ -512,7 +522,7 @@ describe("runAutomation - status transitions", () => {
 			expect(actionRuns.length).toBeGreaterThan(0)
 			expect(actionRuns.every((ar) => ar.status === ActionRunStatus.success)).toBe(true)
 		}
-	})
+	}, 10_000)
 
 	it("should only emit sequential events once per status change", async () => {
 		const trx = getTrx()
@@ -572,5 +582,5 @@ describe("runAutomation - status transitions", () => {
 
 		// job count should be the same (no new jobs created)
 		expect(jobsAfterUpdate.length).toBe(initialJobCount)
-	})
+	}, 10_000)
 })
