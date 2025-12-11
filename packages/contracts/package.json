@@ -12,7 +12,8 @@
 	},
 	"files": ["dist"],
 	"scripts": {
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"type-check:go": "tsgo --noEmit"
 	},
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "GPL-2.0+",
@@ -29,6 +30,7 @@
 		"@ts-rest/core": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
+		"@typescript/native-preview": "catalog:",
 		"zod": "catalog:"
 	},
 	"preconstruct": {

@@ -11,6 +11,7 @@
 	},
 	"scripts": {
 		"type-check": "tsc --noEmit",
+		"type-check:go": "tsgo --noEmit",
 		"test": "vitest run"
 	},
 	"dependencies": {
@@ -23,6 +24,7 @@
 		"react": "catalog:react19",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
+		"@typescript/native-preview": "catalog:",
 		"vitest": "catalog:"
 	},
 	"preconstruct": {
