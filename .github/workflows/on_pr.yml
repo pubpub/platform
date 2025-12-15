@@ -44,8 +44,10 @@ jobs:
               id: check
               run: |
                   if [[ "$(git log -1 --pretty=%B)" == *"skip-build"* ]]; then
+                      echo "skip-build is in the commit message"
                       echo "skip-build=true" >> $GITHUB_OUTPUT
                   else
+                      echo "skip-build is not in the commit message"
                       echo "skip-build=false" >> $GITHUB_OUTPUT
                   fi
             - name: Find last successful build SHA
