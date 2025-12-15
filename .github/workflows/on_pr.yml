@@ -33,13 +33,28 @@ jobs:
 
     # you can skip the build by adding 'skip-build' to the commit message, useful when testing tests
     skip_build_sha:
-        if: ${{ contains(github.event.head_commit.message, 'skip-build') }}
         outputs:
             skip-build-sha: ${{ steps.last-build.outputs.sha }}
         runs-on: ubuntu-latest
         steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+            - name: Check if skip-build is in the commit message
+              id: check
+              run: |
+                  echo "commit message: $(git log -1 --pretty=%B)"
+                  if [[ "$(git log -1 --pretty=%B)" == *"skip-build"* ]]; then
+                      echo "skip-build is in the commit message"
+                      echo "skip-build=true" >> $GITHUB_OUTPUT
+                  else
+                      echo "skip-build is not in the commit message"
+                      echo "skip-build=false" >> $GITHUB_OUTPUT
+                  fi
             - name: Find last successful build SHA
               id: last-build
+              if: ${{ steps.check.outputs.skip-build == 'false' }}
               env:
                   GH_TOKEN: ${{ github.token }}
               run: |
@@ -75,6 +90,7 @@ jobs:
         if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')) && (needs.skip_build_sha.outputs.skip-build-sha == '')
         needs:
             - path-filter
+            - skip_build_sha
         uses: ./.github/workflows/ecrbuild-all.yml
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
