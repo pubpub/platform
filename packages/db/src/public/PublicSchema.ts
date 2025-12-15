@@ -81,9 +81,9 @@ export interface PublicSchema {
 
 	communities: CommunitiesTable
 
-	automation_triggers: AutomationTriggersTable
-
 	users: UsersTable
+
+	automation_triggers: AutomationTriggersTable
 
 	_PubFieldToPubType: PubFieldToPubTypeTable
 

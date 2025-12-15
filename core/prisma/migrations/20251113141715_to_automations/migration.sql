@@ -258,7 +258,7 @@ SELECT
   ar.config AS config,
   ar."createdAt",
   ar."updatedAt",
-  null as "sourceAutomationRunId"
+  NULL AS "sourceAutomationRunId"
   -- ar."sourceAutomationRunId"
 FROM
   "action_runs" ar
