@@ -19,39 +19,96 @@ jobs:
         if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || github.event.action == 'closed'
         outputs:
             docs: ${{ steps.changes.outputs.docs }}
+            only-tests: ${{ steps.check.outputs.only-tests }}
+            last-build-sha: ${{ steps.last-build.outputs.sha }}
         steps:
             - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
             - uses: dorny/paths-filter@v2
               id: changes
               with:
                   filters: |
                       docs:
                           - 'docs/**'
+                      tests:
+                          - '**/*.spec.ts'
+                      non-test-code:
+                          - '**/*.ts'
+                          - '**/*.tsx'
+                          - '**/*.js'
+                          - '**/*.jsx'
+                          - '**/*.json'
+                          - '**/Dockerfile'
+                          - '**/package.json'
+                          - '**/pnpm-lock.yaml'
+                          - '!**/*.spec.ts'
+            - name: Determine if only tests changed
+              id: check
+              run: |
+                  if [[ "${{ steps.changes.outputs.tests }}" == "true" && "${{ steps.changes.outputs.non-test-code }}" == "false" ]]; then
+                      echo "only-tests=true" >> $GITHUB_OUTPUT
+                      echo "Only test files changed, will skip build and use base branch images"
+                  else
+                      echo "only-tests=false" >> $GITHUB_OUTPUT
+                  fi
+            - name: Find last successful build SHA
+              id: last-build
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  pr_number="${{ github.event.pull_request.number }}"
+                  
+                  # get all workflow runs for this PR
+                  gh api "/repos/${{ github.repository }}/actions/workflows/on_pr.yml/runs?event=pull_request&per_page=100" \
+                      --jq ".workflow_runs[] | select(.pull_requests[]?.number == ${pr_number}) | select(.id < ${{ github.run_id }}) | {id: .id, sha: .head_sha, created: .created_at}" \
+                      | jq -s 'sort_by(.created) | reverse | .[].id' -r \
+                      | while read run_id; do
+                          # check if build-all job succeeded in this run
+                          build_status=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}/jobs" \
+                              --jq '.jobs[] | select(.name | contains("build-all")) | .conclusion')
+                          
+                          if [ "$build_status" == "success" ]; then
+                              # get the SHA for this run
+                              successful_sha=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}" --jq '.head_sha')
+                              echo "sha=$successful_sha" >> $GITHUB_OUTPUT
+                              echo "Found last successful build at SHA: $successful_sha (run: $run_id)"
+                              exit 0
+                          fi
+                      done
+                  
+                  # if we get here, no successful build found
+                  echo "sha=" >> $GITHUB_OUTPUT
+                  echo "No previous successful build found in this PR"
 
     ci:
         if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
         uses: ./.github/workflows/ci.yml
 
     build-all:
-        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview'))
+        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')) && (needs.path-filter.outputs.only-tests != 'true' || needs.path-filter.outputs.last-build-sha == '')
+        needs:
+            - path-filter
         uses: ./.github/workflows/ecrbuild-all.yml
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     e2e:
-        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
+        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize') && always() && (needs.build-all.result == 'success' || needs.build-all.result == 'skipped')
         needs:
+            - path-filter
             - build-all
-            # could theoretically be skipped, but in practice is always faster
-            # than waiting for the build-all job to finish anyway
             - ci
         uses: ./.github/workflows/e2e.yml
+        with:
+            image-tag-override: ${{ needs.path-filter.outputs.only-tests == 'true' && needs.path-filter.outputs.last-build-sha || '' }}
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     deploy-preview:
+        if: needs.build-all.result == 'success'
         uses: ./.github/workflows/pull-preview.yml
         needs:
             - build-all
