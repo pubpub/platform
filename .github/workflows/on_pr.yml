@@ -51,6 +51,7 @@ jobs:
                   else
                       echo "skip-build is not in the commit message"
                       echo "skip-build=false" >> $GITHUB_OUTPUT
+                      echo "sha=" >> $GITHUB_OUTPUT
                   fi
             - name: Find last successful build SHA
               id: last-build
