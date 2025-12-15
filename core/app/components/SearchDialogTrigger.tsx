@@ -6,7 +6,7 @@ import { Button, type ButtonProps } from "ui/button"
 import { Search } from "ui/icon"
 import { SidebarMenuButton } from "ui/sidebar"
 
-import { useSearchDialog } from "./search/SearchDialog"
+import { useSearchDialog } from "./Search/SearchDialog"
 
 export function SearchDialogTrigger(props: ButtonProps) {
 	const { open } = useSearchDialog()
