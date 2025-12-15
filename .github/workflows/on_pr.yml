@@ -19,41 +19,24 @@ jobs:
         if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || github.event.action == 'closed'
         outputs:
             docs: ${{ steps.changes.outputs.docs }}
-            only-tests: ${{ steps.check.outputs.only-tests }}
-            last-build-sha: ${{ steps.last-build.outputs.sha }}
         steps:
             - uses: actions/checkout@v4
               with:
                   fetch-depth: 0
-            - uses: dorny/paths-filter@v2
+            - uses: dorny/paths-filter@v3
               id: changes
               with:
                   filters: |
                       docs:
                           - 'docs/**'
-                      tests:
-                          - '**/*.spec.ts'
-                          - '.github/workflows/*.yml'
-                      non-test-code:
-                          - '**/*.ts'
-                          - '**/*.tsx'
-                          - '**/*.js'
-                          - '**/*.jsx'
-                          - '**/*.json'
-                          - '**/Dockerfile'
-                          - '**/package.json'
-                          - '**/pnpm-lock.yaml'
-                          - '!**/*.spec.ts'
-                          - '!**/*.yml'
-            - name: Determine if only tests changed
-              id: check
-              run: |
-                  if [[ "${{ steps.changes.outputs.tests }}" == "true" && "${{ steps.changes.outputs.non-test-code }}" == "false" ]]; then
-                      echo "only-tests=true" >> $GITHUB_OUTPUT
-                      echo "Only test files changed, will skip build and use base branch images"
-                  else
-                      echo "only-tests=false" >> $GITHUB_OUTPUT
-                  fi
+
+    # you can skip the build by adding 'skip-build' to the commit message, useful when testing tests
+    skip_build_sha:
+        if: ${{ contains(github.event.head_commit.message, 'skip-build') }}
+        outputs:
+            skip-build-sha: ${{ steps.last-build.outputs.sha }}
+        runs-on: ubuntu-latest
+        steps:
             - name: Find last successful build SHA
               id: last-build
               env:
@@ -74,7 +57,7 @@ jobs:
                           if [ "$all_success" == "true" ]; then
                               # get the SHA for this run
                               successful_sha=$(echo $run | jq '.jobs[0].head_sha' )
-                              echo "sha=$successful_sha" >> $GITHUB_OUTPUT
+                              echo "skip-build-sha=$successful_sha" >> $GITHUB_OUTPUT
                               echo "Found last successful build at SHA: $successful_sha (run: $run_id)"
                               exit 0
                           fi
@@ -89,7 +72,7 @@ jobs:
         uses: ./.github/workflows/ci.yml
 
     build-all:
-        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')) && (needs.path-filter.outputs.only-tests != 'true' || needs.path-filter.outputs.last-build-sha == '')
+        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')) && (needs.skip_build_sha.outputs.skip-build-sha == '')
         needs:
             - path-filter
         uses: ./.github/workflows/ecrbuild-all.yml
@@ -105,7 +88,7 @@ jobs:
             - ci
         uses: ./.github/workflows/e2e.yml
         with:
-            image-tag-override: ${{ needs.path-filter.outputs.only-tests == 'true' && needs.path-filter.outputs.last-build-sha || '' }}
+            image-tag-override: ${{ needs.skip_build_sha.outputs.skip-build-sha || '' }}
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
