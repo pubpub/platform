@@ -56,7 +56,7 @@ jobs:
                   fi
             - name: Find last successful build SHA
               id: last-build
-              if: ${{ steps.check.outputs.skip-build == 'false' }}
+              if: ${{ steps.check.outputs.skip-build == 'true' }}
               env:
                   GH_TOKEN: ${{ github.token }}
               run: |
