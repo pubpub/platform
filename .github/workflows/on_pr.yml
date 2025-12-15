@@ -34,7 +34,7 @@ jobs:
     # you can skip the build by adding 'skip-build' to the commit message, useful when testing tests
     skip_build_sha:
         outputs:
-            skip-build-sha: ${{ steps.last-build.outputs.sha }}
+            skip-build-sha: ${{ steps.last-build.outputs.skip-build-sha }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -52,7 +52,7 @@ jobs:
                   else
                       echo "skip-build is not in the commit message"
                       echo "skip-build=false" >> $GITHUB_OUTPUT
-                      echo "sha=" >> $GITHUB_OUTPUT
+                      echo "skip-build-sha=" >> $GITHUB_OUTPUT
                   fi
             - name: Find last successful build SHA
               id: last-build
@@ -84,7 +84,7 @@ jobs:
                       done
                   
                   if [ "$all_success" == "false" ]; then
-                      echo "sha=" >> $GITHUB_OUTPUT
+                      echo "skip-build-sha=" >> $GITHUB_OUTPUT
                       echo "No previous successful build found in this PR"
                   fi
 
