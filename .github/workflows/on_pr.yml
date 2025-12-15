@@ -83,9 +83,10 @@ jobs:
                           fi
                       done
                   
-                  # if we get here, no successful build found
-                  echo "sha=" >> $GITHUB_OUTPUT
-                  echo "No previous successful build found in this PR"
+                  if [ "$all_success" == "false" ]; then
+                      echo "sha=" >> $GITHUB_OUTPUT
+                      echo "No previous successful build found in this PR"
+                  fi
 
     ci:
         if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
