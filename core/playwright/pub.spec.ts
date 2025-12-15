@@ -91,20 +91,23 @@ test.describe("Moving a pub", () => {
 		const sources = page.getByTestId("sources")
 		const destinations = page.getByTestId("destinations")
 		await expect(sources).toHaveCount(0)
-		await destinations.getByRole("button", { name: "Ask Author For Consent" }).click()
+		await destinations.getByText("Move to Ask Author for Consent").click()
 		await expect(page.getByTestId("current-stage")).toHaveText("Ask Author for Consent")
 
 		// Open the move modal again and expect to be able to move to sources and destinations
 		await page.getByRole("button", { name: "Ask Author for Consent", exact: true }).click()
-		await expect(sources.getByRole("button", { name: "Submitted" })).toHaveCount(1)
-		await expect(destinations.getByRole("button", { name: "To Evaluate" })).toHaveCount(1)
+		await expect(sources.getByText("Move to Submitted", { exact: true })).toHaveCount(1)
+		await expect(destinations.getByText("Move to To Evaluate", { exact: true })).toHaveCount(1)
 	})
 
 	test("No move button if pub is not in a linked stage", async () => {
 		const pubsPage = new PubsPage(page, community.community.slug)
 		await pubsPage.goTo()
 		await page.getByRole("link", { name: "Update" }).click()
-		await page.getByLabel("Stage").click()
+		await page.waitForURL(`/c/${community.community.slug}/pubs/*/edit*`)
+		await page.getByRole("combobox").filter({ hasText: "Submitted" }).click({
+			timeout: 5000,
+		})
 		// Shelved is its own node in stages
 		await page.getByRole("option", { name: "Shelved" }).click()
 		await page.getByRole("button", { name: "Save" }).click()
@@ -339,7 +342,7 @@ test.describe("Creating a pub", () => {
 		await choosePubType({ page, communitySlug: community.community.slug })
 
 		// Stage should be prefilled
-		await expect(page.getByLabel("Stage")).toHaveText(stage)
+		await expect(page.getByRole("combobox").filter({ hasText: stage })).toHaveCount(1)
 		await page.getByTestId(`${community.community.slug}:title`).fill("Stage test")
 		await page.getByRole("button", { name: "Save" }).click()
 		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(1)

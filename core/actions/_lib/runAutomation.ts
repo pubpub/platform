@@ -638,7 +638,7 @@ export async function runAutomation(
 			title: "Automation run failed",
 			report: `${results
 				.filter((r) => r.success === false)
-				.map((r) => r.error)
+				.map((r) => r.report)
 				.join(", ")}`,
 			stack: [...args.stack, finalAutomationRun.id],
 			actionRuns: results,

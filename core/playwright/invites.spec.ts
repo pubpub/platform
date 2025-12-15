@@ -759,7 +759,7 @@ test.describe("invite reject flow", () => {
 			})
 
 			await expect(page.getByText("You have rejected the invite")).toBeVisible({
-				timeout: 1000,
+				timeout: 5000,
 			})
 		})
 

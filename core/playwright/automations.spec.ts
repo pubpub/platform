@@ -296,6 +296,8 @@ test.describe("sequential automations", () => {
 
 		await page
 			.getByText("Log Pub Entered Stagesuccess", { exact: true })
+			// first here bc otherwise it falsely detects two selectors
+			.first()
 			.waitFor({ timeout: 5000 })
 	})
 
