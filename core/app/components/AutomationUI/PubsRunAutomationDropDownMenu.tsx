@@ -46,7 +46,7 @@ export const PubsRunAutomationsDropDownMenu = async ({
 				>
 					<Play size="12" strokeWidth="1px" className="text-neutral-500" />
 					<span className={cn({ "sr-only": iconOnly })}>
-						{buttonText ?? "Run action"}
+						{buttonText ?? "Run automation"}
 					</span>
 					{iconOnly ? null : <ChevronDown size="14" />}
 				</Button>

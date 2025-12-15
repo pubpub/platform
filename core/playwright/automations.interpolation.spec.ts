@@ -39,7 +39,7 @@ const seed = createSeed({
 						{
 							action: Action.log,
 							config: {
-								text: "Hello, {{ $uppercase($.pub.values.title) }}. Im running {{ $.action.name }} with Debounce: {{ $.action.config.debounce }}",
+								text: "Hello, {{ $uppercase($.pub.values.title) }}. Im running {{ $.automation.name }} with Debounce: {{ $.automation.actions[0].config.debounce }}",
 								debounce: 10,
 							},
 						},
@@ -88,7 +88,7 @@ test.describe("actions interpolation", () => {
 		)
 		await pubDetailsPage.goTo()
 		await pubDetailsPage.runAutomation("Log", async (runActionDialog) => {
-			await runActionDialog.getByRole("button", { name: "Run action" }).click()
+			await runActionDialog.getByRole("button", { name: "Run" }).click()
 		})
 		await page
 			.getByRole("status")
@@ -111,7 +111,7 @@ test.describe("actions interpolation", () => {
 			// wait for thing to load
 			await page.waitForTimeout(1000)
 			await runActionDialog.getByLabel("Log Text").fill("'my title is ' & $.pub.values.title")
-			await runActionDialog.getByRole("button", { name: "Run action" }).click()
+			await runActionDialog.getByRole("button", { name: "Run" }).click()
 		})
 		await page
 			.getByRole("status")
@@ -162,7 +162,7 @@ test.describe("actions interpolation", () => {
 				.getByText("my title is Test")
 				.waitFor({ timeout: 5000 })
 
-			await runActionDialog.getByRole("button", { name: "Run action" }).click()
+			await runActionDialog.getByRole("button", { name: "Run" }).click()
 
 			await page
 				.getByRole("status")

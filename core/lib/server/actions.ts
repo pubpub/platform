@@ -171,11 +171,6 @@ export const getAutomationRuns = (
 				jsonObjectFrom(
 					eb
 						.selectFrom("automation_runs as ar")
-						.innerJoin(
-							"automation_runs",
-							"ar.id",
-							"automation_runs.sourceAutomationRunId"
-						)
 						.whereRef("ar.id", "=", "automation_runs.sourceAutomationRunId")
 						.select(["ar.id", "ar.triggerConfig"])
 				).as("sourceAutomationRun"),
