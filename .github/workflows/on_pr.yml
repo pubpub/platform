@@ -76,7 +76,7 @@ jobs:
 
                           if [ "$all_success" == "true" ]; then
                               # get the SHA for this run
-                              successful_sha=$(echo $run | jq '.jobs[0].head_sha' )
+                              successful_sha=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}" --jq '.head_sha')
                               echo "skip-build-sha=$successful_sha" >> $GITHUB_OUTPUT
                               echo "Found last successful build at SHA: $successful_sha (run: $run_id)"
                               exit 0
@@ -107,7 +107,6 @@ jobs:
         needs:
             - path-filter
             - build-all
-            - ci
         uses: ./.github/workflows/e2e.yml
         with:
             image-tag-override: ${{ needs.skip_build_sha.outputs.skip-build-sha || '' }}
