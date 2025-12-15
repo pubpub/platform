@@ -281,10 +281,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 					onEscapeKeyDown={() => setIsPopoverOpen(false)}
 				>
 					<Command className="overflow-clip rounded-lg">
-						<CommandInput
-							placeholder="Search..."
-							onKeyDown={handleInputKeyDown}
-						/>
+						<CommandInput placeholder="Search..." onKeyDown={handleInputKeyDown} />
 						<CommandSeparator />
 						<CommandList className="max-h-[300px] overflow-y-auto">
 							<CommandEmpty>No results found.</CommandEmpty>

@@ -211,7 +211,6 @@ const MiniForm = ({
 	const runUpdatePub = useServerAction(updatePub)
 
 	const onSubmit = async (values: Record<string, unknown>) => {
-		console.log(values)
 		setIsEditing(false)
 		const oldValue = value.value
 		setValue(values[value.fieldSlug] as unknown)

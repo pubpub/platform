@@ -51,7 +51,6 @@ export function ShowMore({
 
 	const [fitsInContainer, setFitsInContainer] = useState(false)
 
-	console.log(fitsInContainer, ref.current)
 	React.useEffect(() => {
 		if (
 			!fitsInContainer &&

@@ -18,11 +18,6 @@ import { StagesProvider, stagesDAO } from "ui/stages"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { tryCatch } from "utils/try-catch"
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 1231e2acd (feat: sort of add pub page)
-
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher"
 import { PubFormProvider } from "~/app/components/providers/PubFormProvider"
 import { PubTypeLabel } from "~/app/components/pubs/PubCard/PubTypeLabel"
