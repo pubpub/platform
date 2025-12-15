@@ -44,6 +44,7 @@ jobs:
                           - '**/package.json'
                           - '**/pnpm-lock.yaml'
                           - '!**/*.spec.ts'
+                          - '!**/*.yml'
             - name: Determine if only tests changed
               id: check
               run: |
