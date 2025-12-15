@@ -43,9 +43,9 @@ import type { UsersTable } from "./Users"
 export interface PublicSchema {
 	PubFieldSchema: PubFieldSchemaTable
 
-	automation_runs: AutomationRunsTable
-
 	membership_capabilities: MembershipCapabilitiesTable
+
+	automation_runs: AutomationRunsTable
 
 	sessions: SessionsTable
 
@@ -73,9 +73,9 @@ export interface PublicSchema {
 
 	pub_types: PubTypesTable
 
-	automation_conditions: AutomationConditionsTable
-
 	pub_fields: PubFieldsTable
+
+	automation_conditions: AutomationConditionsTable
 
 	invites_history: InvitesHistoryTable
 
@@ -107,9 +107,9 @@ export interface PublicSchema {
 
 	stages: StagesTable
 
-	automation_condition_blocks: AutomationConditionBlocksTable
-
 	form_elements: FormElementsTable
+
+	automation_condition_blocks: AutomationConditionBlocksTable
 
 	forms: FormsTable
 

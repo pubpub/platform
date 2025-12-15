@@ -128,20 +128,19 @@ WHERE
 
 -- step 14: create automation triggers for existing automations
 -- migrate the event, config, and sourceActionInstanceId to triggers
-INSERT INTO "automation_triggers"(id, "automationId", event, config, "sourceAutomationId", "createdAt", "updatedAt")
-SELECT
-  gen_random_uuid(),
-  a.id,
-  a.event,
-  a.config,
-  a."sourceActionInstanceId",
-  a."createdAt",
-  a."updatedAt"
-FROM
-  "automations" a
-WHERE
-  a.event IS NOT NULL;
-
+-- INSERT INTO "automation_triggers"(id, "automationId", event, config, "sourceAutomationId", "createdAt", "updatedAt")
+-- SELECT
+--   gen_random_uuid(),
+--   a.id,
+--   a.event,
+--   a.config,
+--   a."sourceActionInstanceId",
+--   a."createdAt",
+--   a."updatedAt"
+-- FROM
+--   "automations" a
+-- WHERE
+--   a.event IS NOT NULL;
 -- step 15: create new automations for action_instances that don't have one yet
 -- this handles standalone actions that were only meant to be run manually
 INSERT INTO "automations"(id, name, description, "communityId", "stageId", event, "createdAt", "updatedAt", "actionInstanceId")
@@ -249,37 +248,24 @@ SET
 WHERE
   "automationId" IS NULL;
 
--- step 20: create automation runs for all existing action runs, linked to dummy automation
-INSERT INTO "automation_runs"(id, "automationId", config, "createdAt", "updatedAt", "sourceAutomationRunId")
+-- step 20: create automation runs for all existing action runs
+-- link them to the automations that were created from their action_instances
+INSERT INTO "automation_runs"(id, "automationId", event, config, "createdAt", "updatedAt", "sourceAutomationRunId")
 SELECT
   gen_random_uuid() AS id,
-(
-    SELECT
-      a.id
-    FROM
-      "automations" a
-      INNER JOIN "stages" s ON s."communityId" =(
-        SELECT
-          s2."communityId"
-        FROM
-          "action_instances" ai2
-          INNER JOIN "stages" s2 ON s2.id = ai2."stageId"
-        WHERE
-          ai2.id = ar."actionInstanceId"
-        LIMIT 1)
-    WHERE
-      a."stageId" IS NULL
-      AND a.name = 'Deleted Automations'
-      AND a."communityId" = s."communityId"
-    LIMIT 1) AS "automationId",
-NULL AS config,
-ar."createdAt",
-ar."updatedAt",
-NULL AS "sourceAutomationRunId"
+  ai."automationId",
+  COALESCE(ar.event, 'manual') AS event,
+  ar.config AS config,
+  ar."createdAt",
+  ar."updatedAt",
+  null as "sourceAutomationRunId"
+  -- ar."sourceAutomationRunId"
 FROM
   "action_runs" ar
+  INNER JOIN "action_instances" ai ON ai.id = ar."actionInstanceId"
 WHERE
-  ar."actionInstanceId" IS NOT NULL;
+  ar."actionInstanceId" IS NOT NULL
+  AND ai."automationId" IS NOT NULL;
 
 -- step 21: link action_runs to their new automation_runs
 -- create a temporary mapping table to match them correctly
@@ -304,6 +290,21 @@ FROM
 WHERE
   m.action_run_id = ar.id
   AND m.rn = 1;
+
+-- step 21b: update sourceAutomationRunId on automation_runs based on sourceActionRunId chain
+UPDATE
+  "automation_runs" arun
+SET
+  "sourceAutomationRunId" = m_source.automation_run_id
+FROM
+  temp_action_run_mapping m
+  INNER JOIN "action_runs" ar ON ar.id = m.action_run_id
+  INNER JOIN temp_action_run_mapping m_source ON m_source.action_run_id = ar."sourceActionRunId"
+WHERE
+  arun.id = m.automation_run_id
+  AND ar."sourceActionRunId" IS NOT NULL
+  AND m.rn = 1
+  AND m_source.rn = 1;
 
 DROP TABLE temp_action_run_mapping;
 
