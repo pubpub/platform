@@ -114,6 +114,7 @@ for (const [name, fn] of Array.from(functions.entries()).sort(([a], [b]) => a.lo
 }
 
 writeFileSync(outputFile, output.join("\n"))
+// biome-ignore lint/suspicious/noConsole: ssh
 console.log(
 	`Consolidated ${functions.size} functions and ${triggers.size} triggers to ${outputFile}`
 )
