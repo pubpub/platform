@@ -33,6 +33,7 @@ jobs:
                           - 'docs/**'
                       tests:
                           - '**/*.spec.ts'
+                          - '.github/workflows/*.yml'
                       non-test-code:
                           - '**/*.ts'
                           - '**/*.tsx'
@@ -56,6 +57,7 @@ jobs:
               id: last-build
               env:
                   GH_TOKEN: ${{ github.token }}
+              if: ${{ steps.check.outputs.only-tests == 'true' }}
               run: |
                   pr_number="${{ github.event.pull_request.number }}"
                   
@@ -65,12 +67,12 @@ jobs:
                       | jq -s 'sort_by(.created) | reverse | .[].id' -r \
                       | while read run_id; do
                           # check if build-all job succeeded in this run
-                          build_status=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}/jobs" \
-                              --jq '.jobs[] | select(.name | contains("build-all")) | .conclusion')
-                          
-                          if [ "$build_status" == "success" ]; then
+                          run=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}/jobs")
+                          all_success=$(echo "$run" | jq '[.jobs[] | select(.name | contains("build-all")) | .conclusion] | all(. == "success")')
+
+                          if [ "$all_success" == "true" ]; then
                               # get the SHA for this run
-                              successful_sha=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}" --jq '.head_sha')
+                              successful_sha=$(echo $run | jq '.jobs[0].head_sha' )
                               echo "sha=$successful_sha" >> $GITHUB_OUTPUT
                               echo "Found last successful build at SHA: $successful_sha (run: $run_id)"
                               exit 0
