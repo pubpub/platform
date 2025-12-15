@@ -32,16 +32,23 @@ jobs:
 
     # you can skip the build by adding 'skip-build' to the commit message, useful when testing tests
     skip_build_sha:
-        if: ${{ contains(github.event.head_commit.message, 'skip-build') }}
         outputs:
             skip-build-sha: ${{ steps.last-build.outputs.sha }}
         runs-on: ubuntu-latest
         steps:
+            - name: Check if skip-build is in the commit message
+              id: check
+              run: |
+                  if [[ "$(git log -1 --pretty=%B)" == *"skip-build"* ]]; then
+                      echo "skip-build=true" >> $GITHUB_OUTPUT
+                  else
+                      echo "skip-build=false" >> $GITHUB_OUTPUT
+                  fi
             - name: Find last successful build SHA
               id: last-build
               env:
                   GH_TOKEN: ${{ github.token }}
-              if: ${{ steps.check.outputs.only-tests == 'true' }}
+              if: ${{ steps.check.outputs.skip-build == 'true' }}
               run: |
                   pr_number="${{ github.event.pull_request.number }}"
                   
