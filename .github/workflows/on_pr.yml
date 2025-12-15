@@ -67,9 +67,12 @@ jobs:
                       --jq ".workflow_runs[] | select(.pull_requests[]?.number == ${pr_number}) | select(.id < ${{ github.run_id }}) | {id: .id, sha: .head_sha, created: .created_at}" \
                       | jq -s 'sort_by(.created) | reverse | .[].id' -r \
                       | while read run_id; do
+                          echo "Checking run: $run_id"
                           # check if build-all job succeeded in this run
                           run=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}/jobs")
+                          echo "Run: $run"
                           all_success=$(echo "$run" | jq '[.jobs[] | select(.name | contains("build-all")) | .conclusion] | all(. == "success")')
+                          echo "All success for $run_id: $all_success"
 
                           if [ "$all_success" == "true" ]; then
                               # get the SHA for this run
