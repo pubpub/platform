@@ -53,9 +53,9 @@ export interface PublicSchema {
 
 	pub_values_history: PubValuesHistoryTable
 
-	_MemberGroupToUser: MemberGroupToUserTable
-
 	api_access_tokens: ApiAccessTokensTable
+
+	_MemberGroupToUser: MemberGroupToUserTable
 
 	_FormElementToPubType: FormElementToPubTypeTable
 
@@ -73,17 +73,17 @@ export interface PublicSchema {
 
 	pub_types: PubTypesTable
 
-	pub_fields: PubFieldsTable
-
 	automation_conditions: AutomationConditionsTable
+
+	pub_fields: PubFieldsTable
 
 	invites_history: InvitesHistoryTable
 
 	communities: CommunitiesTable
 
-	users: UsersTable
-
 	automation_triggers: AutomationTriggersTable
+
+	users: UsersTable
 
 	_PubFieldToPubType: PubFieldToPubTypeTable
 
@@ -91,9 +91,9 @@ export interface PublicSchema {
 
 	action_runs: ActionRunsTable
 
-	pubs: PubsTable
-
 	invites: InvitesTable
+
+	pubs: PubsTable
 
 	action_config_defaults: ActionConfigDefaultsTable
 

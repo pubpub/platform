@@ -31,6 +31,10 @@ ALTER TABLE "automations"
 ALTER TABLE "automations"
   ADD COLUMN "name" text;
 
+-- this is just so the migration can be run
+ALTER TABLE "automations"
+  ALTER COLUMN "actionInstanceId" DROP NOT NULL;
+
 ALTER TABLE "automations"
   ADD COLUMN "description" text;
 
@@ -98,13 +102,14 @@ WHERE
   a."actionInstanceId" = ai.id;
 
 -- step 12: create dummy automation for each community to re-parent deleted automation runs
-INSERT INTO "automations"(id, name, description, "communityId", "stageId", "createdAt", "updatedAt")
+INSERT INTO "automations"(id, name, description, "communityId", "stageId", event, "createdAt", "updatedAt")
 SELECT
   gen_random_uuid(),
   'Deleted Automations',
   'Placeholder automation for automation runs from deleted automations',
   c.id,
   NULL,
+  'manual',
   CURRENT_TIMESTAMP,
   CURRENT_TIMESTAMP
 FROM
@@ -139,15 +144,17 @@ WHERE
 
 -- step 15: create new automations for action_instances that don't have one yet
 -- this handles standalone actions that were only meant to be run manually
-INSERT INTO "automations"(id, name, description, "communityId", "stageId", "createdAt", "updatedAt")
+INSERT INTO "automations"(id, name, description, "communityId", "stageId", event, "createdAt", "updatedAt", "actionInstanceId")
 SELECT
   gen_random_uuid(),
   ai.name,
   NULL,
   s."communityId",
   ai."stageId",
+  'manual',
   ai."createdAt",
-  ai."updatedAt"
+  ai."updatedAt",
+  ai.id
 FROM
   "action_instances" ai
   INNER JOIN "stages" s ON s.id = ai."stageId"

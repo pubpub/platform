@@ -182,22 +182,22 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_pubs_in_stages_update_pub
     AFTER INSERT OR UPDATE OR DELETE ON "PubsInStages"
     FOR EACH ROW
-    EXECUTE FUNCTION update_pub_updated_at()
+    EXECUTE FUNCTION update_pub_updated_at();
 
 CREATE TRIGGER pub_stage_change
     AFTER INSERT OR DELETE ON "PubsInStages"
     FOR EACH ROW
-    EXECUTE FUNCTION emit_pub_stage_change_event()
+    EXECUTE FUNCTION emit_pub_stage_change_event();
 
 CREATE TRIGGER schedule_duration_automations
     AFTER INSERT ON "PubsInStages"
     FOR EACH ROW
-    EXECUTE FUNCTION schedule_pub_in_stage_for_duration()
+    EXECUTE FUNCTION schedule_pub_in_stage_for_duration();
 
 CREATE TRIGGER cancel_scheduled_on_leave
     AFTER DELETE ON "PubsInStages"
     FOR EACH ROW
-    EXECUTE FUNCTION cancel_scheduled_automations_on_pub_leave()
+    EXECUTE FUNCTION cancel_scheduled_automations_on_pub_leave();
 
 
 -- Table: _PubFieldToPubType
@@ -233,19 +233,19 @@ CREATE TRIGGER trigger_pub_field_to_pub_type_insert_pub_title
 AFTER INSERT ON "_PubFieldToPubType"
 FOR EACH ROW
 WHEN (NEW."isTitle" IS TRUE)
-EXECUTE FUNCTION update_pub_title_for_pub_type()
+EXECUTE FUNCTION update_pub_title_for_pub_type();
 
 CREATE TRIGGER trigger_pub_field_to_pub_type_update_pub_title
 AFTER UPDATE ON "_PubFieldToPubType"
 FOR EACH ROW
 WHEN (NEW."isTitle" IS DISTINCT FROM OLD."isTitle")
-EXECUTE FUNCTION update_pub_title_for_pub_type()
+EXECUTE FUNCTION update_pub_title_for_pub_type();
 
 CREATE TRIGGER trigger_pub_field_to_pub_type_delete_pub_title
 AFTER DELETE ON "_PubFieldToPubType"
 FOR EACH ROW
 WHEN (OLD."isTitle" IS TRUE)
-EXECUTE FUNCTION update_pub_title_for_pub_type()
+EXECUTE FUNCTION update_pub_title_for_pub_type();
 
 
 -- Table: action_runs
@@ -363,7 +363,7 @@ VOLATILE;
 CREATE TRIGGER compute_automation_run_status_trigger
   AFTER INSERT OR UPDATE ON action_runs
   FOR EACH ROW
-  EXECUTE FUNCTION compute_automation_run_status()
+  EXECUTE FUNCTION compute_automation_run_status();
 
 
 -- Table: automations
@@ -406,7 +406,7 @@ LANGUAGE plpgsql;
 CREATE TRIGGER reparent_automation_runs_before_automation_delete
   BEFORE DELETE ON "automations"
   FOR EACH ROW
-  EXECUTE FUNCTION reparent_automation_runs_on_delete()
+  EXECUTE FUNCTION reparent_automation_runs_on_delete();
 
 
 -- Table: communities
@@ -426,7 +426,7 @@ LANGUAGE plpgsql;
 CREATE TRIGGER create_dummy_automation_after_community_insert
   AFTER INSERT ON "communities"
   FOR EACH ROW
-  EXECUTE FUNCTION create_dummy_automation_for_community()
+  EXECUTE FUNCTION create_dummy_automation_for_community();
 
 
 -- Table: invite_forms
@@ -459,7 +459,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER check_invite_pubtype_agreement
 AFTER INSERT ON "invite_forms" FOR EACH ROW
-EXECUTE FUNCTION check_invite_pubtype_agreement ()
+EXECUTE FUNCTION check_invite_pubtype_agreement ();
 
 
 -- Table: invites
@@ -547,7 +547,7 @@ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_invites_history
   AFTER INSERT OR UPDATE ON invites
   FOR EACH ROW
-  EXECUTE FUNCTION f_generic_history('inviteId')
+  EXECUTE FUNCTION f_generic_history('inviteId');
 
 
 -- Table: pub_memberships
@@ -579,7 +579,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER check_pub_membership_pubtype_agreement
 AFTER INSERT ON "pub_memberships" FOR EACH ROW
-EXECUTE FUNCTION check_pub_membership_pubtype_agreement ()
+EXECUTE FUNCTION check_pub_membership_pubtype_agreement ();
 
 
 -- Table: pub_values
@@ -748,17 +748,17 @@ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_pub_values_insert_pub
     AFTER INSERT ON "pub_values" REFERENCING NEW TABLE AS inserted_updated_deleted_rows
     FOR EACH STATEMENT
-    EXECUTE FUNCTION update_pub_for_value_changes()
+    EXECUTE FUNCTION update_pub_for_value_changes();
 
 CREATE TRIGGER trigger_pub_values_delete_pub
     AFTER DELETE ON "pub_values" REFERENCING OLD TABLE AS inserted_updated_deleted_rows
     FOR EACH STATEMENT
-    EXECUTE FUNCTION update_pub_for_value_changes()
+    EXECUTE FUNCTION update_pub_for_value_changes();
 
 CREATE TRIGGER trigger_pub_values_history
   AFTER INSERT OR UPDATE ON pub_values
   FOR EACH ROW
-  EXECUTE FUNCTION f_generic_history('pubValueId')
+  EXECUTE FUNCTION f_generic_history('pubValueId');
 
 
 -- Table: unknown
@@ -826,13 +826,13 @@ CREATE OR REPLACE TRIGGER action_runs_change_trigger
     AFTER INSERT OR UPDATE -- Removed delete
     ON action_runs
     FOR EACH ROW
-    EXECUTE FUNCTION notify_change_action_runs()
+    EXECUTE FUNCTION notify_change_action_runs();
 
 CREATE OR REPLACE TRIGGER automation_runs_change_trigger
     AFTER INSERT OR UPDATE -- Removed delete
     ON automation_runs
     FOR EACH ROW
-    EXECUTE FUNCTION notify_change_automation_runs()
+    EXECUTE FUNCTION notify_change_automation_runs();
 
 
 -- Standalone functions
