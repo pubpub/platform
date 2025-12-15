@@ -105,7 +105,8 @@ test.describe("Moving a pub", () => {
 		await pubsPage.goTo()
 		await page.getByRole("link", { name: "Update" }).click()
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*/edit*`)
-		await page.getByRole("combobox").filter({ hasText: "Submitted" }).click({
+		// dependent on previous test
+		await page.getByRole("combobox").filter({ hasText: "Ask Author for Consent" }).click({
 			timeout: 5000,
 		})
 		// Shelved is its own node in stages
