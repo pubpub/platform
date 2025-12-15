@@ -187,7 +187,11 @@ test.describe("Creating a pub", () => {
 		await pubsPage.goTo()
 		const title = "pub with multivalue"
 		await page.getByRole("button", { name: "Create" }).click()
-		await pubsPage.choosePubType("Submission")
+		await choosePubType({
+			page,
+			communitySlug: community.community.slug,
+			pubType: "Submission",
+		})
 		await page.getByLabel("Title").fill(title)
 		await page.getByLabel("Content").fill("Some content")
 		await page.getByLabel("Animals").fill("dogs")
@@ -239,7 +243,7 @@ test.describe("Creating a pub", () => {
 		const pubsPage = new PubsPage(page, community.community.slug)
 		await pubsPage.goTo()
 		await page.getByRole("button", { name: "Create" }).click()
-		await pubsPage.choosePubType("Editor")
+		await choosePubType({ page, communitySlug: community.community.slug, pubType: "Editor" })
 		await page.getByLabel("Title").fill("old title")
 		// It seems for ProseMirror, Keyboard actions trigger things better than using .fill()
 		await page.locator(".ProseMirror").click()
