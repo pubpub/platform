@@ -43,10 +43,10 @@ const updateItems = async (view: EditorView, filter: string) => {
 	})
 }
 
-export default (
+export default function contextSuggestPlugin(
 	_suggestDataOld: SuggestProps,
 	_setSuggestDataOld: React.Dispatch<React.SetStateAction<SuggestProps>>
-) => {
+) {
 	/* The docs say we can either include handler functions or  */
 	/* a single reducer. But the type requires the reducer, incorrectly. */
 	/* Hence, the Omit type below */

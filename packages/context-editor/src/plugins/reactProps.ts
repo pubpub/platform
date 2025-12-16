@@ -3,7 +3,7 @@ import type { ContextEditorProps } from "../ContextEditor"
 import { Plugin, PluginKey } from "prosemirror-state"
 
 export const reactPropsKey = new PluginKey("reactProps")
-export default (initialProps: ContextEditorProps) => {
+export default function reactPropsPlugin(initialProps: ContextEditorProps) {
 	return new Plugin({
 		key: reactPropsKey,
 		state: {

@@ -72,7 +72,7 @@ const markdownLinkRule = (markType: MarkType) =>
 		return state.tr.replaceWith(start, end, fragment)
 	})
 
-export default (schema: Schema) => {
+export default function inputRulesPlugin(schema: Schema) {
 	const rules = [
 		new InputRule(/^AI please!$/, (state, _match, start, end) => {
 			const contentToInsert = state.schema.nodeFromJSON(initialDoc).content
