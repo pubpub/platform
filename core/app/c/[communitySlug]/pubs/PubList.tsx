@@ -125,6 +125,7 @@ const PaginatedPubListInner = async (
 
 				return (
 					<PubCard
+						data-pulse={true}
 						key={pub.id}
 						pub={pub}
 						communitySlug={props.communitySlug}

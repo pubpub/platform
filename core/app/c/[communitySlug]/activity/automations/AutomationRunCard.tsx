@@ -81,6 +81,8 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 
 	return (
 		<div
+			// makes it pulse in the search results
+			data-pulse
 			className="gap-4 rounded-md border border-gray-200 bg-white p-4"
 			style={{ gridTemplateRows: "auto auto" }}
 			data-testid={`automation-run-card-${automationRun.id}`}

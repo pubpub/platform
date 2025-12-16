@@ -1,10 +1,11 @@
 "use client"
 
-import type { PubTypesId, StagesId } from "db/public"
+import type { PubTypes, PubTypesId, StagesId } from "db/public"
 import type React from "react"
+import type { PubSearchParams } from "./pubQuery"
 
-import { useRef } from "react"
-import { ArrowUpDownIcon, PlusCircle, Search, SortAsc, SortDesc, X } from "lucide-react"
+import { memo, type SetStateAction } from "react"
+import { ArrowUpDownIcon, PlusCircle, SortAsc, SortDesc } from "lucide-react"
 
 import { Button } from "ui/button"
 import {
@@ -13,11 +14,9 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu"
-import { KeyboardShortcutPriority, useKeyboardShortcut, usePlatformModifierKey } from "ui/hooks"
-import { Input } from "ui/input"
 import { MultiSelect } from "ui/multi-select"
-import { cn } from "utils"
 
+import { SearchBar, SearchContent } from "~/app/components/Search/SearchBar"
 import { entries } from "~/lib/mapping"
 import { usePubSearch } from "./PubSearchProvider"
 
@@ -53,20 +52,6 @@ const sorts = {
 }
 
 export const PubSearch = (props: PubSearchProps) => {
-	const inputRef = useRef<HTMLInputElement>(null)
-
-	const { symbol, platform } = usePlatformModifierKey()
-	useKeyboardShortcut(
-		"Mod+k",
-		() => {
-			inputRef.current?.focus()
-			inputRef.current?.select()
-		},
-		{
-			priority: KeyboardShortcutPriority.MEDIUM,
-		}
-	)
-
 	const {
 		queryParams,
 		inputValues,
@@ -77,101 +62,25 @@ export const PubSearch = (props: PubSearchProps) => {
 		availablePubTypes,
 	} = usePubSearch()
 
-	const handleClearInput = () => {
-		setQuery("")
-	}
-	// determine if content is stale, in order to provide a visual feedback to the user
-
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 px-4 py-4">
-				<div className="relative flex grow items-center gap-x-2">
-					<Search
-						className="-translate-y-1/2 absolute top-1/2 left-2 text-muted-foreground"
-						size={16}
-					/>
-					<Input
-						ref={inputRef}
-						value={inputValues?.query}
-						onChange={(e) => {
-							setQuery(e.target.value)
-						}}
-						placeholder="Search updates as you type..."
-						className={cn("pl-8 tracking-wide shadow-none", inputValues && "pr-8")}
-					/>
-					<span className="-translate-y-1/2 absolute top-1/2 right-2 flex items-center font-mono text-muted-foreground text-xs opacity-50 md:flex">
-						{inputValues?.query && (
-							<button
-								onClick={handleClearInput}
-								className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground md:right-16"
-								type="button"
-								aria-label="Clear search"
-							>
-								<X size={14} />
-							</button>
-						)}
-						<span
-							className={cn(
-								"flex w-10 items-center justify-center gap-x-1 transition-opacity duration-200",
-								{
-									// hide until hydrated, otherwise you see flash of `Ctrl` -> `Cmd` on mac
-									"opacity-0": platform === "unknown",
-								}
-							)}
-						>
-							<span className={cn({ "mt-0.5 text-lg": platform === "mac" })}>
-								{symbol}
-							</span>{" "}
-							K
-						</span>
-					</span>
-				</div>
-				<MultiSelect
-					options={availablePubTypes?.map((type) => ({
-						label: type.name,
-						value: type.id,
-					}))}
-					defaultValue={queryParams.pubTypes.map((type) => type.id)}
-					onValueChange={(items) =>
-						setFilters((old) => ({ ...old, pubTypes: items as PubTypesId[] }))
-					}
-					showClearAll
-					value={inputValues.pubTypes}
-					asChild
-				>
-					<Button variant="outline" className="h-9" size="sm">
-						<PlusCircle size={16} />
-						Type
-						{queryParams.pubTypes?.length ? (
-							<span className="ml-1 text-muted-foreground text-xs">
-								{queryParams.pubTypes.length}
-							</span>
-						) : null}
-					</Button>
-				</MultiSelect>
-				<MultiSelect
-					options={availableStages?.map((stage) => ({
-						label: stage.name,
-						value: stage.id,
-					}))}
-					defaultValue={queryParams.stages.map((stage) => stage.id)}
-					onValueChange={(items) =>
-						setFilters((old) => ({ ...old, stages: items as StagesId[] }))
-					}
-					value={inputValues.stages}
-					showClearAll
-					asChild
-				>
-					<Button variant="outline" className="h-9" size="sm">
-						<PlusCircle size={16} />
-						Stage
-						{queryParams.stages?.length ? (
-							<span className="ml-1 text-muted-foreground text-xs">
-								{queryParams.stages.length}
-							</span>
-						) : null}
-					</Button>
-				</MultiSelect>
+			<SearchBar
+				value={inputValues.query}
+				onChange={setQuery}
+				placeholder="Search by pub title..."
+			>
+				<PubTypesFilter
+					availablePubTypes={availablePubTypes}
+					defaultPubTypes={queryParams.pubTypes.map((type) => type.id)}
+					setFilters={setFilters}
+					selectedPubTypes={inputValues.pubTypes}
+				/>
+				<StagesFilter
+					availableStages={availableStages}
+					defaultStages={queryParams.stages.map((stage) => stage.id)}
+					setFilters={setFilters}
+					currentStages={inputValues.stages}
+				/>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button variant="outline" className="ml-auto h-9" size="sm">
@@ -205,16 +114,88 @@ export const PubSearch = (props: PubSearchProps) => {
 						))}
 					</DropdownMenuContent>
 				</DropdownMenu>
-			</div>
-			<div
-				className={cn(
-					stale &&
-						'opacity-50 transition-opacity duration-200 **:data-[testid*="pub-card"]:animate-pulse',
-					"m-4 mt-0"
-				)}
-			>
-				{props.children}
-			</div>
+			</SearchBar>
+			<SearchContent stale={stale}>{props.children}</SearchContent>
 		</div>
 	)
 }
+
+export const PubTypesFilter = memo(
+	({
+		availablePubTypes,
+		defaultPubTypes,
+		setFilters,
+		selectedPubTypes,
+	}: {
+		availablePubTypes: PubTypes[]
+		defaultPubTypes: PubTypesId[]
+		setFilters: (filters: SetStateAction<PubSearchParams>) => void
+		selectedPubTypes: PubTypesId[]
+	}) => {
+		return (
+			<MultiSelect
+				options={availablePubTypes?.map((type) => ({
+					label: type.name,
+					value: type.id,
+				}))}
+				defaultValue={defaultPubTypes}
+				onValueChange={(items) =>
+					setFilters((old) => ({ ...old, pubTypes: items as PubTypesId[] }))
+				}
+				showClearAll
+				value={selectedPubTypes}
+				asChild
+			>
+				<Button variant="outline" className="h-9" size="sm">
+					<PlusCircle size={16} />
+					Type
+					{selectedPubTypes?.length ? (
+						<span className="ml-1 text-muted-foreground text-xs">
+							{selectedPubTypes.length}
+						</span>
+					) : null}
+				</Button>
+			</MultiSelect>
+		)
+	}
+)
+
+export const StagesFilter = memo(
+	({
+		availableStages,
+		defaultStages,
+		setFilters,
+		currentStages,
+	}: {
+		availableStages: StageFilters
+		defaultStages: StagesId[]
+		setFilters: (filters: SetStateAction<PubSearchParams>) => void
+		currentStages: StagesId[]
+	}) => {
+		return (
+			<MultiSelect
+				options={availableStages.map((stage) => ({
+					label: stage.name,
+					value: stage.id,
+				}))}
+				defaultValue={defaultStages}
+				onValueChange={(items) =>
+					setFilters((old) => ({ ...old, stages: items as StagesId[] }))
+				}
+				value={currentStages}
+				showClearAll
+				asChild
+			>
+				<Button variant="outline" className="h-9" size="sm">
+					<PlusCircle size={16} />
+					Stage
+					{currentStages?.length ? (
+						<span className="ml-1 text-muted-foreground text-xs">
+							{currentStages.length}
+						</span>
+					) : null}
+				</Button>
+			</MultiSelect>
+		)
+	}
+)

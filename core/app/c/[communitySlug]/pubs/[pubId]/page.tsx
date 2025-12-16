@@ -226,7 +226,6 @@ export default async function Page(props: {
 			communitySlug,
 		})
 
-	console.log("all pubtypes", allPubTypes)
 	return (
 		<ContentLayout
 			title={

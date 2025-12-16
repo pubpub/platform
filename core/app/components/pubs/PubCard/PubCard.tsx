@@ -77,7 +77,8 @@ export const PubCard = async ({
 	canMoveAllPubs,
 	canViewAllStages,
 	canFilter,
-}: PubCardProps) => {
+	...props
+}: PubCardProps & React.HTMLAttributes<HTMLDivElement>) => {
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle)
 
 	const showMatchingValues = matchingValues && matchingValues.length !== 0
@@ -85,11 +86,12 @@ export const PubCard = async ({
 	const hasActions = pub.stage && manualAutomations && manualAutomations.length !== 0
 	return (
 		<Card
-			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-data-[state=checked]:border-blue-500"
+			{...props}
 			className={cn(
 				"group relative flex flex-row items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 has-data-[state=checked]:border-blue-500",
 				// accessibility focus styles
-				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200"
+				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200",
+				props.className
 			)}
 			data-testid={`pub-card-${pub.id}`}
 		>

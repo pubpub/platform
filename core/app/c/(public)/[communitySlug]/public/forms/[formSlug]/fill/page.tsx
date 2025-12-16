@@ -282,7 +282,7 @@ export default async function FormPage(props: {
 	const relatedPubs = pubWithProsemirrorRichText
 		? pubWithProsemirrorRichText.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : []))
 		: []
-	const pubsForContext = [...pubs, ...relatedPubs]
+	const _pubsForContext = [...pubs, ...relatedPubs]
 
 	return (
 		<div className="isolate min-h-screen">
@@ -316,7 +316,6 @@ export default async function FormPage(props: {
 								<ContextEditorContextProvider
 									pubId={pubId}
 									pubTypeId={form.pubTypeId}
-									pubs={pubsForContext}
 									pubTypes={pubTypes}
 								>
 									<ExternalFormWrapper

@@ -1,5 +1,5 @@
 import type { User } from "contracts"
-import type { FileUploadFile } from "~/lib/fields/fileUpload"
+import type { InputTypeForCoreSchemaType } from "schemas"
 import type { FullProcessedPubWithForm } from "~/lib/server"
 
 import { ExternalLink } from "lucide-react"
@@ -97,7 +97,11 @@ export const PubValueDisplay = ({ values }: { values: FullProcessedPubWithForm["
 				</div>
 			)
 		case CoreSchemaType.FileUpload:
-			return <FileUploadPreview files={value.value as (FileUploadFile & { id: string })[]} />
+			return (
+				<FileUploadPreview
+					files={value.value as InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>}
+				/>
+			)
 		case CoreSchemaType.Boolean:
 			return <Checkbox checked={value.value as boolean} />
 		case CoreSchemaType.MemberId:

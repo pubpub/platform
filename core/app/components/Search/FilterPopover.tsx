@@ -19,7 +19,7 @@ export const FilterPopover = ({ activeFilterCount, children }: FilterPopoverProp
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button variant="outline" size="sm">
+				<Button variant="outline" size="sm" className="h-9">
 					<Filter size={16} />
 					Filters
 					{activeFilterCount > 0 && (

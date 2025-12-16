@@ -8,7 +8,6 @@ import { Plus } from "ui/icon"
 
 import { getLoginData } from "~/lib/authentication/loginData"
 import { getCreatablePubTypes } from "~/lib/authorization/capabilities"
-import { getPubsWithRelatedValues } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getPubFields } from "~/lib/server/pubFields"
 import { ContextEditorContextProvider } from "../ContextEditor/ContextEditorContext"
@@ -36,16 +35,7 @@ const InitialCreatePubFormWithRelatedPub = async ({
 	communityId: CommunitiesId
 	stageId?: StagesId
 }) => {
-	const { user } = await getLoginData()
-	const [pubs, pubFieldsResponse] = await Promise.all([
-		getPubsWithRelatedValues(
-			{ communityId: communityId, userId: user?.id },
-			{
-				limit: 30,
-				withStage: true,
-				withPubType: true,
-			}
-		),
+	const [pubFieldsResponse] = await Promise.all([
 		//TODO: this includes all relationship fields on the pub type, but it should be limited to
 		//relationship pub fields in the forms the user is allowed to use to create pubs of the
 		//given type
@@ -62,7 +52,6 @@ const InitialCreatePubFormWithRelatedPub = async ({
 		<ContextEditorContextProvider
 			pubId={relatedPub.pubId}
 			pubTypes={pubTypes}
-			pubs={pubs}
 			pubTypeId={relatedPub.pubTypeId}
 		>
 			<InitialCreatePubForm

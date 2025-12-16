@@ -178,7 +178,6 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 				<div className="isolate h-full w-full text-sm">
 					<div className="relative z-10 bg-white text-muted-foreground">Label</div>
 					<ContextEditorClient
-						pubs={[]}
 						pubTypes={[]}
 						onChange={() => {}}
 						// Casting since this is a demo component where the pubId and pubTypeId doesn't really matter

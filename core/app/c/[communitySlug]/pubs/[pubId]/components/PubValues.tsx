@@ -15,17 +15,9 @@ type FullProcessedPubWithForm = ProcessedPubWithForm<{
 
 export const PubValues = async ({
 	pub,
-	isNested,
 	formSlug,
 }: {
 	pub: FullProcessedPubWithForm
-	/**
-	 * If this is a nested related pub. This can likely be removed once we have related pubs
-	 * using default forms as well, as right now we only need it to not render
-	 * the "Other fields" header which will always show up since related pubs do not have
-	 * forms joined currently
-	 **/
-	isNested?: boolean
 	formSlug: string
 }) => {
 	const hydratedeValues = await Promise.all(
@@ -49,23 +41,29 @@ export const PubValues = async ({
 
 	return (
 		<div className="grid grid-cols-12 gap-x-2 gap-y-4 text-sm">
-			{Object.values(valuesGroupedByField).map((values, idx) => (
-				<>
-					<FieldBlock
-						formSlug={formSlug}
-						key={values[0]?.fieldId}
-						pubId={pub.id}
-						name={values[0]?.fieldName}
-						slug={values[0]?.fieldSlug}
-						schemaType={values[0]?.schemaName}
-						values={values}
-						depth={0}
-					/>
-					{idx < hydratedeValues.length - 1 && (
-						<Separator className="col-span-12" key={`${values[0].fieldId}-divider`} />
-					)}
-				</>
-			))}
+			{Object.values(valuesGroupedByField)!.map((values, idx) =>
+				!values?.length ? null : (
+					<>
+						<FieldBlock
+							formSlug={formSlug}
+							key={values[0]?.fieldId ?? `field-${idx}`}
+							pubId={pub.id}
+							name={values[0]?.fieldName}
+							slug={values[0]?.fieldSlug}
+							schemaType={values[0]?.schemaName}
+							// @ts-expect-error - FIXME: i bring shame to this company
+							values={values}
+							depth={0}
+						/>
+						{idx < hydratedeValues.length - 1 && (
+							<Separator
+								className="col-span-12"
+								key={`${values[0].fieldId}-divider`}
+							/>
+						)}
+					</>
+				)
+			)}
 		</div>
 	)
 }

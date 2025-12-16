@@ -14,7 +14,7 @@ type SearchBarProps = {
 	onChange: (value: string) => void
 	placeholder?: string
 	className?: string
-	actions?: ReactNode
+	children?: ReactNode
 }
 
 export const SearchBar = ({
@@ -22,7 +22,10 @@ export const SearchBar = ({
 	onChange,
 	placeholder = "Search...",
 	className,
-	actions,
+	/**
+	 * actions to be rendered next to the search bar
+	 */
+	children,
 }: SearchBarProps) => {
 	const inputRef = useRef<HTMLInputElement>(null)
 	const { symbol, platform } = usePlatformModifierKey()
@@ -45,7 +48,7 @@ export const SearchBar = ({
 	return (
 		<div
 			className={cn(
-				"sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 border-b bg-white px-4 py-2",
+				"sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 bg-background px-4 py-4",
 				className
 			)}
 		>
@@ -87,7 +90,20 @@ export const SearchBar = ({
 					</span>
 				</span>
 			</div>
-			{actions}
+			{children}
+		</div>
+	)
+}
+
+export const SearchContent = ({ children, stale }: { children?: ReactNode; stale: boolean }) => {
+	return (
+		<div
+			className={cn(
+				stale && "opacity-50 transition-opacity duration-200 **:data-pulse:animate-pulse",
+				"m-4 mt-0"
+			)}
+		>
+			{children}
 		</div>
 	)
 }

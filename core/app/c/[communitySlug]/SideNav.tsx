@@ -347,7 +347,7 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 
 	return (
 		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="fixed z-40 border-r-0!">
-			<SidebarHeader className="py-4 group-data-[state=expanded]:p-2 group-data-[collapsible=icon]:pt-5">
+			<SidebarHeader className="py-4 group-data-[state=expanded]:p-4 group-data-[collapsible=icon]:pt-5 group-data-[state=expanded]:pb-2">
 				<SidebarMenu>
 					<SidebarMenuItem className={`h-full`}>
 						<CommunitySwitcher
