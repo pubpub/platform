@@ -29,30 +29,28 @@ export const StagePanelAutomations = (props: Props) => {
 				<AddAutomationButton />
 			</StagePanelCardHeader>
 			<CardContent>
-				<ItemGroup className="gap-y-2">
-					{props.automations.length > 0 ? (
-						props.automations.map((automation) => (
+				{props.automations.length > 0 ? (
+					<ItemGroup className="gap-y-2 dark:[&>div]:bg-muted/50">
+						{props.automations.map((automation) => (
 							<StagePanelAutomation
 								stageId={props.stage.id}
 								communityId={props.stage.communityId as CommunitiesId}
 								automation={automation}
 								key={automation.id}
 							/>
-						))
-					) : (
-						<Empty>
-							<EmptyHeader>
-								<EmptyMedia variant="icon">
-									<Bot size={16} />
-								</EmptyMedia>
-								<EmptyTitle>No automations</EmptyTitle>
-								<EmptyDescription>
-									Add an automation to get started
-								</EmptyDescription>
-							</EmptyHeader>
-						</Empty>
-					)}
-				</ItemGroup>
+						))}
+					</ItemGroup>
+				) : (
+					<Empty>
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<Bot size={16} />
+							</EmptyMedia>
+							<EmptyTitle>No automations</EmptyTitle>
+							<EmptyDescription>Add an automation to get started</EmptyDescription>
+						</EmptyHeader>
+					</Empty>
+				)}
 			</CardContent>
 		</Card>
 	)

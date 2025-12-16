@@ -19,7 +19,12 @@ export function TabLink({ tab, children }: { tab: StageManageTab; children: Reac
 
 	return (
 		<Tooltip>
-			<TabsTrigger value={tab} onClick={handleClick} asChild>
+			<TabsTrigger
+				className="data-[state=inactive]:border-none"
+				value={tab}
+				onClick={handleClick}
+				asChild
+			>
 				<TooltipTrigger>
 					<div>
 						{children}

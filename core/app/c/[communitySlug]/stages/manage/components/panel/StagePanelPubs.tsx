@@ -79,13 +79,13 @@ export const StagePanelPubs = async (props: Props) => {
 					<Suspense fallback={<SkeletonCard />}>
 						<CreatePubButton
 							stageId={props.stageId}
-							className="m-0 h-6 border-none bg-transparent p-0 text-neutral-600 text-xs shadow-none hover:bg-transparent hover:text-neutral-900"
+							className="!bg-transparent m-0 h-6 border-none p-0 text-muted-foreground text-xs shadow-none hover:bg-transparent hover:text-foreground"
 						/>
 					</Suspense>
 				</CardAction>
 			</StagePanelCardHeader>
 			<CardContent>
-				<div className="flex flex-col gap-2">
+				<div className="flex flex-col gap-2 dark:[&>div]:bg-muted/50">
 					{stagePubs.map((pub) => (
 						<PubCard
 							key={pub.id}

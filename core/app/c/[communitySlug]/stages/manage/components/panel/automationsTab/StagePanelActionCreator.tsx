@@ -30,12 +30,12 @@ const ActionCell = (props: ActionCellProps) => {
 
 	return (
 		<Button
-			className="col-span-4 row-span-2 grid h-20 cursor-pointer grid-rows-subgrid flex-col items-start gap-x-3 gap-y-0 space-y-1 rounded-md border bg-accent p-3 text-black shadow-md transition-colors"
+			className="col-span-4 row-span-2 grid h-20 cursor-pointer grid-rows-subgrid flex-col items-start gap-x-3 gap-y-0 space-y-1 rounded-md border bg-accent p-3 text-foreground shadow-md transition-colors"
 			variant="outline"
 			onClick={onClick}
 			data-testid={`${props.action.name}-button`}
 		>
-			<props.action.icon className="col-span-1 place-self-center" />
+			<props.action.icon className="col-span-1 col-start-1 place-self-center" />
 
 			<div className="col-span-3 col-start-2 flex items-center gap-2 self-center">
 				<h4 className="font-semibold text-sm">{props.action.niceName}</h4>
@@ -47,7 +47,7 @@ const ActionCell = (props: ActionCellProps) => {
 						<TooltipTrigger asChild>
 							<Badge
 								variant="outline"
-								className="flex size-5 items-center justify-center rounded-full bg-rose-200 text-xs"
+								className="flex size-5 items-center justify-center rounded-full bg-rose-200 text-accent text-xs"
 							>
 								α
 							</Badge>

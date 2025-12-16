@@ -19,7 +19,7 @@ export function AddAutomationButton() {
 			variant="ghost"
 			size="sm"
 			data-testid="add-automation-button"
-			className="m-0 h-6 p-0 text-neutral-700 hover:bg-transparent hover:text-neutral-900"
+			className="m-0 h-6 p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
 			onClick={handleClick}
 		>
 			<Plus size={16} /> Add automation

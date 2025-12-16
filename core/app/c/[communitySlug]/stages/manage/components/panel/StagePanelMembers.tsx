@@ -39,7 +39,7 @@ export const StagePanelMembers = async ({ stageId, user }: Props) => {
 				</div>
 				<CardAction>
 					<AddMemberDialog
-						className="m-0 h-6 border-none bg-transparent p-0 text-neutral-600 text-xs shadow-none hover:bg-transparent hover:text-neutral-900"
+						className="!bg-transparent m-0 h-6 border-none p-0 text-muted-foreground text-xs shadow-none hover:bg-transparent hover:text-foreground"
 						addMember={addStageMember.bind(null, stageId)}
 						addUserMember={addUserWithStageMembership.bind(null, stageId)}
 						existingMembers={members.map((member) => member.id)}
