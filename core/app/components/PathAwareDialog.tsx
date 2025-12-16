@@ -69,7 +69,7 @@ export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, _ref) =>
 			<DialogOverlay />
 			<DialogTrigger asChild>
 				<Button
-					variant={props.buttonVariant ?? "outline-solid"}
+					variant={props.buttonVariant ?? "outline"}
 					size={props.buttonSize ?? "sm"}
 					className={cn("flex items-center gap-x-2 py-4", props.className)}
 					disabled={props.disabled}

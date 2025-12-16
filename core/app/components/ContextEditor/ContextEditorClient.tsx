@@ -11,9 +11,11 @@ import { ContextAtom } from "./AtomRenderer"
 
 import "context-editor/style.css"
 
-import type { ContextEditorPub } from "./ContextEditorContext"
+import { useDebouncedCallback } from "use-debounce"
 
+import { client } from "~/lib/api"
 import { useServerAction } from "~/lib/serverActions"
+import { useCommunity } from "../providers/CommunityProvider"
 
 const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.ContextEditor), {
 	ssr: false,
@@ -27,7 +29,6 @@ const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.C
 
 export const ContextEditorClient = (
 	props: {
-		pubs: ContextEditorPub[]
 		pubTypes: Pick<PubTypes, "id" | "name">[]
 		pubId: PubsId
 		pubTypeId: PubTypesId
@@ -39,14 +40,33 @@ export const ContextEditorClient = (
 ) => {
 	const runUpload = useServerAction(upload)
 
+	const community = useCommunity()
 	const getPubs = useCallback(
-		(_filter: string) => {
-			return new Promise<any[]>((resolve, _reject) => {
-				resolve(props.pubs)
+		async (filter: string) => {
+			const res = await client.pubs.getMany.query({
+				query: {
+					withValues: true,
+					withPubType: true,
+					withStage: true,
+					limit: 10,
+					depth: 2,
+					search: filter,
+				},
+				params: {
+					communitySlug: community.slug,
+				},
 			})
+
+			if (res.status !== 200) {
+				return []
+			}
+
+			return res.body ?? []
 		},
-		[props.pubs]
+		[community.slug]
 	)
+
+	const debouncedGetPubs = useDebouncedCallback(getPubs, 300)
 
 	const signedUploadUrl = (fileName: string) => {
 		return runUpload(fileName, props.pubId)
@@ -58,7 +78,8 @@ export const ContextEditorClient = (
 				pubId={props.pubId}
 				pubTypeId={props.pubTypeId}
 				pubTypes={props.pubTypes}
-				getPubs={getPubs}
+				// @ts-expect-error - its fine, debounce returns `undefined` at the beginning
+				getPubs={debouncedGetPubs}
 				getPubById={() => {
 					return {}
 				}}

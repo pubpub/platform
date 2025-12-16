@@ -82,7 +82,11 @@ async function MoveButton({ hideIfNowhereToMove = true, ...props }: Props) {
 			? { moveConstraints: props.moveTo, moveConstraintSources: props.moveFrom }
 			: ((await getStage(props.stageId, loginData.user.id).executeTakeFirst()) ?? {})
 
-	const { sources, destinations } = makeSourcesAndDestinations({ ...props, moveFrom, moveTo })
+	const { sources, destinations } = makeSourcesAndDestinations({
+		...props,
+		moveFrom,
+		moveTo,
+	} as Props)
 
 	if (destinations?.length === 0 && sources?.length === 0 && hideIfNowhereToMove) {
 		return <BasicMoveButton name={stageName} />
@@ -112,8 +116,8 @@ async function MoveButton({ hideIfNowhereToMove = true, ...props }: Props) {
 	return (
 		<MoveInteractive
 			{...props}
-			sources={sources}
-			destinations={destinations}
+			sources={sources ?? []}
+			destinations={destinations ?? []}
 			canMovePub={canMovePub}
 			canViewStage={canViewStage}
 			button={stageButton}

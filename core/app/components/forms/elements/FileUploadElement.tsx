@@ -98,7 +98,7 @@ export const FileUploadElement = ({
 							<FormControl>
 								<FileUpload
 									{...field}
-									theme={resolvedTheme}
+									theme={resolvedTheme as "light" | "dark"}
 									disabled={!isEnabled}
 									upload={signedUploadUrl}
 									onUpdateFiles={(event) => {

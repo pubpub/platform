@@ -1,6 +1,7 @@
 import type { ProcessedPubWithForm } from "contracts"
 
 import { type CommunityMembershipsId, CoreSchemaType } from "db/public"
+import { Separator } from "ui/separator"
 
 import { getMember } from "~/lib/server/user"
 import { FieldBlock } from "./FieldBlock"
@@ -27,34 +28,43 @@ export const PubValues = async ({
 	isNested?: boolean
 	formSlug: string
 }) => {
-	const valuesWithMembers = await Promise.all(
+	const hydratedeValues = await Promise.all(
 		pub.values.map(async (val) => {
-			if (val.schemaName !== CoreSchemaType.MemberId) {
-				return val
+			if (val.schemaName === CoreSchemaType.MemberId) {
+				const member = await getMember(
+					val.value as CommunityMembershipsId
+				).executeTakeFirst()
+
+				return {
+					...val,
+					value: member,
+				}
 			}
 
-			const member = await getMember(val.value as CommunityMembershipsId).executeTakeFirst()
-
-			return {
-				...val,
-				value: member,
-			}
+			return val
 		})
 	)
 
+	const valuesGroupedByField = Object.groupBy(hydratedeValues, (val) => val.fieldSlug)
+
 	return (
 		<div className="grid grid-cols-12 gap-x-2 gap-y-4 text-sm">
-			{valuesWithMembers.map((value) => (
-				<FieldBlock
-					formSlug={formSlug}
-					key={value.id}
-					pubId={pub.id}
-					name={value.fieldName}
-					slug={value.fieldSlug}
-					schemaType={value.schemaName}
-					values={[value]}
-					depth={0}
-				/>
+			{Object.values(valuesGroupedByField).map((values, idx) => (
+				<>
+					<FieldBlock
+						formSlug={formSlug}
+						key={values[0]?.fieldId}
+						pubId={pub.id}
+						name={values[0]?.fieldName}
+						slug={values[0]?.fieldSlug}
+						schemaType={values[0]?.schemaName}
+						values={values}
+						depth={0}
+					/>
+					{idx < hydratedeValues.length - 1 && (
+						<Separator className="col-span-12" key={`${values[0].fieldId}-divider`} />
+					)}
+				</>
 			))}
 		</div>
 	)

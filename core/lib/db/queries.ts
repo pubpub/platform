@@ -245,7 +245,6 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 			)
 		})
 		.orderBy("automations.createdAt", "asc")
-		.$narrowType<{ icon: IconConfig | null }>()
 })
 
 export const getStageAutomations = cache(
@@ -256,6 +255,7 @@ export const getStageAutomations = cache(
 
 		return automations.map((automation) => ({
 			...automation,
+			icon: automation.icon as IconConfig | null,
 			lastAutomationRun: automation.lastAutomationRun
 				? {
 						...automation.lastAutomationRun,
@@ -281,6 +281,7 @@ export const getAutomation = cache(
 
 		return {
 			...automation,
+			icon: automation.icon as IconConfig | null,
 			lastAutomationRun: automation.lastAutomationRun
 				? {
 						...automation.lastAutomationRun,
@@ -315,6 +316,7 @@ export const getAutomationsByTriggerConfig = cache(
 
 		return automations.map((automation) => ({
 			...automation,
+			icon: automation.icon as IconConfig | null,
 			lastAutomationRun: automation.lastAutomationRun
 				? {
 						...automation.lastAutomationRun,

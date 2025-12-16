@@ -377,6 +377,7 @@ type ValuesWithFormElements =
 				| { relationshipConfig: { label?: string } }
 				| null
 			formElementComponent: InputComponent
+			formElementRelatedPubTypes: PubTypesId[]
 	  })
 	// With only value info
 	| ValueBase
@@ -393,6 +394,7 @@ type ValuesWithFormElements =
 				| { relationshipConfig: { label?: string } }
 				| null
 			formElementComponent: InputComponent
+			formElementRelatedPubTypes: PubTypesId[]
 	  } & ValueFieldInfo)
 
 type ProcessedPubBase = {

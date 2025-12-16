@@ -8,6 +8,7 @@ import type { ElementProps } from "../types"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { Value } from "@sinclair/typebox/value"
 import { baseSchema } from "context-editor/schemas"
+import { htmlToProsemirror } from "context-editor/utils/serialize"
 import { Node } from "prosemirror-model"
 import { useFormContext } from "react-hook-form"
 import { richTextInputConfigSchema } from "schemas"
@@ -46,7 +47,7 @@ const EditorFormElement = function EditorFormElement({
 	help?: string
 }) {
 	const formElementToggle = useFormElementToggleContext()
-	const { pubs, pubTypes, pubId, pubTypeId, registerGetter } = useContextEditorContext()
+	const { pubTypes, pubId, pubTypeId, registerGetter } = useContextEditorContext()
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: it is unfortunately pretty important that this not change
 	const f = useMemo(() => {
@@ -67,6 +68,12 @@ const EditorFormElement = function EditorFormElement({
 
 		if (!f.value) {
 			return
+		}
+
+		// FIXME: this is a fallback, it's quite slow to do this on the client, move to server ideally
+		if (typeof f.value === "string") {
+			const node = htmlToProsemirror(f.value)
+			return node
 		}
 
 		return baseSchema.nodeFromJSON(f.value)
@@ -98,7 +105,6 @@ const EditorFormElement = function EditorFormElement({
 					<ContextEditorClient
 						getterRef={contextEditorRef}
 						pubId={pubId}
-						pubs={pubs}
 						pubTypes={pubTypes}
 						pubTypeId={pubTypeId}
 						initialDoc={initialDoc}

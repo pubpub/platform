@@ -12,8 +12,9 @@ import * as authorPub from "./author-pub-fixture.json"
 
 describe("rendering related pub values", () => {
 	const renderArticle = () =>
-		render(<PubValues pub={articlePub as unknown as FullProcessedPub} />)
-	const renderAuthor = () => render(<PubValues pub={authorPub as unknown as FullProcessedPub} />)
+		render(<PubValues pub={articlePub as unknown as FullProcessedPub} formSlug="article" />)
+	const renderAuthor = () =>
+		render(<PubValues pub={authorPub as unknown as FullProcessedPub} formSlug="author" />)
 	it("groups values by the field", () => {
 		renderArticle()
 		expect(screen.getAllByRole("heading", { name: "Tables" }).length).toBe(1)

@@ -24,7 +24,7 @@ import { db } from "~/kysely/database"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { getCommunityRole } from "~/lib/authentication/roles"
 import { userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities"
-import { transformRichTextValuesToProsemirror } from "~/lib/editor/serialize-server"
+import { transformRichTextValuesToProsemirrorServer } from "~/lib/editor/serialize-server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
 import { getPubsWithRelatedValues } from "~/lib/server/pub"
@@ -226,7 +226,7 @@ export default async function FormPage(props: {
 		return notFound()
 	}
 	const pubWithProsemirrorRichText = pub
-		? transformRichTextValuesToProsemirror(pub, { toJson: true })
+		? transformRichTextValuesToProsemirrorServer(pub, { toJson: true })
 		: undefined
 
 	const memberWithUser = {

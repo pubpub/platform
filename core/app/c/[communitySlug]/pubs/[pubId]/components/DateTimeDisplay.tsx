@@ -14,7 +14,7 @@ export function DateTimeDisplay({
 	type: "relative" | "absolute"
 }) {
 	return (
-		<div className={cn("flex gap-1", className)}>
+		<div className={cn("flex items-center gap-2", className)}>
 			<Calendar size="16px" strokeWidth="1px" />
 			<time dateTime={date.toISOString()} title={date.toLocaleString()}>
 				{type === "absolute"

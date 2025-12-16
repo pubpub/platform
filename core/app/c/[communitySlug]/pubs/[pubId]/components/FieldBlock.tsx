@@ -4,11 +4,26 @@ import type { PubFieldElement } from "~/app/components/forms/types"
 import type { FullProcessedPubWithForm } from "~/lib/server"
 
 import { useState } from "react"
-import { typeboxResolver } from "@hookform/resolvers/typebox"
-import { Type } from "@sinclair/typebox"
 import { Pencil } from "lucide-react"
-import { useForm } from "react-hook-form"
-import { getJsonSchemaByCoreSchemaType, SCHEMA_TYPES_WITH_ICONS } from "schemas"
+import { defaultComponent, SCHEMA_TYPES_WITH_ICONS } from "schemas"
+
+import {
+	type CoreSchemaType,
+	ElementType,
+	type FormElementsId,
+	type PubsId,
+	type PubTypesId,
+} from "db/public"
+import { Button } from "ui/button"
+import { useIsMobile } from "ui/hooks"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { FormSubmitButton } from "ui/submit-button"
+import { cn } from "utils"
+
+import { FormElement } from "~/app/components/forms/FormElement"
+import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient"
+import { DateTimeDisplay } from "./DateTimeDisplay"
+import { PubValueDisplay } from "./PubValue"
 
 /**
  * Get the label a form/pub value combo might have. In preference order:
@@ -16,7 +31,7 @@ import { getJsonSchemaByCoreSchemaType, SCHEMA_TYPES_WITH_ICONS } from "schemas"
  * 2. "config.label" on a FormElement
  * 3. the name of the PubField
  **/
-const _getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
+const getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
 	// Default to the field name
 	const defaultLabel = value.fieldName
 	let configLabel: string | null = null
@@ -30,25 +45,6 @@ const _getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
 	}
 	return formElementLabel || configLabel || defaultLabel
 }
-
-import type { JsonValue } from "contracts"
-
-import {
-	type CoreSchemaType,
-	ElementType,
-	type FormElementsId,
-	type PubsId,
-	type PubValuesId,
-} from "db/public"
-import { Button } from "ui/button"
-import { Form } from "ui/form"
-import { FormSubmitButton } from "ui/submit-button"
-import { cn } from "utils"
-
-import { FormElement } from "~/app/components/forms/FormElement"
-import { updatePub } from "~/app/components/pubs/PubEditor/actions"
-import { didSucceed, useServerAction } from "~/lib/serverActions"
-import { PubValue } from "./PubValue"
 
 export const PubValueHeading = ({
 	depth,
@@ -89,181 +85,226 @@ export const FieldBlock = ({
 	depth: number
 	formSlug: string
 }) => {
-	const _slugWithoutCommunity = slug.split(":").pop()
+	const slugWithoutCommunity = slug.split(":").pop()
 	const SchemaTypeIcon = SCHEMA_TYPES_WITH_ICONS[schemaType]?.icon
 
-	const [_isEditing, setIsEditing] = useState(false)
-	const _firstValue = values[0]
+	const [isEditing, setIsEditing] = useState(false)
+	const firstValue = values[0]
 
-	const toggleEditing = () => {
-		setIsEditing((prev) => !prev)
-	}
-	const label = _getLabel(_firstValue)
+	const label = getLabel(firstValue)
+
+	const _isMobile = useIsMobile()
+	const [isOpen, setIsOpen] = useState(false)
 
 	return (
 		<>
-			<Button
-				variant="ghost"
-				className="group relative col-span-2 col-start-2 flex flex-col items-start gap-0"
-				onClick={toggleEditing}
-			>
-				<PubValueHeading depth={depth} className="font-medium">
-					{label}
-				</PubValueHeading>
-				<div className="flex items-center gap-1">
-					{SchemaTypeIcon && <SchemaTypeIcon className="w-3 text-muted-foreground" />}
-					<code className="text-muted-foreground text-xs">{_slugWithoutCommunity}</code>
-				</div>
-				<Pencil
-					size={14}
-					className={cn(
-						"absolute top-1 right-1 text-muted-foreground/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100",
-						_isEditing && "opacity-100"
-					)}
-				/>
-			</Button>
-			<div data-testid={`${name}-value`} className="col-span-9">
-				{values.map((value) =>
-					value.id ? (
-						<VVV
-							key={value.id}
-							value={value}
-							setIsEditing={setIsEditing}
-							pubId={pubId}
-							formSlug={formSlug}
-							isEditing={_isEditing}
+			<Popover open={isOpen} onOpenChange={setIsOpen}>
+				<PopoverTrigger
+					asChild
+					onClick={(e) => {
+						if (isEditing) {
+							e.preventDefault()
+							setIsEditing(false)
+							return
+						}
+						setIsOpen((prev) => !prev)
+					}}
+				>
+					<div className="group relative col-span-4 col-start-1 flex min-h-10 flex-col items-start gap-0 overflow-ellipsis md:col-span-2 md:col-start-2">
+						<div className="line-clamp-1 w-[90%] truncate">
+							<PubValueHeading depth={depth} className="truncate font-medium">
+								{label}
+							</PubValueHeading>
+						</div>
+						<div className="line-clamp-1 flex w-full items-end gap-1">
+							{SchemaTypeIcon && (
+								<SchemaTypeIcon className="size-3 text-muted-foreground md:size-4" />
+							)}
+							<code className="w-full truncate text-muted-foreground text-xs">
+								{slugWithoutCommunity}
+							</code>
+						</div>
+					</div>
+				</PopoverTrigger>
+				<PopoverContent
+					side="right"
+					align="start"
+					sideOffset={-80}
+					className="flex h-auto w-[80vw] flex-col gap-4 md:w-72"
+				>
+					<div className="flex flex-col gap-2">
+						<PubValueHeading depth={depth} className="truncate font-medium">
+							{label}
+						</PubValueHeading>
+						<div className="line-clamp-1 flex w-full items-end gap-1">
+							{SchemaTypeIcon && (
+								<SchemaTypeIcon className="size-3 text-muted-foreground md:size-4" />
+							)}
+							<code className="w-full truncate text-muted-foreground text-xs">
+								{slug}
+							</code>
+						</div>
+						<DateTimeDisplay
+							className="text-muted-foreground text-xs"
+							date={new Date(values?.[0].updatedAt ?? new Date())}
+							type="relative"
 						/>
-					) : (
-						// Blank space if there is no value
-						<div className="h-1" key={value.fieldId} />
-					)
-				)}
+					</div>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="ml-auto"
+						onClick={(e) => {
+							e.preventDefault()
+							setIsEditing(true)
+							setIsOpen(false)
+						}}
+					>
+						Edit
+					</Button>
+				</PopoverContent>
+			</Popover>
+			<div
+				data-testid={`${name}-value`}
+				className="group relative col-span-8 md:col-span-8 lg:col-span-6"
+			>
+				<VVV
+					values={values}
+					setIsEditing={setIsEditing}
+					pubId={pubId}
+					formSlug={formSlug}
+					isEditing={isEditing}
+				/>
+				<Button
+					variant="ghost"
+					size="icon"
+					className={cn(
+						"-right-2 absolute top-1 hidden translate-x-full text-muted-foreground/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:flex",
+						isEditing && "md:hidden"
+					)}
+					onClick={(e) => {
+						e.preventDefault()
+						setIsEditing(true)
+						setIsOpen(false)
+					}}
+					aria-label="Edit field"
+				>
+					<Pencil size={14} className="text-muted-foreground/50" />
+				</Button>
 			</div>
 		</>
 	)
 }
 
 const VVV = ({
-	value,
+	values,
 	setIsEditing,
 	pubId,
 	formSlug,
 	isEditing,
 }: {
-	value: FullProcessedPubWithForm["values"][number] & {
-		formElementId: FormElementsId
-		id: PubValuesId
-	}
+	values: FullProcessedPubWithForm["values"]
 	setIsEditing: (isEditing: boolean) => void
 	pubId: PubsId
 	formSlug: string
 	isEditing: boolean
 }) => {
-	const [val, setValue] = useState(value.value)
+	const firstValue = values[0]
+	if (!isEditing || !("formElementComponent" in firstValue)) {
+		return <PubValueDisplay values={values} />
+	}
 
-	return !isEditing ? (
-		<PubValue
-			value={{
-				...value,
-				value: val,
-			}}
-			key={value.id}
-		/>
-	) : (
-		<MiniForm
-			setValue={setValue}
-			key={value.id}
-			value={value}
-			formSlug={formSlug}
-			setIsEditing={setIsEditing}
-			pubId={pubId}
-		/>
+	if (!values.length) {
+		return <div className="h-1" key={firstValue.fieldId} />
+	}
+
+	return (
+		<MiniForm values={values} formSlug={formSlug} setIsEditing={setIsEditing} pubId={pubId} />
 	)
 }
 
 const MiniForm = ({
-	value,
+	values,
 	setIsEditing,
 	pubId,
 	formSlug,
-	setValue,
 }: {
-	value: FullProcessedPubWithForm["values"][number] & {
-		formElementId: FormElementsId
-		id: PubValuesId
-	}
+	values: FullProcessedPubWithForm["values"]
 	setIsEditing: (isEditing: boolean) => void
 	pubId: PubsId
 	formSlug: string
-	setValue: (value: unknown) => void
 }) => {
-	const miniForm = useForm({
-		defaultValues: {
-			[value.fieldSlug]: value.value,
-		},
-		resolver: typeboxResolver(
-			Type.Object({
-				[value.fieldSlug]: getJsonSchemaByCoreSchemaType(value.schemaName),
-			})
-		),
-	})
-
-	const runUpdatePub = useServerAction(updatePub)
-
-	const onSubmit = async (values: Record<string, unknown>) => {
-		setIsEditing(false)
-		const oldValue = value.value
-		setValue(values[value.fieldSlug] as unknown)
-		const result = await runUpdatePub({
-			pubId,
-			continueOnValidationError: false,
-			deleted: [],
-			pubValues: {
-				[value.fieldSlug]: values[value.fieldSlug] as JsonValue,
-			},
-			formSlug,
-		})
-		if (didSucceed(result)) {
-			return
+	const fieldAsElements = values.map((v) => {
+		if ("formElementComponent" in v) {
+			return {
+				type: ElementType.pubfield,
+				component: v.formElementComponent,
+				id: v.formElementId,
+				fieldId: v.fieldId,
+				label: v.formElementLabel,
+				config: v.formElementConfig,
+				schemaName: v.schemaName,
+				isRelation: Boolean(v.relatedPubId),
+				required: true,
+				slug: v.fieldSlug,
+				relatedPubTypes: v.formElementRelatedPubTypes,
+			} as PubFieldElement
 		}
 
-		setIsEditing(true)
-		setValue(oldValue)
-	}
+		// should probably not allow you to edit this
+		return {
+			id: "a" as FormElementsId,
+			fieldName: v.fieldName,
+			content: null,
+			stageId: null,
+			element: null,
+			rank: "",
+			type: ElementType.pubfield,
+			component: defaultComponent(v.schemaName),
+			fieldId: v.fieldId,
+			label: v.fieldName,
+			config: {},
+			schemaName: v.schemaName,
+			isRelation: Boolean(v.relatedPubId),
+			required: true,
+			slug: v.fieldSlug,
+			relatedPubTypes: [],
+		} as PubFieldElement
+	})
+
+	const actualValues = values.filter((v) => v.id !== null)
 
 	return (
-		<Form key={value.id} {...miniForm}>
-			<form
-				onSubmit={miniForm.handleSubmit(onSubmit)}
-				className="flex w-full items-baseline justify-between gap-4 [&>div]:w-full [&_label]:sr-only"
-			>
-				<FormElement
-					element={
-						{
-							type: ElementType.pubfield,
-							component: value.formElementComponent,
-							id: value.formElementId,
-							fieldId: value.fieldId,
-							label: value.formElementLabel,
-							config: value.formElementConfig,
-							schemaName: value.schemaName,
-							isRelation: Boolean(value.relatedPubId),
-							required: true,
-							slug: value.fieldSlug,
-						} as PubFieldElement
-					}
-					values={[value]}
-					pubId={pubId}
-				/>
-				<FormSubmitButton
-					size="sm"
-					formState={miniForm.formState}
-					idleText="Save"
-					pendingText="Saving..."
-					successText="Saved"
-					errorText="Error saving"
-				/>
-			</form>
-		</Form>
+		<PubEditorClient
+			withAutoSave={false}
+			withButtonElements={false}
+			className="[&_label]:sr-only"
+			mode="edit"
+			pub={{
+				id: pubId,
+				values: actualValues,
+				pubTypeId: "xxx" as PubTypesId,
+			}}
+			onSuccess={() => {
+				setIsEditing(false)
+			}}
+			formSlug={formSlug}
+			elements={fieldAsElements}
+		>
+			{(formInstance) => (
+				<>
+					<FormElement element={fieldAsElements[0]} values={actualValues} pubId={pubId} />
+					<FormSubmitButton
+						size="sm"
+						formState={formInstance.formState}
+						idleText="Save"
+						pendingText="Saving..."
+						successText="Saved"
+						errorText="Error saving"
+						className="-right-2 absolute top-0 translate-x-full"
+					/>
+				</>
+			)}
+		</PubEditorClient>
 	)
 }

@@ -2,25 +2,49 @@ import type { User } from "contracts"
 import type { FileUploadFile } from "~/lib/fields/fileUpload"
 import type { FullProcessedPubWithForm } from "~/lib/server"
 
-import { CoreSchemaType } from "db/public"
+import { ExternalLink } from "lucide-react"
+
+import { CoreSchemaType, InputComponent } from "db/public"
 import { Badge } from "ui/badge"
 import { Checkbox } from "ui/checkbox"
 import { ColorCircle, ColorValue } from "ui/color"
 import { ShowMore } from "ui/show-more"
+import { Slider } from "ui/slider"
 
 import { FileUploadPreview } from "~/app/components/forms/FileUpload"
+import { PubCardClient, type PubCardClientPub } from "~/app/components/pubs/PubCard/PubCardClient"
 import { UserDisplay } from "../../../UserDisplay"
 import { DateTimeDisplay } from "./DateTimeDisplay"
 
-export const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number] }) => {
-	if (value.value === null) {
-		return "-"
+export const PubValueDisplay = ({ values }: { values: FullProcessedPubWithForm["values"] }) => {
+	const value = values[0]
+	if (!value) {
+		return <div className="h-1" />
+	}
+
+	const isRelation = value.relatedPubId !== null
+
+	if (!value.id) {
+		return <div className="h-1" />
+	}
+
+	if (isRelation && "formElementLabel" in value && "value" in value) {
+		return values.map((v) => (
+			<PubCardClient
+				pub={v.relatedPub as PubCardClientPub}
+				selected={false}
+				showCheckbox={false}
+				className="w-full"
+				bigLink={false}
+				key={value.id}
+			/>
+		))
 	}
 
 	switch (value.schemaName) {
 		case CoreSchemaType.String:
 			return (
-				<p key={value.id} className="prose dark:prose-invert text-sm">
+				<p key={value.id} className="prose-sm dark:prose-invert text-sm">
 					{value.value as string}
 				</p>
 			)
@@ -36,8 +60,14 @@ export const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][
 
 		case CoreSchemaType.URL:
 			return (
-				<a key={value.id} href={value.value as string} className="text-blue-500 underline">
-					{value.value as string}
+				<a
+					key={value.id}
+					href={value.value as string}
+					className="flex items-center gap-1 text-blue-400 underline"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					{value.value as string} <ExternalLink size={14} />
 				</a>
 			)
 		case CoreSchemaType.Email:
@@ -45,7 +75,7 @@ export const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][
 				<a
 					key={value.id}
 					href={`mailto:${value.value as string}`}
-					className="text-blue-500 underline"
+					className="text-blue-400 underline"
 				>
 					{value.value as string}
 				</a>
@@ -63,23 +93,34 @@ export const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][
 				<div className="flex h-full items-center gap-2">
 					<span className="sr-only">Pick a color</span>
 					<ColorCircle color={value.value as string} size="sm" />
-					<ColorValue
-						color={value.value as string}
-						className="text-muted-foreground text-xs"
-					/>
+					<ColorValue color={value.value as string} className="text-foreground text-xs" />
 				</div>
 			)
 		case CoreSchemaType.FileUpload:
-			return <FileUploadPreview files={value.value as FileUploadFile[]} />
+			return <FileUploadPreview files={value.value as (FileUploadFile & { id: string })[]} />
 		case CoreSchemaType.Boolean:
 			return <Checkbox checked={value.value as boolean} />
 		case CoreSchemaType.MemberId:
 			return <UserDisplay user={value.value as User} />
 		case CoreSchemaType.Vector3:
 		case CoreSchemaType.NumericArray:
+			if (
+				"formElementComponent" in value &&
+				value.formElementComponent === InputComponent.confidenceInterval
+			) {
+				return (
+					<Slider
+						value={value.value as number[]}
+						min={0}
+						max={100}
+						className="h-4 w-full"
+						withThumbLabels="always"
+					/>
+				)
+			}
 			return (
 				<div className="flex h-full items-center gap-2">
-					<code className="text-xs">[{value.value.join(", ")}]</code>
+					<code className="text-xs">[{(value.value as number[]).join(", ")}]</code>
 				</div>
 			)
 		case CoreSchemaType.Number:

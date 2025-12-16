@@ -217,6 +217,7 @@ export const RelatedPubsElement = ({
 	const { pubTypes } = useContextEditorContext()
 	const { form, mode } = usePubForm()
 	const { relatedPubTypes: relatedPubTypeIds } = element
+
 	const relatedPubTypes = pubTypes.filter((pt) => relatedPubTypeIds?.includes(pt.id))
 
 	const [showPanel, setShowPanel] = useState(false)

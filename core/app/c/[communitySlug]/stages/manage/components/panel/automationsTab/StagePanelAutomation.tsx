@@ -174,9 +174,7 @@ export const StagePanelAutomation = (props: Props) => {
 	const onDeleteClick = useCallback(async () => {
 		const res = await runDeleteAutomation(automation.id, props.stageId)
 		if (didSucceed(res)) {
-			toast({
-				title: "Automation deleted successfully",
-			})
+			toast("Automation deleted")
 		}
 	}, [props.stageId, runDeleteAutomation, automation.id])
 
@@ -184,9 +182,7 @@ export const StagePanelAutomation = (props: Props) => {
 	const onDuplicateClick = useCallback(async () => {
 		const res = await runDuplicateAutomation(automation.id, props.stageId)
 		if (didSucceed(res)) {
-			toast({
-				title: "Automation duplicated successfully",
-			})
+			toast("Automation duplicated")
 		}
 	}, [props.stageId, runDuplicateAutomation, automation.id])
 

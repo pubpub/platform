@@ -9,7 +9,7 @@ import { cn } from "utils"
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants"
 import SetLastVisited from "~/app/components/LastVisitedCommunity/SetLastVisited"
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider"
-import { SearchDialogProvider } from "~/app/components/search/SearchDialogProvider"
+import { SearchDialogProvider } from "~/app/components/Search/SearchDialogProvider"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { getCommunityRole } from "~/lib/authentication/roles"
 import { findCommunityBySlug } from "~/lib/server/community"
@@ -71,10 +71,12 @@ export default async function MainLayout(props: Props) {
 				<div className="flex min-h-screen flex-col md:flex-row">
 					<SidebarProvider
 						defaultOpen={defaultOpen}
-						style={{
-							"--sidebar-width": "13rem",
-							"--sidebar-width-mobile": "20rem",
-						}}
+						style={
+							{
+								"--sidebar-width": "13rem",
+								"--sidebar-width-mobile": "20rem",
+							} as React.CSSProperties
+						}
 					>
 						<SideNav
 							community={community}

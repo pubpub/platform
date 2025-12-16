@@ -18,6 +18,7 @@ import { StagesProvider, stagesDAO } from "ui/stages"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { tryCatch } from "utils/try-catch"
 
+import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext"
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher"
 import { PubFormProvider } from "~/app/components/providers/PubFormProvider"
 import { PubTypeLabel } from "~/app/components/pubs/PubCard/PubTypeLabel"
@@ -32,7 +33,7 @@ import {
 } from "~/lib/authorization/capabilities"
 import { constructRedirectToPubEditPage } from "~/lib/links"
 import { getPubByForm, getPubTitle } from "~/lib/pubs"
-import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server"
+import { getPubsWithRelatedValues, getPubTypesForCommunity, NotFoundError } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
 import { resolveFormAccess } from "~/lib/server/form-access"
@@ -119,7 +120,7 @@ export default async function Page(props: {
 			communityId: community.id,
 			userId: user.id,
 		},
-		{ withAutomations: AutomationEvent.manual }
+		{ withAutomations: { filter: [AutomationEvent.manual], detail: "full" } }
 	).execute()
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
@@ -135,9 +136,11 @@ export default async function Page(props: {
 	// surely this can be done in fewer queries
 	const [
 		pub,
+		allPubTypes,
 		availableViewForms,
 		availableUpdateForms,
 		canArchive,
+
 		_canRunActions,
 		_canAddMember,
 		_canRemoveMember,
@@ -150,6 +153,7 @@ export default async function Page(props: {
 		pubFields,
 	] = await Promise.all([
 		pubPromise,
+		getPubTypesForCommunity(community.id, { limit: 50 }),
 		getAuthorizedViewForms(user.id, pubId).execute(),
 		getAuthorizedUpdateForms(user.id, pubId).execute(),
 		userCan(Capabilities.deletePub, { type: MembershipType.pub, pubId }, user.id),
@@ -222,6 +226,7 @@ export default async function Page(props: {
 			communitySlug,
 		})
 
+	console.log("all pubtypes", allPubTypes)
 	return (
 		<ContentLayout
 			title={
@@ -308,11 +313,20 @@ export default async function Page(props: {
 							isExternalForm: false,
 						}}
 					>
-						<div className="m-4 flex flex-col space-y-4">
-							<div className="flex-1">
-								<PubValues formSlug={form.slug} pub={pubByForm} />
+						<ContextEditorContextProvider
+							pubId={pub.id}
+							pubTypeId={pub.pubTypeId}
+							pubTypes={allPubTypes.map((pubType) => ({
+								id: pubType.id,
+								name: pubType.name,
+							}))}
+						>
+							<div className="m-4 flex flex-col space-y-4">
+								<div className="flex-1">
+									<PubValues formSlug={form.slug} pub={pubByForm} />
+								</div>
 							</div>
-						</div>
+						</ContextEditorContextProvider>
 					</PubFormProvider>
 				</PubFieldProvider>
 			</StagesProvider>

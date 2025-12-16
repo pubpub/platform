@@ -381,7 +381,7 @@ export function StagePanelAutomationForm(props: Props) {
 					icon: z
 						.object({
 							name: z.string(),
-							variant: z.enum(["solid", "outline-solid"]).nullish(),
+							variant: z.enum(["solid", "outline"]).nullish(),
 							color: z.string().nullish(),
 						})
 						.nullish(),

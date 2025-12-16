@@ -33,7 +33,7 @@ import {
 	SidebarRail,
 } from "ui/sidebar"
 
-import { SidebarSearchDialogTrigger } from "~/app/components/search/SearchDialogTrigger"
+import { SidebarSearchDialogTrigger } from "~/app/components/Search/SearchDialogTrigger"
 import { SidebarDarkmodeToggle } from "~/app/components/theme/DarkmodeToggle"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan, userCanViewStagePage } from "~/lib/authorization/capabilities"

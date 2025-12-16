@@ -61,8 +61,9 @@ export const PubCardClient = ({
 	return (
 		<Card
 			className={cn(
-				"group relative flex items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 transition-colors",
-				selected && "border-blue-500 bg-blue-50",
+				"group relative flex flex-row items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 transition-colors",
+				selected &&
+					"border border-blue-500! bg-blue-50 dark:border-blue-500/50! dark:bg-card",
 				disabled && "cursor-not-allowed opacity-50",
 				!disabled && onSelect && "cursor-pointer hover:border-gray-300",
 				showCheckbox ? "justify-between" : "justify-start",
@@ -115,13 +116,13 @@ export const PubCardClient = ({
 						))}
 					</div>
 				)}
-				<CardFooter className="flex gap-2 p-0 text-gray-600 text-xs">
+				<CardFooter className="flex gap-2 p-0 text-muted-foreground text-xs">
 					<div className="flex gap-1" title="Created at">
-						<Calendar size="16px" strokeWidth="1px" className="text-neutral-500" />
+						<Calendar size="16px" strokeWidth="1px" className="text-muted-foreground" />
 						<span>{formatDateAsMonthDayYear(new Date(pub.createdAt))}</span>
 					</div>
 					<div className="flex gap-1" title="Updated at">
-						<History size="16px" strokeWidth="1px" className="text-neutral-500" />
+						<History size="16px" strokeWidth="1px" className="text-muted-foreground" />
 						<span>{formatDateAsPossiblyDistance(new Date(pub.updatedAt))}</span>
 					</div>
 				</CardFooter>
