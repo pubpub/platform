@@ -266,7 +266,7 @@ export const FormSubmitButton = ({
 	pendingText = "Submitting...",
 	successText = "Success!",
 	errorText = "Error",
-	className = "",
+	// className = "",
 	onClick,
 	type = "submit",
 	...props
@@ -284,7 +284,7 @@ export const FormSubmitButton = ({
 	return (
 		<Button
 			type={type}
-			className={cn(className, "transition-colors duration-500")}
+			className={cn("transition-colors duration-500", props.className)}
 			onClick={onClick}
 			variant={variant}
 			disabled={isDisabled}

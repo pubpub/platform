@@ -8,7 +8,7 @@ import * as Icons from "./icon"
 
 export type IconConfig = {
 	name: IconName
-	variant?: "solid" | "outline-solid"
+	variant?: "solid" | "outline"
 	color?: string
 }
 

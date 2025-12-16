@@ -1,4 +1,5 @@
 export * from "./useKeyBoardShortcut"
 export * from "./useLocalStorage"
+export * from "./useMobile"
 export * from "./usePlatform"
 export * from "./useUnsavedChangesWarning"

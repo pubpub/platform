@@ -98,7 +98,14 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, _ref) 
 	}, [props.upload, uppy.getPlugin])
 
 	return (
-		<Dashboard uppy={uppy} disabled={props.disabled} theme={props.theme} id={id} width="100%" />
+		<Dashboard
+			uppy={uppy}
+			disabled={props.disabled}
+			theme={props.theme}
+			id={id}
+			width="100%"
+			height="250px"
+		/>
 	)
 })
 
