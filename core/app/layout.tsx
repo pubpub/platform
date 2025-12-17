@@ -31,7 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 					/>
 				)}
 			</head>
-			<body>
+			<body className="bg-background">
 				<UserProvider {...loginData}>
 					<KeyboardShortcutProvider>
 						<ReactQueryProvider>

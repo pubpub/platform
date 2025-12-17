@@ -2,37 +2,42 @@
 
 import type { UserLoginData } from "~/lib/types"
 
+import dynamic from "next/dynamic"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 import { Button } from "ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
-import { Loader2, Undo2, XCircle } from "ui/icon"
+import { Field, FieldError, FieldLabel } from "ui/field"
+import { Loader2 } from "ui/icon"
 import { Input } from "ui/input"
+import { Skeleton } from "ui/skeleton"
 import { toast } from "ui/use-toast"
 
 import { useServerAction } from "~/lib/serverActions"
+import { AvatarEditor } from "./AvatarEditor"
 import * as actions from "./actions"
+import { userInfoFormSchema } from "./schema"
 
-export const userInfoFormSchema = z.object({
-	id: z.string().uuid(),
-	firstName: z.string().min(1),
-	lastName: z.string().min(1),
-	email: z.string().email(),
-	avatar: z
-		.string()
-		.url()
-		.optional()
-		.or(z.literal("").transform((v) => v || null))
-		.or(z.null()),
-})
+const _FileUpload = dynamic(
+	async () => import("ui/customRenderers/fileUpload/fileUpload").then((mod) => mod.FileUpload),
+	{
+		ssr: false,
+		// TODO: make sure this is the same height as the file upload, otherwise looks ugly
+		loading: () => <Skeleton className="h-[182px] w-full" />,
+	}
+)
 
 export function UserInfoForm({ user }: { user: UserLoginData }) {
 	const runUpdateUserInfo = useServerAction(actions.updateUserInfo)
 
-	const form = useForm<z.infer<typeof userInfoFormSchema>>({
+	const runUpload = useServerAction(actions.uploadUserAvatar)
+	const runUpdateAvatar = useServerAction(actions.updateUserAvatar)
+	const signedUploadUrl = (fileName: string) => {
+		return runUpload({ userId: user.id, fileName })
+	}
+
+	const userInfoForm = useForm<z.infer<typeof userInfoFormSchema>>({
 		resolver: zodResolver(userInfoFormSchema),
 		mode: "onBlur",
 		defaultValues: {
@@ -40,6 +45,17 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 			firstName: user.firstName,
 			lastName: user.lastName ?? "",
 			email: user.email,
+		},
+	})
+
+	const avatarForm = useForm<{ avatar: string | null }>({
+		resolver: zodResolver(
+			z.object({
+				avatar: z.string().url().nullable(),
+			})
+		),
+		mode: "onBlur",
+		defaultValues: {
 			avatar: user.avatar,
 		},
 	})
@@ -50,98 +66,92 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 			toast.success("User information updated")
 		}
 	}
+	const onSubmitAvatar = async (data: { avatar: string | null }) => {
+		const result = await runUpdateAvatar({ userId: user.id, fileName: data.avatar })
+		if (result && "success" in result) {
+			toast.success("Avatar updated")
+			return
+		}
+
+		avatarForm.resetField("avatar")
+	}
 
 	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
-				<input type="hidden" name="id" value={user.id} />
-				<FormField
+		<div className="flex flex-col gap-y-8">
+			<form
+				onSubmit={avatarForm.handleSubmit(onSubmitAvatar)}
+				className="flex flex-col gap-y-4"
+				id="avatar-form"
+			>
+				<Controller
+					control={avatarForm.control}
 					name="avatar"
-					render={({ field }) => (
-						<FormItem aria-label="Avatar">
-							<Avatar className="group relative h-20 w-20">
-								<AvatarImage src={field.value} />
-								<AvatarFallback>
-									{user.firstName[0]}
-									{user.lastName?.[0]}
-								</AvatarFallback>
-								{field.value && (
-									<Button
-										type="button"
-										variant="ghost"
-										className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 h-full w-full p-0 text-destructive group-hover:text-destructive"
-										onClick={() => {
-											form.setValue("avatar", "")
-										}}
-									>
-										<XCircle
-											className="hidden group-hover:block group-hover:text-destructive"
-											size="20"
-										/>
-									</Button>
-								)}
-								{!field.value && user.avatar && (
-									<Button
-										type="button"
-										variant="ghost"
-										className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 h-full w-full p-0"
-										onClick={() => form.setValue("avatar", user.avatar)}
-									>
-										<Undo2 className="hidden group-hover:block" size="20" />
-									</Button>
-								)}
-							</Avatar>
-							<FormLabel>Avatar URL</FormLabel>
-							<FormControl>
-								<Input {...field} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid} aria-label="Avatar">
+							<FieldLabel htmlFor={field.name}>Avatar</FieldLabel>
+							<AvatarEditor
+								user={user}
+								avatar={field.value}
+								onEdit={async (avatar: string | null) => {
+									field.onChange(avatar)
+									await avatarForm.handleSubmit(onSubmitAvatar)()
+								}}
+								upload={signedUploadUrl}
+							/>
+						</Field>
 					)}
 				/>
-				<FormField
+			</form>
+			<form onSubmit={userInfoForm.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
+				<input type="hidden" name="id" value={user.id} />
+				<Controller
+					control={userInfoForm.control}
 					name="firstName"
-					render={({ field }) => (
-						<FormItem aria-label="First Name">
-							<FormLabel>First Name</FormLabel>
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid} aria-label="First Name">
+							<FieldLabel htmlFor={field.name}>First Name</FieldLabel>
 							<Input {...field} />
-							<FormMessage />
-						</FormItem>
+							<FieldError errors={[fieldState.error]} />
+						</Field>
 					)}
 				/>
-				<FormField
+				<Controller
+					control={userInfoForm.control}
 					name="lastName"
-					render={({ field }) => (
-						<FormItem aria-label="Last Name">
-							<FormLabel>Last Name</FormLabel>
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid} aria-label="Last Name">
+							<FieldLabel htmlFor={field.name}>Last Name</FieldLabel>
 							<Input {...field} />
-							<FormMessage />
-						</FormItem>
+							<FieldError errors={[fieldState.error]} />
+						</Field>
 					)}
 				/>
-				<FormField
+				<Controller
+					control={userInfoForm.control}
 					name="email"
-					render={({ field }) => (
-						<FormItem aria-label="Email">
-							<FormLabel>Email</FormLabel>
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid} aria-label="Email">
+							<FieldLabel htmlFor={field.name}>Email</FieldLabel>
 							<Input {...field} />
-							<FormMessage />
-						</FormItem>
+							<FieldError errors={[fieldState.error]} />
+						</Field>
 					)}
 				/>
 				<Button
 					type="submit"
 					disabled={
-						form.formState.isSubmitting ||
-						!form.formState.isValid ||
-						!form.formState.isDirty
+						userInfoForm.formState.isSubmitting ||
+						!userInfoForm.formState.isValid ||
+						!userInfoForm.formState.isDirty
 					}
 					className="w-min grow-0"
 				>
 					Save
-					{form.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+					{userInfoForm.formState.isSubmitting && (
+						<Loader2 className="h-4 w-4 animate-spin" />
+					)}
 				</Button>
 			</form>
-		</Form>
+		</div>
 	)
 }

@@ -46,16 +46,21 @@ export default async function Page() {
 						<div className="flex flex-col gap-4">
 							<span className="text-primary text-sm">Communities</span>
 
-							<div className="grid gap-4">
+							<div className="flex flex-col gap-2">
 								{user.memberships.map(({ community }) => {
 									return (
-										<Button variant="link" key={community.id} asChild>
+										<Button
+											variant="ghost"
+											className="w-full"
+											key={community.id}
+											asChild
+										>
 											<Link
 												href={
 													redirectUrlMap.get(community.id) ||
 													`/c/${community.slug}`
 												}
-												className="flex w-min items-center gap-2 hover:bg-gray-50"
+												className="flex items-center gap-2 hover:underline"
 											>
 												<Avatar className="h-6 w-6">
 													<AvatarImage
@@ -88,8 +93,8 @@ export default async function Page() {
 						<CardHeader>
 							<CardTitle>Reset password</CardTitle>
 							<CardDescription>
-								Click below to receive an email with a secure link for reseting yor
-								password.
+								Click below to receive an email with a secure link for resetting
+								your password.
 							</CardDescription>
 						</CardHeader>
 						<CardContent>

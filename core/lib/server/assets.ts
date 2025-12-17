@@ -118,10 +118,10 @@ const getPublicS3Client = () => {
 export const generateSignedAssetUploadUrl = async (
 	userId: UsersId,
 	fileName: string,
-	_pubId?: PubsId
+	kind: "temporary" | "permanent"
 ) => {
 	const communitySlug = await getCommunitySlug()
-	const key = `temporary/${communitySlug}/${userId}/${crypto.randomUUID()}/${fileName}`
+	const key = `${kind === "temporary" ? "temporary/" : ""}${communitySlug}/${userId}/${crypto.randomUUID()}/${fileName}`
 
 	const client = getPublicS3Client() // use public client for signed URLs
 
@@ -131,7 +131,25 @@ export const generateSignedAssetUploadUrl = async (
 		Key: key,
 	})
 
-	return await getSignedUrl(client, command, { expiresIn: 3600 })
+	return await getSignedUrl(
+		client,
+		command,
+		kind === "temporary" ? { expiresIn: 3600 } : undefined
+	)
+}
+
+export const generateSignedUserAvatarUploadUrl = async (userId: UsersId, fileName: string) => {
+	const key = `avatars/${userId}/${fileName}`
+
+	const client = getPublicS3Client()
+
+	const bucket = env.ASSETS_BUCKET_NAME
+	const command = new PutObjectCommand({
+		Bucket: bucket,
+		Key: key,
+	})
+
+	return await getSignedUrl(client, command)
 }
 
 export class InvalidFileUrlError extends Error {

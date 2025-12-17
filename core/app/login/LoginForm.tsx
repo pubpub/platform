@@ -85,7 +85,7 @@ export default function LoginForm() {
 						errorText="Error signing in"
 						className="w-full"
 					/>
-					<Link href="/forgot" className="text-gray-600 text-sm hover:underline">
+					<Link href="/forgot" className="text-muted-foreground text-sm hover:underline">
 						Forgot Password
 					</Link>
 				</CardFooter>
