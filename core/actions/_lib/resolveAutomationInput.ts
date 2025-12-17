@@ -1,6 +1,7 @@
 import type { ProcessedPub } from "contracts"
 import type { CommunitiesId, PubsId } from "db/public"
 import type { FullAutomation, Json } from "db/types"
+import type { InterpolationContext } from "./interpolationContext"
 
 import { interpolate } from "@pubpub/json-interpolate"
 import { logger } from "logger"
@@ -8,7 +9,6 @@ import { tryCatch } from "utils/try-catch"
 
 import { db } from "~/kysely/database"
 import { getPubsWithRelatedValues } from "~/lib/server"
-import type { InterpolationContext } from "./interpolationContext"
 
 type ResolvedPub = ProcessedPub<{
 	withPubType: true
@@ -158,13 +158,7 @@ async function findPubByFieldValue(
 	return pub as ResolvedPub
 }
 
-/**
- * Finds a pub by its ID.
- */
-async function findPubById(
-	communityId: CommunitiesId,
-	pubId: PubsId
-): Promise<ResolvedPub | null> {
+async function findPubById(communityId: CommunitiesId, pubId: PubsId): Promise<ResolvedPub | null> {
 	const [error, pub] = await tryCatch(
 		getPubsWithRelatedValues(
 			{ pubId, communityId },
