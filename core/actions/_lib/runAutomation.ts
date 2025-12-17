@@ -422,7 +422,7 @@ const runActionInstance = async (args: RunActionInstanceArgs): Promise<ActionIns
 		},
 		automationRun: args.automationRun,
 		user: args.user ?? null,
-		...(pub ? { pub } : { json: args.json ?? ({} as Json) }),
+		...(pub ? { pub, json: args.json } : { json: args.json ?? ({} as Json) }),
 	})
 
 	const interpolated = await actionConfigBuilder.interpolate(interpolationData)
@@ -579,6 +579,9 @@ export async function runAutomation(
 
 	// resolve automation input if a resolver is configured
 	// this allows the automation to operate on a different pub or transformed json
+	// resolved values are additive - they add to or overwrite existing context:
+	// - JSON resolved: adds json to context (or overwrites existing json)
+	// - Pub resolved: adds pub to context (or overwrites existing pub)
 	let resolvedPub = pub
 	let resolvedJson = args.json
 
@@ -593,7 +596,7 @@ export async function runAutomation(
 				id: args.scheduledAutomationRunId ?? ("pending-resolver" as AutomationRunsId),
 			},
 			user: args.user ?? null,
-			...(pub ? { pub } : { json: args.json ?? ({} as Json) }),
+			...(pub ? { pub, json: args.json } : { json: args.json ?? ({} as Json) }),
 		})
 
 		const resolved = await resolveAutomationInput(
@@ -604,18 +607,20 @@ export async function runAutomation(
 		)
 
 		if (resolved.type === "pub") {
+			// Pub resolved: overwrites existing pub, keeps existing json
 			resolvedPub = resolved.pub
-			resolvedJson = undefined
-			logger.debug("Resolver resolved to a different pub", {
+			logger.debug("Resolver resolved to a pub", {
 				automationId: automation.id,
 				originalPubId: pub?.id,
 				resolvedPubId: resolved.pub.id,
+				hasExistingJson: resolvedJson !== undefined,
 			})
 		} else if (resolved.type === "json") {
+			// JSON resolved: overwrites existing json, keeps existing pub
 			resolvedJson = resolved.json
-			resolvedPub = null
 			logger.debug("Resolver resolved to JSON", {
 				automationId: automation.id,
+				hasExistingPub: resolvedPub !== null,
 			})
 		}
 		// if type is "unchanged", keep the original pub/json
