@@ -331,6 +331,7 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			communityId: community.id,
 			stageId,
 			conditionEvaluationTiming: data.conditionEvaluationTiming ?? null,
+			resolver: data.resolver ?? null,
 
 			triggers: data.triggers.map((trigger) => ({
 				event: trigger.event,

@@ -437,6 +437,8 @@ model Automation {
   automationRuns            AutomationRun[]
   automationTriggers        AutomationTrigger[]
 
+  resolver String?
+
   @@map(name: "automations")
 }
 

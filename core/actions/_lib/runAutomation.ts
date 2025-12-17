@@ -48,6 +48,7 @@ import { ActionConfigBuilder } from "./ActionConfigBuilder"
 import { evaluateConditions } from "./evaluateConditions"
 import { getActionRunByName } from "./getRuns"
 import { buildInterpolationContext } from "./interpolationContext"
+import { hasResolver, resolveAutomationInput } from "./resolveAutomationInput"
 
 export type ActionInstanceRunResult = ActionRunResult
 
@@ -576,6 +577,50 @@ export async function runAutomation(
 
 	const isActionUserInitiated = "userId" in args
 
+	// resolve automation input if a resolver is configured
+	// this allows the automation to operate on a different pub or transformed json
+	let resolvedPub = pub
+	let resolvedJson = args.json
+
+	if (hasResolver(automation)) {
+		const resolverContext = buildInterpolationContext({
+			useDummyValues: false,
+			env: { PUBPUB_URL: env.PUBPUB_URL },
+			community,
+			stage,
+			automation,
+			automationRun: {
+				id: args.scheduledAutomationRunId ?? ("pending-resolver" as AutomationRunsId),
+			},
+			user: args.user ?? null,
+			...(pub ? { pub } : { json: args.json ?? ({} as Json) }),
+		})
+
+		const resolved = await resolveAutomationInput(
+			automation.resolver,
+			resolverContext,
+			args.communityId,
+			community.slug
+		)
+
+		if (resolved.type === "pub") {
+			resolvedPub = resolved.pub
+			resolvedJson = undefined
+			logger.debug("Resolver resolved to a different pub", {
+				automationId: automation.id,
+				originalPubId: pub?.id,
+				resolvedPubId: resolved.pub.id,
+			})
+		} else if (resolved.type === "json") {
+			resolvedJson = resolved.json
+			resolvedPub = null
+			logger.debug("Resolver resolved to JSON", {
+				automationId: automation.id,
+			})
+		}
+		// if type is "unchanged", keep the original pub/json
+	}
+
 	// create the automation run with scheduled action runs
 	// we need to create action runs first in case the action modifies the pub
 	// and needs to pass the lastModifiedBy field (action-run:<action-run-id>)
@@ -588,8 +633,8 @@ export async function runAutomation(
 			result: { scheduled: `Action to be run immediately` },
 			status: ActionRunStatus.scheduled,
 		})),
-		pubId: pub?.id,
-		json: args.json as Json,
+		pubId: resolvedPub?.id,
+		json: resolvedJson as Json,
 		communityId: args.communityId,
 		stack: args.stack,
 		scheduledAutomationRunId: args.scheduledAutomationRunId,
@@ -603,8 +648,8 @@ export async function runAutomation(
 		automationRun,
 		community,
 		stage,
-		pub,
-		json: args.json,
+		pub: resolvedPub,
+		json: resolvedJson,
 		manualActionInstancesOverrideArgs: args.manualActionInstancesOverrideArgs,
 		user: isActionUserInitiated ? args.user : null,
 	})
@@ -621,8 +666,8 @@ export async function runAutomation(
 			status: getActionRunStatusFromResult(result),
 			result: result,
 		})),
-		pubId: args.pubId,
-		json: args.json,
+		pubId: resolvedPub?.id,
+		json: resolvedJson,
 		trigger: args.trigger,
 		communityId: args.communityId,
 		stack: args.stack,
