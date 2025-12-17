@@ -37,9 +37,9 @@ import { Input } from "ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
 import { toast } from "ui/use-toast"
 
+import { AvatarEditor } from "~/app/(user)/settings/AvatarEditor"
 import { useServerAction } from "~/lib/serverActions"
 import * as actions from "./actions"
-import { CommunityAvatarEditor } from "./CommunityAvatarEditor"
 import { communitySettingsSchema } from "./schema"
 
 export function CommunitySettingsForm({
@@ -138,8 +138,13 @@ export function CommunitySettingsForm({
 					render={({ field, fieldState }) => (
 						<Field data-invalid={fieldState.invalid} aria-label="Community Avatar">
 							<FieldLabel htmlFor={field.name}>Community Avatar</FieldLabel>
-							<CommunityAvatarEditor
-								communityName={community.name}
+							<AvatarEditor
+								initials={community.name
+									.split(" ")
+									.slice(0, 2)
+									.map((word) => word[0])
+									.join("")
+									.toUpperCase()}
 								avatar={field.value}
 								onEdit={async (avatar: string | null) => {
 									field.onChange(avatar)

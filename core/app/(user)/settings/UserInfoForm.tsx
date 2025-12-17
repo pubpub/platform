@@ -90,7 +90,7 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 						<Field data-invalid={fieldState.invalid} aria-label="Avatar">
 							<FieldLabel htmlFor={field.name}>Avatar</FieldLabel>
 							<AvatarEditor
-								user={user}
+								initials={`${user.firstName[0]}${user.lastName?.[0] ?? ""}`}
 								avatar={field.value}
 								onEdit={async (avatar: string | null) => {
 									field.onChange(avatar)

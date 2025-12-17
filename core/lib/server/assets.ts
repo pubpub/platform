@@ -98,7 +98,7 @@ export const getS3Client = () => {
 // we create a separate client for generating signed URLs that uses the public endpoint
 // this is bc, when using `minio` locally, the server
 // uses `minio:9000`, but for the client this does not make sense
-const getPublicS3Client = () => {
+export const getPublicS3Client = () => {
 	const region = env.ASSETS_REGION
 	const key = env.ASSETS_UPLOAD_KEY
 	const secret = env.ASSETS_UPLOAD_SECRET_KEY
@@ -138,35 +138,29 @@ export const generateSignedAssetUploadUrl = async (
 	)
 }
 
-export const generateSignedUserAvatarUploadUrl = async (userId: UsersId, fileName: string) => {
-	const key = `avatars/${userId}/${fileName}`
-
+const generateSignedUploadUrl = async (key: string) => {
 	const client = getPublicS3Client()
-
 	const bucket = env.ASSETS_BUCKET_NAME
 	const command = new PutObjectCommand({
 		Bucket: bucket,
 		Key: key,
 	})
-
 	return await getSignedUrl(client, command)
+}
+
+export const generateSignedUserAvatarUploadUrl = async (userId: UsersId, fileName: string) => {
+	return generateSignedUploadUrl(`avatars/${userId}/${fileName}`)
 }
 
 export const generateSignedCommunityAvatarUploadUrl = async (
 	communityId: string,
 	fileName: string
 ) => {
-	const key = `avatars/communities/${communityId}/${fileName}`
+	return generateSignedUploadUrl(`avatars/communities/${communityId}/${fileName}`)
+}
 
-	const client = getPublicS3Client()
-
-	const bucket = env.ASSETS_BUCKET_NAME
-	const command = new PutObjectCommand({
-		Bucket: bucket,
-		Key: key,
-	})
-
-	return await getSignedUrl(client, command)
+export const generateSignedTempAvatarUploadUrl = async (fileName: string) => {
+	return generateSignedUploadUrl(`avatars/temp/${Date.now()}-${fileName}`)
 }
 
 export class InvalidFileUrlError extends Error {

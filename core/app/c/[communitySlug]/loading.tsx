@@ -1,8 +1,15 @@
+import type { Metadata } from "next"
+
 import { Skeleton } from "ui/skeleton"
 import { Spinner } from "ui/spinner"
 
 import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton"
 import { ContentLayout } from "./ContentLayout"
+
+export const metadata: Metadata = {
+	title: "Loading...",
+	description: "Loading...",
+}
 
 export default function Loading() {
 	return (
