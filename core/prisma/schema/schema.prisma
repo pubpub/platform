@@ -117,7 +117,7 @@ model Pub {
   valuesBlob  Json?
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String
-  community   Community @relation(fields: [communityId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
   createdAt   DateTime  @default(now())
   // updatedAt is also updated once a value is updated
@@ -151,7 +151,7 @@ model PubField {
   schemaName       CoreSchemaType?
   pubFieldSchemaId String?
   isArchived       Boolean         @default(false)
-  community        Community       @relation(fields: [communityId], references: [id])
+  community        Community       @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId      String
   isRelation       Boolean         @default(false)
 
@@ -224,7 +224,7 @@ model PubType {
   id          String    @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   description String?
-  community   Community @relation(fields: [communityId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
@@ -260,7 +260,7 @@ model Stage {
   id          String    @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   order       String
-  community   Community @relation(fields: [communityId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt

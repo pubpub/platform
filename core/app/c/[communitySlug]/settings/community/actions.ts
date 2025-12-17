@@ -4,17 +4,20 @@ import type { CommunitiesId } from "db/public"
 import type { z } from "zod"
 import type { communitySettingsSchema } from "./schema"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
+import { cookies } from "next/headers"
 
 import { Capabilities, MembershipType } from "db/public"
 import { logger } from "logger"
 
+import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants"
 import { db } from "~/kysely/database"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
 import { env } from "~/lib/env/env"
 import { ApiError, deleteFileFromS3 } from "~/lib/server"
 import { generateSignedCommunityAvatarUploadUrl } from "~/lib/server/assets"
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
 import { updateCommunity } from "~/lib/server/community"
 import { defineServerAction } from "~/lib/server/defineServerAction"
 import { maybeWithTrx } from "~/lib/server/maybeWithTrx"
@@ -156,6 +159,8 @@ export const deleteCommunity = defineServerAction(async function deleteCommunity
 		return { error: "You must be logged in to delete a community" }
 	}
 
+	const communitySlug = await getCommunitySlug()
+
 	const canEdit = await userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId },
@@ -168,6 +173,11 @@ export const deleteCommunity = defineServerAction(async function deleteCommunity
 
 	try {
 		await db.deleteFrom("communities").where("id", "=", communityId).execute()
+		revalidateTag(`community-all_${communitySlug}`)
+		// remove cookie
+		const cookieStore = await cookies()
+		cookieStore.delete(LAST_VISITED_COOKIE)
+
 		return { success: true }
 	} catch (error) {
 		logger.error({ msg: "Failed to delete community", error })
