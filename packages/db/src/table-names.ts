@@ -1163,6 +1163,14 @@ export const databaseTables = [
 				hasDefaultValue: false,
 				comment: "@type(IconConfig, '../types', true, false, true)",
 			},
+			{
+				name: "resolver",
+				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: true,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
 		],
 	},
 	{
