@@ -152,6 +152,23 @@ export const generateSignedUserAvatarUploadUrl = async (userId: UsersId, fileNam
 	return await getSignedUrl(client, command)
 }
 
+export const generateSignedCommunityAvatarUploadUrl = async (
+	communityId: string,
+	fileName: string
+) => {
+	const key = `avatars/communities/${communityId}/${fileName}`
+
+	const client = getPublicS3Client()
+
+	const bucket = env.ASSETS_BUCKET_NAME
+	const command = new PutObjectCommand({
+		Bucket: bucket,
+		Key: key,
+	})
+
+	return await getSignedUrl(client, command)
+}
+
 export class InvalidFileUrlError extends Error {
 	constructor(message: string) {
 		super(message)

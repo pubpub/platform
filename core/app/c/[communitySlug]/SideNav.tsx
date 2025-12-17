@@ -160,6 +160,11 @@ const adminLinks: LinkGroupDefinition = {
 			authorization: userCanEditCommunityCached,
 			children: [
 				{
+					href: "/settings/community",
+					text: "Community",
+					authorization: userCanEditCommunityCached,
+				},
+				{
 					href: "/settings/tokens",
 					text: "API Tokens",
 					authorization: userCanEditCommunityCached,

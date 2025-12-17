@@ -53,7 +53,9 @@ const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunit
 				/>
 				<AvatarFallback>{community.name[0]}</AvatarFallback>
 			</Avatar>
-			<span className={textClasses}>{community.name}</span>
+			<span className={cn(textClasses, "line-clamp-2 text-sm leading-[1.1]")}>
+				{community.name}
+			</span>
 			{!onlyOneCommunity && <ChevronsUpDown className="ml-auto" />}
 		</SidebarMenuButton>
 	)
@@ -75,7 +77,7 @@ const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunit
 							<DropdownMenuItem asChild key={option.id}>
 								<Link
 									href={redirectUrlMap.get(option.id) || `/c/${option.slug}`}
-									className="flex cursor-pointer items-center hover:bg-gray-50"
+									className="line-clamp-1 flex cursor-pointer items-center hover:bg-gray-50"
 								>
 									<Avatar
 										className={cn("grid place-items-center", avatarClasses)}
@@ -86,7 +88,7 @@ const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunit
 										/>
 										<AvatarFallback>{option.name[0]}</AvatarFallback>
 									</Avatar>
-									<span className={cn(textClasses, "font-medium")}>
+									<span className={cn(textClasses, "line-clamp-1 font-medium")}>
 										{option.name}
 									</span>
 								</Link>
