@@ -170,6 +170,7 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 					communityId: props.communityId,
 					stageId: props.stageId,
 					conditionEvaluationTiming: props.conditionEvaluationTiming,
+					resolver: props.resolver,
 				})
 				.onConflict((oc) =>
 					oc.columns(["id"]).doUpdateSet((eb) => ({
@@ -179,6 +180,7 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 						communityId: eb.ref("excluded.communityId"),
 						stageId: eb.ref("excluded.stageId"),
 						conditionEvaluationTiming: eb.ref("excluded.conditionEvaluationTiming"),
+						resolver: eb.ref("excluded.resolver"),
 					}))
 				)
 				.returningAll()

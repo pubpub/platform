@@ -385,6 +385,25 @@ export async function seedStarter(communityId?: CommunitiesId) {
 								},
 							],
 						},
+						"Log with Resolved Pub": {
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							// This resolver expression finds a pub by matching the current pub's email field
+							// against other pubs' email values, effectively resolving to a related pub
+							resolver: `$.pub.values.email = $.pub.values.email`,
+							actions: [
+								{
+									action: Action.log,
+									config: {
+										text: "Resolved pub: {{ $.pub.values.title }}",
+									},
+								},
+							],
+						},
 					},
 				},
 				Published: {
