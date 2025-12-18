@@ -63,7 +63,6 @@ function parseResolverExpression(expression: string): ResolverExpressionType {
 
 /**
  * Extracts the field slug from a pub values path like `$.pub.values.fieldname`
- * Returns null if the path doesn't match the expected pattern.
  */
 function extractFieldSlugFromPath(path: string): string | null {
 	// Handle both formats:
@@ -110,8 +109,6 @@ async function findPubByFieldValue(
 	value: unknown,
 	communitySlug: string
 ): Promise<ResolvedPub | null> {
-	// We need to find the pub where the field with the given slug has the matching value
-	// First, we need to find the field id by slug
 	const field = await db
 		.selectFrom("pub_fields")
 		.select(["id", "slug"])
@@ -130,7 +127,6 @@ async function findPubByFieldValue(
 		return null
 	}
 
-	// Now find pubs with this field value
 	const pubWithValue = await db
 		.selectFrom("pub_values")
 		.select("pubId")
@@ -143,7 +139,6 @@ async function findPubByFieldValue(
 		return null
 	}
 
-	// Get the full pub with related values
 	const pub = await getPubsWithRelatedValues(
 		{ pubId: pubWithValue.pubId, communityId },
 		{
@@ -248,15 +243,6 @@ export async function resolveAutomationInput(
 	if (error) {
 		logger.error("Failed to evaluate resolver expression", { resolver, error: error.message })
 		return { type: "unchanged" }
-	}
-
-	// If result is a pub-like object (has id, values, etc.), wrap it
-	if (result && typeof result === "object" && "id" in result && "values" in result) {
-		// Try to load the full pub if we just have an id
-		const resolvedPub = await findPubById(communityId, (result as { id: PubsId }).id)
-		if (resolvedPub) {
-			return { type: "pub", pub: resolvedPub }
-		}
 	}
 
 	// Otherwise, treat it as JSON
