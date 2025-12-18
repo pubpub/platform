@@ -20,6 +20,7 @@ import { StagesManagePage } from "./fixtures/stages-manage-page"
 import { expect, test } from "./test-fixtures"
 
 const WEBHOOK_PATH = "coar-inbox"
+const COMMUNITY_SLUG = `coar-test-${crypto.randomUUID().slice(0, 8)}`
 
 const STAGE_IDS = {
 	Inbox: crypto.randomUUID() as StagesId,
@@ -34,7 +35,7 @@ const STAGE_IDS = {
 const seed = createSeed({
 	community: {
 		name: "COAR Test Community",
-		slug: `coar-test-${crypto.randomUUID().slice(0, 8)}`,
+		slug: COMMUNITY_SLUG,
 	},
 	users: {
 		admin: {
@@ -120,8 +121,12 @@ const seed = createSeed({
 								formSlug: "review-default-editor",
 								pubValues: {
 									title: "Review for: {{ $.pub.values.title }}",
-									relatedpub:
-										"<<< [{ 'relatedPubId': $.pub.id, 'value': 'Notification' }] >>>",
+								},
+								relationConfig: {
+									fieldSlug: `${COMMUNITY_SLUG}:relatedpub`,
+									relatedPubId: "{{ $.pub.id }}",
+									value: "Notification",
+									direction: "source",
 								},
 							},
 						},

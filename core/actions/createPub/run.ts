@@ -1,7 +1,7 @@
 "use server"
 
-import type { Json } from "contracts"
-import type { PubsId, PubTypesId, StagesId } from "db/public"
+import type { Json, JsonValue } from "contracts"
+import type { PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public"
 import type { action } from "./action"
 
 import { interpolate } from "@pubpub/json-interpolate"
@@ -11,7 +11,11 @@ import { db } from "~/kysely/database"
 import { env } from "~/lib/env/env"
 import { getCommunity } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
-import { createPubRecursiveNew } from "~/lib/server/pub"
+import {
+	createPubRecursiveNew,
+	getFieldInfoForSlugs,
+	upsertPubRelationValues,
+} from "~/lib/server/pub"
 import { getStages } from "~/lib/server/stages"
 import { buildInterpolationContext } from "../_lib/interpolationContext"
 import { extractJsonata, needsInterpolation } from "../_lib/schemaWithJsonFields"
@@ -132,6 +136,88 @@ export const run = defineRun<typeof action>(async (props) => {
 			formSlug,
 			stage,
 		})
+
+		// Handle optional relation configuration
+		const { relationConfig } = config
+		if (relationConfig?.fieldSlug && relationConfig?.relatedPubId) {
+			try {
+				// Interpolate relatedPubId if it's a JSONata expression
+				let resolvedRelatedPubId = relationConfig.relatedPubId
+				if (
+					typeof relationConfig.relatedPubId === "string" &&
+					needsInterpolation(relationConfig.relatedPubId)
+				) {
+					const expression = extractJsonata(relationConfig.relatedPubId)
+					resolvedRelatedPubId = (await interpolate(
+						expression,
+						interpolationData
+					)) as string
+				}
+
+				// Interpolate value if it's a JSONata expression
+				let resolvedValue: JsonValue = (relationConfig.value as JsonValue) ?? null
+				if (typeof relationConfig.value === "string" && needsInterpolation(relationConfig.value)) {
+					const expression = extractJsonata(relationConfig.value)
+					resolvedValue = (await interpolate(expression, interpolationData)) as JsonValue
+				}
+
+				// Get field info to get the fieldId
+				const fieldInfo = await getFieldInfoForSlugs(
+					{ slugs: [relationConfig.fieldSlug], communityId },
+					db
+				)
+				if (fieldInfo.length === 0) {
+					logger.error({
+						msg: "createPub: Relation field not found",
+						fieldSlug: relationConfig.fieldSlug,
+					})
+				} else {
+					const fieldId = fieldInfo[0].fieldId as PubFieldsId
+
+					// Determine which pub owns the relation based on direction
+					// "source" = new pub stores the relation to existing pub
+					// "target" = existing pub stores the relation to new pub
+					const direction = relationConfig.direction ?? "source"
+					const sourcePubId =
+						direction === "source"
+							? createdPub.id
+							: (resolvedRelatedPubId as PubsId)
+					const targetPubId =
+						direction === "source"
+							? (resolvedRelatedPubId as PubsId)
+							: createdPub.id
+
+					await upsertPubRelationValues({
+						pubId: sourcePubId,
+						allRelationsToCreate: [
+							{
+								relatedPubId: targetPubId,
+								value: resolvedValue,
+								fieldId,
+							},
+						],
+						lastModifiedBy,
+						trx: db,
+					})
+
+					logger.info({
+						msg: "createPub: Relation created successfully",
+						sourcePubId,
+						targetPubId,
+						fieldSlug: relationConfig.fieldSlug,
+						direction,
+					})
+				}
+			} catch (error) {
+				logger.error({
+					msg: "createPub: Failed to create relation",
+					error,
+					relationConfig,
+				})
+				// Don't fail the whole action if relation creation fails
+				// The pub was already created successfully
+			}
+		}
 
 		return {
 			success: true,
