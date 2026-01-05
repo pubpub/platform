@@ -58,7 +58,7 @@ export class PubsPage {
 				.getByRole("button", { name: "Create", exact: true })
 				.click({ timeout: 5000 })
 			await this.page
-				.getByRole("heading", { name: "Create AAAAAAAAA", exact: true })
+				.getByRole("heading", { name: "Create Pub", exact: true })
 				.waitFor({ state: "visible", timeout: 5000 })
 			await this.page.waitForTimeout(500)
 			await choosePubType({ page: this.page, pubType, communitySlug: this.communitySlug })

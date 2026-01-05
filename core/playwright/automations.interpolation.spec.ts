@@ -91,11 +91,7 @@ test.describe("actions interpolation", () => {
 			await runActionDialog.getByRole("button", { name: "Run" }).click()
 		})
 		await page
-			.getByRole("status")
-			.filter({
-				hasText:
-					"Logged out Hello, TEST. Im running Log with Debounce: 10, check your console",
-			})
+			.getByText("Hello, TEST. Im running Log with Debounce: 10, check your console")
 			.waitFor({ timeout: 5000 })
 	})
 
@@ -113,12 +109,7 @@ test.describe("actions interpolation", () => {
 			await runActionDialog.getByLabel("Log Text").fill("'my title is ' & $.pub.values.title")
 			await runActionDialog.getByRole("button", { name: "Run" }).click()
 		})
-		await page
-			.getByRole("status")
-			.filter({
-				hasText: "Logged out my title is Test, check your console",
-			})
-			.waitFor({ timeout: 5000 })
+		await page.getByText("my title is Test, check your console").waitFor({ timeout: 5000 })
 	})
 
 	test("can test the jsonata expression", async () => {
@@ -164,12 +155,7 @@ test.describe("actions interpolation", () => {
 
 			await runActionDialog.getByRole("button", { name: "Run" }).click()
 
-			await page
-				.getByRole("status")
-				.filter({
-					hasText: "Logged out my title is Test, check your console",
-				})
-				.waitFor({ timeout: 5000 })
+			await page.getByText("my title is Test, check your console").waitFor({ timeout: 5000 })
 		})
 	})
 })

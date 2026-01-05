@@ -33,7 +33,7 @@ const updateItems = async (view: EditorView, filter: string) => {
 		.map((result) => {
 			return { ...result, parentTypeId: pubTypeId }
 		})
-	const newPubItems = await getPubs(filter)
+	const newPubItems = (await getPubs?.(filter)) ?? []
 	const newItems = [...newTypeItems, ...newFieldItems, ...newPubItems]
 	setSuggestData({
 		...suggestData,

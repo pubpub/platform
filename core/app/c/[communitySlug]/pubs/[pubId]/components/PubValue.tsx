@@ -27,8 +27,9 @@ export const PubValueDisplay = ({ values }: { values: FullProcessedPubWithForm["
 	if (!value.id) {
 		return <div className="h-1" />
 	}
+	console.log(values)
 
-	if (isRelation && "formElementLabel" in value && "value" in value) {
+	if (isRelation && "value" in value) {
 		return values.map((v) => (
 			<PubCardClient
 				pub={v.relatedPub as PubCardClientPub}

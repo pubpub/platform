@@ -240,11 +240,18 @@ test.describe("Multivalue inputs", () => {
 		// Make sure pub details page has loaded before making assertions
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*`)
 		await expect(page.getByText(numberElement.name)).toHaveCount(1)
-		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("0")
-		await expect(page.getByText(animalElement.name)).toHaveCount(1)
-		await expect(page.getByTestId(`${animalElement.name}-value`)).toHaveText("cats,otters")
+		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("[0]", {
+			timeout: 5000,
+		})
+		await expect(page.getByText(animalElement.name)).toHaveCount(1, { timeout: 5000 })
+		const animalValue = page.getByTestId(`${animalElement.name}-value`)
+		await expect(animalValue.getByText("cats")).toHaveCount(1, { timeout: 5000 })
+		await expect(animalValue.getByText("otters")).toHaveCount(1, { timeout: 5000 })
+
 		await expect(page.getByText(fruitElement.name)).toHaveCount(1)
-		await expect(page.getByTestId(`${fruitElement.name}-value`)).toHaveText("mangos")
+		await expect(page.getByTestId(`${fruitElement.name}-value`)).toHaveText("mangos", {
+			timeout: 5000,
+		})
 	})
 })
 
@@ -289,7 +296,9 @@ test.describe("Rich text editor", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`)
-		await expect(page.getByRole("link", { name: actualTitle, exact: true })).toHaveCount(1)
+		await expect(page.getByRole("link", { name: actualTitle, exact: true })).toHaveCount(1, {
+			timeout: 5000,
+		})
 	})
 })
 
@@ -342,7 +351,7 @@ test.describe("Member select", async () => {
 		await page.getByLabel("First name").fill(faker.person.firstName())
 		await page.getByLabel("Last Name").fill(faker.person.lastName())
 		await page.getByLabel("Suggestions").getByRole("button", { name: "Submit" }).click()
-		await page.getByText("User successfully invited", { exact: true }).waitFor()
+		await page.getByText("User invited", { exact: true }).waitFor({ timeout: 5000 })
 		await page.getByLabel(newUser).click()
 		await expect(memberInput).toHaveValue(newUser)
 

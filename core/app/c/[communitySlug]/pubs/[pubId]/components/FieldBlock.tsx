@@ -96,6 +96,8 @@ export const FieldBlock = ({
 	const _isMobile = useIsMobile()
 	const [isOpen, setIsOpen] = useState(false)
 
+	console.log(name, values)
+
 	return (
 		<>
 			<Popover open={isOpen} onOpenChange={setIsOpen}>

@@ -54,7 +54,7 @@ test.describe("Creating a field", () => {
 
 		// Try to create a field with the same name, should error
 		await fieldsPage.addField("String", CoreSchemaType.String, false, false)
-		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "Error" })).toHaveCount(1)
 	})
 
 	test("Auto slug", async () => {

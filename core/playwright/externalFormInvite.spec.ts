@@ -348,7 +348,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await page.getByText("Error", { exact: true }).first().waitFor()
 		await expect(
 			page
-				.getByLabel("Notifications (F8)")
+				.getByRole("listitem")
 				.getByText(
 					"Invitation failed. The specified form is for Evaluation pubs but this pub's type is Submission"
 				)

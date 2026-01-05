@@ -163,7 +163,7 @@ test.describe("Creating a form", () => {
 		const formsPage = new FormsPage(page, community.community.slug)
 		await formsPage.goto()
 		await formsPage.addForm("another form", FORM_SLUG, false)
-		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "Error" })).toHaveCount(1)
 	})
 	test("Can archive and restore a form", async () => {
 		const formsPage = new FormsPage(page, community.community.slug)
@@ -223,9 +223,7 @@ test.describe("Submission buttons", () => {
 
 		// Save to the server
 		await page.getByTestId("save-form-button").click()
-		await expect(
-			page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
-		).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "Form saved" })).toHaveCount(1)
 	})
 
 	test("Editing a saved button", async () => {
@@ -246,9 +244,7 @@ test.describe("Submission buttons", () => {
 		await page.getByTestId("save-button-configuration-button").click()
 
 		await page.getByTestId("save-form-button").click()
-		await expect(
-			page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
-		).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "Form saved" })).toHaveCount(1)
 	})
 })
 
@@ -459,9 +455,9 @@ test.describe("changing access", () => {
 			await page.getByTestId("select-form-access-private").click()
 
 			await page.getByTestId("save-form-button").click()
-			await expect(
-				page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
-			).toHaveCount(1)
+			await expect(page.getByRole("listitem").filter({ hasText: "Form saved" })).toHaveCount(
+				1
+			)
 		})
 
 		await test.step("changes should be persisted", async () => {

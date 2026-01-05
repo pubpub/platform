@@ -309,6 +309,7 @@ export default async function Page(props: {
 									)}
 									{canRunActions && (
 										<PubsRunAutomationsDropDownMenu
+											data-testid="run-automations-primary"
 											buttonText="Run"
 											automations={pub.stage?.fullAutomations ?? []}
 											pubId={pub.id}

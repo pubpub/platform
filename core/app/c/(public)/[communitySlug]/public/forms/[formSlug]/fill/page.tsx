@@ -137,7 +137,7 @@ export default async function FormPage(props: {
 	}
 	const { user, session } = await getLoginData()
 
-	const [form, pub, pubs, pubTypes] = await Promise.all([
+	const [form, pub, pubTypes] = await Promise.all([
 		getForm({
 			slug: params.formSlug,
 			communityId: community.id,
@@ -148,14 +148,6 @@ export default async function FormPage(props: {
 					{ withStage: true, withPubType: true }
 				)
 			: undefined,
-		getPubsWithRelatedValues(
-			{ communityId: community.id, userId: user?.id },
-			{
-				limit: 30,
-				withStage: true,
-				withPubType: true,
-			}
-		),
 		getPubTypesForCommunity(community.id, { limit: 0 }),
 	])
 
@@ -279,10 +271,9 @@ export default async function FormPage(props: {
 	}
 	// For the Context, we want both the pubs from the initial pub query (which is limited)
 	// as well as the pubs related to this pub
-	const relatedPubs = pubWithProsemirrorRichText
+	const _relatedPubs = pubWithProsemirrorRichText
 		? pubWithProsemirrorRichText.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : []))
 		: []
-	const _pubsForContext = [...pubs, ...relatedPubs]
 
 	return (
 		<div className="isolate min-h-screen">

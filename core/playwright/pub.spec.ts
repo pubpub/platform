@@ -111,7 +111,7 @@ test.describe("Moving a pub", () => {
 		// Shelved is its own node in stages
 		await page.getByRole("option", { name: "Shelved" }).click()
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(page.getByRole("status").filter({ hasText: "Updated Pub" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "Updated Pub" })).toHaveCount(1)
 
 		const pubDetailsPage = new PubDetailsPage(
 			page,
@@ -137,7 +137,7 @@ test.describe("Creating a pub", () => {
 		const pubId = await pubsPage.createPub({ values: { title, content: "Some content" } })
 		const pubDetailsPage = new PubDetailsPage(page, community.community.slug, pubId)
 		await pubDetailsPage.goTo()
-		await expect(page.getByTestId("current-stage")).toHaveCount(0)
+		await expect(page.getByTestId("current-stage")).toHaveText("No stage")
 	})
 
 	test.skip("Can create a pub with a stage", async () => {
@@ -159,7 +159,9 @@ test.describe("Creating a pub", () => {
 		await pubsPage.goTo()
 		await pubsPage.createPub({})
 
-		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "New pub created" })).toHaveCount(
+			1
+		)
 	})
 
 	test("Can create and edit a multivalue field", async () => {
@@ -209,7 +211,7 @@ test.describe("Creating a pub", () => {
 		await page.getByTestId("remove-button").first().click()
 		await page.waitForTimeout(200)
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(page.getByRole("status").filter({ hasText: "Updated Pub" })).toHaveCount(1, {
+		await expect(page.getByRole("listitem").filter({ hasText: "Updated Pub" })).toHaveCount(1, {
 			timeout: 10_000,
 		})
 		await page.getByRole("link", { name: "View Pub" }).click()
@@ -248,7 +250,9 @@ test.describe("Creating a pub", () => {
 		await page.keyboard.press("Enter")
 		await page.keyboard.type(actualTitle)
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "New pub created" })).toHaveCount(
+			1
+		)
 		await pubsPage.goTo()
 		await expect(page.getByRole("link", { name: actualTitle, exact: true })).toHaveCount(1)
 
@@ -260,7 +264,7 @@ test.describe("Creating a pub", () => {
 		await page.keyboard.type("prefix ")
 
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(page.getByRole("status").filter({ hasText: "Updated Pub" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "Updated Pub" })).toHaveCount(1)
 		await pubsPage.goTo()
 		await expect(
 			page.getByRole("link", { name: `prefix ${actualTitle}`, exact: true })
@@ -317,7 +321,9 @@ test.describe("Creating a pub", () => {
 		await page.getByTestId(`${community.community.slug}:title`).fill(related.title)
 		await page.getByTestId(`${community.community.slug}:content`).fill(related.content)
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "New pub created" })).toHaveCount(
+			1
+		)
 
 		// The original pub should now have a related pub which is the newly created pub
 		await pubPage.goTo()
@@ -345,7 +351,9 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByRole("combobox").filter({ hasText: stage })).toHaveCount(1)
 		await page.getByTestId(`${community.community.slug}:title`).fill("Stage test")
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "New pub created" })).toHaveCount(
+			1
+		)
 		await page.getByRole("link", { name: "View Pub" }).click()
 		await expect(page.getByTestId("current-stage")).toHaveText(stage)
 	})
@@ -367,7 +375,7 @@ test.describe("Updating a pub", () => {
 		const newTitle = `New title ${Date.now()}`
 		await page.getByTestId(`${community.community.slug}:title`).fill(newTitle)
 		await page.getByRole("button", { name: "Save" }).click()
-		await expect(page.getByRole("status").filter({ hasText: "Updated Pub" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "Updated Pub" })).toHaveCount(1)
 		await expect(page.getByTestId("save-status-text")).toContainText("Last saved at")
 
 		await page.getByRole("link", { name: "View Pub" }).click()

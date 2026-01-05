@@ -37,6 +37,7 @@ export const PubValues = async ({
 		})
 	)
 
+	console.log(hydratedeValues)
 	const valuesGroupedByField = Object.groupBy(hydratedeValues, (val) => val.fieldSlug)
 
 	return (

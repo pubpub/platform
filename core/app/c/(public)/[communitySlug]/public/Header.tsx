@@ -9,7 +9,7 @@ import { HEADER_HEIGHT } from "~/lib/ui"
 export const Header = ({ children }: { children: ReactNode }) => {
 	return (
 		<div
-			className="sticky top-0 z-10 flex items-center gap-2 border-color-gray-100 border-b bg-gray-50 py-5"
+			className="sticky top-0 z-10 flex items-center gap-2 border-border border-b bg-muted py-5"
 			style={{ height: `${HEADER_HEIGHT}px` }}
 		>
 			<div className="ml-4 flex-1">
