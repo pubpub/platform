@@ -162,8 +162,6 @@ export async function redirectToBaseCommunityPage(
 	opts?: RedirectToBaseCommunityPageOpts
 ): Promise<never> {
 	const basePath = await constructRedirectToBaseCommunityPage(opts)
-	console.log("basePath", basePath)
-	console.log("opts", opts)
 	redirect(basePath)
 }
 

@@ -283,7 +283,12 @@ export const updatePub = defineServerAction(async function updatePub({
 		const [pub] = await Promise.all([
 			updateQuery.executeAndReturnPub(),
 			...fileUploads.map(({ fileName, tempUrl }) =>
-				makeFileUploadPermanent({ scopingId: pubId, tempUrl, fileName, userId: loginData.user.id })
+				makeFileUploadPermanent({
+					scopingId: pubId,
+					tempUrl,
+					fileName,
+					userId: loginData.user.id,
+				})
 			),
 		])
 		return pub
