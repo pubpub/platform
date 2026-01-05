@@ -211,11 +211,7 @@ export function AcceptRejectInvite({
 												})
 											})}
 										>
-											<AlertDialogAction
-												asChild
-												variant="destructive"
-												type="submit"
-											>
+											<AlertDialogAction asChild type="submit">
 												<FormSubmitButton
 													type="submit"
 													formState={rejectForm.formState}

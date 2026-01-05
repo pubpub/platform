@@ -22,7 +22,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 }: {
 	name: string
 	slug: string
-	avatar?: string
+	avatar?: string | null
 }) {
 	const { user } = await getLoginData()
 

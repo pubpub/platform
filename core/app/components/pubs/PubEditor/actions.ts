@@ -137,7 +137,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 			await Promise.all(
 				fileUploads.map(({ fileName, tempUrl }) =>
 					makeFileUploadPermanent(
-						{ scopingId: createdPub.id, tempUrl, fileName, userId: user.id },
+						{ pubId: createdPub.id, tempUrl, fileName, userId: user.id },
 						trx
 					)
 				)
@@ -284,7 +284,7 @@ export const updatePub = defineServerAction(async function updatePub({
 			updateQuery.executeAndReturnPub(),
 			...fileUploads.map(({ fileName, tempUrl }) =>
 				makeFileUploadPermanent({
-					scopingId: pubId,
+					pubId,
 					tempUrl,
 					fileName,
 					userId: loginData.user.id,

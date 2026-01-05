@@ -43,7 +43,7 @@ export const FileUploadElement = ({
 }: ElementProps<InputComponent.fileUpload> & { pubId?: PubsId }) => {
 	const runUpload = useServerAction(upload)
 	const signedUploadUrl = (fileName: string) => {
-		return runUpload(fileName, pubId)
+		return runUpload(fileName, "temporary")
 	}
 	const runDelete = useServerAction(deleteFile)
 	const { form, mode } = usePubForm()

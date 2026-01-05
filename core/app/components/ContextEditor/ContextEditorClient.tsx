@@ -69,7 +69,7 @@ export const ContextEditorClient = (
 	const debouncedGetPubs = useDebouncedCallback(getPubs, 300)
 
 	const signedUploadUrl = (fileName: string) => {
-		return runUpload(fileName, props.pubId)
+		return runUpload(fileName, "temporary")
 	}
 
 	const memoEditor = useMemo(() => {
