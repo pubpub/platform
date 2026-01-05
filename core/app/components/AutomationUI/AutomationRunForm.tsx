@@ -35,10 +35,12 @@ const ActionCard = (props: ActionCardProps) => {
 	const Icon = props.icon
 
 	return (
-		<Item variant="outline" className="bg-neutral-50" size="sm">
+		<Item variant="outline" className="bg-muted" size="sm">
 			<ItemHeader>
-				<Icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
-				<span className="flex-1 font-medium text-neutral-900 text-sm">{props.title}</span>
+				<Icon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+				<span className="flex-1 font-medium text-muted-foreground text-sm">
+					{props.title}
+				</span>
 			</ItemHeader>
 			{props.children && (
 				<ItemContent className="m-1 overflow-visible">{props.children}</ItemContent>
@@ -154,7 +156,7 @@ export const AutomationRunForm = (props: Props) => {
 					</Button>
 				</DialogTrigger>
 				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
-					<DialogHeader className="sticky inset-0 top-0 z-10 bg-white p-6 pb-2">
+					<DialogHeader className="sticky inset-0 top-0 z-10 bg-background p-6 pb-2">
 						<div className="flex items-start gap-x-2">
 							<DynamicIcon
 								icon={automationIcon as IconConfig}

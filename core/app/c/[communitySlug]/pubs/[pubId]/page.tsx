@@ -18,6 +18,7 @@ import { StagesProvider, stagesDAO } from "ui/stages"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { tryCatch } from "utils/try-catch"
 
+import { PubsRunAutomationsDropDownMenu } from "~/app/components/AutomationUI/PubsRunAutomationDropDownMenu"
 import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext"
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher"
 import { PubFormProvider } from "~/app/components/providers/PubFormProvider"
@@ -141,12 +142,12 @@ export default async function Page(props: {
 		availableUpdateForms,
 		canArchive,
 
-		_canRunActions,
+		canRunActions,
 		_canAddMember,
 		_canRemoveMember,
 		_canCreateRelatedPub,
 		_canRunActionsAllPubs,
-		_canOverrideAutomationConditions,
+		canOverrideAutomationConditions,
 		communityStages,
 		withExtraPubValues,
 		form,
@@ -227,108 +228,126 @@ export default async function Page(props: {
 		})
 
 	return (
-		<ContentLayout
-			title={
-				<>
-					<BookOpen size={24} strokeWidth={1} className="mr-3 text-muted-foreground" />
-					<div className="flex flex-col">
-						<Tooltip delayDuration={300}>
-							<TooltipTrigger className="m-0 line-clamp-1 p-0 text-left">
-								{getPubTitle(pub)}
-							</TooltipTrigger>
-							<TooltipContent
-								side="bottom"
-								align="start"
-								className="max-w-sm text-xs"
-							>
-								{getPubTitle(pub)}
-							</TooltipContent>
-						</Tooltip>
-						<div className="flex items-center gap-2 text-muted-foreground text-sm">
-							<PubTypeLabel pubType={pub.pubType} canFilter={false} />
-							{pub.stage && (
-								<Move
-									pubId={pub.id}
-									stageId={pub.stage?.id}
-									moveTo={[]}
-									moveFrom={[]}
-									stageName={pub.stage.name}
-									hideIfNowhereToMove={false}
-									button={
-										<StageMoveButton
-											className="m-0 p-0"
-											stage={pub.stage}
-											canFilter={false}
-											withDropdown={true}
-										/>
-									}
-								/>
-							)}
-							<FormSwitcher
-								defaultFormSlug={defaultViewForm?.slug}
-								forms={availableViewForms}
-								className="!bg-transparent !p-0 h-6! text-xs"
-							>
-								<Eye size={14} />
-							</FormSwitcher>
-						</div>
-					</div>
-				</>
-			}
-			right={
-				<div className="flex items-center gap-2">
-					{canArchive && (
-						<RemovePubButton pubId={pub.id} redirectTo={`/c/${communitySlug}/pubs`} />
-					)}
-					{hasAccessToAnyEditForm && (
-						<Button
-							variant="outline"
-							size="sm"
-							asChild
-							className="flex items-center gap-x-2 bg-emerald-500 py-4 text-white"
-						>
-							<Link
-								href={constructRedirectToPubEditPage({
-									pubId,
-									communitySlug,
-									formSlug: editFormToRedirectTo.slug,
-								})}
-							>
-								<Pencil size="12" />
-								<span>Update</span>
-							</Link>
-						</Button>
-					)}
-				</div>
-			}
-		>
-			<StagesProvider stages={stagesDAO(communityStages)}>
-				<PubFieldProvider pubFields={pubFields.fields}>
-					<PubFormProvider
-						form={{
-							pubId: pub.id,
-							form,
-							mode: "edit",
-							isExternalForm: false,
-						}}
+		<StagesProvider stages={stagesDAO(communityStages)}>
+			<PubFieldProvider pubFields={pubFields.fields}>
+				<PubFormProvider
+					form={{
+						pubId: pub.id,
+						form,
+						mode: "edit",
+						isExternalForm: false,
+					}}
+				>
+					<ContextEditorContextProvider
+						pubId={pub.id}
+						pubTypeId={pub.pubTypeId}
+						pubTypes={allPubTypes.map((pubType) => ({
+							id: pubType.id,
+							name: pubType.name,
+						}))}
 					>
-						<ContextEditorContextProvider
-							pubId={pub.id}
-							pubTypeId={pub.pubTypeId}
-							pubTypes={allPubTypes.map((pubType) => ({
-								id: pubType.id,
-								name: pubType.name,
-							}))}
+						<ContentLayout
+							title={
+								<>
+									<BookOpen
+										size={24}
+										strokeWidth={1}
+										className="mr-3 text-muted-foreground"
+									/>
+									<div className="flex flex-col">
+										<Tooltip delayDuration={300}>
+											<TooltipTrigger className="m-0 line-clamp-1 p-0 text-left">
+												{getPubTitle(pub)}
+											</TooltipTrigger>
+											<TooltipContent
+												side="bottom"
+												align="start"
+												className="max-w-sm text-xs"
+											>
+												{getPubTitle(pub)}
+											</TooltipContent>
+										</Tooltip>
+										<div className="flex items-center gap-2 text-muted-foreground text-sm">
+											<PubTypeLabel pubType={pub.pubType} canFilter={false} />
+											{pub.stage && (
+												<Move
+													pubId={pub.id}
+													stageId={pub.stage?.id}
+													moveTo={[]}
+													moveFrom={[]}
+													stageName={pub.stage.name}
+													hideIfNowhereToMove={false}
+													button={
+														<StageMoveButton
+															className="m-0 p-0"
+															stage={pub.stage}
+															canFilter={false}
+															withDropdown={true}
+														/>
+													}
+												/>
+											)}
+											<FormSwitcher
+												defaultFormSlug={defaultViewForm?.slug}
+												forms={availableViewForms}
+												className="!bg-transparent !p-0 h-6! text-xs"
+											>
+												<Eye size={14} />
+											</FormSwitcher>
+										</div>
+									</div>
+								</>
+							}
+							right={
+								<div className="flex items-center gap-2">
+									{canArchive && (
+										<RemovePubButton
+											pubId={pub.id}
+											redirectTo={`/c/${communitySlug}/pubs`}
+											variant="ghost"
+										/>
+									)}
+									{canRunActions && (
+										<PubsRunAutomationsDropDownMenu
+											buttonText="Run"
+											automations={pub.stage?.fullAutomations ?? []}
+											pubId={pub.id}
+											canOverrideAutomationConditions={
+												canOverrideAutomationConditions
+											}
+										/>
+									)}
+									{hasAccessToAnyEditForm && (
+										<Button
+											variant="outline"
+											size="sm"
+											asChild
+											className="flex items-center gap-x-2 bg-emerald-500 py-4 text-white"
+										>
+											<Link
+												href={constructRedirectToPubEditPage({
+													pubId,
+													communitySlug,
+													formSlug: editFormToRedirectTo.slug,
+												})}
+											>
+												<Pencil size="12" />
+												<span>Update</span>
+											</Link>
+										</Button>
+									)}
+								</div>
+							}
 						>
 							<div className="m-4 flex flex-col space-y-4">
 								<div className="flex-1">
 									<PubValues formSlug={form.slug} pub={pubByForm} />
 								</div>
 							</div>
-						</ContextEditorContextProvider>
-					</PubFormProvider>
-				</PubFieldProvider>
-			</StagesProvider>
-		</ContentLayout>
+						</ContentLayout>
+					</ContextEditorContextProvider>
+				</PubFormProvider>
+			</PubFieldProvider>
+		</StagesProvider>
 	)
 }

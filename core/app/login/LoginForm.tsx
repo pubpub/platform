@@ -60,8 +60,8 @@ export default function LoginForm() {
 						name="email"
 						render={({ field }) => (
 							<Field>
-								<FieldLabel>Email</FieldLabel>
-								<Input placeholder="name@example.com" {...field} />
+								<FieldLabel htmlFor={field.name}>Email</FieldLabel>
+								<Input id={field.name} placeholder="name@example.com" {...field} />
 							</Field>
 						)}
 					/>
@@ -70,8 +70,8 @@ export default function LoginForm() {
 						name="password"
 						render={({ field }) => (
 							<Field>
-								<FieldLabel>Password</FieldLabel>
-								<PasswordInput {...field} />
+								<FieldLabel htmlFor={field.name}>Password</FieldLabel>
+								<PasswordInput id={field.name} {...field} />
 							</Field>
 						)}
 					/>
