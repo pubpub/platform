@@ -85,7 +85,7 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 			data-pulse
 			className="gap-4 rounded-md border border-border bg-card p-4"
 			style={{ gridTemplateRows: "auto auto" }}
-			data-testid={`automation-run-card-${automationRun.id}`}
+			data-testid={`automation-run-card-${automationRun.id}-${automationRun.automation!.name}`}
 		>
 			{/* Header - spans both columns on large screens */}
 			<Collapsible className="flex flex-col gap-3" onOpenChange={setIsOpen}>

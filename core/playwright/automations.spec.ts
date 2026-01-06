@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test"
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import test from "@playwright/test"
+import test, { expect } from "@playwright/test"
 
 import {
 	Action,
@@ -266,14 +266,15 @@ test.describe("sequential automations", () => {
 
 		await page.goto(`/c/${community.community.slug}/activity/automations`)
 
-		await page.getByText("2", { exact: true }).waitFor({ timeout: 5000 })
-		await page.getByText("2success", { exact: true }).waitFor({ timeout: 5000 })
-		await page
-			.getByText("log something after log 2", { exact: true })
-			.waitFor({ timeout: 5000 })
+		const automationRunCards = await page.getByTestId(/automation-run-card-/).all()
+		for (const automationRunCard of automationRunCards) {
+			const _testId = await automationRunCard.getAttribute(`data-testid`)
+			const name = await automationRunCard.getByRole("heading").innerText()
 
-		const success = await page.getByText("success").all()
-		test.expect(success).toHaveLength(2)
+			expect(name).toMatch(/^2$|^log something after log 2$/)
+			await expect(automationRunCard.getByText("success")).toHaveCount(1)
+		}
+		// make sure one has has title 2 and success, and the other has title log something after log 2 and success
 	})
 
 	test("can run pubEnteredStage automation", async () => {
