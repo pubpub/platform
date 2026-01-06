@@ -1,18 +1,17 @@
 import type { ProcessedPub } from "contracts"
 import type { UsersId } from "db/public"
 import type { FullAutomation } from "db/types"
+import type React from "react"
 import type { CommunityStage } from "~/lib/server/stages"
 
-import React, { Suspense } from "react"
+import { Suspense } from "react"
 import Link from "next/link"
 
 import { Capabilities, MembershipType } from "db/public"
 import { Button } from "ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "ui/card"
 import { Pencil, Trash2 } from "ui/icon"
 import { cn } from "utils"
 
-import { DateTimeDisplay } from "~/app/c/[communitySlug]/pubs/[pubId]/components/DateTimeDisplay"
 import Move from "~/app/c/[communitySlug]/stages/components/Move"
 import { userCan, userCanEditPub } from "~/lib/authorization/capabilities"
 import { getPubTitle } from "~/lib/pubs"
@@ -21,20 +20,24 @@ import { PubsRunAutomationsDropDownMenu } from "../../AutomationUI/PubsRunAutoma
 import { SkeletonButton } from "../../skeletons/SkeletonButton"
 import { RelationsDropDown } from "../RelationsDropDown"
 import { RemovePubButton } from "../RemovePubButton"
+import {
+	PubCard,
+	PubCardContent,
+	PubCardCreatedAt,
+	PubCardFooter,
+	PubCardHeader,
+	PubCardMatchingValues,
+	PubCardTitle,
+	PubCardUpdatedAt,
+} from "./PubCardClient"
 import { PubTypeLabel } from "./PubTypeLabel"
 import { StageMoveButton } from "./StageMoveButton"
 
-// import { RemovePubButton } from "./pubs/RemovePubButton";
+const HOVER_CLASS = ""
+// "opacity-0 group-hover:opacity-100 transition-opacity duration-200 group-focus-within:opacity-100"
 
-// TODO: https://github.com/pubpub/platform/issues/1200
-const PubDescription = ({ pub }: { pub: ProcessedPub }) => {
-	return null
-}
-
-const HOVER_CLASS =
-	"opacity-0 group-hover:opacity-100 transition-opacity duration-200 group-focus-within:opacity-100"
 // So that the whole card can be clickable as a link
-const LINK_AFTER =
+const _LINK_AFTER =
 	"after:content-[''] after:z-0 after:absolute after:left-0 after:top-0 after:bottom-0 after:right-0"
 
 export type PubCardProps = {
@@ -63,7 +66,7 @@ export type PubCardProps = {
 	canFilter?: boolean
 }
 
-export const PubCard = async ({
+export const PubCardServer = async ({
 	pub,
 	communitySlug,
 	moveFrom,
@@ -82,21 +85,12 @@ export const PubCard = async ({
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle)
 
 	const showMatchingValues = matchingValues && matchingValues.length !== 0
-	const showDescription = "description" in pub && pub.description !== null && !showMatchingValues
 	const hasActions = pub.stage && manualAutomations && manualAutomations.length !== 0
+
 	return (
-		<Card
-			{...props}
-			className={cn(
-				"group relative flex flex-row items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 has-data-[state=checked]:border-blue-500",
-				// accessibility focus styles
-				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200",
-				props.className
-			)}
-			data-testid={`pub-card-${pub.id}`}
-		>
-			<CardContent className="flex min-w-0 flex-1 flex-col space-y-[6px] px-0">
-				<div className="z-10 flex flex-row gap-2 p-0 font-semibold leading-4">
+		<PubCard {...props} data-testid={`pub-card-${pub.id}`}>
+			<PubCardContent>
+				<PubCardHeader>
 					<PubTypeLabel pubType={pub.pubType} canFilter={canFilter} />
 					{pub.stage ? (
 						<Move
@@ -120,27 +114,13 @@ export const PubCard = async ({
 					{pub.relatedPubsCount ? (
 						<RelationsDropDown pubId={pub.id} numRelations={pub.relatedPubsCount} />
 					) : null}
-				</div>
-				<CardTitle className="font-bold text-sm">
-					<h3 className="min-w-0 truncate">
-						<Link
-							href={`/c/${communitySlug}/pubs/${pub.id}`}
-							className={cn("hover:underline", LINK_AFTER, "focus-within:underline")}
-						>
-							<div
-								className="[&_mark]:bg-yellow-300"
-								dangerouslySetInnerHTML={{ __html: getPubTitle(pub) }}
-							/>
-						</Link>
-					</h3>
-				</CardTitle>
-				<CardDescription
-					className={cn("m-0 min-w-0 truncate p-0", {
-						hidden: showMatchingValues || !showDescription,
-					})}
-				>
-					<PubDescription pub={pub} />
-				</CardDescription>
+				</PubCardHeader>
+				<PubCardTitle pubId={pub.id} bigLink={true}>
+					<div
+						className="[&_mark]:bg-yellow-300"
+						dangerouslySetInnerHTML={{ __html: getPubTitle(pub) }}
+					/>
+				</PubCardTitle>
 				{showMatchingValues && (
 					<div
 						className={cn(
@@ -149,32 +129,23 @@ export const PubCard = async ({
 						)}
 					>
 						{/* Matching values that aren't titles */}
-						{matchingValues.map((match, idx) => (
-							<React.Fragment key={idx}>
-								<span className="font-medium">{match.name}:</span>
-								<span
-									dangerouslySetInnerHTML={{
-										__html: match.highlights,
-									}}
-									className="font-light text-gray-600"
-								/>
-							</React.Fragment>
-						))}
+						<PubCardMatchingValues matchingValues={matchingValues} />
 					</div>
 				)}
-				<CardFooter className="flex gap-2 p-0 text-muted-foreground text-xs">
-					<DateTimeDisplay date={new Date(pub.createdAt)} type="absolute" />
-					<DateTimeDisplay date={new Date(pub.updatedAt)} type="relative" />
-				</CardFooter>
-			</CardContent>
-			<div className="z-10 mr-4 w-fit shrink-0">
+				<PubCardFooter>
+					<PubCardCreatedAt createdAt={pub.createdAt} />
+
+					<PubCardUpdatedAt updatedAt={pub.updatedAt} />
+				</PubCardFooter>
+			</PubCardContent>
+			<div className="-translate-y-1/2 after:-left-10 -right-1 absolute top-1/2 z-10 mr-4 w-fit shrink-0 bg-card transition-opacity duration-200 after:absolute after:top-0 after:z-0 after:h-full after:w-10 after:bg-gradient-to-r after:from-card/0 after:to-card/100 after:content-[''] group-focus-within:opacity-100 group-hover:opacity-100 md:opacity-0">
 				{/* We use grid and order-[x] to place items according to the design, but 
 				PubsRunActionDropDownMenu needs to be first so it can have `peer`. The other
 				buttons check if the `peer` is open, and if it is, it does not lose opacity.
 				Otherwise, when the dropdown menu opens, the buttons all fade away */}
 				<div
 					className={cn(
-						"grid w-fit items-center gap-3 text-neutral-500",
+						"grid w-fit items-center gap-2 text-muted-foreground md:gap-1",
 						withSelection && hasActions && "grid-cols-4",
 						withSelection && !hasActions && "grid-cols-3",
 						!withSelection && hasActions && "grid-cols-3",
@@ -227,14 +198,14 @@ export const PubCard = async ({
 						<PubSelector
 							pubId={pub.id}
 							className={cn(
-								"order-4 ml-2 box-content h-4 w-4 border-neutral-500 data-[state=checked]:opacity-100 peer-data-[state=open]:opacity-100",
+								"order-4 box-content h-4 w-4 border-muted-foreground data-[state=checked]:opacity-100 peer-data-[state=open]:opacity-100",
 								HOVER_CLASS
 							)}
 						/>
 					) : null}
 				</div>
 			</div>
-		</Card>
+		</PubCard>
 	)
 }
 
@@ -326,7 +297,7 @@ const PubCardActions = async ({
 						"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
 						HOVER_CLASS
 					)}
-					icon={<Trash2 strokeWidth="1px" className="text-neutral-500" />}
+					icon={<Trash2 strokeWidth="1px" className="text-muted-foreground" />}
 				/>
 			) : (
 				<span
@@ -346,7 +317,7 @@ const PubCardActions = async ({
 					asChild
 				>
 					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
-						<Pencil strokeWidth="1px" className="text-neutral-500" />
+						<Pencil strokeWidth="1px" className="text-muted-foreground" />
 						<span className="sr-only">Update {pubTitle}</span>
 					</Link>
 				</Button>

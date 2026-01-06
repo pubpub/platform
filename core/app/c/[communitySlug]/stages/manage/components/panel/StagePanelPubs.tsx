@@ -8,7 +8,7 @@ import { AutomationEvent } from "db/public"
 import { Card, CardAction, CardContent, CardTitle } from "ui/card"
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import { PubCardServer } from "~/app/components/pubs/PubCard/PubCardServer"
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
 import {
 	userCanArchiveAllPubs,
@@ -87,7 +87,7 @@ export const StagePanelPubs = async (props: Props) => {
 			<CardContent>
 				<div className="flex flex-col gap-2 dark:[&>div]:bg-muted/50">
 					{stagePubs.map((pub) => (
-						<PubCard
+						<PubCardServer
 							key={pub.id}
 							pub={{ ...pub, stageId: props.stageId, depth: 0 }}
 							communitySlug={community.slug}

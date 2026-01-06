@@ -9,7 +9,7 @@ import { Button } from "ui/button"
 import { tryCatch } from "utils/try-catch"
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout"
-import { PubPageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus"
+import { PubPageStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus"
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { getAuthorizedUpdateForms, getAuthorizedViewForms } from "~/lib/authorization/capabilities"
@@ -161,28 +161,29 @@ export default async function Page(props: {
 				</Button>
 			}
 			title={
-				<PubPageTitleWithStatus
-					title="Edit pub"
-					defaultFormSlug={searchParams.form}
-					forms={availableUpdateForms}
-				/>
-			}
-			right={
-				hasAccessToAnyViewForm && (
-					<Button variant="link" asChild>
+				<>
+					<span className="mr-2 font-normal">Editing {getPubTitle(pub)}</span>
+					{hasAccessToAnyViewForm ? (
 						<Link
+							className="underline"
 							href={constructRedirectToPubDetailPage({
 								pubId,
 								communitySlug,
 								formSlug: viewFormToRedirectTo.slug,
 							})}
 						>
-							View Pub
+							{getPubTitle(pub)}
 						</Link>
-					</Button>
-				)
+					) : (
+						getPubTitle(pub)
+					)}
+				</>
 			}
+			right={<div />}
 		>
+			<div className="sticky top-0 z-50 flex w-full flex-col items-center border-b bg-background">
+				<PubPageStatus defaultFormSlug={searchParams.form} forms={availableUpdateForms} />
+			</div>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
 					{/** TODO: Add suspense */}

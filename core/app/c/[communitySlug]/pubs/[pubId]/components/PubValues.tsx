@@ -4,7 +4,7 @@ import { type CommunityMembershipsId, CoreSchemaType } from "db/public"
 import { Separator } from "ui/separator"
 
 import { getMember } from "~/lib/server/user"
-import { FieldBlock } from "./FieldBlock"
+import { FieldRow, type PubValue } from "./FieldRow"
 
 type FullProcessedPubWithForm = ProcessedPubWithForm<{
 	withRelatedPubs: true
@@ -20,51 +20,44 @@ export const PubValues = async ({
 	pub: FullProcessedPubWithForm
 	formSlug: string
 }) => {
-	const hydratedeValues = await Promise.all(
+	const hydratedValues = await Promise.all(
 		pub.values.map(async (val) => {
 			if (val.schemaName === CoreSchemaType.MemberId) {
 				const member = await getMember(
 					val.value as CommunityMembershipsId
 				).executeTakeFirst()
 
-				return {
-					...val,
-					value: member,
-				}
+				return { ...val, value: member }
 			}
-
 			return val
 		})
 	)
 
-	console.log(hydratedeValues)
-	const valuesGroupedByField = Object.groupBy(hydratedeValues, (val) => val.fieldSlug)
+	const valuesGroupedByField = Object.groupBy(hydratedValues, (val) => val.fieldSlug)
+	const fieldGroups = Object.values(valuesGroupedByField).filter(
+		(values): values is NonNullable<typeof values> => Boolean(values?.length)
+	)
 
 	return (
 		<div className="grid grid-cols-12 gap-x-2 gap-y-4 text-sm">
-			{Object.values(valuesGroupedByField)!.map((values, idx) =>
-				!values?.length ? null : (
-					<>
-						<FieldBlock
-							formSlug={formSlug}
-							key={values[0]?.fieldId ?? `field-${idx}`}
-							pubId={pub.id}
-							name={values[0]?.fieldName}
-							slug={values[0]?.fieldSlug}
-							schemaType={values[0]?.schemaName}
-							// @ts-expect-error - FIXME: i bring shame to this company
-							values={values}
-							depth={0}
-						/>
-						{idx < hydratedeValues.length - 1 && (
-							<Separator
-								className="col-span-12"
-								key={`${values[0].fieldId}-divider`}
-							/>
-						)}
-					</>
-				)
-			)}
+			{fieldGroups.map((values, idx) => (
+				<>
+					<FieldRow
+						key={values[0].id}
+						formSlug={formSlug}
+						pubId={pub.id}
+						name={values[0].fieldName}
+						slug={values[0].fieldSlug}
+						schemaType={values[0].schemaName}
+						values={values as PubValue[]}
+						depth={0}
+					/>
+
+					{idx < fieldGroups.length - 1 && (
+						<Separator key={`separator-${values[0].id}`} className="col-span-12 mt-4" />
+					)}
+				</>
+			))}
 		</div>
 	)
 }

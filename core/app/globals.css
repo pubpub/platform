@@ -9,3 +9,7 @@ also import ui/styles which includes it */
 
 /* @custom-variant dark (&:is(.dark *)); */
 @custom-variant dark (&:where(.dark, .dark *));
+
+.card-filling-link {
+	@apply after:content-[''] after:z-0 after:absolute after:left-0 after:top-0 after:bottom-0 after:right-0;
+}

@@ -5,7 +5,6 @@ import type { PubTypesId } from "db/public"
 import { useState } from "react"
 import { Plus, X } from "lucide-react"
 
-import { Button } from "ui/button"
 import { cn } from "utils"
 
 import { usePubSearch } from "~/app/c/[communitySlug]/pubs/PubSearchProvider"
@@ -25,12 +24,9 @@ export const PubTypeLabel = ({
 	}
 
 	return (
-		<Button
-			variant="outline"
-			className="h-[22px] rounded-sm border-gray-300 bg-gray-100 px-[.35rem] font-semibold text-xs shadow-none"
-		>
+		<span className="flex h-5 items-center rounded-sm bg-muted px-[0.35rem] font-normal text-[10px] text-muted-foreground shadow-none">
 			{pubType.name}
-		</Button>
+		</span>
 	)
 }
 
@@ -51,11 +47,9 @@ export const FilterablePubTypeLabel = ({
 	const isSelected = currentPubTypes.includes(pubType.id)
 
 	return (
-		<Button
-			variant="outline"
-			className={cn(
-				"h-[22px] gap-0 rounded-sm border-gray-300 bg-gray-100 px-[.35rem] font-semibold text-xs shadow-none"
-			)}
+		<button
+			className="flex h-5 items-center gap-0.5 rounded-sm bg-muted/50 px-[0.35rem] font-normal text-xs shadow-none"
+			type="button"
 			onMouseEnter={() => setExpanded(true)}
 			onMouseLeave={() => setExpanded(false)}
 			onFocus={() => setExpanded(true)}
@@ -84,6 +78,6 @@ export const FilterablePubTypeLabel = ({
 					{isSelected ? <X size={14} /> : <Plus size={14} />}
 				</div>
 			</div>
-		</Button>
+		</button>
 	)
 }

@@ -186,7 +186,7 @@ export const FieldOutputMap = <F extends string>({
 									render={({ field }) => {
 										return (
 											<OutputMapField
-												form={form}
+												form={form as any}
 												disabled={disabled}
 												unselectedPubFields={unselectedPubFields}
 												fieldName={`outputMap.[${index}]`}

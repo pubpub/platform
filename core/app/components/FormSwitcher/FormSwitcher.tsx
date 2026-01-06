@@ -12,6 +12,7 @@ import {
 	SelectLabel,
 	SelectTrigger,
 } from "ui/select"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { cn } from "utils"
 
 export const formSwitcherUrlParam = "form"
@@ -50,16 +51,24 @@ export const FormSwitcher = ({
 				}}
 				defaultValue={selectedFormSlug || defaultFormSlug}
 			>
-				<SelectTrigger
-					id={htmlId}
-					className={cn(
-						"flex h-6 items-center gap-1 border-none bg-transparent",
-						className
-					)}
-				>
-					{children}
-					{currentForm?.name}
-				</SelectTrigger>
+				<Tooltip>
+					<TooltipTrigger>
+						<SelectTrigger
+							id={htmlId}
+							className={cn(
+								"flex h-6 items-center gap-1 border-none bg-transparent!",
+								className
+							)}
+						>
+							{children}
+							{currentForm?.name}
+						</SelectTrigger>
+					</TooltipTrigger>
+
+					<TooltipContent>
+						Viewing as <em>{currentForm?.name}</em>
+					</TooltipContent>
+				</Tooltip>
 				<SelectContent>
 					<SelectGroup>
 						<SelectLabel className="font-normal text-muted-foreground text-xs">

@@ -20,7 +20,7 @@ import { StagesProvider, stagesDAO } from "ui/stages"
 import { cn } from "utils"
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import { PubCardServer } from "~/app/components/pubs/PubCard/PubCardServer"
 import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton"
 import {
 	userCanArchiveAllPubs,
@@ -124,7 +124,7 @@ const PaginatedPubListInner = async (
 				const stageForPub = stages.find((stage) => stage.id === pub.stage?.id)
 
 				return (
-					<PubCard
+					<PubCardServer
 						data-pulse={true}
 						key={pub.id}
 						pub={pub}

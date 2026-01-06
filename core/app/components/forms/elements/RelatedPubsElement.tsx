@@ -90,7 +90,7 @@ const RelatedPubBlock = ({
 				<Button
 					type="button"
 					variant="ghost"
-					className="p-2 text-neutral-400 hover:bg-white hover:text-destructive"
+					className="p-2 text-muted-foreground hover:text-destructive"
 					aria-label="Delete link to related pub"
 					onClick={onRemove}
 				>
@@ -106,7 +106,7 @@ const RelatedPubBlock = ({
 					{...listeners}
 					{...attributes}
 				>
-					<GripVertical size={24} className="text-neutral-400" />
+					<GripVertical size={24} className="text-muted-foreground" />
 				</Button>
 			</div>
 		</div>
@@ -247,7 +247,7 @@ export const RelatedPubsElement = ({
 		RelatedFormValues & { deleted: { slug: string; relatedPubId: PubsId }[] }
 	>()
 	const formElementToggle = useFormElementToggleContext()
-	const _isEnabled = formElementToggle.isEnabled(slug)
+	const isEnabled = formElementToggle.isEnabled(slug)
 
 	const { fields, append, move, update, remove } = useFieldArray({
 		control,
@@ -365,7 +365,7 @@ export const RelatedPubsElement = ({
 							<FormControl>
 								<MultiBlock
 									title="Pub Relations"
-									disabled={!_isEnabled}
+									disabled={!isEnabled}
 									onAdd={() => setShowPanel(true)}
 								>
 									{fields.length ? (

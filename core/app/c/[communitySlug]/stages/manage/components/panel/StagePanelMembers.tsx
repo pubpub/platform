@@ -5,7 +5,7 @@ import { Users } from "lucide-react"
 import { Capabilities, MembershipType, type StagesId } from "db/public"
 import { Card, CardAction, CardContent, CardTitle } from "ui/card"
 
-import { MembersList } from "~/app/components//Memberships/MembersList"
+import { MembersCardList } from "~/app/components/Memberships/MembersCardList"
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
 import { userCan } from "~/lib/authorization/capabilities"
 import { getStageMembers } from "~/lib/db/queries"
@@ -14,7 +14,6 @@ import {
 	addStageMember,
 	addUserWithStageMembership,
 	removeStageMember,
-	setStageMemberRole,
 } from "../../actions"
 import { StagePanelCardHeader } from "../editor/StagePanelCard"
 
@@ -50,10 +49,9 @@ export const StagePanelMembers = async ({ stageId, user }: Props) => {
 				</CardAction>
 			</StagePanelCardHeader>
 			<CardContent>
-				<MembersList
+				<MembersCardList
 					members={members}
 					membershipType={MembershipType.stage}
-					setRole={setStageMemberRole}
 					removeMember={removeStageMember}
 					targetId={stageId}
 					readOnly={!canManage}

@@ -14,7 +14,7 @@ import { StagesProvider, stagesDAO } from "ui/stages"
 
 import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu"
 import { BasicPagination } from "~/app/components/Pagination"
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import { PubCardServer } from "~/app/components/pubs/PubCard/PubCardServer"
 import {
 	userCanArchiveAllPubs,
 	userCanEditAllPubs,
@@ -82,7 +82,7 @@ async function StageCard({
 	return (
 		<Card
 			key={stage.id}
-			className="relative flex flex-col justify-between gap-2 rounded-l-none border-0 border-border border-b-0 border-l-6 py-2 shadow-none"
+			className="relative flex flex-col justify-between gap-2 rounded-l-none border-none bg-transparent py-2 shadow-none"
 		>
 			<CardHeader className="!pb-2 my-1 flex items-center justify-between">
 				<CardTitle className="flex items-baseline gap-3">
@@ -201,7 +201,7 @@ export async function StagePubs({
 				}
 				// this way we don't pass unecessary data to the client
 				return (
-					<PubCard
+					<PubCardServer
 						key={pub.id}
 						pub={
 							pub as ProcessedPub<{

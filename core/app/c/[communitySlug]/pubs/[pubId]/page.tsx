@@ -14,6 +14,7 @@ import {
 } from "db/public"
 import { Button } from "ui/button"
 import { PubFieldProvider } from "ui/pubFields"
+import { Separator } from "ui/separator"
 import { StagesProvider, stagesDAO } from "ui/stages"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { tryCatch } from "utils/try-catch"
@@ -22,6 +23,7 @@ import { PubsRunAutomationsDropDownMenu } from "~/app/components/AutomationUI/Pu
 import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext"
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher"
 import { PubFormProvider } from "~/app/components/providers/PubFormProvider"
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
 import { PubTypeLabel } from "~/app/components/pubs/PubCard/PubTypeLabel"
 import { StageMoveButton } from "~/app/components/pubs/PubCard/StageMoveButton"
 import { RemovePubButton } from "~/app/components/pubs/RemovePubButton"
@@ -36,14 +38,17 @@ import { constructRedirectToPubEditPage } from "~/lib/links"
 import { getPubByForm, getPubTitle } from "~/lib/pubs"
 import { getPubsWithRelatedValues, getPubTypesForCommunity, NotFoundError } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
-import { getForm } from "~/lib/server/form"
+import { getForm, getSimpleForms } from "~/lib/server/form"
 import { resolveFormAccess } from "~/lib/server/form-access"
 import { redirectToPubDetailPage, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
 import { getPubFields } from "~/lib/server/pubFields"
 import { getStages } from "~/lib/server/stages"
 import { ContentLayout } from "../../ContentLayout"
 import Move from "../../stages/components/Move"
+import { addPubMember, addUserWithPubMembership, removePubMember } from "./actions"
+import { PubMembersPanel } from "./components/PubMembersPanel"
 import { PubValues } from "./components/PubValues"
+import { RelatedPubsTableWrapper } from "./components/RelatedPubsTableWrapper"
 
 const getPubsWithRelatedValuesCached = cache(async (pubId: PubsId, communityId: CommunitiesId) => {
 	const [error, pub] = await tryCatch(
@@ -141,10 +146,9 @@ export default async function Page(props: {
 		availableViewForms,
 		availableUpdateForms,
 		canArchive,
-
 		canRunActions,
-		_canAddMember,
-		_canRemoveMember,
+		canAddMember,
+		canRemoveMember,
 		_canCreateRelatedPub,
 		_canRunActionsAllPubs,
 		canOverrideAutomationConditions,
@@ -152,6 +156,7 @@ export default async function Page(props: {
 		withExtraPubValues,
 		form,
 		pubFields,
+		availableForms,
 	] = await Promise.all([
 		pubPromise,
 		getPubTypesForCommunity(community.id, { limit: 50 }),
@@ -176,6 +181,7 @@ export default async function Page(props: {
 		),
 		getForm(getFormProps).executeTakeFirst(),
 		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
+		getSimpleForms(),
 	])
 
 	if (!pub) {
@@ -217,7 +223,6 @@ export default async function Page(props: {
 	const _pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation)
 	const _pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub)
 
-	const { stage } = pub
 	const pubByForm = getPubByForm({ pub, form, withExtraPubValues })
 
 	const { hasAccessToAnyForm: hasAccessToAnyEditForm, canonicalForm: editFormToRedirectTo } =
@@ -267,34 +272,6 @@ export default async function Page(props: {
 												{getPubTitle(pub)}
 											</TooltipContent>
 										</Tooltip>
-										<div className="flex items-center gap-2 text-muted-foreground text-sm">
-											<PubTypeLabel pubType={pub.pubType} canFilter={false} />
-											{pub.stage && (
-												<Move
-													pubId={pub.id}
-													stageId={pub.stage?.id}
-													moveTo={[]}
-													moveFrom={[]}
-													stageName={pub.stage.name}
-													hideIfNowhereToMove={false}
-													button={
-														<StageMoveButton
-															className="m-0 p-0"
-															stage={pub.stage}
-															canFilter={false}
-															withDropdown={true}
-														/>
-													}
-												/>
-											)}
-											<FormSwitcher
-												defaultFormSlug={defaultViewForm?.slug}
-												forms={availableViewForms}
-												className="!bg-transparent !p-0 h-6! text-xs"
-											>
-												<Eye size={14} />
-											</FormSwitcher>
-										</div>
 									</div>
 								</>
 							}
@@ -340,10 +317,77 @@ export default async function Page(props: {
 								</div>
 							}
 						>
+							<div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 py-1 text-muted-foreground text-sm">
+								<PubTypeLabel pubType={pub.pubType} canFilter={false} />
+								{pub.stage && (
+									<Move
+										pubId={pub.id}
+										stageId={pub.stage?.id}
+										moveTo={[]}
+										moveFrom={[]}
+										stageName={pub.stage.name}
+										hideIfNowhereToMove={false}
+										button={
+											<StageMoveButton
+												className="m-0 p-0"
+												stage={pub.stage}
+												canFilter={false}
+												withDropdown={true}
+											/>
+										}
+									/>
+								)}
+								<FormSwitcher
+									defaultFormSlug={defaultViewForm?.slug}
+									forms={availableViewForms}
+									className="!bg-transparent !p-0 h-6! text-xs"
+								>
+									<Eye size={14} />
+								</FormSwitcher>
+								<PubMembersPanel
+									pubId={pub.id}
+									members={pub.members ?? []}
+									user={user}
+									availableForms={availableForms}
+									canAddMember={canAddMember}
+									canRemoveMember={canRemoveMember}
+									addMember={addPubMember.bind(null, pub.id)}
+									addUserMember={addUserWithPubMembership.bind(null, pub.id)}
+									removeMember={removePubMember}
+								/>
+							</div>
 							<div className="m-4 flex flex-col space-y-4">
 								<div className="flex-1">
 									<PubValues formSlug={form.slug} pub={pubByForm} />
 								</div>
+
+								<Separator className="mt-10" />
+
+								{(_pubTypeHasRelatedPubs || _pubHasRelatedPubs) && (
+									<div className="flex flex-col gap-2" data-testid="related-pubs">
+										<div className="flex items-center justify-between gap-2">
+											<h2 className="mb-2 font-semibold">Related Pubs</h2>
+											{_canCreateRelatedPub && (
+												<CreatePubButton
+													text="Add Related Pub"
+													communityId={community.id}
+													relatedPub={{
+														pubId: pub.id,
+														pubTypeId: pub.pubTypeId,
+													}}
+													className="w-fit"
+												/>
+											)}
+										</div>
+										<RelatedPubsTableWrapper
+											pub={pubByForm}
+											userCanRunActions={_canRunActionsAllPubs}
+											userCanOverrideAutomationConditions={
+												canOverrideAutomationConditions
+											}
+										/>
+									</div>
+								)}
 							</div>
 						</ContentLayout>
 					</ContextEditorContextProvider>
