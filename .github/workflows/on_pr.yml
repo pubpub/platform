@@ -34,7 +34,7 @@ jobs:
     # you can skip the build by adding 'skip-build' to the commit message, useful when testing tests
     skip_build_sha:
         outputs:
-            skip-build-sha: ${{ steps.last-build.outputs.skip-build-sha }}
+            last-successful-build-sha: ${{ steps.last-build.outputs.last-successful-build-sha }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -77,14 +77,14 @@ jobs:
                           if [ "$all_success" == "true" ]; then
                               # get the SHA for this run
                               successful_sha=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}" --jq '.head_sha')
-                              echo "skip-build-sha=$successful_sha" >> $GITHUB_OUTPUT
+                              echo "last-successful-build-sha=${successful_sha}" >> $GITHUB_OUTPUT
                               echo "Found last successful build at SHA: $successful_sha (run: $run_id)"
                               exit 0
                           fi
                       done
                   
                   if [ "$all_success" == "false" ]; then
-                      echo "skip-build-sha=" >> $GITHUB_OUTPUT
+                      echo "last-successful-build-sha=" >> $GITHUB_OUTPUT
                       echo "No previous successful build found in this PR"
                   fi
 
@@ -93,7 +93,7 @@ jobs:
         uses: ./.github/workflows/ci.yml
 
     build-all:
-        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')) && (needs.skip_build_sha.outputs.skip-build-sha == '')
+        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')) && (needs.skip_build_sha.outputs.last-successful-build-sha == '')
         needs:
             - path-filter
             - skip_build_sha
@@ -107,9 +107,10 @@ jobs:
         needs:
             - path-filter
             - build-all
+            - skip_build_sha
         uses: ./.github/workflows/e2e.yml
         with:
-            image-tag-override: ${{ needs.skip_build_sha.outputs.skip-build-sha || '' }}
+            image-tag-override: ${{ needs.skip_build_sha.outputs.last-successful-build-sha || '' }}
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
