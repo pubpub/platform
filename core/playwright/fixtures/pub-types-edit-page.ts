@@ -46,7 +46,7 @@ export class PubTypesEditPage {
 	}
 
 	async setAsTitleField(name: string) {
-		await this.page.getByTestId(`set-as-title-${name}`).click()
+		await this.page.getByTestId(`set-as-title-${name}`).first().click()
 	}
 
 	async toggleDeleteType() {

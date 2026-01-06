@@ -52,7 +52,7 @@ export class AddMemberDialog {
 
 		await this.page.getByRole("button", { name: "Invite" }).click()
 
-		await this.page.getByText("User successfully invited", { exact: true }).waitFor()
+		await this.page.getByText("User invited", { exact: true }).waitFor()
 		await this.dialog.waitFor({ state: "hidden" })
 
 		return {
