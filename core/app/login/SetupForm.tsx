@@ -106,12 +106,16 @@ export default function SetupForm() {
 								control={form.control}
 								name="firstName"
 								render={({ field, fieldState }) => (
-									<Field
-										data-invalid={fieldState.invalid}
-										aria-label="First Name"
-									>
-										<FieldLabel>First Name</FieldLabel>
-										<Input placeholder="John" {...field} />
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor={field.name}>First Name</FieldLabel>
+
+										<Input
+											aria-label="First Name"
+											placeholder="John"
+											{...field}
+											id={field.name}
+										/>
+
 										<FieldError errors={[fieldState.error]} />
 									</Field>
 								)}
@@ -120,9 +124,14 @@ export default function SetupForm() {
 								control={form.control}
 								name="lastName"
 								render={({ field, fieldState }) => (
-									<Field data-invalid={fieldState.invalid} aria-label="Last Name">
-										<FieldLabel>Last Name</FieldLabel>
-										<Input placeholder="Doe" {...field} />
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor={field.name}>Last Name</FieldLabel>
+										<Input
+											aria-label="Last Name"
+											placeholder="Doe"
+											{...field}
+											id={field.name}
+										/>
 										<FieldError errors={[fieldState.error]} />
 									</Field>
 								)}
@@ -132,9 +141,14 @@ export default function SetupForm() {
 							control={form.control}
 							name="email"
 							render={({ field, fieldState }) => (
-								<Field data-invalid={fieldState.invalid} aria-label="Email">
-									<FieldLabel>Email</FieldLabel>
-									<Input placeholder="admin@example.com" {...field} />
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>Email</FieldLabel>
+									<Input
+										placeholder="admin@example.com"
+										aria-label="Email"
+										{...field}
+										id={field.name}
+									/>
 									<FieldError errors={[fieldState.error]} />
 								</Field>
 							)}
@@ -143,9 +157,13 @@ export default function SetupForm() {
 							control={form.control}
 							name="password"
 							render={({ field, fieldState }) => (
-								<Field data-invalid={fieldState.invalid} aria-label="Password">
-									<FieldLabel>Password</FieldLabel>
-									<PasswordInput {...field} />
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>Password</FieldLabel>
+									<PasswordInput
+										aria-label="Password"
+										{...field}
+										id={field.name}
+									/>
 									<FieldError errors={[fieldState.error]} />
 								</Field>
 							)}
@@ -172,12 +190,14 @@ export default function SetupForm() {
 							control={form.control}
 							name="communityName"
 							render={({ field, fieldState }) => (
-								<Field
-									data-invalid={fieldState.invalid}
-									aria-label="Community Name"
-								>
-									<FieldLabel>Community Name</FieldLabel>
-									<Input placeholder="My Organization" {...field} />
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>Community Name</FieldLabel>
+									<Input
+										aria-label="Community Name"
+										placeholder="My Organization"
+										{...field}
+										id={field.name}
+									/>
 									<FieldError errors={[fieldState.error]} />
 								</Field>
 							)}
@@ -186,12 +206,14 @@ export default function SetupForm() {
 							control={form.control}
 							name="communitySlug"
 							render={({ field, fieldState }) => (
-								<Field
-									data-invalid={fieldState.invalid}
-									aria-label="Community Slug"
-								>
-									<FieldLabel>Community Slug</FieldLabel>
-									<Input placeholder="my-organization" {...field} />
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>Community Slug</FieldLabel>
+									<Input
+										aria-label="Community Slug"
+										placeholder="my-organization"
+										{...field}
+										id={field.name}
+									/>
 									<FieldError errors={[fieldState.error]} />
 								</Field>
 							)}
