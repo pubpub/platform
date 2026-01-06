@@ -57,6 +57,8 @@ export const PubMembersPanel = ({
 				<Button
 					variant="ghost"
 					size="sm"
+					data-testid="members-button"
+					aria-label="Members"
 					className="flex h-5! items-center gap-2 text-muted-foreground text-xs"
 				>
 					<Users size={12} className="size-3.5" />

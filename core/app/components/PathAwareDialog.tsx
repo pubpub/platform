@@ -1,13 +1,14 @@
 "use client"
 
+import type React from "react"
 import type { ButtonProps } from "ui/button"
 import type { LucideIcon } from "ui/icon"
 
-import React, { forwardRef, Suspense, useCallback, useEffect } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { forwardRef, Suspense, useCallback } from "react"
+import { parseAsString, useQueryState } from "nuqs"
 
 import { Button } from "ui/button"
-import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog"
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog"
 import { cn } from "utils"
 
 import { SkeletonCard } from "./skeletons/SkeletonCard"
@@ -38,35 +39,26 @@ export type PathAwareDialogProps = {
 }
 
 export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, _ref) => {
-	const searchParams = useSearchParams()
-	const pathname = usePathname()
-	const router = useRouter()
-	const isOpen = searchParams.get(props.param) === props.id
-
-	const close = useCallback(
-		(open: boolean) => {
-			const nextSearchParams = new URLSearchParams(searchParams)
-
-			if (open) {
-				nextSearchParams.set(props.param, props.id)
-				router.push(`${pathname}?${nextSearchParams.toString()}`)
-				return
-			}
-
-			nextSearchParams.delete(props.param)
-			router.push(`${pathname}?${nextSearchParams.toString()}`)
-		},
-		[pathname, router, searchParams, props.id, props.param]
+	const [searchParam, setSearchParam] = useQueryState(
+		props.param,
+		parseAsString.withOptions({ shallow: false })
 	)
 
-	const [isReallyOpen, setIsReallyOpen] = React.useState(false)
-	useEffect(() => {
-		setIsReallyOpen(isOpen)
-	}, [isOpen])
+	const isOpen = searchParam === props.id
+	const handleOpenChange = useCallback(
+		(newOpen: boolean) => {
+			if (newOpen) {
+				setSearchParam(props.id)
+			} else {
+				setSearchParam(null)
+			}
+		},
+		[props.id, setSearchParam]
+	)
 
 	return (
-		<Dialog onOpenChange={close} defaultOpen={false} open={isReallyOpen}>
-			<DialogOverlay />
+		<Dialog onOpenChange={handleOpenChange} defaultOpen={false} open={isOpen}>
+			{/* <DialogOverlay /> */}
 			<DialogTrigger asChild>
 				<Button
 					variant={props.buttonVariant ?? "outline"}

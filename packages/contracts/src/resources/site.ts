@@ -192,7 +192,7 @@ export const siteApi = contract.router(
 			search: {
 				method: "GET",
 				path: "/pubs/search",
-				summary: "Search for pubs",
+				summary: "Search for Pubs",
 				description: "Search for pubs by title or value.",
 				query: z.object({
 					query: z.string(),
@@ -206,7 +206,7 @@ export const siteApi = contract.router(
 				path: "/pubs/:pubId",
 				summary: "Gets a pub",
 				description:
-					"Get a pub by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
+					"Get a pub by ID. This endpoint is used by the PubPub site builder to get a Pub's details.",
 				pathParams: z.object({
 					pubId: z.string().uuid(),
 				}),

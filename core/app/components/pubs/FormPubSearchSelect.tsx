@@ -40,8 +40,8 @@ export const FormPubSearchSelect = ({
 	disabledPubIds = [],
 	pubTypeIds,
 	mode = "multi",
-	placeholder = "Search pubs...",
-	emptyMessage = "No pubs found",
+	placeholder = "Search Pubs...",
+	emptyMessage = "No Pubs found",
 	className,
 	maxHeight = "600px",
 }: FormPubSearchSelectProps) => {
@@ -142,6 +142,7 @@ export const FormPubSearchSelect = ({
 				/>
 				<Input
 					ref={inputRef}
+					data-testid="form-pub-search-select-input"
 					value={query}
 					onChange={(e) => setQuery(e.target.value)}
 					placeholder={placeholder}

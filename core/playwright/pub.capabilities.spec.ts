@@ -1,4 +1,4 @@
-import type { Page, Response } from "@playwright/test"
+import type { Page } from "@playwright/test"
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
 import { expect, test } from "@playwright/test"
@@ -94,26 +94,11 @@ test.describe("Pub contributor capabilities", () => {
 		// can remove pub
 		await pubDetailsPage.removePub()
 
-		const requests: Response[] = []
-		page.on("request", async (request) => {
-			if (
-				!request
-					.url()
-					.includes(`/c/${community.community.slug}/pubs/${community.pubs[0].id}`)
-			) {
-				return
-			}
-
-			const res = await request.response()
-			if (res) {
-				requests.push(res)
-			}
-		})
-
 		// going back to pub details page should show 404
 		await pubDetailsPage.goTo(false)
+		await page.waitForTimeout(3_000)
 
-		expect(requests).toHaveLength(1)
-		expect(requests[0].status()).toBe(404)
+		// we don't see an actual 404 anymore bc of loading.tsx
+		await page.getByText("404").waitFor({ timeout: 5_000 })
 	})
 })

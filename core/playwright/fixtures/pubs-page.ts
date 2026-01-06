@@ -23,8 +23,14 @@ export const choosePubType = async ({
 		// Choose the first pub type
 		await page.getByRole("option").first().click({ timeout: 5000 })
 	}
-	await createDialog.getByRole("button", { name: "Create Pub" }).click({ timeout: 5000 })
-	await page.waitForURL(`/c/${communitySlug}/pubs/create**`)
+
+	await retryAction(async () => {
+		await page.waitForTimeout(200)
+		await createDialog
+			.getByRole("button", { name: /Create Pub|Redirecting/ })
+			.click({ timeout: 5000 })
+		await page.waitForURL(`/c/${communitySlug}/pubs/create**`, { timeout: 3000 })
+	})
 }
 
 export class PubsPage {
@@ -53,7 +59,7 @@ export class PubsPage {
 		await this.page.waitForURL(`/c/${this.communitySlug}/pubs*`)
 		// this is extremely flaky for some reason
 		await retryAction(async () => {
-			await this.page.waitForTimeout(500)
+			await this.page.waitForTimeout(1000)
 			await this.page
 				.getByRole("button", { name: "Create", exact: true })
 				.click({ timeout: 5000 })

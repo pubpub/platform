@@ -1,6 +1,6 @@
 "use client"
 
-import { Computer, Moon, Sun } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "ui/button"
@@ -15,6 +15,15 @@ import { SidebarMenuButton } from "ui/sidebar"
 export function DarkmodeToggle({ children }: { children?: React.ReactNode }) {
 	const { setTheme } = useTheme()
 
+	const handleClick = async (theme: "light" | "dark" | "system") => {
+		const html = document.documentElement
+		html.style.transition = "color background-color 0.3s ease"
+		await new Promise((resolve) => setTimeout(resolve, 100))
+		setTheme(theme)
+		await new Promise((resolve) => setTimeout(resolve, 1000))
+		html.style.transition = "none"
+	}
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -27,36 +36,23 @@ export function DarkmodeToggle({ children }: { children?: React.ReactNode }) {
 				)}
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => handleClick("light")}>Light</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => handleClick("dark")}>Dark</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => handleClick("system")}>System</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)
 }
 
+// needs to be kinda silly like this otherwise you get a ton of hydration errors
 export function SidebarDarkmodeToggle() {
-	const { theme } = useTheme()
-
 	return (
 		<DarkmodeToggle>
-			<SidebarMenuButton suppressHydrationWarning>
-				{theme === "dark" ? (
-					<>
-						<Moon className="h-[1.2rem] w-[1.2rem]" suppressHydrationWarning />
-						<span>Dark</span>
-					</>
-				) : theme === "light" ? (
-					<>
-						<Sun className="h-[1.2rem] w-[1.2rem]" suppressHydrationWarning />
-						<span>Light</span>
-					</>
-				) : (
-					<>
-						<Computer className="h-[1.2rem] w-[1.2rem]" suppressHydrationWarning />
-						<span>System</span>
-					</>
-				)}
+			<SidebarMenuButton>
+				<Moon className="hidden h-[1.2rem] w-[1.2rem] dark:flex" />
+				<span className="hidden dark:flex">Dark</span>
+				<Sun className="flex h-[1.2rem] w-[1.2rem] dark:hidden" suppressHydrationWarning />
+				<span className="flex dark:hidden">Light</span>
 			</SidebarMenuButton>
 		</DarkmodeToggle>
 	)

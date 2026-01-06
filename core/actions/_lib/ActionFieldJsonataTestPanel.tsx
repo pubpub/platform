@@ -513,7 +513,7 @@ export const InputSelector = (props: {
 								}
 								props.setSelectedPubId(pubs[0].id)
 							}}
-							placeholder="Search for a pub to test..."
+							placeholder="Search for a Pub to test..."
 						/>
 					</div>
 				</TabsContent>

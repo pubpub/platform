@@ -80,7 +80,7 @@ export const MembersCardList = <T extends TargetId>({
 				value={query}
 				onChange={setQuery}
 				placeholder="Search by name or email..."
-				className="bg-card px-0"
+				className="bg-transparent px-0"
 			/>
 			{filteredMembers.map((member) => (
 				<MemberCard

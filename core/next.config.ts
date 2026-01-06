@@ -11,6 +11,9 @@ import { env } from "./lib/env/env"
 // import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 const nextConfig: NextConfig = {
+	devIndicators: {
+		position: "top-left",
+	},
 	output: "standalone",
 	typescript: {
 		// this gets checked in CI already
