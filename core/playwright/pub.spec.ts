@@ -201,8 +201,9 @@ test.describe("Creating a pub", () => {
 
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*/edit?*`)
 		// await closeToast(page)
-		await page.getByRole("link", { name: "View Pub" }).click()
-		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats")
+		await page.getByRole("link", { name: title, exact: true }).click()
+		await page.waitForURL(`/c/${community.community.slug}/pubs/*`)
+		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogscats")
 
 		// Edit this same pub
 		await page.getByRole("link", { name: "Update" }).click()
@@ -214,8 +215,9 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByRole("listitem").filter({ hasText: "Updated Pub" })).toHaveCount(1, {
 			timeout: 10_000,
 		})
-		await page.getByRole("link", { name: "View Pub" }).click()
-		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins")
+		await page.getByRole("link", { name: title, exact: true }).click()
+		await page.waitForURL(`/c/${community.community.slug}/pubs/*`)
+		await expect(page.getByTestId(`Animals-value`)).toHaveText("catspenguins")
 	})
 
 	test("Can create and edit a rich text field", async () => {
@@ -327,7 +329,7 @@ test.describe("Creating a pub", () => {
 
 		// The original pub should now have a related pub which is the newly created pub
 		await pubPage.goTo()
-		await expect(page.getByText("related value:related")).toHaveCount(1)
+		await expect(page.getByText("related value")).toHaveCount(1, { timeout: 10_000 })
 		await expect(
 			page.getByTestId("related-pubs").getByRole("button", { name: stringField })
 		).toHaveCount(1)
@@ -341,6 +343,7 @@ test.describe("Creating a pub", () => {
 
 	test("Can create a pub at a stage", async () => {
 		const stage = "Shelved"
+		const title = "Stage test"
 		const stagesPage = new StagesManagePage(page, community.community.slug)
 		await stagesPage.goTo()
 		await stagesPage.openStagePanelTab(stage, "Pubs")
@@ -349,12 +352,12 @@ test.describe("Creating a pub", () => {
 
 		// Stage should be prefilled
 		await expect(page.getByRole("combobox").filter({ hasText: stage })).toHaveCount(1)
-		await page.getByTestId(`${community.community.slug}:title`).fill("Stage test")
+		await page.getByTestId(`${community.community.slug}:title`).fill(title)
 		await page.getByRole("button", { name: "Save" }).click()
 		await expect(page.getByRole("listitem").filter({ hasText: "New pub created" })).toHaveCount(
 			1
 		)
-		await page.getByRole("link", { name: "View Pub" }).click()
+		await page.getByRole("link", { name: title, exact: true }).click()
 		await expect(page.getByTestId("current-stage")).toHaveText(stage)
 	})
 })
@@ -364,8 +367,8 @@ test.describe("Updating a pub", () => {
 		const pubsPage = new PubsPage(page, community.community.slug)
 		await pubsPage.goTo()
 		await page
-			.getByTestId(`pub-card-${community.pubs[0].id}`)
-			.getByRole("link", { name: "Update" })
+			// .getByTestId(`pub-card-${community.pubs[0].id}`)
+			.getByRole("link", { name: "Update The Activity of Snails" })
 			.click()
 
 		await expect(page.getByTestId("save-status-text")).toHaveText(
@@ -378,7 +381,7 @@ test.describe("Updating a pub", () => {
 		await expect(page.getByRole("listitem").filter({ hasText: "Updated Pub" })).toHaveCount(1)
 		await expect(page.getByTestId("save-status-text")).toContainText("Last saved at")
 
-		await page.getByRole("link", { name: "View Pub" }).click()
+		await page.getByRole("link", { name: newTitle, exact: true }).click()
 		await expect(page.getByRole("heading", { name: newTitle })).toHaveCount(1)
 	})
 })

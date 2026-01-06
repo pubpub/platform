@@ -61,6 +61,7 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 	return (
 		<>
 			<DataTable
+				getRowId={(row) => row.name}
 				columns={columns}
 				data={data}
 				onRowClick={handleRowClick}

@@ -48,7 +48,8 @@ export const MemberCard = <T extends TargetId>({
 	removeMember,
 	className,
 }: MemberCardProps<T>) => {
-	const initials = `${(member.firstName || member.email)[0]}${member.lastName?.[0] ?? ""}`.toUpperCase()
+	const initials =
+		`${(member.firstName || member.email)[0]}${member.lastName?.[0] ?? ""}`.toUpperCase()
 
 	return (
 		<div

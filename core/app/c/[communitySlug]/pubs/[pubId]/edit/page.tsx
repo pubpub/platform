@@ -155,14 +155,10 @@ export default async function Page(props: {
 
 	return (
 		<ContentLayout
-			left={
-				<Button form={htmlFormId} type="submit">
-					Save
-				</Button>
-			}
+			left={<div />}
 			title={
 				<>
-					<span className="mr-2 font-normal">Editing {getPubTitle(pub)}</span>
+					<span className="mr-2 font-normal">Editing </span>
 					{hasAccessToAnyViewForm ? (
 						<Link
 							className="underline"
@@ -179,7 +175,11 @@ export default async function Page(props: {
 					)}
 				</>
 			}
-			right={<div />}
+			right={
+				<Button form={htmlFormId} type="submit">
+					Save
+				</Button>
+			}
 		>
 			<div className="sticky top-0 z-50 flex w-full flex-col items-center border-b bg-background">
 				<PubPageStatus defaultFormSlug={searchParams.form} forms={availableUpdateForms} />

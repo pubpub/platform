@@ -30,7 +30,14 @@ export const RemoveMemberButton = <T extends TargetId>({
 	}
 
 	return (
-		<Button className="ml-auto" type="button" variant="ghost" onClick={handleClick}>
+		<Button
+			aria-label="Remove member"
+			data-testid={`remove-member-button-${userId}`}
+			className="ml-auto"
+			type="button"
+			variant="ghost"
+			onClick={handleClick}
+		>
 			<Trash size={14} />
 		</Button>
 	)

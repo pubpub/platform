@@ -189,6 +189,7 @@ export function DataTable<TData, TValue>({
 										data-state={row.getIsSelected() && "selected"}
 										tabIndex={0}
 										role="button"
+										aria-label={`Select row ${getRowId?.(row.original)}`}
 										aria-pressed={row.getIsSelected() ? "true" : "false"}
 										onKeyDown={(evt) => {
 											if (evt.code === "Enter" || evt.code === "Space") {
@@ -198,7 +199,7 @@ export function DataTable<TData, TValue>({
 										onClick={(evt) => {
 											handleRowClick(evt, row)
 										}}
-										data-testid={`data-table-row-${row.id}`}
+										data-testid={`data-table-row-${getRowId?.(row.original)}`}
 										// data-testid={getRowId?.(row.original)}
 										className={cn({
 											"cursor-pointer": Boolean(onRowClick),

@@ -75,7 +75,6 @@ export const FilterableStageMoveButton = ({ stage, withDropdown, className, ...p
 				}`}
 				aria-label={`${stage.name} ${isSelected ? "remove from" : "add to"} filter`}
 				tabIndex={0}
-				// ugh
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === " ") {
 						toggleStage()

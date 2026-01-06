@@ -34,7 +34,7 @@ export class PubTypesEditPage {
 
 	async saveType() {
 		await this.page.getByTestId("save-form-button").click()
-		await this.page.getByText("Type Successfully Saved", { exact: true }).waitFor()
+		await this.page.getByText("Type saved", { exact: true }).waitFor()
 	}
 
 	async deleteField(name: string) {

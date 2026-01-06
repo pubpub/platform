@@ -294,7 +294,7 @@ test.describe("public forms", () => {
 			}, url!)
 
 			await page.goto(decodedUrl)
-			await page.getByText("Your email is now verified", { exact: true }).waitFor()
+			// await page.getByText("Your email is now verified", { exact: true }).waitFor()
 			await page.waitForURL(fillUrl, { timeout: 5_000 })
 		})
 

@@ -1,5 +1,7 @@
 import type { ProcessedPubWithForm } from "contracts"
 
+import { Fragment } from "react"
+
 import { type CommunityMembershipsId, CoreSchemaType } from "db/public"
 import { Separator } from "ui/separator"
 
@@ -39,11 +41,10 @@ export const PubValues = async ({
 	)
 
 	return (
-		<div className="grid grid-cols-12 gap-x-2 gap-y-4 text-sm">
+		<div className="grid grid-cols-12 gap-x-2 gap-y-3 text-sm">
 			{fieldGroups.map((values, idx) => (
-				<>
+				<Fragment key={`field-row-${values[0].id}-${idx}`}>
 					<FieldRow
-						key={values[0].id}
 						formSlug={formSlug}
 						pubId={pub.id}
 						name={values[0].fieldName}
@@ -53,10 +54,8 @@ export const PubValues = async ({
 						depth={0}
 					/>
 
-					{idx < fieldGroups.length - 1 && (
-						<Separator key={`separator-${values[0].id}`} className="col-span-12 mt-4" />
-					)}
-				</>
+					{idx < fieldGroups.length - 1 && <Separator className="col-span-12" />}
+				</Fragment>
 			))}
 		</div>
 	)

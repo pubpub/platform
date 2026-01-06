@@ -232,6 +232,17 @@ export default async function Page(props: {
 			communitySlug,
 		})
 
+	const moveFrom = communityStages
+		.filter((stage) =>
+			stage.moveConstraintSources.some((source) => source.id === pub.stage?.id)
+		)
+		.map(({ id, name }) => ({ id, name }))
+	const moveTo = communityStages
+		.filter((stage) =>
+			stage.moveConstraints.some((constraint) => constraint.id === pub.stage?.id)
+		)
+		.map(({ id, name }) => ({ id, name }))
+
 	return (
 		<StagesProvider stages={stagesDAO(communityStages)}>
 			<PubFieldProvider pubFields={pubFields.fields}>
@@ -282,6 +293,7 @@ export default async function Page(props: {
 											pubId={pub.id}
 											redirectTo={`/c/${communitySlug}/pubs`}
 											variant="ghost"
+											size="sm"
 										/>
 									)}
 									{canRunActions && (
@@ -300,7 +312,7 @@ export default async function Page(props: {
 											variant="outline"
 											size="sm"
 											asChild
-											className="flex items-center gap-x-2 bg-emerald-500 py-4 text-white"
+											className="flex items-center gap-x-2 bg-emerald-500 text-white"
 										>
 											<Link
 												href={constructRedirectToPubEditPage({
@@ -323,13 +335,15 @@ export default async function Page(props: {
 									<Move
 										pubId={pub.id}
 										stageId={pub.stage?.id}
-										moveTo={[]}
-										moveFrom={[]}
+										moveTo={moveTo}
+										moveFrom={moveFrom}
+										// moveFrom={[]}
+										// communityStages={communityStages}
 										stageName={pub.stage.name}
 										hideIfNowhereToMove={false}
 										button={
 											<StageMoveButton
-												className="m-0 p-0"
+												data-testid="current-stage"
 												stage={pub.stage}
 												canFilter={false}
 												withDropdown={true}

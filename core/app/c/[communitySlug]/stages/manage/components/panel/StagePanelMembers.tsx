@@ -5,16 +5,12 @@ import { Users } from "lucide-react"
 import { Capabilities, MembershipType, type StagesId } from "db/public"
 import { Card, CardAction, CardContent, CardTitle } from "ui/card"
 
-import { MembersCardList } from "~/app/components/Memberships/MembersCardList"
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
+import { MembersCardList } from "~/app/components/Memberships/MembersCardList"
 import { userCan } from "~/lib/authorization/capabilities"
 import { getStageMembers } from "~/lib/db/queries"
 import { getSimpleForms } from "~/lib/server/form"
-import {
-	addStageMember,
-	addUserWithStageMembership,
-	removeStageMember,
-} from "../../actions"
+import { addStageMember, addUserWithStageMembership, removeStageMember } from "../../actions"
 import { StagePanelCardHeader } from "../editor/StagePanelCard"
 
 type Props = {

@@ -30,7 +30,7 @@ export const FormElement = ({ pubId, element, values }: FormElementProps) => {
 		if (element.type === ElementType.structural) {
 			return (
 				<div
-					className="prose dark:prose-invert"
+					className="prose-sm dark:prose-invert"
 					// TODO: sanitize content
 					dangerouslySetInnerHTML={{ __html: expect(element.content) }}
 				/>

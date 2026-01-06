@@ -9,10 +9,10 @@ interface Props extends React.ComponentPropsWithoutRef<"button"> {
 
 export const BasicMoveButton = ({ name, withDropdown, className, ...props }: Props) => {
 	return (
-		<span
+		<button
 			{...props}
 			className={cn(
-				"flex h-5! items-center gap-0.5 rounded-full border bg-background px-[0.35rem] font-normal text-xs shadow-none",
+				"flex h-5! items-center gap-0.5 rounded-full border bg-background px-2 font-normal text-xs shadow-none",
 				withDropdown ? "" : "pr-4",
 				className
 			)}
@@ -21,6 +21,6 @@ export const BasicMoveButton = ({ name, withDropdown, className, ...props }: Pro
 
 			{name}
 			{withDropdown && <ChevronDown strokeWidth="1px" className="size-3.5" size={8} />}
-		</span>
+		</button>
 	)
 }

@@ -3,9 +3,12 @@
 import type { FormsId, UsersId } from "db/public"
 import type { MembersListProps, TargetId } from "./types"
 
+import { useMemo, useState } from "react"
+
 import { MemberRole } from "db/public"
 
 import { compareMemberRoles } from "~/lib/authorization/rolesRanking"
+import { SearchBar } from "../Search/SearchBar"
 import { MemberCard, type MemberCardMember } from "./MemberCard"
 
 const dedupeMembers = (
@@ -55,15 +58,31 @@ export const MembersCardList = <T extends TargetId>({
 }: Omit<MembersListProps<T>, "setRole">) => {
 	const dedupedMembers = dedupeMembers(members, availableForms)
 
+	const [query, setQuery] = useState("")
+
+	const filteredMembers = useMemo(() => {
+		return dedupedMembers.filter((member) => {
+			const name = `${member.firstName} ${member.lastName}`.toLowerCase()
+			return (
+				name.includes(query.toLowerCase()) ||
+				member.email.toLowerCase().includes(query.toLowerCase())
+			)
+		})
+	}, [dedupedMembers, query])
+
 	if (dedupedMembers.length === 0) {
-		return (
-			<div className="py-8 text-center text-muted-foreground text-sm">No members yet</div>
-		)
+		return <div className="py-8 text-center text-muted-foreground text-sm">No members yet</div>
 	}
 
 	return (
 		<div className="flex flex-col gap-2">
-			{dedupedMembers.map((member) => (
+			<SearchBar
+				value={query}
+				onChange={setQuery}
+				placeholder="Search by name or email..."
+				className="bg-card px-0"
+			/>
+			{filteredMembers.map((member) => (
 				<MemberCard
 					key={member.id}
 					member={member}

@@ -19,7 +19,7 @@ export function DarkmodeToggle({ children }: { children?: React.ReactNode }) {
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				{children ?? (
-					<Button variant="outline" size="icon">
+					<Button variant="outline" size="icon" suppressHydrationWarning>
 						<Sun className="dark:-rotate-90 h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:scale-0" />
 						<Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
 						<span className="sr-only">Toggle theme</span>
@@ -40,20 +40,20 @@ export function SidebarDarkmodeToggle() {
 
 	return (
 		<DarkmodeToggle>
-			<SidebarMenuButton>
+			<SidebarMenuButton suppressHydrationWarning>
 				{theme === "dark" ? (
 					<>
-						<Moon className="h-[1.2rem] w-[1.2rem]" />
+						<Moon className="h-[1.2rem] w-[1.2rem]" suppressHydrationWarning />
 						<span>Dark</span>
 					</>
 				) : theme === "light" ? (
 					<>
-						<Sun className="h-[1.2rem] w-[1.2rem]" />
+						<Sun className="h-[1.2rem] w-[1.2rem]" suppressHydrationWarning />
 						<span>Light</span>
 					</>
 				) : (
 					<>
-						<Computer className="h-[1.2rem] w-[1.2rem]" />
+						<Computer className="h-[1.2rem] w-[1.2rem]" suppressHydrationWarning />
 						<span>System</span>
 					</>
 				)}

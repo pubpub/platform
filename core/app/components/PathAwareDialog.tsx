@@ -71,7 +71,7 @@ export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, _ref) =>
 				<Button
 					variant={props.buttonVariant ?? "outline"}
 					size={props.buttonSize ?? "sm"}
-					className={cn("flex items-center gap-x-2 py-4", props.className)}
+					className={cn("flex items-center gap-x-2", props.className)}
 					disabled={props.disabled}
 					aria-label={props.buttonLabel ?? props.buttonText}
 				>

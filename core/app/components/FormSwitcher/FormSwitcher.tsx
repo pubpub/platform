@@ -52,7 +52,7 @@ export const FormSwitcher = ({
 				defaultValue={selectedFormSlug || defaultFormSlug}
 			>
 				<Tooltip>
-					<TooltipTrigger>
+					<TooltipTrigger asChild>
 						<SelectTrigger
 							id={htmlId}
 							className={cn(

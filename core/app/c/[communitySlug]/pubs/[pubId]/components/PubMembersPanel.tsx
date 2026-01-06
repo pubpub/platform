@@ -57,9 +57,9 @@ export const PubMembersPanel = ({
 				<Button
 					variant="ghost"
 					size="sm"
-					className="flex h-5! items-center gap-2 text-muted-foreground"
+					className="flex h-5! items-center gap-2 text-muted-foreground text-xs"
 				>
-					<Users size={12} className="size-4" />
+					<Users size={12} className="size-3.5" />
 					<span>{members.length}</span>
 					<span className="hidden md:inline">Members</span>
 				</Button>

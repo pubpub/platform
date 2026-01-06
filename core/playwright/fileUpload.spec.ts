@@ -55,9 +55,10 @@ test.describe("File upload", () => {
 		const pubsPage = new PubsPage(page, community.community.slug)
 		await pubsPage.goTo()
 		await page.waitForURL(`/c/${community.community.slug}/pubs*`)
+		const title = "The Activity of Slugs"
 		const pubId = await pubsPage.createPub({
 			pubType: "File Upload Test",
-			values: { title: "The Activity of Slugs" },
+			values: { title },
 		})
 
 		const pubEditUrl = `/c/${community.community.slug}/pubs/${pubId}/edit`
@@ -82,7 +83,7 @@ test.describe("File upload", () => {
 			timeout: 2_000,
 		})
 
-		await page.getByRole("link", { name: "View Pub", exact: true }).click()
+		await page.getByRole("link", { name: title, exact: true }).click()
 		await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}*`)
 
 		// there should be 3 files
@@ -159,7 +160,7 @@ test.describe("File upload", () => {
 					timeout: 2_000,
 				})
 
-				await page.getByRole("link", { name: "View Pub", exact: true }).click()
+				await page.getByRole("link", { name: title, exact: true }).click()
 				await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}*`)
 
 				await expect(page.getByText(fileName)).toBeHidden({ timeout: 1_000 })

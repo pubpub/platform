@@ -65,7 +65,7 @@ export const FieldRow = ({
 				isRelationEdgeValue={isRelationEdgeValue}
 				className="col-span-2 col-start-2"
 			/>
-			<div className="col-span-8 mt-1">
+			<div className="col-span-8 mt-1" data-testid={`${name}-value`}>
 				{isEditing && canEdit ? (
 					<InlineEditForm
 						values={values}
@@ -121,7 +121,7 @@ const FieldHeader = ({
 			</FieldHeading>
 			<div className="flex items-center gap-1">
 				{SchemaTypeIcon && (
-					<SchemaTypeIcon className="size-3 text-muted-foreground md:size-4" />
+					<SchemaTypeIcon className="size-3 text-muted-foreground md:size-3.5" />
 				)}
 				<code className="truncate text-muted-foreground text-xs">{slug}</code>
 			</div>

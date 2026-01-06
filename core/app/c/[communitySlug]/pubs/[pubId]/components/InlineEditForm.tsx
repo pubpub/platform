@@ -1,13 +1,12 @@
 "use client"
 
 import type { ProcessedPubWithForm } from "contracts"
+import type { PubFieldElement } from "~/app/components/forms/types"
 
 import { defaultComponent } from "schemas"
 
 import { ElementType, type FormElementsId, type PubsId, type PubTypesId } from "db/public"
 import { FormSubmitButton } from "ui/submit-button"
-
-import type { PubFieldElement } from "~/app/components/forms/types"
 
 import { FormElement } from "~/app/components/forms/FormElement"
 import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient"
