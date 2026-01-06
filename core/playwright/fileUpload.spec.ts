@@ -160,7 +160,7 @@ test.describe("File upload", () => {
 					timeout: 2_000,
 				})
 
-				await page.getByRole("link", { name: title, exact: true }).click()
+				await page.getByRole("link", { name: "The Activity of Slugs", exact: true }).click()
 				await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}*`)
 
 				await expect(page.getByText(fileName)).toBeHidden({ timeout: 1_000 })

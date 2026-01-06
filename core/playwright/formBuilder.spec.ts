@@ -170,7 +170,7 @@ test.describe("Creating a form", () => {
 		await formsPage.goto()
 
 		// Open actions menu and archive form
-		await page.getByTestId(`${FORM_SLUG}-actions-button`).click()
+		await page.getByTestId(`${FORM_SLUG}-actions-button`).first().click()
 		await page.getByTestId(`${FORM_SLUG}-archive-button`).click()
 
 		// Now that there's an archived form, it should be under the archived tab
@@ -243,7 +243,7 @@ test.describe("Submission buttons", () => {
 		await page.getByRole("textbox").nth(1).fill(newData.content)
 		await page.getByTestId("save-button-configuration-button").click()
 
-		await page.getByTestId("save-form-button").click()
+		await page.getByTestId("save-form-button").first().click()
 		await expect(page.getByRole("listitem").filter({ hasText: "Form saved" })).toHaveCount(1)
 	})
 })
