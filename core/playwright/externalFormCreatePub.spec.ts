@@ -334,7 +334,7 @@ test.describe("Member select", async () => {
 		const title = "member test"
 		await page.getByTestId(`${community.community.slug}:title`).fill(title)
 		await page.getByTestId(`${community.community.slug}:content`).fill("content")
-		await memberInput.fill(community.users.user2.email)
+		await memberInput.pressSequentially(community.users.user2.email)
 		await page.getByLabel(community.users.user2.email).click()
 		await expect(memberInput).toHaveValue(community.users.user2.email)
 

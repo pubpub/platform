@@ -25,7 +25,7 @@ export const choosePubType = async ({
 	}
 
 	await retryAction(async () => {
-		await page.waitForTimeout(200)
+		await page.waitForTimeout(500)
 		await createDialog
 			.getByRole("button", { name: /Create Pub|Redirecting/ })
 			.click({ timeout: 5000 })
