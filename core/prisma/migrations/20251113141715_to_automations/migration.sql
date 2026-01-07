@@ -1,3 +1,10 @@
+
+
+
+DROP TRIGGER IF EXISTS action_runs_change_trigger ON action_runs;
+
+
+
 /*
  Warnings:
 
@@ -430,3 +437,10 @@ CREATE TRIGGER reparent_automation_runs_before_automation_delete
   FOR EACH ROW
   EXECUTE FUNCTION reparent_automation_runs_on_delete();
 
+
+
+CREATE OR REPLACE TRIGGER action_runs_change_trigger
+    AFTER INSERT OR UPDATE -- Removed delete
+    ON action_runs
+    FOR EACH ROW
+    EXECUTE FUNCTION notify_change_action_runs();
