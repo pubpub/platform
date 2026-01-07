@@ -1,4 +1,6 @@
+import type { Database } from "db/Database"
 import type { CommunitiesId, PubsId } from "db/public"
+import type { Kysely } from "kysely"
 
 import { cache } from "react"
 
@@ -55,3 +57,30 @@ export const findCommunityByPubId = memoize(
 )
 
 export type CommunityData = Awaited<ReturnType<typeof findCommunityByPubId>>
+
+export const updateCommunity = async (
+	data: {
+		id: CommunitiesId
+		name?: string
+		avatar?: string | null
+	},
+	trx?: Kysely<Database>
+) => {
+	const client = trx ?? db
+
+	const updateData: Record<string, string | null> = {}
+
+	if (data.name !== undefined) {
+		updateData.name = data.name
+	}
+
+	if (data.avatar !== undefined) {
+		updateData.avatar = data.avatar
+	}
+
+	return client
+		.updateTable("communities")
+		.set(updateData)
+		.where("id", "=", data.id)
+		.executeTakeFirst()
+}

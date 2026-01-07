@@ -35,9 +35,9 @@ type TriggerWithConfigForm<T extends AutomationEvent> = T extends T
 export const isTriggerWithConfigForm = <T extends AutomationEvent>(
 	props: TriggerWithConfigForm<any>,
 	// only used for typesafety
-	_event: T
+	event: T
 ): props is TriggerWithConfigForm<T> => {
-	return isTriggerWithConfig(props.event)
+	return isTriggerWithConfig(props.event) && props.event === event
 }
 
 export const TriggerConfigForm = <T extends AutomationEvent>(

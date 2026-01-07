@@ -5,17 +5,12 @@ import { Users } from "lucide-react"
 import { Capabilities, MembershipType, type StagesId } from "db/public"
 import { Card, CardAction, CardContent, CardTitle } from "ui/card"
 
-import { MembersList } from "~/app/components//Memberships/MembersList"
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
+import { MembersCardList } from "~/app/components/Memberships/MembersCardList"
 import { userCan } from "~/lib/authorization/capabilities"
 import { getStageMembers } from "~/lib/db/queries"
 import { getSimpleForms } from "~/lib/server/form"
-import {
-	addStageMember,
-	addUserWithStageMembership,
-	removeStageMember,
-	setStageMemberRole,
-} from "../../actions"
+import { addStageMember, addUserWithStageMembership, removeStageMember } from "../../actions"
 import { StagePanelCardHeader } from "../editor/StagePanelCard"
 
 type Props = {
@@ -39,7 +34,7 @@ export const StagePanelMembers = async ({ stageId, user }: Props) => {
 				</div>
 				<CardAction>
 					<AddMemberDialog
-						className="m-0 h-6 border-none bg-transparent p-0 text-neutral-600 text-xs shadow-none hover:bg-transparent hover:text-neutral-900"
+						className="!bg-transparent m-0 h-6 border-none p-0 text-muted-foreground text-xs shadow-none hover:bg-transparent hover:text-foreground"
 						addMember={addStageMember.bind(null, stageId)}
 						addUserMember={addUserWithStageMembership.bind(null, stageId)}
 						existingMembers={members.map((member) => member.id)}
@@ -50,10 +45,9 @@ export const StagePanelMembers = async ({ stageId, user }: Props) => {
 				</CardAction>
 			</StagePanelCardHeader>
 			<CardContent>
-				<MembersList
+				<MembersCardList
 					members={members}
 					membershipType={MembershipType.stage}
-					setRole={setStageMemberRole}
 					removeMember={removeStageMember}
 					targetId={stageId}
 					readOnly={!canManage}

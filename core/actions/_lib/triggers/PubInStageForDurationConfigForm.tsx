@@ -33,7 +33,7 @@ export const PubInStageForDurationConfigForm: AdditionalConfigForm<
 									</FieldLabel>
 									<Input
 										type="number"
-										className="bg-white"
+										className="bg-background"
 										defaultValue={0}
 										value={p.field.value}
 										onChange={(e) =>

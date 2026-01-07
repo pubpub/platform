@@ -47,6 +47,20 @@ export function ShowMore({
 
 	const toggleExpanded = () => setExpanded((prev) => !prev)
 
+	const ref = React.useRef<HTMLDivElement>(null)
+
+	const [fitsInContainer, setFitsInContainer] = useState(false)
+
+	React.useEffect(() => {
+		if (
+			!fitsInContainer &&
+			ref.current?.clientHeight &&
+			ref.current?.clientHeight < (variant === "default" ? 200 : variant === "sm" ? 100 : 400)
+		) {
+			setFitsInContainer(true)
+		}
+	}, [ref.current])
+
 	return (
 		<div className={cn("w-fit", className)} {...props}>
 			<div
@@ -55,31 +69,34 @@ export function ShowMore({
 					expanded && "max-h-full",
 					animate && "transition-[max-height] duration-300 ease-in-out",
 					!expanded &&
-						"after:absolute after:bottom-0 after:left-0 after:h-16 after:w-full after:bg-gradient-to-t after:from-background after:to-transparent"
+						!fitsInContainer &&
+						"after:absolute after:bottom-0 after:left-0 after:h-16 after:w-full after:bg-linear-to-t after:from-background after:to-transparent"
 				)}
 			>
-				{children}
+				<div ref={ref}>{children}</div>
 			</div>
-			<div className="mt-2 flex justify-center">
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={toggleExpanded}
-					className="flex items-center gap-1"
-				>
-					{expanded ? (
-						<>
-							{showLessText}
-							<ChevronUp size={16} />
-						</>
-					) : (
-						<>
-							{showMoreText}
-							<ChevronDown size={16} />
-						</>
-					)}
-				</Button>
-			</div>
+			{(!fitsInContainer || expanded) && (
+				<div className="mt-2 flex justify-center">
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={toggleExpanded}
+						className="flex items-center gap-1"
+					>
+						{expanded ? (
+							<>
+								{showLessText}
+								<ChevronUp size={16} />
+							</>
+						) : (
+							<>
+								{showMoreText}
+								<ChevronDown size={16} />
+							</>
+						)}
+					</Button>
+				</div>
+			)}
 		</div>
 	)
 }

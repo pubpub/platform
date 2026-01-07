@@ -52,7 +52,7 @@ export const CreateEditDialog = ({
 		<Dialog onOpenChange={onOpenChange} defaultOpen={false} open={open} modal={true}>
 			<DialogOverlay />
 			{trigger}
-			<DialogContent className="max-h-full min-w-[20rem] max-w-fit overflow-auto md:min-w-[32rem]">
+			<DialogContent className="max-h-full min-w-[20rem] max-w-fit overflow-auto md:min-w-lg">
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 				</DialogHeader>

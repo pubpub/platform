@@ -63,12 +63,12 @@ export default async function Page(props: Props) {
 		<ContentLayout
 			title={
 				<>
-					<action.icon size={20} strokeWidth={1} className="mr-2 text-gray-500" />
+					<action.icon size={20} strokeWidth={1} className="mr-2 text-muted-foreground" />
 					{actionTitle} Action Defaults
 				</>
 			}
 		>
-			<div className="container ml-0 max-w-screen-md px-4 py-6 md:px-6">
+			<div className="container ml-0 max-w-(--breakpoint-md) px-4 py-6 md:px-6">
 				<div>
 					<p className="mb-4 text-muted-foreground">
 						Set default configuration values for the {actionTitle} action. <br /> These

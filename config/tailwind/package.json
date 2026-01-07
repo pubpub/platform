@@ -1,0 +1,26 @@
+{
+	"name": "@pubpub/tailwind",
+	"type": "module",
+	"version": "0.0.0",
+	"private": true,
+	"license": "MIT",
+	"exports": {
+		"./style.css": "./style.css",
+		"./postcss-config": "./postcss.config.js"
+	},
+	"scripts": {},
+	"publishConfig": {
+		"access": "public"
+	},
+	"peerDependencies": {
+		"tailwindcss-animate": "catalog:",
+		"@tailwindcss/typography": "catalog:",
+		"@tailwindcss/forms": "catalog:"
+	},
+	"dependencies": {
+		"@tailwindcss/postcss": "catalog:",
+		"postcss": "catalog:",
+		"tailwindcss": "catalog:"
+	},
+	"devDependencies": {}
+}

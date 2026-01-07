@@ -1,11 +1,13 @@
 import type { SuggestProps } from "../ContextEditor"
 
 import * as React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import { useEditorEffect } from "@handlewithcare/react-prosemirror"
 import { RectangleEllipsis, StickyNote, ToyBrick } from "lucide-react"
 
 import { reactPropsKey } from "../plugins/reactProps"
+import { MENU_BAR_HEIGHT } from "./MenuBar"
 
 type Props = {
 	suggestData: SuggestProps
@@ -34,6 +36,7 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 		[suggestData]
 	)
 
+	// just terrible way to do this
 	useEffect(() => {
 		const span = document.getElementsByClassName("autocomplete")[0]
 		if (span) {
@@ -41,49 +44,52 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 			const container = containerRef.current
 			if (container) {
 				const containerBound = container.getBoundingClientRect()
-				const topOffset = -1 * containerBound.top + container.scrollTop + 16
-				const leftOffset = -1 * containerBound.left + 16
+				const topOffset = containerBound.top - MENU_BAR_HEIGHT + container.scrollTop
+				const leftOffset = containerBound.left + 16
 				setPosition([rect.top + 20 + topOffset, rect.left + leftOffset])
 			}
 		}
-	}, [containerRef])
+	}, [containerRef.current, suggestData.isOpen])
+
+	const [top, left] = position
+
+	const style = useMemo(
+		() => ({
+			top: window.innerHeight - top,
+			left: window.innerWidth - left,
+		}),
+		[top, left]
+	)
+
 	if (!isOpen) {
 		return null
 	}
-	return (
-		<div
-			className="w-80 p-2"
-			style={{
-				background: "white",
-				border: "1px solid #777",
-				position: "absolute",
-				top: position[0],
-				left: position[1],
-			}}
-		>
+
+	const content = (
+		<div className="absolute w-80 rounded-xl border bg-card p-2" style={style}>
 			{items.map((item, index) => {
 				const itemIsPub = item.pubTypeId
 				const itemIsField = item.schemaName
 				return (
 					<div
 						key={item.id}
-						className={`rounded p-1 ${index === selectedIndex ? "bg-neutral-200" : ""}`}
+						className={`rounded-xs p-1 ${index === selectedIndex ? "bg-muted" : ""}`}
 						data-testid="suggest-item"
 					>
 						{itemIsPub && (
 							<div className="flex items-center space-x-2">
-								<StickyNote className="flex-shrink-0" size={16} />{" "}
+								<StickyNote className="shrink-0" size={16} />{" "}
 								<span className="truncate">
-									Insert <span className="italic">{item.values["rd:title"]}</span>
+									Insert <span className="italic">{item.title}</span>
 								</span>
 							</div>
 						)}
 						{itemIsField && (
 							<div className="flex items-center space-x-2">
-								<RectangleEllipsis className="flex-shrink-0" size={16} />{" "}
+								<RectangleEllipsis className="shrink-0" size={16} />{" "}
 								<span className="truncate">
 									Insert{" "}
-									<span className="rounded-md bg-neutral-200/80 p-1 font-mono">
+									<span className="rounded-md bg-muted/80 p-1 font-mono">
 										{item.name}
 									</span>
 								</span>
@@ -91,7 +97,7 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 						)}
 						{!itemIsPub && !itemIsField && (
 							<div className="flex items-center space-x-2">
-								<ToyBrick className="flex-shrink-0" size={16} />{" "}
+								<ToyBrick className="shrink-0" size={16} />{" "}
 								<span className="truncate">
 									Insert new <span>{item.name}</span>
 								</span>
@@ -102,4 +108,6 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerRef
 			})}
 		</div>
 	)
+
+	return createPortal(content, window.document.body)
 }

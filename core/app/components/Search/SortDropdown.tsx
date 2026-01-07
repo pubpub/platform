@@ -31,7 +31,7 @@ export const SortDropdown = <const T extends SortOption[]>({
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="outline" size="sm">
+				<Button variant="outline" size="sm" className="h-9">
 					{currentSort ? (
 						currentSort.desc ? (
 							<SortDesc size={16} />

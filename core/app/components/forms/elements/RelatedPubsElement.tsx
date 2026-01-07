@@ -79,7 +79,7 @@ const RelatedPubBlock = ({
 		<div
 			ref={setNodeRef}
 			style={style}
-			className="flex items-center justify-start rounded border border-l-[12px] border-l-emerald-100 p-3"
+			className="flex items-center justify-start rounded-sm border border-l-12 border-l-emerald-100 p-3"
 		>
 			{/* Max width to keep long 'value's truncated. 90% to leave room for the trash button */}
 			<div className="flex max-w-[90%] flex-col items-start gap-1 text-sm">
@@ -90,7 +90,7 @@ const RelatedPubBlock = ({
 				<Button
 					type="button"
 					variant="ghost"
-					className="p-2 text-neutral-400 hover:bg-white hover:text-destructive"
+					className="p-2 text-muted-foreground hover:text-destructive"
 					aria-label="Delete link to related pub"
 					onClick={onRemove}
 				>
@@ -106,7 +106,7 @@ const RelatedPubBlock = ({
 					{...listeners}
 					{...attributes}
 				>
-					<GripVertical size={24} className="text-neutral-400" />
+					<GripVertical size={24} className="text-muted-foreground" />
 				</Button>
 			</div>
 		</div>
@@ -217,6 +217,7 @@ export const RelatedPubsElement = ({
 	const { pubTypes } = useContextEditorContext()
 	const { form, mode } = usePubForm()
 	const { relatedPubTypes: relatedPubTypeIds } = element
+
 	const relatedPubTypes = pubTypes.filter((pt) => relatedPubTypeIds?.includes(pt.id))
 
 	const [showPanel, setShowPanel] = useState(false)
@@ -246,7 +247,7 @@ export const RelatedPubsElement = ({
 		RelatedFormValues & { deleted: { slug: string; relatedPubId: PubsId }[] }
 	>()
 	const formElementToggle = useFormElementToggleContext()
-	const _isEnabled = formElementToggle.isEnabled(slug)
+	const isEnabled = formElementToggle.isEnabled(slug)
 
 	const { fields, append, move, update, remove } = useFieldArray({
 		control,
@@ -364,7 +365,7 @@ export const RelatedPubsElement = ({
 							<FormControl>
 								<MultiBlock
 									title="Pub Relations"
-									disabled={!_isEnabled}
+									disabled={!isEnabled}
 									onAdd={() => setShowPanel(true)}
 								>
 									{fields.length ? (

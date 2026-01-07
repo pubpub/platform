@@ -98,11 +98,9 @@ export function useSSEUpdates<T extends NotifyTables>({
 					error,
 				})
 				// TODO: handle actual closure
-				connectionBrokenToastRef.current = toast({
-					variant: "default",
-					title: "SSE connection closed unexpectedly",
-					description: "Will try to reconnect in 5 seconds",
-				})
+				connectionBrokenToastRef.current = toast.error(
+					"Disconnected from live updates, will try to reconnect in 5 seconds"
+				)
 				return
 			}
 
@@ -112,16 +110,12 @@ export function useSSEUpdates<T extends NotifyTables>({
 				connectionState: connectionStateRef.current,
 				error,
 			})
-			toast({
-				variant: "destructive",
-				title: `Error fetching ${eventName} updates`,
-				description: error.message,
-			})
+			toast.error(`Error fetching ${eventName} updates: ${error.message}`)
 			return
 		}
 
 		if (connectionBrokenToastRef.current) {
-			connectionBrokenToastRef.current.dismiss()
+			toast.dismiss(connectionBrokenToastRef.current)
 			connectionBrokenToastRef.current = null
 		}
 

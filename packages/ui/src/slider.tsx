@@ -11,8 +11,11 @@ function Slider({
 	value,
 	min = 0,
 	max = 100,
+	withThumbLabels = "always",
 	...props
-}: React.ComponentProps<typeof SliderPrimitive.Root>) {
+}: React.ComponentProps<typeof SliderPrimitive.Root> & {
+	withThumbLabels?: "always" | "hover" | "never"
+}) {
 	const _values = React.useMemo(
 		() =>
 			Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max],
@@ -49,7 +52,14 @@ function Slider({
 				<SliderPrimitive.Thumb
 					data-slot="slider-thumb"
 					key={index}
-					className="block size-4 shrink-0 rounded-full border border-primary bg-white shadow-sm ring-ring/50 transition-[color,box-shadow] hover:ring-4 focus-visible:outline-hidden focus-visible:ring-4 disabled:pointer-events-none disabled:opacity-50"
+					className={cn(
+						"block size-4 shrink-0 rounded-full border border-primary bg-white shadow-sm ring-ring/50 transition-[color,box-shadow] hover:ring-4 focus-visible:outline-hidden focus-visible:ring-4 disabled:pointer-events-none disabled:opacity-50",
+						"after:absolute after:top-5 after:right-1/2 after:translate-x-1/2 after:rounded-md after:bg-accent after:px-2 after:py-1 after:font-medium after:text-foreground after:text-xs",
+						withThumbLabels !== "never"
+							? "after:content-[attr(aria-valuenow)]"
+							: "after:hidden after:content-none",
+						withThumbLabels === "hover" && "after:opacity-0 hover:after:opacity-100"
+					)}
 				/>
 			))}
 		</SliderPrimitive.Root>

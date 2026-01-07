@@ -206,7 +206,7 @@ const ConfigCard = memo(
 				onOpenChange={(open) => setIsCollapsed(!open)}
 				defaultOpen={!props.defaultCollapsed}
 			>
-				<Item variant="outline" className="rounded-lg bg-neutral-50" size="sm">
+				<Item variant="outline" className="rounded-lg bg-muted/50" size="sm">
 					<ItemHeader className={cn(props.isError && "text-destructive")}>
 						{props.showCollapseToggle && hasContent ? (
 							<CollapsibleTrigger
@@ -232,13 +232,13 @@ const ConfigCard = memo(
 
 									<Icon
 										className={cn(
-											"h-4 w-4 flex-shrink-0 text-neutral-600",
+											"h-4 w-4 shrink-0 text-muted-foreground",
 											props.isError && "text-destructive"
 										)}
 									/>
 									<span
 										className={cn(
-											"flex-1 text-left font-medium text-neutral-900 text-sm",
+											"flex-1 text-left font-medium text-foreground text-sm",
 											props.isError && "text-destructive"
 										)}
 									>
@@ -250,13 +250,13 @@ const ConfigCard = memo(
 							<>
 								<Icon
 									className={cn(
-										"h-4 w-4 flex-shrink-0 text-neutral-600",
+										"h-4 w-4 shrink-0 text-muted-foreground",
 										props.isError && "text-destructive"
 									)}
 								/>
 								<span
 									className={cn(
-										"flex-1 font-medium text-neutral-900 text-sm",
+										"flex-1 font-medium text-foreground text-sm",
 										props.isError && "text-destructive"
 									)}
 								>
@@ -772,8 +772,11 @@ export function StagePanelAutomationForm(props: Props) {
 												className="h-auto w-full justify-start border border-dashed bg-transparent"
 											>
 												<div className="flex items-center gap-2 py-1">
-													<Plus size={16} className="text-neutral-500" />
-													<span className="text-neutral-600">
+													<Plus
+														size={16}
+														className="text-muted-foreground"
+													/>
+													<span className="text-muted-foreground">
 														Add action
 													</span>
 												</div>
@@ -1099,11 +1102,11 @@ export const TriggerField = (props: {
 				>
 					<SelectTrigger
 						data-testid={`event-select-trigger`}
-						className="h-12 w-full justify-start rounded-lg border-dashed"
+						className="h-12! w-full justify-start rounded-lg border-dashed bg-card"
 					>
 						<div className="flex items-center gap-2 py-1">
-							<Plus size={16} className="text-neutral-500" />
-							<span className="text-neutral-600">Add trigger</span>
+							<Plus size={16} className="text-muted-foreground" />
+							<span className="text-muted-foreground">Add trigger</span>
 						</div>
 					</SelectTrigger>
 					<SelectContent>{selectTriggers}</SelectContent>

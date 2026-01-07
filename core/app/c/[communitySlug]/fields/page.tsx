@@ -74,7 +74,11 @@ export default async function Page(props: Props) {
 			<ContentLayout
 				title={
 					<>
-						<FormInput size={24} strokeWidth={1} className="mr-2 text-gray-500" />{" "}
+						<FormInput
+							size={24}
+							strokeWidth={1}
+							className="mr-2 text-muted-foreground"
+						/>{" "}
 						Fields
 					</>
 				}

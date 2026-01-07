@@ -1,8 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 import type { PubsId } from "db/public"
 
-import { closeToast } from "../helpers"
-
 export class PubDetailsPage {
 	constructor(
 		public readonly page: Page,
@@ -22,7 +20,7 @@ export class PubDetailsPage {
 		configureCallback?: (runAutomationDialog: Locator) => Promise<void>,
 		waitForSuccess = true
 	) {
-		await this.page.getByTestId("run-action-primary").click()
+		await this.page.getByTestId("run-automations-primary").first().click()
 		await this.page.getByRole("button", { name: automationName }).click()
 
 		const runAutomationDialog = this.page.getByRole("dialog", {
@@ -35,10 +33,7 @@ export class PubDetailsPage {
 
 		await runAutomationDialog.getByTestId("action-run-button").click()
 		if (waitForSuccess) {
-			await this.page
-				.getByRole("status")
-				.filter({ hasText: `Successfully ran ${automationName}` })
-				.waitFor()
+			await this.page.getByText(`Successfully ran ${automationName}`).waitFor()
 			await runAutomationDialog.getByRole("button", { name: "Cancel", exact: true }).click()
 			await runAutomationDialog.waitFor({ state: "hidden" })
 		}
@@ -57,10 +52,10 @@ export class PubDetailsPage {
 			timeout: 5000,
 		})
 		await this.page
-			.getByRole("status")
+			.getByRole("listitem")
 			.filter({ hasText: "Successfully removed the pub" })
 			.first()
 			.waitFor()
-		await closeToast(this.page)
+		// await closeToast(this.page)
 	}
 }

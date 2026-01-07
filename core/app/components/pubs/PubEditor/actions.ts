@@ -283,7 +283,12 @@ export const updatePub = defineServerAction(async function updatePub({
 		const [pub] = await Promise.all([
 			updateQuery.executeAndReturnPub(),
 			...fileUploads.map(({ fileName, tempUrl }) =>
-				makeFileUploadPermanent({ pubId, tempUrl, fileName, userId: loginData.user.id })
+				makeFileUploadPermanent({
+					pubId,
+					tempUrl,
+					fileName,
+					userId: loginData.user.id,
+				})
 			),
 		])
 		return pub
@@ -327,12 +332,12 @@ export const removePub = defineServerAction(async function removePub({ pubId }: 
 
 		return {
 			success: true,
-			report: `Successfully removed the pub`,
+			report: `Successfully removed the Pub`,
 		}
 	} catch (error) {
-		logger.error({ msg: "Failed to remove pub", err: error })
+		logger.error({ msg: "Failed to remove Pub", err: error })
 		return {
-			error: "Failed to remove pub",
+			error: "Failed to remove Pub",
 			cause: error,
 		}
 	}

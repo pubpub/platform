@@ -138,11 +138,10 @@ const JSONataToggleButton = memo(
 				aria-label={`Toggle JSONata mode for ${fieldName}`}
 				data-testid={`toggle-jsonata-${fieldName}`}
 				className={cn(
-					"font-mono font-semibold text-gray-900 hover:bg-amber-50",
+					"font-mono font-semibold text-foreground hover:bg-amber-50",
 					"transition-colors duration-200",
 
-					inputState.state === "jsonata" &&
-						"border-orange-400 bg-orange-50 text-orange-900"
+					inputState.state === "jsonata" && "border-amber-400 bg-amber-600 text-amber-200"
 				)}
 				onClick={handleToggle}
 			>
@@ -246,7 +245,7 @@ const InnerActionField = memo(
 					<div className="flex flex-col space-y-1">
 						{label}
 
-						<FieldDescription className="text-pretty text-gray-500 text-xs">
+						<FieldDescription className="text-pretty text-xs">
 							{props.description ?? fieldSchema.description}
 						</FieldDescription>
 					</div>

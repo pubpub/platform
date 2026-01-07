@@ -109,7 +109,7 @@ export default async function Page(props: {
 					<FlagTriangleRightIcon
 						size={20}
 						strokeWidth={1}
-						className="mr-2 text-gray-500"
+						className="mr-2 text-muted-foreground"
 					/>
 					{stage.name}
 				</>
@@ -134,7 +134,7 @@ export default async function Page(props: {
 				</div>
 			}
 		>
-			<div className="m-4 max-w-screen-lg">
+			<div className="m-4 max-w-(--breakpoint-lg)">
 				<Suspense
 					fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
 				>

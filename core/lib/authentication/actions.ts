@@ -367,6 +367,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 	lastName: string
 	email: string
 	password: string
+	avatar?: string | null
 	redirectTo?: string
 	slug?: string
 }) {
@@ -393,6 +394,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 		lastName: props.lastName,
 		email: props.email,
 		password: props.password,
+		avatar: props.avatar,
 	}
 
 	const checked = compiledSignupFormSchema.Errors(input)
@@ -419,6 +421,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 						generateUserSlug({ firstName: props.firstName, lastName: props.lastName }),
 					passwordHash: await createPasswordHash(props.password),
 					isVerified: false,
+					avatar: props.avatar ?? null,
 				},
 				trx
 			).executeTakeFirstOrThrow((err) => {
@@ -488,6 +491,7 @@ export const legacySignup = defineServerAction(async function signup(
 		lastName: string
 		email: string
 		password: string
+		avatar?: string | null
 		redirectTo?: string | null
 	}
 ) {
@@ -533,6 +537,7 @@ export const legacySignup = defineServerAction(async function signup(
 				firstName: props.firstName,
 				lastName: props.lastName,
 				email: props.email,
+				avatar: props.avatar ?? null,
 				// If the user changed the email that they signed up with, make
 				// sure they are not verified (magic-link login will mark them as verified)
 				...(changedEmail ? { isVerified: false } : {}),
@@ -605,7 +610,8 @@ export const initializeSetup = defineServerAction(async function initializeSetup
 	lastName?: string
 	communityName: string
 	communitySlug: string
-	communityAvatar?: string
+	userAvatar?: string | null
+	communityAvatar?: string | null
 }) {
 	const usersExist = await hasUsers()
 	if (usersExist) {
@@ -621,8 +627,16 @@ export const initializeSetup = defineServerAction(async function initializeSetup
 		}
 	}
 
-	const { email, password, firstName, lastName, communityName, communitySlug, communityAvatar } =
-		parsed.data
+	const {
+		email,
+		password,
+		firstName,
+		lastName,
+		communityName,
+		communitySlug,
+		communityAvatar,
+		userAvatar,
+	} = parsed.data
 
 	let result: { user: Users; community: Communities }
 	try {
@@ -639,6 +653,7 @@ export const initializeSetup = defineServerAction(async function initializeSetup
 					passwordHash,
 					isSuperAdmin: true,
 					isVerified: true,
+					avatar: userAvatar ?? null,
 				})
 				.returningAll()
 				.executeTakeFirstOrThrow()

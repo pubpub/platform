@@ -47,7 +47,7 @@ export interface DataTableProps<TData, TValue> {
 	defaultSort?: SortingState
 }
 
-const STRIPED_ROW_STYLING = "hover:bg-gray-100 data-[state=selected]:bg-sky-50"
+const STRIPED_ROW_STYLING = "hover:bg-muted/50 data-[state=selected]:bg-muted"
 
 export function DataTable<TData, TValue>({
 	columns,
@@ -157,7 +157,7 @@ export function DataTable<TData, TValue>({
 											className={cn([
 												isNotDefaultSize
 													? "overflow-clip"
-													: "max-w-[12rem] overflow-auto",
+													: "max-w-48 overflow-auto",
 											])}
 											style={
 												isNotDefaultSize
@@ -189,6 +189,7 @@ export function DataTable<TData, TValue>({
 										data-state={row.getIsSelected() && "selected"}
 										tabIndex={0}
 										role="button"
+										aria-label={`Select row ${getRowId?.(row.original)}`}
 										aria-pressed={row.getIsSelected() ? "true" : "false"}
 										onKeyDown={(evt) => {
 											if (evt.code === "Enter" || evt.code === "Space") {
@@ -198,11 +199,11 @@ export function DataTable<TData, TValue>({
 										onClick={(evt) => {
 											handleRowClick(evt, row)
 										}}
-										data-testid={`data-table-row-${row.id}`}
+										data-testid={`data-table-row-${getRowId?.(row.original)}`}
 										// data-testid={getRowId?.(row.original)}
 										className={cn({
 											"cursor-pointer": Boolean(onRowClick),
-											"bg-gray-100/50": striped && idx % 2,
+											"bg-muted/50": striped && idx % 2,
 											[STRIPED_ROW_STYLING]: striped,
 										})}
 									>
@@ -215,7 +216,7 @@ export function DataTable<TData, TValue>({
 													className={cn([
 														isNotDefaultSize
 															? "overflow-clip"
-															: "max-w-[12rem] overflow-auto",
+															: "max-w-48 overflow-auto",
 													])}
 													style={
 														isNotDefaultSize

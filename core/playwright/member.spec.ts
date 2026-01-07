@@ -83,7 +83,7 @@ test.describe("Community members", () => {
 		const membersPage = new MembersPage(page, COMMUNITY_SLUG)
 		await membersPage.goto()
 		await membersPage.searchMembers(community.users.admin.email)
-		expect(page.getByText("No results.")).not.toBeAttached()
+		await expect(page.getByText(community.users.admin.email).first()).toBeVisible()
 	})
 
 	test("Can remove a member", async () => {
@@ -91,7 +91,7 @@ test.describe("Community members", () => {
 		await membersPage.goto()
 		await membersPage.addExistingUser(community2.users.user3.email)
 		await membersPage.removeMember(community2.users.user3.email)
-		expect(page.getByText("No results.")).toBeVisible()
+		await expect(page.getByText(community2.users.user3.email)).not.toBeVisible()
 	})
 
 	test("new user signup flow", async ({ browser }) => {
@@ -139,29 +139,29 @@ test.describe("Community members", () => {
 		})
 
 		//TODO: not sure why the expect fails here
-		await test.step.skip("User is not able to sign up twice", async () => {
-			const page = await browser.newPage()
-			const inviteEmail = await (
-				await inbucketClient.getMailbox(newUserEmail.split("@")[0])
-			).getLatestMessage(20)
+		// await test.step.skip("User is not able to sign up twice", async () => {
+		// 	const page = await browser.newPage()
+		// 	const inviteEmail = await (
+		// 		await inbucketClient.getMailbox(newUserEmail.split("@")[0])
+		// 	).getLatestMessage(20)
 
-			const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]
+		// 	const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]
 
-			expect(joinLink).toBeTruthy()
+		// 	expect(joinLink).toBeTruthy()
 
-			await page.goto(joinLink!)
-			await page.waitForURL(/\/signup/)
+		// 	await page.goto(joinLink!)
+		// 	await page.waitForURL(/\/signup/)
 
-			expect(page.getByText("You are not allowed to signup for an account")).toBeAttached()
-			await page.close()
-		})
+		// 	expect(page.getByText("You are not allowed to signup for an account")).toBeAttached()
+		// 	await page.close()
+		// })
 	})
 
-	test.fixme("User is able to change their first and last name on signup", async () => {})
+	// test.fixme("User is able to change their first and last name on signup", async () => {})
 
-	// Email address confirmation is not yet implemented
-	test.fixme(
-		"User needs to confirm their email address again if they change it during signup",
-		async () => {}
-	)
+	// // Email address confirmation is not yet implemented
+	// test.fixme(
+	// 	"User needs to confirm their email address again if they change it during signup",
+	// 	async () => {}
+	// )
 })

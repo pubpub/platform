@@ -58,7 +58,7 @@ const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
 			<FormControl>
 				<RadioGroupCard
 					value={alignment}
-					className="rounded border-0 data-[state=checked]:border-ring-0 data-[state=checked]:bg-gray-200"
+					className="rounded-xs border-0 data-[state=checked]:border-ring-0 data-[state=checked]:bg-gray-200"
 				>
 					{icon}
 				</RadioGroupCard>
@@ -130,7 +130,7 @@ export const MediaUpload = (props: Props) => {
 										<TooltipTrigger>
 											<HelpCircle
 												strokeWidth="1px"
-												className="text-gray-500"
+												className="text-muted-foreground"
 											/>
 										</TooltipTrigger>
 										<TooltipContent>
@@ -146,7 +146,10 @@ export const MediaUpload = (props: Props) => {
 							right={(value) =>
 								value.length ? (
 									<a href={value} target="_blank">
-										<ExternalLink strokeWidth="1px" className="text-gray-500" />
+										<ExternalLink
+											strokeWidth="1px"
+											className="text-muted-foreground"
+										/>
 									</a>
 								) : (
 									<ExternalLink strokeWidth="1px" className="text-gray-300" />

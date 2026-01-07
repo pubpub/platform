@@ -564,12 +564,6 @@ test.describe("email invite flow", () => {
 				state: "visible",
 				timeout: 1000,
 			})
-
-			// dismiss notification
-			await page
-				.getByRole("region", { name: "Notifications (F8)" })
-				.getByRole("button")
-				.click()
 		})
 
 		await test.step("user can signup with the correct email", async () => {

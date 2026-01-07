@@ -18,10 +18,10 @@ type InfoButtonProps = {
 	type?: "info" | "warning" | "error"
 }
 
-const infoButtonVariants = cva("h-4 w-4 text-gray-500", {
+const infoButtonVariants = cva("h-4 w-4 text-muted-foreground", {
 	variants: {
 		type: {
-			info: "text-gray-500",
+			info: "text-muted-foreground",
 			warning: "text-yellow-500",
 			error: "text-destructive",
 		},

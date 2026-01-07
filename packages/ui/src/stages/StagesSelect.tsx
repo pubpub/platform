@@ -6,7 +6,8 @@ import React from "react"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
-import { FormField, FormItem, FormLabel, FormMessage } from "../form"
+import { Field, FieldError, FieldLabel } from "../field"
+import { FormField } from "../form"
 import { useStages } from "./StagesProvider"
 
 type Props = {
@@ -48,12 +49,12 @@ export const StagesSelectField = (props: { fieldName: string; fieldLabel: string
 	return (
 		<FormField
 			name={props.fieldName}
-			render={({ field }) => (
-				<FormItem>
-					<FormLabel>{props.fieldLabel ?? "Stage"}</FormLabel>
+			render={({ field, fieldState }) => (
+				<Field data-invalid={fieldState.invalid}>
+					<FieldLabel>{props.fieldLabel ?? "Stage"}</FieldLabel>
 					<StagesSelect fieldLabel={props.fieldLabel} field={field} />
-					<FormMessage />
-				</FormItem>
+					<FieldError errors={[fieldState.error]} />
+				</Field>
 			)}
 		/>
 	)

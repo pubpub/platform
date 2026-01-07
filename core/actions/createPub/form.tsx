@@ -80,8 +80,7 @@ const FileUploadInput = ({ field, elementId }: { field: any; elementId: string }
 	const runUpload = useServerAction(upload)
 
 	const signedUploadUrl = async (fileName: string) => {
-		// No pubId since we're creating a new pub
-		return runUpload(fileName, undefined)
+		return runUpload(fileName, "temporary")
 	}
 
 	return (

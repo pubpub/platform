@@ -1,7 +1,6 @@
 "use client"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 
 import { client, retryPolicy } from "~/lib/api"
 
@@ -17,7 +16,7 @@ export function ReactQueryProvider({ children }: React.PropsWithChildren) {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<client.ReactQueryProvider>{children}</client.ReactQueryProvider>
-			<ReactQueryDevtools />
+			{/* <ReactQueryDevtools /> */}
 		</QueryClientProvider>
 	)
 }

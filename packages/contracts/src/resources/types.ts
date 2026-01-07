@@ -4,6 +4,7 @@ import type {
 	CommunitiesId,
 	FormElementsId,
 	FormsId,
+	InputComponent,
 	PubFields,
 	PubFieldsId,
 	PubsId,
@@ -375,6 +376,8 @@ type ValuesWithFormElements =
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }
 				| null
+			formElementComponent: InputComponent
+			formElementRelatedPubTypes: PubTypesId[]
 	  })
 	// With only value info
 	| ValueBase
@@ -390,6 +393,8 @@ type ValuesWithFormElements =
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }
 				| null
+			formElementComponent: InputComponent
+			formElementRelatedPubTypes: PubTypesId[]
 	  } & ValueFieldInfo)
 
 type ProcessedPubBase = {
@@ -762,6 +767,8 @@ export const getPubQuerySchema = z.object({
 		.describe("Whether to include related pubs with the values"),
 	withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
 	withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
+	withSearchValues: z.boolean().default(false).describe("Whether to show highlighted values."),
+	withValues: z.boolean().default(true).describe("Whether to fetch the pub's values."),
 	withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
 	fieldSlugs: z
 		.array(z.string())

@@ -7,13 +7,14 @@ import Link from "next/link"
 import { Eye } from "lucide-react"
 
 import { AutomationEvent } from "db/public"
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
 import { Pencil } from "ui/icon"
 import { PubFieldProvider } from "ui/pubFields"
 import { StagesProvider, stagesDAO } from "ui/stages"
 
 import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu"
 import { BasicPagination } from "~/app/components/Pagination"
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import { PubCardServer } from "~/app/components/pubs/PubCard/PubCardServer"
 import {
 	userCanArchiveAllPubs,
 	userCanEditAllPubs,
@@ -79,62 +80,64 @@ async function StageCard({
 	const communitySlug = await getCommunitySlug()
 
 	return (
-		<div key={stage.id} className="relative rounded-l-md border-gray-400 border-l-2 py-2 pl-4">
-			<div className="flex flex-col justify-between gap-4">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-3">
-						<Link
-							href={`/c/${communitySlug}/stages/${stage.id}`}
-							className="group underline"
-						>
-							<h3 className="font-semibold text-gray-900 text-xl transition-colors group-hover:text-blue-600">
-								{stage.name}
-							</h3>
+		<Card
+			key={stage.id}
+			className="relative flex flex-col justify-between gap-2 rounded-l-none border-none bg-transparent py-2 shadow-none"
+		>
+			<CardHeader className="!pb-2 my-1 flex items-center justify-between">
+				<CardTitle className="flex items-baseline gap-3">
+					<Link
+						href={`/c/${communitySlug}/stages/${stage.id}`}
+						className="group hover:underline"
+					>
+						<h3 className="font-semibold transition-colors group-hover:text-blue-600">
+							{stage.name}
+						</h3>
+					</Link>
+					<p className="mt-1 text-muted-foreground text-xs">
+						{stage.pubsCount === 0
+							? "No Pubs in this stage"
+							: `${stage.pubsCount} ${stage.pubsCount === 1 ? "Pub" : "Pubs"}`}
+					</p>
+				</CardTitle>
+				<EllipsisMenu>
+					<EllipsisMenuButton asChild>
+						<Link href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}`}>
+							Edit Stage
+							<Pencil size={10} strokeWidth={1.5} />
 						</Link>
-						<p className="mt-1 text-gray-500 text-xs">
-							{stage.pubsCount === 0
-								? "No Pubs in this stage"
-								: `${stage.pubsCount} ${stage.pubsCount === 1 ? "Pub" : "Pubs"}`}
-						</p>
-					</div>
-					<EllipsisMenu>
-						<EllipsisMenuButton asChild>
-							<Link
-								href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}`}
-							>
-								Edit Stage
-								<Pencil size={14} />
-							</Link>
-						</EllipsisMenuButton>
-						<EllipsisMenuButton asChild>
-							<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
-								View Stage
-								<Eye size={14} />
-							</Link>
-						</EllipsisMenuButton>
-					</EllipsisMenu>
-				</div>
+					</EllipsisMenuButton>
+					<EllipsisMenuButton asChild>
+						<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
+							View Stage
+							<Eye size={10} strokeWidth={1.5} />
+						</Link>
+					</EllipsisMenuButton>
+				</EllipsisMenu>
+			</CardHeader>
 
-				{!!stage.pubsCount && stage.pubsCount > 0 && (
-					<div className="flex flex-col gap-4">
-						<Suspense
-							fallback={
-								<PubListSkeleton amount={stage.pubsCount ?? 3} className="gap-4" />
-							}
-						>
-							<StagePubs
-								userId={userId}
-								stage={stage}
-								searchParams={searchParams}
-								members={members}
-								totalPubLimit={3}
-								basePath={`/c/${communitySlug}/stages`}
+			{!!stage.pubsCount && stage.pubsCount > 0 && (
+				<CardContent>
+					<Suspense
+						fallback={
+							<PubListSkeleton
+								amount={stage.pubsCount < 3 ? stage.pubsCount : 3}
+								className="gap-4"
 							/>
-						</Suspense>
-					</div>
-				)}
-			</div>
-		</div>
+						}
+					>
+						<StagePubs
+							userId={userId}
+							stage={stage}
+							searchParams={searchParams}
+							members={members}
+							totalPubLimit={3}
+							basePath={`/c/${communitySlug}/stages`}
+						/>
+					</Suspense>
+				</CardContent>
+			)}
+		</Card>
 	)
 }
 
@@ -198,7 +201,7 @@ export async function StagePubs({
 				}
 				// this way we don't pass unecessary data to the client
 				return (
-					<PubCard
+					<PubCardServer
 						key={pub.id}
 						pub={
 							pub as ProcessedPub<{
@@ -234,15 +237,15 @@ export async function StagePubs({
 				stage.pubsCount &&
 				totalPubLimit &&
 				stagePubs.length > totalPubLimit && (
-					<div className="flex items-center justify-center pt-4">
+					<div className="flex items-center justify-center pt-2">
 						<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
-							<div className="group flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 transition-all hover:bg-gray-200">
+							<div className="group flex items-center gap-2 rounded-full bg-muted px-4 py-1.5 transition-all hover:bg-muted-foreground/50">
 								<div className="flex gap-1">
-									<div className="h-2 w-2 rounded-full bg-gray-500"></div>
-									<div className="h-2 w-2 rounded-full bg-gray-500"></div>
-									<div className="h-2 w-2 rounded-full bg-gray-500"></div>
+									<div className="size-1.5 rounded-full bg-muted-foreground"></div>
+									<div className="size-1.5 rounded-full bg-muted-foreground"></div>
+									<div className="size-1.5 rounded-full bg-muted-foreground"></div>
 								</div>
-								<span className="text-gray-600 text-sm group-hover:text-gray-800">
+								<span className="text-muted-foreground text-xs">
 									{stage.pubsCount - totalPubLimit} more
 								</span>
 							</div>

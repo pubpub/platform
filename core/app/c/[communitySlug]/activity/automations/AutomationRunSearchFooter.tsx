@@ -43,7 +43,7 @@ export const AutomationRunSearchFooter = (
 	return (
 		<div
 			className={cn(
-				"absolute bottom-0 left-0 flex w-full flex-col items-center justify-between gap-2 border-gray-300 border-t bg-white px-4 py-2 text-sm leading-[19px] shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)] md:flex-row",
+				"absolute bottom-0 left-0 flex w-full flex-col items-center justify-between gap-2 border-t bg-sidebar px-4 py-2 text-sm leading-[19px] shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)] md:flex-row",
 				className
 			)}
 		>

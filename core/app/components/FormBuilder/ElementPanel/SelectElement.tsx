@@ -44,7 +44,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				type="button"
 				variant="outline"
 				key={field.id}
-				className="flex h-[68px] flex-1 flex-shrink-0 justify-start gap-4 bg-white p-4"
+				className="flex h-[68px] flex-1 shrink-0 justify-start gap-4 bg-card p-4"
 				onClick={() => {
 					addElement({
 						fieldId: field.id,
@@ -80,7 +80,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 		)
 	})
 	return (
-		<Tabs defaultValue="field" className="flex flex-grow flex-col">
+		<Tabs defaultValue="field" className="flex grow flex-col">
 			<TabsList>
 				<TabsTrigger className="w-full" value="field">
 					Field
@@ -89,10 +89,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 					Structure
 				</TabsTrigger>
 			</TabsList>
-			<TabsContent
-				value="field"
-				className="flex flex-grow flex-col data-[state=inactive]:hidden"
-			>
+			<TabsContent value="field" className="flex grow flex-col data-[state=inactive]:hidden">
 				<Input
 					type="search"
 					placeholder="Type a field name to search..."
@@ -121,7 +118,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 					Cancel
 				</Button>
 			</TabsContent>
-			<TabsContent value="structure" className="flex flex-grow flex-col">
+			<TabsContent value="structure" className="flex grow flex-col">
 				<div className="mb-auto flex flex-col justify-start gap-2 overflow-y-auto">
 					{Object.values(StructuralFormElement).map((elementType) => {
 						const { Icon, enabled, name } = structuralElements[elementType]

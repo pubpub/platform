@@ -21,8 +21,7 @@ import { ActionForm } from "~/actions/_lib/ActionForm"
 import { getActionByName } from "~/actions/api"
 import { runAutomationManual } from "~/actions/api/serverAction"
 import { getActionFormComponent } from "~/actions/forms"
-import { isActionSuccess } from "~/actions/results"
-import { useServerAction } from "~/lib/serverActions"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
 import { useCommunity } from "../providers/CommunityProvider"
 import { SkeletonCard } from "../skeletons/SkeletonCard"
 
@@ -36,10 +35,12 @@ const ActionCard = (props: ActionCardProps) => {
 	const Icon = props.icon
 
 	return (
-		<Item variant="outline" className="bg-neutral-50" size="sm">
+		<Item variant="outline" className="bg-muted" size="sm">
 			<ItemHeader>
-				<Icon className="h-4 w-4 flex-shrink-0 text-neutral-600" />
-				<span className="flex-1 font-medium text-neutral-900 text-sm">{props.title}</span>
+				<Icon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+				<span className="flex-1 font-medium text-muted-foreground text-sm">
+					{props.title}
+				</span>
 			</ItemHeader>
 			{props.children && (
 				<ItemContent className="m-1 overflow-visible">{props.children}</ItemContent>
@@ -83,19 +84,19 @@ export const AutomationRunForm = (props: Props) => {
 				skipConditionCheck: skipConditionCheck && hasConditions,
 			})
 
-			if (isActionSuccess(result)) {
-				toast({
-					title:
-						"title" in result && typeof result.title === "string"
-							? result.title
-							: `Successfully ran ${props.automation.name || action.niceName}`,
-					variant: "default",
-					description: (
-						<div className="max-h-screen max-w-sm overflow-auto text-xs">
-							{result.report}
-						</div>
-					),
-				})
+			if (didSucceed(result)) {
+				toast.success(
+					"title" in result && typeof result.title === "string"
+						? result.title
+						: `Successfully ran ${props.automation.name || action.niceName}`,
+					{
+						description: (
+							<div className="max-h-screen max-w-sm overflow-auto text-xs">
+								{result.report}
+							</div>
+						),
+					}
+				)
 				return
 			}
 			if ("issues" in result && result.issues) {
@@ -149,18 +150,18 @@ export const AutomationRunForm = (props: Props) => {
 						<DynamicIcon
 							icon={(automationIcon as IconConfig) ?? undefined}
 							size="14"
-							className="flex-shrink-0"
+							className="shrink-0"
 						/>
 						<span className="overflow-auto text-ellipsis">{props.automation.name}</span>
 					</Button>
 				</DialogTrigger>
 				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
-					<DialogHeader className="sticky inset-0 top-0 z-10 bg-white p-6 pb-2">
+					<DialogHeader className="sticky inset-0 top-0 z-10 bg-background p-6 pb-2">
 						<div className="flex items-start gap-x-2">
 							<DynamicIcon
 								icon={automationIcon as IconConfig}
 								size="16"
-								className="mt-0.5 flex-shrink-0"
+								className="mt-0.5 shrink-0"
 							/>
 							<DialogTitle className="flex items-baseline gap-x-2 pb-2">
 								{props.automation.name}

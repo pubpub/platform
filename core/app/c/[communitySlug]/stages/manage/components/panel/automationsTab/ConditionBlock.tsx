@@ -73,7 +73,7 @@ const ConditionItem = memo(
 				ref={setNodeRef}
 				style={style}
 				className={cn(
-					"relative border-l-4 border-l-blue-100 bg-white p-2",
+					"relative border-l-4 border-l-blue-100! bg-card p-2",
 					isDragging && "z-10 cursor-grabbing",
 					invalid && "border-red-300"
 				)}
@@ -238,14 +238,10 @@ export const ConditionBlock = memo(
 				ref={setNodeRef}
 				style={style}
 				className={cn(
-					// "relative space-y-2 rounded border p-3",
-
-					"border-l-4 border-l-blue-100",
+					"border-l-4 border-l-blue-100!",
 					isDragging && "z-10 cursor-grabbing",
-					depth === 0 && "border-neutral-300 bg-neutral-50",
-					depth === 1 && "border-neutral-200 bg-white",
-					depth === 2 && "border-neutral-100 bg-neutral-50",
-					depth >= 3 && "border-neutral-100 bg-white",
+					depth % 2 === 1 && "bg-card",
+					depth % 2 === 0 && "bg-muted/50",
 					depth > 0 && "p-2",
 					rootItemError && "border-red-300"
 				)}
@@ -264,11 +260,11 @@ export const ConditionBlock = memo(
 								{...listeners}
 								{...attributes}
 							>
-								<GripVertical size={16} className="text-neutral-400" />
+								<GripVertical size={16} className="text-muted-foreground" />
 							</Button>
 						)}
 						{depth === 0 && (
-							<Label className="font-semibold text-neutral-600 text-xs uppercase">
+							<Label className="font-semibold text-muted-foreground text-xs uppercase">
 								When
 							</Label>
 						)}
@@ -301,7 +297,7 @@ export const ConditionBlock = memo(
 							type="button"
 							variant="ghost"
 							size="sm"
-							className="text-neutral-400 text-xs hover:text-destructive"
+							className="text-muted-foreground text-xs hover:text-destructive"
 							onClick={onRemove}
 						>
 							<X size={14} />
@@ -352,7 +348,7 @@ export const ConditionBlock = memo(
 								type="button"
 								variant="ghost"
 								size="sm"
-								className="h-8 p-0 text-neutral-700 text-xs"
+								className="h-8 p-0 text-muted-foreground text-xs"
 								onClick={() => handleAdd("condition")}
 								disabled={
 									isNot &&
@@ -367,7 +363,7 @@ export const ConditionBlock = memo(
 									type="button"
 									variant="ghost"
 									size="sm"
-									className="h-8 p-0 text-neutral-700 text-xs"
+									className="h-8 p-0 text-muted-foreground text-xs"
 									onClick={() => handleAdd("block")}
 									disabled={
 										isNot &&
@@ -386,7 +382,7 @@ export const ConditionBlock = memo(
 						{isNot &&
 							(fields.filter((field) => field.kind === "condition").length >= 1 ||
 								fields.filter((field) => field.kind === "block").length >= 1) && (
-								<p className="text-amber-600 text-xs">
+								<p className="text-destructive text-xs">
 									NOT blocks can only contain one condition or one block
 								</p>
 							)}

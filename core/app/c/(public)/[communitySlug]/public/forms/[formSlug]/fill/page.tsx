@@ -24,7 +24,7 @@ import { db } from "~/kysely/database"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { getCommunityRole } from "~/lib/authentication/roles"
 import { userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities"
-import { transformRichTextValuesToProsemirror } from "~/lib/editor/serialize-server"
+import { transformRichTextValuesToProsemirrorServer } from "~/lib/editor/serialize-server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
 import { getPubsWithRelatedValues } from "~/lib/server/pub"
@@ -137,7 +137,7 @@ export default async function FormPage(props: {
 	}
 	const { user, session } = await getLoginData()
 
-	const [form, pub, pubs, pubTypes] = await Promise.all([
+	const [form, pub, pubTypes] = await Promise.all([
 		getForm({
 			slug: params.formSlug,
 			communityId: community.id,
@@ -148,14 +148,6 @@ export default async function FormPage(props: {
 					{ withStage: true, withPubType: true }
 				)
 			: undefined,
-		getPubsWithRelatedValues(
-			{ communityId: community.id, userId: user?.id },
-			{
-				limit: 30,
-				withStage: true,
-				withPubType: true,
-			}
-		),
 		getPubTypesForCommunity(community.id, { limit: 0 }),
 	])
 
@@ -226,7 +218,7 @@ export default async function FormPage(props: {
 		return notFound()
 	}
 	const pubWithProsemirrorRichText = pub
-		? transformRichTextValuesToProsemirror(pub, { toJson: true })
+		? transformRichTextValuesToProsemirrorServer(pub, { toJson: true })
 		: undefined
 
 	const memberWithUser = {
@@ -279,10 +271,9 @@ export default async function FormPage(props: {
 	}
 	// For the Context, we want both the pubs from the initial pub query (which is limited)
 	// as well as the pubs related to this pub
-	const relatedPubs = pubWithProsemirrorRichText
+	const _relatedPubs = pubWithProsemirrorRichText
 		? pubWithProsemirrorRichText.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : []))
 		: []
-	const pubsForContext = [...pubs, ...relatedPubs]
 
 	return (
 		<div className="isolate min-h-screen">
@@ -316,7 +307,6 @@ export default async function FormPage(props: {
 								<ContextEditorContextProvider
 									pubId={pubId}
 									pubTypeId={form.pubTypeId}
-									pubs={pubsForContext}
 									pubTypes={pubTypes}
 								>
 									<ExternalFormWrapper

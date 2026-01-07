@@ -44,7 +44,7 @@ export const AddRelatedPubsPanel = (props: AddRelatedPubsPanelProps) => {
 					disabledPubIds={props.disabledPubs}
 					pubTypeIds={props.pubTypes?.map((t) => t.id)}
 					mode="multi"
-					placeholder="Search for pubs to add..."
+					placeholder="Search for Pubs to add..."
 					maxHeight="calc(100vh - 200px)"
 				/>
 			</div>

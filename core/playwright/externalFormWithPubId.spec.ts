@@ -217,7 +217,7 @@ test.describe("Rendering the external form", () => {
 		// Visit the pub's page
 		const pubPage = new PubDetailsPage(page, community.community.slug, community.pubs[2].id)
 		await pubPage.goTo()
-		await expect(page.getByTestId(`Content-value`)).toHaveText("My content")
+		await expect(page.getByTestId(`Content-value`).first()).toHaveText("My content")
 		await expect(page.getByRole("heading", { name: newTitle })).toHaveCount(1)
 	})
 })

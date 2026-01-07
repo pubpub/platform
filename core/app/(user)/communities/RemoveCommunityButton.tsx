@@ -49,11 +49,7 @@ export const RemoveCommunityButton = ({ community }: { community: TableCommunity
 							onClick={async () => {
 								const response = await runRemoveCommunity({ community })
 								if (didSucceed(response)) {
-									toast({
-										title: "Success",
-										description: "Community successfully removed",
-										variant: "default",
-									})
+									toast.success("Community successfully removed")
 								}
 							}}
 						>

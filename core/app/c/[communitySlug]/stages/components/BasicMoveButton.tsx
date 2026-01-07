@@ -1,4 +1,3 @@
-import { Button } from "ui/button"
 import { ChevronDown, FlagTriangleRightIcon } from "ui/icon"
 import { cn } from "utils"
 
@@ -10,18 +9,18 @@ interface Props extends React.ComponentPropsWithoutRef<"button"> {
 
 export const BasicMoveButton = ({ name, withDropdown, className, ...props }: Props) => {
 	return (
-		<Button
-			variant="outline"
+		<button
 			{...props}
 			className={cn(
-				"h-[22px] gap-0.5 rounded-full px-[.35rem] font-semibold text-xs shadow-none",
+				"flex h-5! items-center gap-0.5 rounded-full border bg-background px-2 font-normal text-xs shadow-none",
 				withDropdown ? "" : "pr-4",
 				className
 			)}
 		>
-			<FlagTriangleRightIcon strokeWidth="1px" className="text-neutral-500" />
+			<FlagTriangleRightIcon strokeWidth="1px" className="size-3 text-neutral-500" size={8} />
+
 			{name}
-			{withDropdown && <ChevronDown strokeWidth="1px" />}
-		</Button>
+			{withDropdown && <ChevronDown strokeWidth="1px" className="size-3.5" size={8} />}
+		</button>
 	)
 }

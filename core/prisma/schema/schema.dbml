@@ -811,11 +811,11 @@ Ref: auth_tokens.userId > users.id
 
 Ref: pubs.pubTypeId > pub_types.id
 
-Ref: pubs.communityId > communities.id
+Ref: pubs.communityId > communities.id [delete: Cascade]
 
 Ref: pub_fields.pubFieldSchemaId > PubFieldSchema.id
 
-Ref: pub_fields.communityId > communities.id
+Ref: pub_fields.communityId > communities.id [delete: Cascade]
 
 Ref: pub_values.fieldId > pub_fields.id
 
@@ -823,13 +823,13 @@ Ref: pub_values.pubId > pubs.id [delete: Cascade]
 
 Ref: pub_values.relatedPubId > pubs.id [delete: Cascade]
 
-Ref: pub_types.communityId > communities.id
+Ref: pub_types.communityId > communities.id [delete: Cascade]
 
 Ref: _PubFieldToPubType.A > pub_fields.id [delete: Cascade]
 
 Ref: _PubFieldToPubType.B > pub_types.id [delete: Cascade]
 
-Ref: stages.communityId > communities.id
+Ref: stages.communityId > communities.id [delete: Cascade]
 
 Ref: PubsInStages.pubId > pubs.id [delete: Cascade]
 

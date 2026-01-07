@@ -2,7 +2,7 @@
 
 import type { SlugKeyFilter } from "contracts"
 import type { PubTypesId, StagesId } from "db/public"
-import type { inferParserType } from "nuqs/server"
+import type { inferParserType, ParserBuilder } from "nuqs/server"
 import type { GetPubsWithRelatedValuesOptions } from "~/lib/server"
 
 import { createSearchParamsCache, parseAsArrayOf, parseAsInteger, parseAsString } from "nuqs/server"
@@ -23,8 +23,8 @@ export const pubSearchParsers = {
 	filters: getFiltersStateParser<{
 		[fieldString: `${string}:${string}`]: any
 	}>().withDefault([]),
-	pubTypes: parseAsArrayOf(parseAsString).withDefault([]),
-	stages: parseAsArrayOf(parseAsString).withDefault([]),
+	pubTypes: parseAsArrayOf(parseAsString as unknown as ParserBuilder<PubTypesId>).withDefault([]),
+	stages: parseAsArrayOf(parseAsString as unknown as ParserBuilder<StagesId>).withDefault([]),
 }
 export const pubSearchParamsCache = createSearchParamsCache(pubSearchParsers)
 

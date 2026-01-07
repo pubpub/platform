@@ -31,9 +31,10 @@ import {
 	SidebarMenuSkeleton,
 	SidebarMenuSubItem,
 	SidebarRail,
-	SidebarSeparator,
 } from "ui/sidebar"
 
+import { SidebarSearchDialogTrigger } from "~/app/components/Search/SearchDialogTrigger"
+import { SidebarDarkmodeToggle } from "~/app/components/theme/DarkmodeToggle"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan, userCanViewStagePage } from "~/lib/authorization/capabilities"
 import CommunitySwitcher from "./CommunitySwitcher"
@@ -158,6 +159,11 @@ const adminLinks: LinkGroupDefinition = {
 			icon: <Settings2 size={16} />,
 			authorization: userCanEditCommunityCached,
 			children: [
+				{
+					href: "/settings/community",
+					text: "Community",
+					authorization: userCanEditCommunityCached,
+				},
 				{
 					href: "/settings/tokens",
 					text: "API Tokens",
@@ -322,7 +328,7 @@ const LinkGroup = async ({
 
 	return (
 		<SidebarGroup className="group-data-[collapsible=icon]:py-0">
-			<SidebarGroupLabel className="font-semibold text-gray-500 uppercase group-data-[collapsible=icon]:hidden">
+			<SidebarGroupLabel className="font-semibold text-muted-foreground uppercase group-data-[collapsible=icon]:hidden">
 				{group.name}
 			</SidebarGroupLabel>
 			<SidebarGroupContent className="group-data-[state=expanded]:px-2">
@@ -345,8 +351,8 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 	}
 
 	return (
-		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="fixed z-40">
-			<SidebarHeader className="py-4 group-data-[state=expanded]:p-2 group-data-[collapsible=icon]:pt-5">
+		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="fixed z-40 border-r-0!">
+			<SidebarHeader className="py-4 group-data-[state=expanded]:p-4 group-data-[collapsible=icon]:pt-5 group-data-[state=expanded]:pb-2">
 				<SidebarMenu>
 					<SidebarMenuItem className={`h-full`}>
 						<CommunitySwitcher
@@ -355,19 +361,27 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 						/>
 					</SidebarMenuItem>
 				</SidebarMenu>
-				<SidebarSeparator className="group-data-[state=expanded]:mx-3 group-data-[collapsible=icon]:mt-3" />
+				{/* <SidebarSeparator className="group-data-[state=expanded]:mx-3 group-data-[collapsible=icon]:mt-3" /> */}
 			</SidebarHeader>
 			<SidebarContent className="group-data-[state=expanded]:px-1 group-data-[state=expanded]:py-3">
 				<div className="flex h-full max-h-screen flex-col group-data-[state=expanded]:gap-2">
-					<div className="flex-1">
-						<LinkGroup user={user} community={community} group={viewLinks} />
-						<LinkGroup user={user} community={community} group={manageLinks} />
-						<LinkGroup user={user} community={community} group={adminLinks} />
-					</div>
+					<LinkGroup user={user} community={community} group={viewLinks} />
+					<LinkGroup user={user} community={community} group={manageLinks} />
+					<LinkGroup user={user} community={community} group={adminLinks} />
 				</div>
 			</SidebarContent>
-			<SidebarFooter className="px-2 pb-4">
+			<SidebarFooter className="pb-4 group-data-[state=expanded]:px-2">
 				<SidebarMenu>
+					<SidebarGroup className="group-data-[collapsible=icon]:p-0">
+						<SidebarGroupContent>
+							<SidebarMenuItem>
+								<SidebarSearchDialogTrigger />
+							</SidebarMenuItem>
+							<SidebarMenuItem className="relative flex items-center">
+								<SidebarDarkmodeToggle />
+							</SidebarMenuItem>
+						</SidebarGroupContent>
+					</SidebarGroup>
 					<SidebarMenuItem>
 						<LoginSwitcher />
 					</SidebarMenuItem>

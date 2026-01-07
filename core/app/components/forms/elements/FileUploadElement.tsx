@@ -8,6 +8,7 @@ import type { ElementProps } from "../types"
 import { useCallback } from "react"
 import dynamic from "next/dynamic"
 import { Value } from "@sinclair/typebox/value"
+import { useTheme } from "next-themes"
 import { useFormContext } from "react-hook-form"
 import { fileUploadConfigSchema } from "schemas"
 
@@ -42,10 +43,12 @@ export const FileUploadElement = ({
 }: ElementProps<InputComponent.fileUpload> & { pubId?: PubsId }) => {
 	const runUpload = useServerAction(upload)
 	const signedUploadUrl = (fileName: string) => {
-		return runUpload(fileName, pubId)
+		return runUpload(fileName, "temporary")
 	}
 	const runDelete = useServerAction(deleteFile)
 	const { form, mode } = usePubForm()
+
+	const { resolvedTheme } = useTheme()
 
 	const { control } = useFormContext<FormValues>()
 
@@ -73,11 +76,7 @@ export const FileUploadElement = ({
 			}
 
 			field.onChange(field.value.filter((f) => f.fileName !== file.fileName))
-			toast({
-				title: "Successfully removed file",
-				variant: "success",
-				description: res?.report,
-			})
+			toast.success("Removed file")
 		},
 		[runDelete, slug, pubId, form.slug, mode]
 	)
@@ -99,6 +98,7 @@ export const FileUploadElement = ({
 							<FormControl>
 								<FileUpload
 									{...field}
+									theme={resolvedTheme as "light" | "dark"}
 									disabled={!isEnabled}
 									upload={signedUploadUrl}
 									onUpdateFiles={(event) => {

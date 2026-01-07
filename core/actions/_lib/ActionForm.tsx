@@ -97,11 +97,9 @@ export function ActionForm(props: ActionFormProps) {
 			return result.data
 		}
 
-		toast({
-			title: "Invalid initial values",
-			description: `Can't parse values ${JSON.stringify(props.values)}: ${result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("\n")}. This is likely an issue on our end, please report this.`,
-			variant: "destructive",
-		})
+		toast.error(
+			`Can't parse values ${JSON.stringify(props.values)}: ${result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("\n")}. This is likely an issue on our end, please report this.`
+		)
 		return undefined
 	}, [schema, props.values])
 

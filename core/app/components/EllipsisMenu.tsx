@@ -96,7 +96,7 @@ export const EllipsisMenu = ({
 					size={triggerSize}
 					className={cn(
 						"h-8 w-8 p-0",
-						"hover:bg-gray-100 focus:bg-gray-100",
+						"hover:bg-muted focus-visible:bg-muted",
 						"transition-colors duration-150",
 						triggerClassName
 					)}

@@ -67,31 +67,34 @@ export default async function Page(props: {
 	return (
 		<ContentLayout
 			title={
-				<div className="flex flex-col">
-					<div className="flex flex-row items-center">
-						<ClipboardPenLine
-							size={24}
-							strokeWidth={1}
-							className="mr-2 text-gray-500"
-						/>{" "}
-						{form.name}
-						<EditFormTitleButton formId={form.id} name={form.name} />
-					</div>
-					{form.isDefault && (
-						<div className="flex gap-1 font-normal text-sm">
-							Default editor for this type
-							<Tooltip>
-								<TooltipTrigger>
-									<Info size="16" />
-								</TooltipTrigger>
-								<TooltipContent>
-									This form is used as the default internal editor for all Pubs of
-									this type.
-								</TooltipContent>
-							</Tooltip>
+				<>
+					<ClipboardPenLine
+						size={24}
+						strokeWidth={1}
+						className="mr-2 text-muted-foreground"
+					/>{" "}
+					<div className="flex flex-col">
+						<div className="flex items-center">
+							<h1>{form.name}</h1>
+							<EditFormTitleButton formId={form.id} name={form.name} />
 						</div>
-					)}
-				</div>
+
+						{form.isDefault && (
+							<div className="flex gap-1 font-normal text-muted-foreground text-xs">
+								Default editor for this type
+								<Tooltip>
+									<TooltipTrigger>
+										<Info size="12" />
+									</TooltipTrigger>
+									<TooltipContent>
+										This form is used as the default internal editor for all
+										Pubs of this type.
+									</TooltipContent>
+								</Tooltip>
+							</div>
+						)}
+					</div>
+				</>
 			}
 			right={
 				<div className="flex items-center gap-2">

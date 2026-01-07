@@ -57,19 +57,12 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 	const onSubmit = async ({ pubTypeName, name, slug }: z.infer<typeof schema>) => {
 		const pubTypeId = pubTypes.find((type) => type.name === pubTypeName)?.id
 		if (!pubTypeId) {
-			toast({
-				title: "Error",
-				description: `Unable to find pub type ${pubTypeName}`,
-				variant: "destructive",
-			})
+			toast.error(`Unable to find pub type ${pubTypeName}`)
 			return
 		}
 		const result = await runCreateForm(pubTypeId, name, slug, community.id)
 		if (didSucceed(result)) {
-			toast({
-				title: "Success",
-				description: "Form created",
-			})
+			toast.success("Form created")
 			form.reset()
 			setIsOpen(false)
 		}
@@ -81,12 +74,12 @@ export const NewFormButton = ({ pubTypes }: Props) => {
 			<DialogTrigger asChild>
 				<Button
 					data-testid="new-form-button"
-					className="flex items-center gap-x-2 rounded-md bg-emerald-500 text-white shadow hover:bg-emerald-600"
+					className="flex items-center gap-x-2 rounded-md bg-emerald-500 text-white shadow-sm hover:bg-emerald-600"
 				>
 					<Plus size="16" /> <span>New Form</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="max-h-full min-w-[20rem] max-w-fit overflow-auto md:min-w-[32rem]">
+			<DialogContent className="max-h-full min-w-[20rem] max-w-fit overflow-auto md:min-w-lg">
 				<DialogTitle>Create New Form</DialogTitle>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">

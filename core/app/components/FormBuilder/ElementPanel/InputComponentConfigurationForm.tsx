@@ -100,7 +100,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.checkboxGroup]: {
 		name: "Checkbox Group",
 		demoComponent: () => (
-			<div className="flex h-full w-full flex-col items-start justify-between gap-1 text-left text-gray-500 text-sm">
+			<div className="flex h-full w-full flex-col items-start justify-between gap-1 text-left text-muted-foreground text-sm">
 				<div>Label</div>
 				<div className="flex items-center gap-1">
 					<Checkbox id="c1" />
@@ -120,7 +120,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.radioGroup]: {
 		name: "Radio Group",
 		demoComponent: () => (
-			<RadioGroup className="w-full text-left text-gray-500 text-sm">
+			<RadioGroup className="w-full text-left text-muted-foreground text-sm">
 				<div>Label</div>
 				<div className="flex items-center gap-1">
 					<RadioGroupItem value="1" id="r1" />
@@ -140,7 +140,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.selectDropdown]: {
 		name: "Select Dropdown",
 		demoComponent: () => (
-			<div className="flex flex-col gap-1 text-left text-gray-500 text-sm">
+			<div className="flex flex-col gap-1 text-left text-muted-foreground text-sm">
 				<div>Label</div>
 				<Select>
 					<SelectTrigger className="text-left">
@@ -160,13 +160,13 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		name: "Multivalue Input",
 		demoComponent: () => (
 			<div className="flex flex-col gap-1 text-left text-sm">
-				<div className="text-gray-500">Label</div>
+				<div className="text-muted-foreground">Label</div>
 				<MultiValueInput
 					value={["Value 1"]}
 					onChange={() => {}}
 					// Shrink everything a little to fit into the display box better
 					className="h-8"
-					valueClassName="h-5 px-1"
+					valueClassName="h-5 px-1 whitespace-nowrap"
 				/>
 			</div>
 		),
@@ -176,9 +176,8 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		demoComponent: () => {
 			return (
 				<div className="isolate h-full w-full text-sm">
-					<div className="relative z-10 bg-white text-gray-500">Label</div>
+					<div className="relative z-10 bg-white text-muted-foreground">Label</div>
 					<ContextEditorClient
-						pubs={[]}
 						pubTypes={[]}
 						onChange={() => {}}
 						// Casting since this is a demo component where the pubId and pubTypeId doesn't really matter
@@ -196,7 +195,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		demoComponent: () => {
 			return (
 				<div className="flex w-full flex-col gap-1 text-left text-sm">
-					<div className="text-gray-500">Label</div>
+					<div className="text-muted-foreground">Label</div>
 					<MultiBlock title="Pub Relation" disabled compact onAdd={() => {}} />
 				</div>
 			)
@@ -277,7 +276,7 @@ const ComponentSelect = ({
 								onChange(c)
 							}}
 						/>
-						<div className="flex h-32 w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm peer-checked:border-2 peer-checked:border-ring peer-checked:outline-none">
+						<div className="flex h-32 w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-xs peer-checked:border-2 peer-checked:border-ring peer-checked:outline-hidden">
 							<label
 								className="cursor-pointer"
 								htmlFor={`component-${c}`}
@@ -383,7 +382,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				}}
 				className="flex h-full flex-col gap-2"
 			>
-				<div className="flex flex-nowrap rounded border border-gray-200 border-l-[12px] border-l-emerald-100 border-solid bg-white p-3 pr-4">
+				<div className="flex flex-nowrap rounded-sm border border-border border-l-12 border-l-emerald-100 border-solid bg-card p-3 pr-4">
 					<FieldInputElement element={fieldInputElement} isEditing={false} />
 				</div>
 				<div className="text-muted-foreground text-sm uppercase">Appearance</div>
@@ -454,7 +453,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 										onCheckedChange={field.onChange}
 									/>
 								</FormControl>
-								<FormLabel className="!mt-0">Mark as required</FormLabel>
+								<FormLabel className="mt-0!">Mark as required</FormLabel>
 								<FormMessage />
 							</FormItem>
 						)}

@@ -217,7 +217,9 @@ export const StageEditorGraph = () => {
 			>
 				<Background />
 				{/* otherwise it may overlap with the node when the panel is open */}
-				{editingStageId ? null : <Controls />}
+				{editingStageId ? null : (
+					<Controls className="[&>button]:!bg-muted [&_svg]:!fill-muted-foreground [&>button]:!border-0 rounded-sm border border-transparent" />
+				)}
 			</ReactFlow>
 		</div>
 	)

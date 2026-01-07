@@ -9,6 +9,7 @@ import { redirect } from "next/navigation"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { isCommunityAdmin } from "~/lib/authentication/roles"
 import { env } from "~/lib/env/env"
+import { StopLight } from "./StopLight"
 
 export const dynamic = "force-dynamic"
 
@@ -33,18 +34,9 @@ export default async function IndexPage(props: { params: Promise<{ communitySlug
 	return (
 		<div className="absolute inset-0 min-h-screen">
 			<Script src="https://unpkg.com/@stoplight/elements@8.5.2/web-components.min.js" />
-			<div
-				className="h-full"
-				dangerouslySetInnerHTML={{
-					__html: `<elements-api
-						style="min-height: 100vh;"
-						apiDescriptionUrl="/c/${communitySlug}/developers/docs/openapi.json"
-						router="hash"
-						logo="/logos/icon.svg"
-						layout="sidebar"
-						${env.NODE_ENV === "production" ? 'hideTryItPanel="true"' : ""}
-								  />`,
-				}}
+			<StopLight
+				communitySlug={communitySlug}
+				hideTryItPanel={env.NODE_ENV === "production"}
 			/>
 		</div>
 	)

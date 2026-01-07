@@ -342,7 +342,7 @@ export function ActionFieldJsonataTestPanel(props: {
 									"h-7 gap-1.5 px-2 text-xs transition-colors",
 									autoEvaluate
 										? "text-amber-700 hover:bg-amber-50 hover:text-amber-800"
-										: "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+										: "text-muted-foreground hover:bg-gray-100 hover:text-gray-700"
 								)}
 							>
 								{autoEvaluate ? <Zap size={12} /> : <ZapOff size={12} />}
@@ -373,7 +373,7 @@ export function ActionFieldJsonataTestPanel(props: {
 			<div className="min-h-[60px] transition-all duration-200">
 				{/* to make it easier for screen readers to understand the output */}
 				{testResult.status === "pending" && (
-					<div className="flex items-center justify-center py-4 text-gray-500 text-xs">
+					<div className="flex items-center justify-center py-4 text-muted-foreground text-xs">
 						<Loader2 className="mr-2 h-3 w-3 animate-spin" />
 						Evaluating...
 					</div>
@@ -400,7 +400,7 @@ export function ActionFieldJsonataTestPanel(props: {
 								htmlFor={props.configKey}
 								aria-label="Success: JSONata test interpolated value"
 							>
-								<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-gray-900 text-xs">
+								<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded-sm bg-white p-2 font-mono text-gray-900 text-xs">
 									{JSON.stringify(testResult.interpolated, null, 2)}
 								</pre>
 							</output>
@@ -428,7 +428,7 @@ export function ActionFieldJsonataTestPanel(props: {
 									htmlFor={props.configKey}
 									aria-label="Error: JSONata test interpolated value"
 								>
-									<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-gray-900 text-xs">
+									<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded-sm bg-white p-2 font-mono text-gray-900 text-xs">
 										{JSON.stringify(testResult.interpolated, null, 2)}
 									</pre>
 								</output>
@@ -513,7 +513,7 @@ export const InputSelector = (props: {
 								}
 								props.setSelectedPubId(pubs[0].id)
 							}}
-							placeholder="Search for a pub to test..."
+							placeholder="Search for a Pub to test..."
 						/>
 					</div>
 				</TabsContent>

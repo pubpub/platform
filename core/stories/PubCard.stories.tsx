@@ -12,7 +12,7 @@ import type { CommunityStage } from "~/lib/server/stages"
 import { Action, AutomationEvent } from "db/public"
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider"
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import { PubCardServer } from "~/app/components/pubs/PubCard/PubCardServer"
 import pubJson from "./assets/pub.json"
 import stagesJson from "./assets/stages.json"
 
@@ -28,9 +28,9 @@ const pub = {
 
 const _stages = stagesJson as unknown as CommunityStage[]
 
-const meta: Meta<typeof PubCard> = {
+const meta: Meta<typeof PubCardServer> = {
 	title: "PubCard",
-	component: PubCard,
+	component: PubCardServer,
 	tags: ["autodocs"],
 	argTypes: {},
 	args: {
@@ -92,14 +92,14 @@ const meta: Meta<typeof PubCard> = {
 					updatedAt: new Date(),
 				}}
 			>
-				<PubCard {...args} />
+				<PubCardServer {...args} />
 			</CommunityProvider>
 		)
 	},
 }
 export default meta
 
-type Story = StoryObj<typeof PubCard>
+type Story = StoryObj<typeof PubCardServer>
 
 export const Base: Story = {
 	args: {},

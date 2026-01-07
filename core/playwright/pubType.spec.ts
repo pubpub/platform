@@ -113,6 +113,8 @@ test.describe("Pub types", () => {
 
 		await pubTypesEditPage.goto()
 
-		await expect(pubTypesEditPage.page.getByTestId(`remove-as-title-description`)).toBeVisible()
+		await expect(
+			pubTypesEditPage.page.getByTestId(`remove-as-title-description`).first()
+		).toBeVisible()
 	})
 })

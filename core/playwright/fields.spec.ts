@@ -47,14 +47,14 @@ test.describe("Creating a field", () => {
 					})
 				} catch {}
 			}
-			await expect(
-				page.getByRole("button", { name: `Select row ${schema} ${schema}` })
-			).toHaveCount(1, { timeout: 1000 })
+			await expect(page.getByTestId(`data-table-row-${schema}`)).toHaveCount(1, {
+				timeout: 1000,
+			})
 		}
 
 		// Try to create a field with the same name, should error
 		await fieldsPage.addField("String", CoreSchemaType.String, false, false)
-		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1)
+		await expect(page.getByRole("listitem").filter({ hasText: "Error" })).toHaveCount(1)
 	})
 
 	test("Auto slug", async () => {
@@ -102,7 +102,7 @@ test.describe("Creating a field", () => {
 
 		await page.getByRole("button", { name: "Updated" }).click()
 		await page.getByRole("menuitem", { name: "Desc" }).click()
-		const newRow = page.getByRole("button", { name: "Select row Relation field" })
+		const newRow = page.getByTestId(`data-table-row-Relation field`)
 		await expect(newRow).toHaveCount(1)
 		await expect(newRow).toContainText("Null")
 	})
@@ -119,9 +119,9 @@ test.describe("Creating a field", () => {
 
 		await page.getByRole("button", { name: "Updated" }).click()
 		await page.getByRole("menuitem", { name: "Desc" }).click()
-		const newRow = page.getByRole("button", { name: `Select row ${name}` })
-		await expect(newRow).toHaveCount(1)
-		await expect(newRow).toContainText("Boolean")
+		const row = page.getByTestId(`data-table-row-${name}`)
+		await expect(row).toHaveCount(1)
+		await expect(row).toContainText("Boolean")
 	})
 })
 
@@ -130,7 +130,7 @@ test.describe("Editing a field", () => {
 		const fieldsPage = new FieldsPage(page, community.community.slug)
 		await fieldsPage.goto()
 		await fieldsPage.addField("New Title", CoreSchemaType.String)
-		await page.getByRole("button", { name: "Select row New Title String" }).click()
+		await page.getByTestId(`data-table-row-New Title`).click({ timeout: 5000 })
 		await expect(page.getByRole("dialog").getByRole("combobox")).toBeDisabled()
 		await expect(page.getByRole("textbox", { name: "slug" })).toBeDisabled()
 		await expect(page.getByTestId("isRelation-checkbox")).toBeDisabled()
@@ -139,8 +139,6 @@ test.describe("Editing a field", () => {
 
 		await page.getByRole("button", { name: "Updated" }).click()
 		await page.getByRole("menuitem", { name: "Desc" }).click()
-		await expect(
-			page.getByRole("button", { name: `Select row Newer Title String` })
-		).toHaveCount(1)
+		await expect(page.getByText("Newer Title")).toHaveCount(1)
 	})
 })

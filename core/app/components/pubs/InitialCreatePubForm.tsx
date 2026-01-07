@@ -8,9 +8,10 @@ import type { PubTypeWithForm } from "~/lib/authorization/capabilities"
 import type { PubField } from "~/lib/types"
 
 import { useCallback, useMemo } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { typeboxResolver } from "@hookform/resolvers/typebox"
 import { Type } from "@sinclair/typebox"
+import { parseAsString, useQueryState } from "nuqs"
 import QueryString from "qs"
 import { useForm } from "react-hook-form"
 
@@ -177,20 +178,18 @@ export const InitialCreatePubForm = ({
 		resolver: typeboxResolver(schema),
 	})
 
-	const path = usePathname()
-	const searchParams = useSearchParams()
-	const router = useRouter()
+	const [, setCreatePubForm] = useQueryState(
+		"create-pub-form",
+		parseAsString.withOptions({ shallow: false })
+	)
+
 	const community = useCommunity()
 
-	const pathWithoutFormParam = useMemo(() => {
-		const urlSearchParams = new URLSearchParams(searchParams ?? undefined)
-		urlSearchParams.delete("create-pub-form")
-		return `${path}?${urlSearchParams.toString()}`
-	}, [path, searchParams])
+	const router = useRouter()
 
 	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam)
-	}, [pathWithoutFormParam, router.replace])
+		setCreatePubForm(null)
+	}, [setCreatePubForm])
 
 	const onSubmit = async (values: Schema) => {
 		const formSwitcherUrlParamValue = pubTypes.find(
@@ -211,7 +210,9 @@ export const InitialCreatePubForm = ({
 			}
 		)
 		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`
-		router.push(createPubPath)
+		router.push(createPubPath, {
+			scroll: false,
+		})
 	}
 
 	return (
@@ -228,7 +229,7 @@ export const InitialCreatePubForm = ({
 						disabled={!form.formState.isValid}
 						idleText="Create Pub"
 						successText="Redirecting..."
-						pendingText="Redirecting..."
+						pendingText="Creating..."
 					/>
 				</div>
 			</form>

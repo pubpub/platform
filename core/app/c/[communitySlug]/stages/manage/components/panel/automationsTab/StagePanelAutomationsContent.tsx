@@ -52,16 +52,16 @@ export function StagePanelAutomationsContent(props: Props) {
 				aria-hidden={!automationId}
 			>
 				<Card className="h-full overflow-y-auto pt-0">
-					<CardHeader className="sticky top-0 z-10 flex items-center gap-3 bg-white pt-6 pb-4">
+					<CardHeader className="sticky top-0 z-10 flex items-center gap-3 bg-card pt-6 pb-4">
 						<Button
 							variant="ghost"
 							size="sm"
 							onClick={() => setAutomationId(null)}
-							className="h-8 w-8 p-0"
+							className="h-8 w-8 p-0 text-muted-foreground text-xs hover:text-foreground"
 							data-testid="automation-edit-back-button"
 						>
 							<ChevronLeft size={16} />
-							<span className="sr-only">Back to automations</span>
+							<span className="sr-only text-xs">Back to automations</span>
 						</Button>
 						<CardTitle className="flex items-center gap-2">
 							{currentAutomation ? (

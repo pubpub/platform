@@ -37,7 +37,7 @@ export default async function Page(props: { params: Promise<{ communitySlug: str
 	return (
 		<main className="flex flex-col items-start gap-y-4">
 			<h1 className="font-bold text-xl">Community Settings</h1>
-			<div className="prose">
+			<div className="prose dark:prose-invert">
 				<ul>
 					<li>
 						<Link className="underline" href={`/c/${communitySlug}/settings/tokens`}>

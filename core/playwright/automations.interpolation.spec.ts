@@ -91,11 +91,8 @@ test.describe("actions interpolation", () => {
 			await runActionDialog.getByRole("button", { name: "Run" }).click()
 		})
 		await page
-			.getByRole("status")
-			.filter({
-				hasText:
-					"Logged out Hello, TEST. Im running Log with Debounce: 10, check your console",
-			})
+			.getByText("Hello, TEST. Im running Log with Debounce: 10, check your console")
+			.first()
 			.waitFor({ timeout: 5000 })
 	})
 
@@ -114,10 +111,8 @@ test.describe("actions interpolation", () => {
 			await runActionDialog.getByRole("button", { name: "Run" }).click()
 		})
 		await page
-			.getByRole("status")
-			.filter({
-				hasText: "Logged out my title is Test, check your console",
-			})
+			.getByText("my title is Test, check your console")
+			.first()
 			.waitFor({ timeout: 5000 })
 	})
 
@@ -165,10 +160,8 @@ test.describe("actions interpolation", () => {
 			await runActionDialog.getByRole("button", { name: "Run" }).click()
 
 			await page
-				.getByRole("status")
-				.filter({
-					hasText: "Logged out my title is Test, check your console",
-				})
+				.getByText("my title is Test, check your console")
+				.first()
 				.waitFor({ timeout: 5000 })
 		})
 	})

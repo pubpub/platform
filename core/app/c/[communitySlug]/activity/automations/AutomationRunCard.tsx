@@ -81,9 +81,11 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 
 	return (
 		<div
-			className="gap-4 rounded-md border border-gray-200 bg-white p-4"
+			// makes it pulse in the search results
+			data-pulse
+			className="gap-4 rounded-md border border-border bg-card p-4"
 			style={{ gridTemplateRows: "auto auto" }}
-			data-testid={`automation-run-card-${automationRun.id}`}
+			data-testid={`automation-run-card-${automationRun.id}-${automationRun.automation!.name}`}
 		>
 			{/* Header - spans both columns on large screens */}
 			<Collapsible className="flex flex-col gap-3" onOpenChange={setIsOpen}>
@@ -131,7 +133,7 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 							)}
 						</div>
 						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-1.5 text-gray-600 text-xs">
+							<div className="flex items-center gap-1.5 text-muted-foreground text-xs">
 								<User size={12} />
 								<span>{triggerDescription}</span>
 								<span>·</span>
@@ -151,13 +153,13 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 					</div>
 				</div>
 				<CollapsibleContent className="flex flex-col gap-3">
-					<div className="flex flex-col gap-2 border-gray-200 border-t pt-3 lg:col-start-2 lg:w-64 lg:border-t-0 lg:pt-0">
+					<div className="flex flex-col gap-2 border-border border-t pt-3 lg:col-start-2 lg:w-64 lg:border-t-0 lg:pt-0">
 						<h4 className="font-medium text-xs">Input</h4>
 						{inputDescription}
 					</div>
 					{/* Actions - left side */}
 
-					<div className="flex flex-col gap-2 border-gray-200 border-t pt-3 lg:border-t-0 lg:pt-0">
+					<div className="flex flex-col gap-2 border-border border-t pt-3 lg:border-t-0 lg:pt-0">
 						<h4 className="font-medium text-xs">Actions</h4>
 						{automationRun.actionRuns.length > 0 && (
 							<Accordion type="multiple" className="w-full">
