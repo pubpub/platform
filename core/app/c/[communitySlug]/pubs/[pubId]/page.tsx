@@ -375,32 +375,36 @@ export default async function Page(props: {
 									<PubValues formSlug={form.slug} pub={pubByForm} />
 								</div>
 
-								<Separator className="mt-10" />
-
 								{(_pubTypeHasRelatedPubs || _pubHasRelatedPubs) && (
-									<div className="flex flex-col gap-2" data-testid="related-pubs">
-										<div className="flex items-center justify-between gap-2">
-											<h2 className="mb-2 font-semibold">Related Pubs</h2>
-											{_canCreateRelatedPub && (
-												<CreatePubButton
-													text="Add Related Pub"
-													communityId={community.id}
-													relatedPub={{
-														pubId: pub.id,
-														pubTypeId: pub.pubTypeId,
-													}}
-													className="w-fit"
-												/>
-											)}
+									<>
+										<Separator className="mt-10" />
+										<div
+											className="flex flex-col gap-2"
+											data-testid="related-pubs"
+										>
+											<div className="flex items-center justify-between gap-2">
+												<h2 className="mb-2 font-semibold">Related Pubs</h2>
+												{_canCreateRelatedPub && (
+													<CreatePubButton
+														text="Add Related Pub"
+														communityId={community.id}
+														relatedPub={{
+															pubId: pub.id,
+															pubTypeId: pub.pubTypeId,
+														}}
+														className="w-fit"
+													/>
+												)}
+											</div>
+											<RelatedPubsTableWrapper
+												pub={pubByForm}
+												userCanRunActions={_canRunActionsAllPubs}
+												userCanOverrideAutomationConditions={
+													canOverrideAutomationConditions
+												}
+											/>
 										</div>
-										<RelatedPubsTableWrapper
-											pub={pubByForm}
-											userCanRunActions={_canRunActionsAllPubs}
-											userCanOverrideAutomationConditions={
-												canOverrideAutomationConditions
-											}
-										/>
-									</div>
+									</>
 								)}
 							</div>
 						</ContentLayout>
