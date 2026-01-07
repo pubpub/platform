@@ -237,9 +237,12 @@ test.describe("Multivalue inputs", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`)
-		await page.getByRole("link", { name: title, exact: true }).click()
+
+		await retryAction(async () => {
+			await page.getByRole("link", { name: title, exact: true }).click()
+			await page.waitForURL(`/c/${community.community.slug}/pubs/*`, { timeout: 5000 })
+		})
 		// Make sure pub details page has loaded before making assertions
-		await page.waitForURL(`/c/${community.community.slug}/pubs/*`)
 		await expect(page.getByText(numberElement.name)).toHaveCount(1)
 		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("[0]", {
 			timeout: 5000,

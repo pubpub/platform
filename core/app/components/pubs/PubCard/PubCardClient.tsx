@@ -283,7 +283,8 @@ export const PubCardTitle = ({
 					className={cn(
 						"hover:underline",
 						"focus-within:underline",
-						bigLink && "card-filling-link"
+						bigLink &&
+							"after:absolute after:top-0 after:right-0 after:bottom-0 after:left-0 after:z-0 after:block after:content-['']"
 					)}
 				>
 					{children}

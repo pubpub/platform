@@ -88,7 +88,7 @@ const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunit
 										/>
 										<AvatarFallback>{option.name[0]}</AvatarFallback>
 									</Avatar>
-									<span className={cn(textClasses, "line-clamp-1 font-medium")}>
+									<span className={cn(textClasses, "line-clamp-1")}>
 										{option.name}
 									</span>
 								</Link>
