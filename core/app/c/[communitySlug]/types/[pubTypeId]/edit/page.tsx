@@ -1,6 +1,7 @@
 import type { PubTypesId } from "db/public"
 
 import { cache } from "react"
+import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 
 import { Capabilities, MembershipType } from "db/public"
@@ -88,58 +89,57 @@ export default async function Page(props: {
 	const pubtypebuilderId = "pubtypebuilder"
 
 	return (
-		<ContentLayout
-			title={
-				<div className="flex flex-col">
-					<div className="flex flex-row items-center gap-3">
-						<ToyBrick size={24} strokeWidth={1} className="text-muted-foreground" />
-						<BreadcrumbList className="text-lg">
-							<BreadcrumbItem>
-								<BreadcrumbLink
-									href={`/c/${communitySlug}/types`}
-									className="font-normal text-gray-900"
-								>
-									Types
-								</BreadcrumbLink>
-							</BreadcrumbItem>
-							<BreadcrumbSeparator className="mt-1" />
-							<BreadcrumbPage className="font-bold">{pubType.name}</BreadcrumbPage>
-						</BreadcrumbList>
-						{pubType.description && (
-							<div className="font-normal text-muted-foreground text-sm">
-								{pubType.description}
-							</div>
-						)}
-						<UpdatePubTypeButton
-							pubTypeId={pubTypeId}
-							name={pubType.name}
-							description={pubType.description}
-						>
-							<Button
-								variant="link"
-								size="sm"
-								className="h-auto p-0 text-blue-500 underline hover:text-blue-600"
+		<PubFieldProvider pubFields={fields}>
+			<ContentLayout
+				title={
+					<div className="flex flex-col">
+						<div className="flex flex-row items-center gap-3">
+							<ToyBrick size={24} strokeWidth={1} className="text-muted-foreground" />
+							<BreadcrumbList className="text-lg">
+								<BreadcrumbItem>
+									<BreadcrumbLink
+										className="font-normal text-muted-foreground"
+										asChild
+									>
+										<Link href={`/c/${communitySlug}/types`}>Types</Link>
+									</BreadcrumbLink>
+								</BreadcrumbItem>
+								<BreadcrumbSeparator className="mt-1" />
+								<BreadcrumbPage className="font-bold">
+									{pubType.name}
+								</BreadcrumbPage>
+							</BreadcrumbList>
+							{pubType.description && (
+								<div className="font-normal text-muted-foreground text-sm">
+									{pubType.description}
+								</div>
+							)}
+							<UpdatePubTypeButton
+								pubTypeId={pubTypeId}
+								name={pubType.name}
+								description={pubType.description}
 							>
-								Edit
-							</Button>
-						</UpdatePubTypeButton>
-						{/* <span>Types</span>
-						<span className="text-lg font-bold">{pubType.name}</span> */}
-						{/* <EditFormTitleButton formId={form.id} name={form.name} /> */}
+								<Button
+									variant="link"
+									size="sm"
+									className="h-auto p-0 text-blue-500 underline hover:text-blue-600"
+								>
+									Edit
+								</Button>
+							</UpdatePubTypeButton>
+						</div>
 					</div>
-				</div>
-			}
-			right={
-				<div className="flex items-center gap-2">
-					{/* <FormCopyButton formSlug={formSlug} /> */}
-					{/* <ArchiveFormButton id={form.id} className="border border-gray-950 px-4" />{" "} */}
-					<SaveFormButton form={pubtypebuilderId} />
-				</div>
-			}
-		>
-			<PubFieldProvider pubFields={fields}>
+				}
+				right={
+					<div className="flex items-center gap-2">
+						{/* <FormCopyButton formSlug={formSlug} /> */}
+						{/* <ArchiveFormButton id={form.id} className="border border-gray-950 px-4" />{" "} */}
+						<SaveFormButton form={pubtypebuilderId} />
+					</div>
+				}
+			>
 				<TypeBuilder pubType={pubType} formId={pubtypebuilderId} />
-			</PubFieldProvider>
-		</ContentLayout>
+			</ContentLayout>
+		</PubFieldProvider>
 	)
 }
