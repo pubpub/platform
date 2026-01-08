@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import { cache } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { BookOpen, Eye } from "lucide-react"
+import { BookOpen, ChevronLeft } from "lucide-react"
 
 import { Button } from "ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
@@ -165,23 +165,29 @@ export default async function Page(props: {
 		<ContentLayoutRoot>
 			<ContentLayoutHeader>
 				<ContentLayoutTitle>
-					<BookOpen size={24} strokeWidth={1} className="mr-3 text-muted-foreground" />
+					{hasAccessToAnyViewForm ? (
+						<Link
+							data-testid="back-to-pub-detail"
+							href={constructRedirectToPubDetailPage({
+								pubId,
+								communitySlug,
+								formSlug: viewFormToRedirectTo.slug,
+							})}
+						>
+							<ChevronLeft size={24} className="mr-3" strokeWidth={1} />
+						</Link>
+					) : (
+						<BookOpen
+							size={24}
+							strokeWidth={1}
+							className="mr-3 size-6! grow text-muted-foreground"
+						/>
+					)}
 
 					<div className="flex flex-col">
 						<Tooltip delayDuration={300}>
 							<TooltipTrigger className="m-0 line-clamp-1 p-0 text-left">
 								{getPubTitle(pub)}
-								{hasAccessToAnyViewForm ? (
-									<Link
-										href={constructRedirectToPubDetailPage({
-											pubId,
-											communitySlug,
-											formSlug: viewFormToRedirectTo.slug,
-										})}
-									>
-										<Eye size={16} className="ml-2" />
-									</Link>
-								) : null}
 							</TooltipTrigger>
 							<TooltipContent
 								side="bottom"
