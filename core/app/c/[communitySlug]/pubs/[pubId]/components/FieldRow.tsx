@@ -4,8 +4,10 @@ import type { ProcessedPubWithForm } from "contracts"
 import type { CoreSchemaType, PubsId } from "db/public"
 
 import { useState } from "react"
+import { Pencil } from "lucide-react"
 import { SCHEMA_TYPES_WITH_ICONS } from "schemas"
 
+import { Button } from "ui/button"
 import { cn } from "utils"
 
 import { InlineEditForm } from "./InlineEditForm"
@@ -54,7 +56,7 @@ export const FieldRow = ({
 	}
 
 	return (
-		<div className="group relative col-span-14 grid grid-cols-subgrid gap-x-1 align-top">
+		<div className="group relative col-span-14 grid grid-cols-12 gap-x-1 align-top">
 			<FieldHeader
 				name={name}
 				slug={slugWithoutCommunity}
@@ -63,10 +65,7 @@ export const FieldRow = ({
 				isRelationEdgeValue={isRelationEdgeValue}
 				className="col-span-3 md:col-span-2 md:col-start-2"
 			/>
-			<div
-				className="col-span-10 col-start-5 md:col-span-8 md:col-start-4"
-				data-testid={`${name}-value`}
-			>
+			<div className="col-span-8 md:col-span-8" data-testid={`${name}-value`}>
 				{isEditing && canEdit ? (
 					<InlineEditForm
 						values={values}
@@ -78,7 +77,7 @@ export const FieldRow = ({
 					<ValueDisplay values={values} isRelationEdgeValue={isRelationEdgeValue} />
 				)}
 			</div>
-			{/* {canEdit && !isEditing && (
+			{canEdit && !isEditing && (
 				<Button
 					variant="ghost"
 					size="icon"
@@ -91,7 +90,7 @@ export const FieldRow = ({
 				>
 					<Pencil size={14} className="text-muted-foreground/50" />
 				</Button>
-			)} */}
+			)}
 		</div>
 	)
 }
