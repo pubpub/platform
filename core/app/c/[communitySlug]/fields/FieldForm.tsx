@@ -276,13 +276,13 @@ export const FieldForm = ({
 	const handleSubmit = useCallback(
 		async (values: FormValues & { schemaName: CoreSchemaType | null | undefined }) => {
 			if (isEditing) {
-				handleUpdate(values)
+				await handleUpdate(values)
 				return
 			}
 
 			const slug = `${community?.slug}:${slugifyString(values.slug)}`
 			const schemaName = values.schemaName ?? CoreSchemaType.Null
-			handleCreate({ ...values, slug, schemaName })
+			await handleCreate({ ...values, slug, schemaName })
 		},
 		[handleUpdate, handleCreate]
 	)

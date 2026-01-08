@@ -297,7 +297,7 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 	)
 
 	const fetchStages = useCallback(() => {
-		actions.revalidateStages()
+		void actions.revalidateStages()
 	}, [])
 
 	useEffect(() => {

@@ -44,7 +44,7 @@ export default function ResetForm() {
 			return
 		}
 
-		redirectUser()
+		await redirectUser()
 	}
 
 	return (

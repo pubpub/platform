@@ -317,9 +317,9 @@ export function CommunitySettingsForm({
 								Cancel
 							</AlertDialogCancel>
 							<AlertDialogAction
-								onClick={(e) => {
+								onClick={async (e) => {
 									e.preventDefault()
-									handleDelete()
+									await handleDelete()
 								}}
 								disabled={deleteConfirmation !== community.name || isDeleting}
 								className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

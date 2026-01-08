@@ -121,7 +121,7 @@ export const ButtonConfigurationForm = ({
 			<form
 				onSubmit={(e) => {
 					e.stopPropagation() //prevent submission from propagating to parent form
-					form.handleSubmit(onSubmit)(e)
+					void form.handleSubmit(onSubmit)(e)
 				}}
 				className="flex h-full flex-col gap-4 pt-2"
 			>

@@ -378,7 +378,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 			<form
 				onSubmit={(e) => {
 					e.stopPropagation() //prevent submission from propagating to parent form
-					form.handleSubmit(onSubmit)(e)
+					void form.handleSubmit(onSubmit)(e)
 				}}
 				className="flex h-full flex-col gap-2"
 			>

@@ -56,7 +56,7 @@ export default function contextSuggestPlugin(
 			{ name: "reference", trigger: "@" },
 		],
 		onOpen: ({ view, range, filter, trigger, type }) => {
-			updateItems(view, filter || "")
+			void updateItems(view, filter || "")
 			return true
 		},
 		onArrow: ({ view, kind }) => {
@@ -79,7 +79,7 @@ export default function contextSuggestPlugin(
 			return true
 		},
 		onFilter: ({ view, filter }) => {
-			updateItems(view, filter || "")
+			void updateItems(view, filter || "")
 			return true
 		},
 		onEnter: ({ view, range }) => {

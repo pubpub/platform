@@ -45,7 +45,7 @@ export const AtomRenderer = forwardRef<
 	useEffect(() => {
 		if (isDataset && isDataUrl(activeNode.attrs.data["rd:source"])) {
 			// console.log("ok");
-			fetch(activeNode.attrs.data["rd:source"])
+			void fetch(activeNode.attrs.data["rd:source"])
 				.then((r) => r.text())
 				.then((text) => {
 					setActiveData(text)
