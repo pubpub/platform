@@ -140,6 +140,16 @@ export type AutomationInitializer = {
 			type: AutomationConditionBlockType
 			items: ConditionItemInput[]
 		}
+		/**
+		 * A JSONata expression to resolve a Pub or transform JSON input.
+		 *
+		 * This expression is evaluated before actions run and can:
+		 * - Resolve a different Pub using comparisons like `$.json.some.id = $.pub.values.fieldname`
+		 * - Transform JSON input into a new structure for actions
+		 *
+		 * The resolved value overwrites the initial pub/json context for action execution.
+		 */
+		resolver?: string
 		triggers: {
 			event: AutomationEvent
 			config: unknown
@@ -1400,6 +1410,7 @@ export async function seedCommunity<
 								rank: "a", // get's auto gend
 							}
 						: undefined,
+					resolver: automation.resolver,
 				},
 				trx
 			)

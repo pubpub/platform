@@ -25,13 +25,23 @@ export type InterpolationContextBase = {
 
 export type InterpolationContextWithPub = InterpolationContextBase & {
 	pub: ReturnType<typeof createPubProxy>
+	json?: Json
 }
 
 export type InterpolationContextWithJson = InterpolationContextBase & {
 	json: Json
+	pub?: ReturnType<typeof createPubProxy>
 }
 
-export type InterpolationContext = InterpolationContextWithPub | InterpolationContextWithJson
+export type InterpolationContextWithBoth = InterpolationContextBase & {
+	pub: ReturnType<typeof createPubProxy>
+	json: Json
+}
+
+export type InterpolationContext =
+	| InterpolationContextWithPub
+	| InterpolationContextWithJson
+	| InterpolationContextWithBoth
 
 type InterpolationCommunity = Pick<Communities, "id" | "name" | "slug" | "avatar">
 
@@ -67,7 +77,7 @@ type BuildInterpolationContextArgs =
 			} & (
 				| {
 						pub: ProcessedPub
-						json?: never
+						json?: Json
 				  }
 				| {
 						pub?: never
@@ -82,7 +92,7 @@ type BuildInterpolationContextArgs =
 			} & (
 				| {
 						pub: ProcessedPub
-						json?: never
+						json?: Json
 				  }
 				| {
 						pub?: never
@@ -142,6 +152,15 @@ export function buildInterpolationContext(
 					email: args.user.email,
 				}
 			: null,
+	}
+
+	if (args.pub && args.json !== undefined) {
+		// Both pub and json provided
+		return {
+			...baseContext,
+			pub: createPubProxy(args.pub, args.community.slug),
+			json: args.json,
+		}
 	}
 
 	if (args.pub) {
