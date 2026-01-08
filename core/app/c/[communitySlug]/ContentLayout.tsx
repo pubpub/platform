@@ -224,7 +224,7 @@ function ContentLayoutHeader({ className, children }: { className?: string; chil
 		<header
 			data-slot="content-layout-header"
 			className={cn(
-				"z-20 flex h-16 items-center justify-between gap-2 bg-sidebar p-4 dark:border-0",
+				"z-20 flex h-16 items-center justify-between bg-sidebar p-4 dark:border-0",
 				className
 			)}
 		>

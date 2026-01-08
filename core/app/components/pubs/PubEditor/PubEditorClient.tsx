@@ -467,7 +467,7 @@ export const PubEditorClient = ({
 						: undefined
 				}
 				onSubmit={formInstance.handleSubmit(handleSubmit)}
-				className={cn("relative isolate flex flex-col gap-6 overflow-clip", className)}
+				className={cn("relative isolate flex flex-col gap-6", className)}
 				id={htmlFormId}
 			>
 				{typeof children === "function" ? children(formInstance) : children}
