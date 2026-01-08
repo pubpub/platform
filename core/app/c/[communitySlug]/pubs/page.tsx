@@ -11,13 +11,7 @@ import { MainCreatePubButton } from "~/app/components/pubs/CreatePubButton"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { userCan, userCanCreateAnyPub } from "~/lib/authorization/capabilities"
 import { findCommunityBySlug } from "~/lib/server/community"
-import {
-	ContentLayoutActions,
-	ContentLayoutBody,
-	ContentLayoutHeader,
-	ContentLayoutRoot,
-	ContentLayoutTitle,
-} from "../ContentLayout"
+import { ContentLayout } from "../ContentLayout"
 import { PaginatedPubList } from "./PubList"
 
 export const metadata: Metadata = {
@@ -53,13 +47,15 @@ export default async function Page(props: Props) {
 	const basePath = `/c/${community.slug}/pubs`
 
 	return (
-		<ContentLayoutRoot>
-			<ContentLayoutHeader>
-				<ContentLayoutTitle>
+		<ContentLayout
+			title={
+				<>
 					<BookOpen size={24} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
 					Pubs
-				</ContentLayoutTitle>
-				<ContentLayoutActions>
+				</>
+			}
+			right={
+				<div className="flex items-center gap-x-2">
 					{canEditTypes && (
 						<Button variant="ghost" size="sm" asChild>
 							<Link href="types">Manage Types</Link>
@@ -68,16 +64,16 @@ export default async function Page(props: Props) {
 					{canCreateAnyPub && (
 						<MainCreatePubButton communityId={community.id as CommunitiesId} />
 					)}
-				</ContentLayoutActions>
-			</ContentLayoutHeader>
-			<ContentLayoutBody className="overflow-hidden">
-				<PaginatedPubList
-					communityId={community.id}
-					searchParams={searchParams}
-					basePath={basePath}
-					userId={user.id}
-				/>
-			</ContentLayoutBody>
-		</ContentLayoutRoot>
+				</div>
+			}
+			className="overflow-hidden"
+		>
+			<PaginatedPubList
+				communityId={community.id}
+				searchParams={searchParams}
+				basePath={basePath}
+				userId={user.id}
+			/>
+		</ContentLayout>
 	)
 }

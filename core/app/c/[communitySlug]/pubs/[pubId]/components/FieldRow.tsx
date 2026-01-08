@@ -82,8 +82,8 @@ export const FieldRow = ({
 					variant="ghost"
 					size="icon"
 					className={cn(
-						"absolute col-span-1 col-start-12 translate-x-full text-muted-foreground/50",
-						"transition-opacity duration-200 group-hover:opacity-100 md:flex md:opacity-0"
+						"absolute top-1 right-8 translate-x-full text-muted-foreground/50",
+						"opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:flex"
 					)}
 					onClick={() => setIsEditing(true)}
 					aria-label="Edit field"

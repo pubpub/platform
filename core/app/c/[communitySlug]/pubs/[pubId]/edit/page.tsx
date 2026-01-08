@@ -185,7 +185,7 @@ export default async function Page(props: {
 				<PubPageStatus defaultFormSlug={searchParams.form} forms={availableUpdateForms} />
 			</div>
 			<div className="flex justify-center py-10">
-				<div className="flex-1 md:max-w-prose">
+				<div className="max-w-prose flex-1">
 					{/** TODO: Add suspense */}
 					<PubEditor
 						mode="edit"
