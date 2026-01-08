@@ -24,7 +24,7 @@ export const PubTypeLabel = ({
 	}
 
 	return (
-		<span className="flex h-5 min-w-10 items-center truncate rounded-sm bg-muted px-[0.35rem] font-normal text-[10px] text-muted-foreground shadow-none">
+		<span className="flex h-5 items-center rounded-sm bg-muted px-[0.35rem] font-normal text-[10px] text-muted-foreground shadow-none">
 			{pubType.name}
 		</span>
 	)

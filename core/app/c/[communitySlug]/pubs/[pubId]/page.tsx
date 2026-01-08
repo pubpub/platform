@@ -333,7 +333,7 @@ export default async function Page(props: {
 								</ContentLayoutActions>
 							</ContentLayoutHeader>
 							<ContentLayoutBody>
-								<div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b bg-background px-4 py-1 text-muted-foreground text-sm">
+								<div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 py-1 text-muted-foreground text-sm">
 									<PubTypeLabel pubType={pub.pubType} canFilter={false} />
 									{pub.stage && (
 										<Move

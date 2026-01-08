@@ -44,7 +44,7 @@ export const PubsRunAutomationsDropDownMenu = async ({
 					data-testid={testId}
 					{...buttonProps}
 				>
-					<Play size="12" strokeWidth="1px" className="text-muted-foreground" />
+					<Play size="12" strokeWidth="1px" className="text-neutral-500" />
 					<span className={cn({ "sr-only": iconOnly })}>
 						{buttonText ?? "Run automation"}
 					</span>
