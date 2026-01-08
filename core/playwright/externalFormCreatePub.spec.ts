@@ -341,13 +341,11 @@ test.describe("Member select", async () => {
 		await page.getByLabel(community.users.user2.email).click()
 		await expect(memberInput).toHaveValue(community.users.user2.email)
 
-		await retryAction(async () => {
-			// Switch to a different user
-			await memberInput.clear()
-			await memberInput.pressSequentially(community.users.user3.email, { timeout: 5000 })
-			await page.getByLabel(community.users.user3.email).click({ timeout: 5000 })
-			await expect(memberInput).toHaveValue(community.users.user3.email, { timeout: 5000 })
-		})
+		// Switch to a different user
+		await memberInput.clear()
+		await memberInput.pressSequentially(community.users.user3.email)
+		await page.getByLabel(community.users.user3.email).click()
+		await expect(memberInput).toHaveValue(community.users.user3.email)
 
 		// Add a new user
 		const newUser = faker.internet.email()
