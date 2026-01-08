@@ -14,16 +14,17 @@ export const FormElementToggle = (props: PropsWithChildren<{ slug: string }>) =>
 	const formElementToggle = useFormElementToggleContext()
 	const isEnabled = formElementToggle.isEnabled(props.slug)
 	return (
-		<div className="flex items-baseline gap-1">
+		<div className="relative">
 			<Tooltip delayDuration={500}>
 				<TooltipTrigger asChild>
 					<Toggle
 						aria-label="Toggle field"
 						data-testid={`${props.slug}-toggle`}
 						className={cn(
-							"group top-2 z-20 h-3 w-3 min-w-3 rounded-full p-0 text-muted-foreground data-[state=off]:bg-border",
-							isEnabled ? "bg-accent/80" : "bg-border"
-							// isEnabled ? "text-accent-foreground" : "text-muted-foreground"
+							"group md:-left-5 absolute top-1 right-0 z-20 h-3 w-3 min-w-3 rounded-full p-0 text-muted-foreground data-[state=off]:bg-border md:right-auto",
+							isEnabled
+								? "bg-accent/80 text-accent-foreground"
+								: "bg-border text-muted-foreground"
 						)}
 						pressed={isEnabled}
 						onClick={() => formElementToggle.toggle(props.slug)}
@@ -39,7 +40,7 @@ export const FormElementToggle = (props: PropsWithChildren<{ slug: string }>) =>
 						)}
 					</Toggle>
 				</TooltipTrigger>
-				<TooltipContent>
+				<TooltipContent className="text-xs">
 					{isEnabled ? "Disable" : "Enable"}{" "}
 					<span className="font-mono">{props.slug}</span>
 				</TooltipContent>
