@@ -1,10 +1,14 @@
 import type { Metadata } from "next"
 
-import { Skeleton } from "ui/skeleton"
 import { Spinner } from "ui/spinner"
 
-import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton"
-import { ContentLayout } from "./ContentLayout"
+import {
+	ContentLayoutActionsSkeleton,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitleSkeleton,
+} from "./ContentLayout"
 
 export const metadata: Metadata = {
 	title: "Loading...",
@@ -13,17 +17,14 @@ export const metadata: Metadata = {
 
 export default function Loading() {
 	return (
-		<ContentLayout
-			title={
-				<>
-					<Skeleton className="mr-2 size-6 rounded-full" />
-					<Skeleton className="h-8 w-48 md:w-96" />
-				</>
-			}
-			right={<SkeletonButton className="w-24" />}
-			className="grid place-items-center overflow-hidden"
-		>
-			<Spinner />
-		</ContentLayout>
+		<ContentLayoutRoot>
+			<ContentLayoutHeader>
+				<ContentLayoutTitleSkeleton />
+				<ContentLayoutActionsSkeleton />
+			</ContentLayoutHeader>
+			<ContentLayoutBody className="grid place-items-center overflow-hidden">
+				<Spinner />
+			</ContentLayoutBody>
+		</ContentLayoutRoot>
 	)
 }

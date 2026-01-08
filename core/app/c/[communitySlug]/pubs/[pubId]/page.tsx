@@ -43,7 +43,13 @@ import { resolveFormAccess } from "~/lib/server/form-access"
 import { redirectToPubDetailPage, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
 import { getPubFields } from "~/lib/server/pubFields"
 import { getStages } from "~/lib/server/stages"
-import { ContentLayout } from "../../ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../../ContentLayout"
 import Move from "../../stages/components/Move"
 import { addPubMember, addUserWithPubMembership, removePubMember } from "./actions"
 import { PubMembersPanel } from "./components/PubMembersPanel"
@@ -262,9 +268,9 @@ export default async function Page(props: {
 							name: pubType.name,
 						}))}
 					>
-						<ContentLayout
-							title={
-								<>
+						<ContentLayoutRoot>
+							<ContentLayoutHeader>
+								<ContentLayoutTitle>
 									<BookOpen
 										size={24}
 										strokeWidth={1}
@@ -284,10 +290,8 @@ export default async function Page(props: {
 											</TooltipContent>
 										</Tooltip>
 									</div>
-								</>
-							}
-							right={
-								<div className="flex items-center gap-2">
+								</ContentLayoutTitle>
+								<ContentLayoutActions>
 									{canArchive && (
 										<RemovePubButton
 											pubId={pub.id}
@@ -326,88 +330,91 @@ export default async function Page(props: {
 											</Link>
 										</Button>
 									)}
-								</div>
-							}
-						>
-							<div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 py-1 text-muted-foreground text-sm">
-								<PubTypeLabel pubType={pub.pubType} canFilter={false} />
-								{pub.stage && (
-									<Move
+								</ContentLayoutActions>
+							</ContentLayoutHeader>
+							<ContentLayoutBody>
+								<div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 py-1 text-muted-foreground text-sm">
+									<PubTypeLabel pubType={pub.pubType} canFilter={false} />
+									{pub.stage && (
+										<Move
+											pubId={pub.id}
+											stageId={pub.stage?.id}
+											moveTo={moveTo}
+											moveFrom={moveFrom}
+											// moveFrom={[]}
+											// communityStages={communityStages}
+											stageName={pub.stage.name}
+											hideIfNowhereToMove={false}
+											button={
+												<StageMoveButton
+													data-testid="current-stage"
+													stage={pub.stage}
+													canFilter={false}
+													withDropdown={true}
+												/>
+											}
+										/>
+									)}
+									<FormSwitcher
+										defaultFormSlug={defaultViewForm?.slug}
+										forms={availableViewForms}
+										className="!bg-transparent !p-0 h-6! text-xs"
+									>
+										<Eye size={14} />
+									</FormSwitcher>
+									<PubMembersPanel
 										pubId={pub.id}
-										stageId={pub.stage?.id}
-										moveTo={moveTo}
-										moveFrom={moveFrom}
-										// moveFrom={[]}
-										// communityStages={communityStages}
-										stageName={pub.stage.name}
-										hideIfNowhereToMove={false}
-										button={
-											<StageMoveButton
-												data-testid="current-stage"
-												stage={pub.stage}
-												canFilter={false}
-												withDropdown={true}
-											/>
-										}
+										members={pub.members ?? []}
+										user={user}
+										availableForms={availableForms}
+										canAddMember={canAddMember}
+										canRemoveMember={canRemoveMember}
+										addMember={addPubMember.bind(null, pub.id)}
+										addUserMember={addUserWithPubMembership.bind(null, pub.id)}
+										removeMember={removePubMember}
 									/>
-								)}
-								<FormSwitcher
-									defaultFormSlug={defaultViewForm?.slug}
-									forms={availableViewForms}
-									className="!bg-transparent !p-0 h-6! text-xs"
-								>
-									<Eye size={14} />
-								</FormSwitcher>
-								<PubMembersPanel
-									pubId={pub.id}
-									members={pub.members ?? []}
-									user={user}
-									availableForms={availableForms}
-									canAddMember={canAddMember}
-									canRemoveMember={canRemoveMember}
-									addMember={addPubMember.bind(null, pub.id)}
-									addUserMember={addUserWithPubMembership.bind(null, pub.id)}
-									removeMember={removePubMember}
-								/>
-							</div>
-							<div className="m-4 flex flex-col space-y-4">
-								<div className="flex-1">
-									<PubValues formSlug={form.slug} pub={pubByForm} />
 								</div>
+								<div className="m-4 flex flex-col space-y-4">
+									<div className="flex-1">
+										<PubValues formSlug={form.slug} pub={pubByForm} />
+									</div>
 
-								{(_pubTypeHasRelatedPubs || _pubHasRelatedPubs) && (
-									<>
-										<Separator className="mt-10" />
-										<div
-											className="flex flex-col gap-2"
-											data-testid="related-pubs"
-										>
-											<div className="flex items-center justify-between gap-2">
-												<h2 className="mb-2 font-semibold">Related Pubs</h2>
-												{_canCreateRelatedPub && (
-													<CreatePubButton
-														text="Add Related Pub"
-														communityId={community.id}
-														relatedPub={{
-															pubId: pub.id,
-															pubTypeId: pub.pubTypeId,
-														}}
-														className="w-fit"
-													/>
-												)}
+									{(_pubTypeHasRelatedPubs || _pubHasRelatedPubs) && (
+										<>
+											<Separator className="mt-10" />
+											<div
+												className="flex flex-col gap-2"
+												data-testid="related-pubs"
+											>
+												<div className="flex items-center justify-between gap-2">
+													<h2 className="mb-2 font-semibold">
+														Related Pubs
+													</h2>
+													{_canCreateRelatedPub && (
+														<CreatePubButton
+															text="Add Related Pub"
+															communityId={community.id}
+															relatedPub={{
+																pubId: pub.id,
+																pubTypeId: pub.pubTypeId,
+															}}
+															className="w-fit"
+														/>
+													)}
+												</div>
+												<RelatedPubsTableWrapper
+													pub={pubByForm}
+													userCanRunActions={_canRunActionsAllPubs}
+													userCanOverrideAutomationConditions={
+														canOverrideAutomationConditions
+													}
+												/>
 											</div>
-											<RelatedPubsTableWrapper
-												pub={pubByForm}
-												userCanRunActions={_canRunActionsAllPubs}
-												userCanOverrideAutomationConditions={
-													canOverrideAutomationConditions
-												}
-											/>
-										</div>
-									</>
-								)}
-							</div>
-						</ContentLayout>
+										</>
+									)}
+								</div>
+							</ContentLayoutBody>
+						</ContentLayoutRoot>
 					</ContextEditorContextProvider>
 				</PubFormProvider>
 			</PubFieldProvider>
