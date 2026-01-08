@@ -69,7 +69,7 @@ describe("legacy migration", () => {
 		const { getPubFields } = await import("~/lib/server/pubFields")
 
 		const trx = getTrx()
-		maybeWithTrx(trx, async () => {
+		await maybeWithTrx(trx, async () => {
 			const _result = await createLegacyStructure({
 				community: community.community,
 			})

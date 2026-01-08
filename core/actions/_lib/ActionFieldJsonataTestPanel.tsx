@@ -294,7 +294,7 @@ export function ActionFieldJsonataTestPanel(props: {
 		}
 
 		debounceTimerRef.current = setTimeout(() => {
-			handleTest()
+			void handleTest()
 		}, 500)
 
 		return () => {

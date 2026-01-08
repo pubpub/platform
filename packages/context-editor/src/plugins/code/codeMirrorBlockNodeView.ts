@@ -177,7 +177,7 @@ export const codeMirrorBlockNodeView = (settings: CodeBlockSettings) => {
 		dom.append(codeMirrorView.dom)
 
 		const selectDeleteCB = settings.createSelect(settings, dom, node, view, getPos)
-		setMode(node.attrs.lang, codeMirrorView, settings, languageConf)
+		void setMode(node.attrs.lang, codeMirrorView, settings, languageConf)
 
 		return {
 			dom: wrap,
@@ -197,7 +197,7 @@ export const codeMirrorBlockNodeView = (settings: CodeBlockSettings) => {
 			update: (updateNode) => {
 				if (updateNode.type.name !== node.type.name) return false
 				if (updateNode.attrs.lang !== node.attrs.lang)
-					setMode(updateNode.attrs.lang, codeMirrorView, settings, languageConf)
+					void setMode(updateNode.attrs.lang, codeMirrorView, settings, languageConf)
 				const oldNode = node
 				node = updateNode
 				const change = computeChange(codeMirrorView.state.doc.toString(), node.textContent)

@@ -139,11 +139,38 @@ const createZipAndUploadToS3 = async (
 	id: string,
 	fileName: string
 ): Promise<string> => {
-	return new Promise((resolve, reject) => {
-		const client = getS3Client()
-		const bucket = env.S3_BUCKET_NAME
-		const key = `${id}/${fileName}`
+	const client = getS3Client()
+	const bucket = env.S3_BUCKET_NAME
+	const key = `${id}/${fileName}`
 
+	// Set up metrics for reporting
+	let totalBytes = 0
+
+	// Get total size of files to be added (in background)
+	const calculateTotalSize = async (dir: string): Promise<number> => {
+		let size = 0
+		const entries = await fs.readdir(dir, { withFileTypes: true })
+
+		for (const entry of entries) {
+			const fullPath = path.join(dir, entry.name)
+			if (entry.isDirectory()) {
+				size += await calculateTotalSize(fullPath)
+			} else {
+				const stats = await fs.stat(fullPath)
+				size += stats.size
+			}
+		}
+
+		return size
+	}
+
+	try {
+		totalBytes = await calculateTotalSize(sourceDir)
+	} catch (_err) {
+		// Continue anyway, we'll just have less precise progress reporting
+	}
+
+	return new Promise((resolve, reject) => {
 		// Create a pass-through stream as an intermediary between archiver and S3
 		const passThrough = new PassThrough()
 
@@ -152,37 +179,8 @@ const createZipAndUploadToS3 = async (
 			zlib: { level: 9 }, // compression level
 		})
 
-		// Set up metrics for reporting
-		let totalBytes = 0
 		let processedBytes = 0
 		let lastPercentage = 0
-
-		// Get total size of files to be added (in background)
-		const calculateTotalSize = async (dir: string): Promise<number> => {
-			let size = 0
-			const entries = await fs.readdir(dir, { withFileTypes: true })
-
-			for (const entry of entries) {
-				const fullPath = path.join(dir, entry.name)
-				if (entry.isDirectory()) {
-					size += await calculateTotalSize(fullPath)
-				} else {
-					const stats = await fs.stat(fullPath)
-					size += stats.size
-				}
-			}
-
-			return size
-		}
-
-		;(async () => {
-			try {
-				totalBytes = await calculateTotalSize(sourceDir)
-			} catch (_err) {
-				// Continue anyway, we'll just have less precise progress reporting
-			}
-		})()
-
 		// Pipe archive output to the pass-through stream
 		archive.pipe(passThrough)
 		// Configure S3 upload using the pass-through stream as input

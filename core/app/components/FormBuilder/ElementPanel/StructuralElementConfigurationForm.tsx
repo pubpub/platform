@@ -51,7 +51,7 @@ export const StructuralElementConfigurationForm = ({ index, structuralElement }:
 				className="flex grow flex-col"
 				onSubmit={(e) => {
 					e.stopPropagation() //prevent submission from propagating to parent form
-					form.handleSubmit(onSubmit)(e)
+					void form.handleSubmit(onSubmit)(e)
 				}}
 			>
 				<div className="grow">

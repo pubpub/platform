@@ -429,7 +429,7 @@ export const PubEditorClient = ({
 
 	// Re-validate the form when fields are toggled on/off.
 	useEffect(() => {
-		formInstance.trigger(Object.keys(formInstance.formState.errors))
+		void formInstance.trigger(Object.keys(formInstance.formState.errors))
 	}, [formInstance])
 
 	useUnsavedChangesWarning(formInstance.formState.isDirty)
@@ -444,7 +444,7 @@ export const PubEditorClient = ({
 			const newTimer = setTimeout(async () => {
 				// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 				// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
-				handleSubmit(values, evt, true)
+				await handleSubmit(values, evt, true)
 			}, SAVE_WAIT_MS)
 			setSaveTimer(newTimer)
 		},

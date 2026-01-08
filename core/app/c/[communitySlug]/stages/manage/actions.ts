@@ -108,7 +108,7 @@ export const createStage = defineServerAction(async function createStage(
 	}
 })
 
-export const duplicateStages = defineServerAction(async function createStage(
+export const duplicateStages = defineServerAction(async function duplicateStages(
 	communityId: CommunitiesId,
 	stageIds: StagesId[],
 	newStageIds: StagesId[]

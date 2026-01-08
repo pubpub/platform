@@ -123,7 +123,7 @@ export function ActionForm(props: ActionFormProps) {
 	const submitWithOptions = useCallback(
 		(options?: Record<string, unknown>) => {
 			submitOptionsRef.current = options
-			form.handleSubmit(onSubmit)()
+			void form.handleSubmit(onSubmit)()
 		},
 		[form, onSubmit]
 	)
