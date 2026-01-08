@@ -16,7 +16,7 @@ type Tables = (typeof databaseTableNames)[number]
 /**
  * Tables that are currently supported for SSE notifications
  */
-const notifyTables = ["action_runs"] as const satisfies Tables[]
+const notifyTables = ["automation_runs"] as const satisfies Tables[]
 export type NotifyTables = (typeof notifyTables)[number]
 
 const parseNotifyTables = (tables: string[]): NotifyTables[] => {
@@ -37,7 +37,7 @@ const constructChangeChannel = (communityId: string, table: NotifyTables) => {
 }
 
 const HEARTBEAT_INTERVAL = 15_000 // 15 seconds
-const MAX_IDLE_TIME = 60 * 60 * 1_000
+const MAX_IDLE_TIME = 60 * 60 * 1_000 // 1 hour
 
 // bit awkward since we want to read the search params here, but the next-use-sse does not expose the request
 export const GET = (req: NextRequest) => {
@@ -51,7 +51,7 @@ export const GET = (req: NextRequest) => {
 		let timeoutId: NodeJS.Timeout | undefined
 
 		const cleanup = async () => {
-			logger.info({ connectionId, msg: "closing sse connection" })
+			logger.debug({ connectionId, msg: "closing sse connection" })
 
 			if (interval) {
 				clearInterval(interval)
@@ -74,7 +74,7 @@ export const GET = (req: NextRequest) => {
 				}
 
 				try {
-					logger.info({ connectionId, msg: "releasing client" })
+					logger.debug({ connectionId, msg: "releasing client" })
 					client.release()
 				} catch (err) {
 					logger.error({ connectionId, msg: "error releasing client", err })
@@ -88,7 +88,7 @@ export const GET = (req: NextRequest) => {
 		onClose(cleanup)
 
 		if (!listen?.length) {
-			logger.info({
+			logger.debug({
 				msg: "no listen tables, closing sse connection",
 				connectionId,
 			})
@@ -96,7 +96,7 @@ export const GET = (req: NextRequest) => {
 			return
 		}
 
-		logger.info({ connectionId, msg: "opening sse connection" })
+		logger.debug({ connectionId, msg: "opening sse connection" })
 
 		try {
 			const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()])
@@ -124,8 +124,8 @@ export const GET = (req: NextRequest) => {
 
 			// setup heartbeat interval
 			interval = setInterval(() => {
-				logger.info({ connectionId, msg: "sending heartbeat" })
-				send("heartbeat", connectionId)
+				logger.debug({ connectionId, msg: "sending heartbeat" })
+				send({}, "heartbeat")
 			}, HEARTBEAT_INTERVAL)
 
 			// handle postgres notifications
@@ -146,7 +146,7 @@ export const GET = (req: NextRequest) => {
 						return
 					}
 
-					logger.info({
+					logger.debug({
 						connectionId,
 						msg: "notification",
 						notification,
@@ -167,12 +167,14 @@ export const GET = (req: NextRequest) => {
 
 			// setup max idle timeout
 			timeoutId = setTimeout(async () => {
-				logger.info({
+				logger.debug({
 					connectionId,
 					msg: "closing sse connection after max idle time",
 					userId: user.id,
 					community: community.slug,
 				})
+
+				send({}, "max-idle-timeout")
 				await cleanup()
 			}, MAX_IDLE_TIME)
 		} catch (err) {

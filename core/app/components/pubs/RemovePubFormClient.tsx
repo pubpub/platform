@@ -51,10 +51,7 @@ export const PubRemoveForm = ({ pubId, redirectTo }: PubRemoveProps) => {
 		})
 
 		if (result && "success" in result) {
-			toast({
-				title: "Success",
-				description: result.report,
-			})
+			toast.success(result.report)
 			closeForm()
 		}
 	}

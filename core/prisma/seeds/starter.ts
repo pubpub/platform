@@ -5,6 +5,9 @@ import { defaultMarkdownParser } from "prosemirror-markdown"
 
 import {
 	Action,
+	AutomationConditionBlockType,
+	AutomationEvent,
+	ConditionEvaluationTiming,
 	CoreSchemaType,
 	ElementType,
 	FormAccessType,
@@ -42,6 +45,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 				Evaluations: { schemaName: CoreSchemaType.Null, relation: true },
 				Submissions: { schemaName: CoreSchemaType.Null, relation: true },
 				Color: { schemaName: CoreSchemaType.Color },
+				Body: { schemaName: CoreSchemaType.String },
 			},
 			pubTypes: {
 				Article: {
@@ -69,6 +73,11 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					Confidence: { isTitle: false },
 					"Published At": { isTitle: false },
 					Color: { isTitle: false },
+				},
+				"Review Offer": {
+					Title: { isTitle: true },
+					Content: { isTitle: false },
+					URL: { isTitle: false },
 				},
 			},
 			users: {
@@ -140,6 +149,15 @@ export async function seedStarter(communityId?: CommunitiesId) {
 						],
 					},
 					stage: "Draft",
+				},
+				{
+					pubType: "Review Offer",
+					values: {
+						Title: "First big review offer",
+						Body: "{}",
+						URL: "https://pubpub.org",
+					},
+					stage: "Inbox",
 				},
 			],
 			forms: {
@@ -253,31 +271,234 @@ export async function seedStarter(communityId?: CommunitiesId) {
 			stages: {
 				Draft: {
 					members: { new: MemberRole.contributor },
-					actions: {
+					automations: {
 						"Log Review": {
-							action: Action.log,
-							config: {},
-						},
-						"Send Public Review email": {
-							action: Action.email,
-							config: {
-								subject: "Hello, :recipientName! Please review this draft!",
-								recipient: memberId,
-								body: `You are invited to fill in a form.\n\n\n\n:link{form="public-review" text="I've never been so excited about a form"}\n\nCurrent time: :value{field='starter:published-at'}`,
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: {},
+								},
+							],
+
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression:
+											'$.pub.values.title = "Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
+									},
+									{
+										kind: "block",
+										type: AutomationConditionBlockType.OR,
+										items: [
+											{
+												kind: "condition",
+												type: "jsonata",
+												expression: '$.pub.pubType.name = "Article"',
+											},
+											{
+												kind: "condition",
+												type: "jsonata",
+												expression: '$.pub.pubType.name = "Evaluation"',
+											},
+										],
+									},
+								],
 							},
+						},
+
+						"Send Public Review email": {
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.email,
+									config: {
+										subject: "Hello, :recipientName! Please review this draft!",
+										recipient: memberId,
+										body: `You are invited to fill in a form.\n\n\n\n:link{form="public-review" text="I've never been so excited about a form"}\n\nCurrent time: :value{field='starter:published-at'}`,
+									},
+								},
+							],
 						},
 						"Send Private Review email": {
-							action: Action.email,
-							config: {
-								subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
-								recipientEmail: "james@jimothy.org",
-								body: `You are invited to fill in a form.\n\n\n\n:link{form="private-review" text="Wow, a great form!"}\n\nCurrent time: :value{field='starter:published-at'}`,
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.email,
+									config: {
+										subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
+										recipientEmail: "james@jimothy.org",
+										body: `You are invited to fill in a form.\n\n\n\n:link{form="private-review" text="Wow, a great form!"}\n\nCurrent time: :value{field='starter:published-at'}`,
+									},
+								},
+							],
+						},
+						"Log Pub in Stage For Duration": {
+							triggers: [
+								{
+									event: AutomationEvent.pubInStageForDuration,
+									config: {
+										duration: 1,
+										interval: "minute",
+									},
+								},
+							],
+							timing: ConditionEvaluationTiming.both,
+							condition: {
+								type: AutomationConditionBlockType.OR,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: '$.pub.pubType.name = "Article"',
+									},
+								],
 							},
+							actions: [
+								{
+									action: Action.log,
+									config: {
+										text: "Pub {{ $.pub.title }} is in stage {{ $.stage.name }} for one minute",
+									},
+								},
+							],
 						},
 					},
 				},
 				Published: {
 					members: { new: MemberRole.contributor },
+				},
+				Inbox: {
+					automations: {
+						"Respond to Activity": {
+							icon: {
+								name: "activity",
+								color: "#3b82f6",
+							},
+							triggers: [
+								{
+									event: AutomationEvent.webhook,
+									config: {
+										path: "inbox",
+									},
+								},
+							],
+
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: '"Announce" in $.json.type',
+									},
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: '"coar-notify:ReviewAction" in $.json.type',
+									},
+								],
+							},
+							actions: [
+								{
+									action: Action.createPub,
+
+									config: {
+										stage: "Inbox",
+										formSlug: "inbox-form",
+										pubType: "Review Offer",
+										pubValues: {
+											Title: "Incoming {{ $.json.id }}",
+											Body: "{{ $.json.body }}",
+											URL: "{{ $.json.object.id }}",
+										},
+									},
+								},
+							],
+						},
+						"Send Review Offer": {
+							icon: {
+								name: "alert-circle",
+								color: "#f59e0b",
+							},
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.http,
+									config: {
+										url: "https://postman-echo.com/post",
+										method: "POST",
+										body: `
+{
+  "id": "urn:uuid:{{ $.automationRun.id }}",
+  "updated": "2024-11-28T15:20:58.780000",
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    "https://purl.org/coar/notify"
+  ],
+  "type": [
+    "Announce",
+    "coar-notify:ReviewAction"
+  ],
+  "origin": {
+    "id": "{{ $.community.url }}",
+    "inbox": "{{ $.community.url }}/api/v0/c/{{ $.community.slug }}/site/webhook/inbox",
+    "type": "Service"
+  },
+  "target": {
+    "id": "{{ $.community.url }}",
+    "inbox": "{{ $.community.url }}/api/v0/c/{{ $.community.slug }}/site/webhook/inbox",
+    "type": "Service"
+  },
+  "object": {
+    "id": "{{ $.pub.id }}",
+    "object": {{ $.pub }},
+    "type": "preprint",
+    "ietf:cite-as": null,
+    "url": {{ $.pub.url ? ('"' & $.pub.url & '"') ?? null }}
+  },
+  "actor": {{ $.user.id ? ('"' & $.user.id & '"') ?? null }},
+  "context": null,
+  "inReplyTo": null
+}`,
+										response: "json",
+									},
+								},
+							],
+						},
+					},
+				},
+			},
+			stageConnections: {
+				Draft: {
+					to: ["Published"],
 				},
 			},
 			apiTokens: {

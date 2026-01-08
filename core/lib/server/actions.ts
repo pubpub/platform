@@ -2,12 +2,17 @@ import type {
 	Action,
 	ActionInstancesId,
 	ActionInstancesUpdate,
+	ActionRunStatus,
+	AutomationRunsId,
+	AutomationsId,
 	CommunitiesId,
 	NewActionInstances,
+	StagesId,
 } from "db/public"
-import type { ActionRun } from "~/app/c/[communitySlug]/activity/actions/getActionRunsTableColumns"
+import type { IconConfig } from "ui/dynamic-icon"
+import type { AutoReturnType } from "../types"
 
-import { jsonObjectFrom } from "kysely/helpers/postgres"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
 import { db } from "~/kysely/database"
 import { autoCache } from "./cache/autoCache"
@@ -39,6 +44,24 @@ export const getActionConfigDefaults = (communityId: CommunitiesId, action: Acti
 	)
 }
 
+export type ActionConfigDefaultFields = Record<Action, string[]>
+
+export const getActionConfigDefaultsFields = async (
+	communityId: CommunitiesId
+): Promise<ActionConfigDefaultFields> => {
+	const result = await autoCache(
+		db
+			.selectFrom("action_config_defaults")
+			.select(["action", "config"])
+			.where("communityId", "=", communityId)
+	).execute()
+
+	return result.reduce((acc, row) => {
+		acc[row.action] = Object.keys(row.config ?? {})
+		return acc
+	}, {} as ActionConfigDefaultFields)
+}
+
 export const setActionConfigDefaults = (
 	communityId: CommunitiesId,
 	action: Action,
@@ -56,62 +79,162 @@ export const setActionConfigDefaults = (
 	)
 }
 
-export const getActionRuns = (communityId: CommunitiesId) => {
-	const actionRuns = autoCache(
-		db
-			.selectFrom("stages")
-			.where("stages.communityId", "=", communityId)
-			.innerJoin("action_instances", "stages.id", "action_instances.stageId")
-			.innerJoin("action_runs", "action_instances.id", "action_runs.actionInstanceId")
-			.leftJoin("users", "action_runs.userId", "users.id")
+export type FullAutomationRun = AutoReturnType<typeof getAutomationRuns>["execute"][number]
+
+export const getAutomationRuns = (
+	communityId: CommunitiesId,
+	options?: {
+		limit?: number
+		offset?: number
+		orderBy?: "createdAt"
+		orderDirection?: "desc" | "asc"
+		automations?: AutomationsId[]
+		statuses?: (ActionRunStatus | "partial")[]
+		stages?: StagesId[]
+		actions?: Action[]
+		query?: string
+	}
+) => {
+	const startQuery = db
+		.selectFrom("automation_runs")
+		.innerJoin("automations", "automation_runs.automationId", "automations.id")
+		.where("automations.communityId", "=", communityId)
+
+	let query = startQuery
+	if (options?.automations && options.automations.length > 0) {
+		query = query.where("automation_runs.automationId", "in", options.automations)
+	}
+
+	if (options?.stages && options.stages.length > 0) {
+		query = query.where("automations.stageId", "in", options.stages)
+	}
+
+	if (options?.query) {
+		query = query.where("automations.name", "ilike", `%${options.query}%`)
+	}
+
+	const automationRuns = autoCache(
+		query
 			.select((eb) => [
-				"action_runs.id",
-				"action_runs.config",
-				"action_runs.event",
-				"action_runs.params",
-				"action_runs.status",
-				"action_runs.result",
-				"action_runs.createdAt",
-				"action_runs.json",
+				"automation_runs.id",
+				"automation_runs.createdAt",
+				"automation_runs.updatedAt",
+				"automation_runs.triggerEvent",
+				"automation_runs.triggerConfig",
+				"automation_runs.sourceAutomationRunId",
+				"automation_runs.inputJson",
 				jsonObjectFrom(
 					eb
-						.selectFrom("action_instances")
-						.whereRef("action_instances.id", "=", "action_runs.actionInstanceId")
-						.select(["action_instances.name", "action_instances.action"])
-				).as("actionInstance"),
-				"action_runs.sourceActionRunId",
+						.selectFrom("automations")
+						.whereRef("automations.id", "=", "automation_runs.automationId")
+						.select(["automations.id", "automations.name", "automations.icon"])
+						.$narrowType<{ icon: IconConfig | null }>()
+				).as("automation"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("action_runs")
+						.whereRef("action_runs.automationRunId", "=", "automation_runs.id")
+						.leftJoin(
+							"action_instances",
+							"action_runs.actionInstanceId",
+							"action_instances.id"
+						)
+						.select([
+							"action_runs.id",
+							"action_runs.actionInstanceId",
+							"action_runs.config",
+							"action_instances.action",
+							"action_runs.status",
+							"action_runs.result",
+							"action_runs.createdAt",
+							"action_runs.updatedAt",
+							"action_runs.config",
+							"action_runs.event",
+							"action_runs.params",
+							"action_runs.json",
+							"action_runs.pubId",
+						])
+				).as("actionRuns"),
 				jsonObjectFrom(
 					eb
-						.selectFrom("action_runs as ar")
-						.innerJoin("action_instances", "ar.actionInstanceId", "action_instances.id")
-						.whereRef("ar.id", "=", "action_runs.sourceActionRunId")
-						.select(["action_instances.name", "action_instances.action"])
-				).as("sourceActionInstance"),
+						.selectFrom("pubs")
+						.whereRef("pubs.id", "=", "automation_runs.inputPubId")
+						.select([
+							"pubs.id",
+							"pubs.title",
+							"pubs.pubTypeId",
+							"pubs.createdAt",
+							"pubs.updatedAt",
+						])
+						.select(pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
+				).as("inputPub"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("automation_runs as ar")
+						.whereRef("ar.id", "=", "automation_runs.sourceAutomationRunId")
+						.select(["ar.id", "ar.triggerConfig"])
+				).as("sourceAutomationRun"),
 				jsonObjectFrom(
 					eb
 						.selectFrom("stages")
-						.whereRef("stages.id", "=", "action_instances.stageId")
+						.whereRef("stages.id", "=", "automations.stageId")
 						.select(["stages.id", "stages.name"])
 				).as("stage"),
 				jsonObjectFrom(
 					eb
-						.selectFrom("pubs")
-						.select(["pubs.id", "pubs.createdAt", "pubs.title"])
-						.whereRef("pubs.id", "=", "action_runs.pubId")
-						.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
-				)
-					.$notNull()
-					.as("pub"),
-				jsonObjectFrom(
-					eb
 						.selectFrom("users")
-						.whereRef("users.id", "=", "action_runs.userId")
-						.select(["id", "firstName", "lastName"])
-				).as("user"),
+						.whereRef("users.id", "=", "automation_runs.sourceUserId")
+						.select(["users.id", "users.firstName", "users.lastName"])
+				).as("sourceUser"),
 			])
-			.orderBy("action_runs.createdAt", "desc")
-			.$castTo<ActionRun>()
+			.orderBy(
+				options?.orderBy ?? "automation_runs.createdAt",
+				options?.orderDirection ?? "desc"
+			)
+			.limit(options?.limit ?? 1000)
+			.offset(options?.offset ?? 0)
 	)
 
-	return actionRuns
+	return automationRuns
+}
+
+export const getAutomationRunsCount = async (
+	communityId: CommunitiesId,
+	options?: {
+		automations?: AutomationsId[]
+		stages?: StagesId[]
+		query?: string
+	}
+) => {
+	let query = db
+		.selectFrom("automation_runs")
+		.innerJoin("automations", "automation_runs.automationId", "automations.id")
+		.where("automations.communityId", "=", communityId)
+
+	if (options?.automations && options.automations.length > 0) {
+		query = query.where("automation_runs.automationId", "in", options.automations)
+	}
+
+	if (options?.stages && options.stages.length > 0) {
+		query = query.where("automations.stageId", "in", options.stages)
+	}
+
+	if (options?.query) {
+		query = query.where("automations.name", "ilike", `%${options.query}%`)
+	}
+
+	const result = await autoCache(
+		query.select((eb) => eb.fn.countAll<number>().as("count"))
+	).executeTakeFirst()
+
+	return result?.count ?? 0
+}
+
+export const getAutomationRunById = (
+	communityId: CommunitiesId,
+	automationRunId: AutomationRunsId
+) => {
+	return autoCache(
+		getAutomationRuns(communityId).qb.where("automation_runs.id", "=", automationRunId)
+	)
 }

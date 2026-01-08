@@ -52,10 +52,7 @@ export const RevokeTokenButton = ({ token }: { token: SafeApiAccessToken }) => {
 				</p>
 				<AlertDialogFooter>
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
-					<AlertDialogAction
-						variant="destructive"
-						onClick={async () => await revokeToken({ id: token.id })}
-					>
+					<AlertDialogAction onClick={async () => await revokeToken({ id: token.id })}>
 						Remove
 					</AlertDialogAction>
 				</AlertDialogFooter>

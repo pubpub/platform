@@ -1,13 +1,3 @@
-import type {
-	CommunitiesId,
-	Forms,
-	FormsId,
-	PubsId,
-	PubTypes,
-	PubTypesId,
-	StagesId,
-	UsersId,
-} from "db/public"
 import type { XOR } from "utils/types"
 import type {
 	CommunityTargetCapabilities,
@@ -17,7 +7,19 @@ import type {
 
 import { cache } from "react"
 
-import { Capabilities, MemberRole, MembershipType } from "db/public"
+import {
+	Capabilities,
+	type CommunitiesId,
+	type Forms,
+	type FormsId,
+	MemberRole,
+	MembershipType,
+	type PubsId,
+	type PubTypes,
+	type PubTypesId,
+	type StagesId,
+	type UsersId,
+} from "db/public"
 import { logger } from "logger"
 
 import { db } from "~/kysely/database"

@@ -31,16 +31,13 @@ export const RequestLink = ({
 			return
 		}
 
-		toast({
-			title: "Link sent",
-			description: "Successfully requested new link",
-		})
+		toast.success("Link sent")
 	}, [token, formSlug, pubId, communityId])
 
 	return (
 		<Button
 			variant="secondary"
-			className="bg-blue-500 text-gray-50 shadow-sm hover:bg-blue-500/90 dark:bg-blue-900 dark:text-gray-50 dark:hover:bg-blue-900/90"
+			className="bg-blue-500 text-gray-50 shadow-xs hover:bg-blue-500/90 dark:bg-blue-900 dark:text-gray-50 dark:hover:bg-blue-900/90"
 			onClick={requestLink}
 		>
 			<Mail size={16} className="mr-1" strokeWidth={1} /> Request New Link

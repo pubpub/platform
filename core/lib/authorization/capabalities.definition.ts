@@ -104,13 +104,19 @@ export const CAPABILITY_MAPPINGS = {
 		},
 	},
 
-	// actions
+	// actions/automations
 	[Capabilities.runAction]: {
 		target: [MembershipType.pub],
 		access: {
 			[MembershipType.pub]: [MemberRole.admin],
 			[MembershipType.stage]: [MemberRole.admin, MemberRole.editor],
 			[MembershipType.community]: [MemberRole.admin, MemberRole.editor],
+		},
+	},
+	[Capabilities.overrideAutomationConditions]: {
+		target: [MembershipType.community],
+		access: {
+			[MembershipType.community]: [MemberRole.admin],
 		},
 	},
 

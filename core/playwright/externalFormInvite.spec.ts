@@ -6,6 +6,7 @@ import { expect, test } from "@playwright/test"
 
 import {
 	Action,
+	AutomationEvent,
 	CoreSchemaType,
 	ElementType,
 	InputComponent,
@@ -77,22 +78,42 @@ const seed = createSeed({
 	},
 	stages: {
 		Evaluating: {
-			actions: {
+			automations: {
 				[ACTION_NAME_USER]: {
-					action: Action.email,
-					config: {
-						subject: "Hello",
-						body: "Greetings",
-						recipientEmail: email1,
-					},
+					triggers: [
+						{
+							event: AutomationEvent.manual,
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.email,
+							config: {
+								subject: "Hello",
+								body: "Greetings",
+								recipientEmail: email1,
+							},
+						},
+					],
 				},
 				[ACTION_NAME_EMAIL]: {
-					action: Action.email,
-					config: {
-						subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
-						recipientEmail: email2,
-						body: `You are invited to fill in a form.\n\n\n\n:link{form="${evalSlug}" text="Wow, a great form!"}\n\n`,
-					},
+					triggers: [
+						{
+							event: AutomationEvent.manual,
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.email,
+							config: {
+								subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
+								recipientEmail: email2,
+								body: `You are invited to fill in a form.\n\n\n\n:link{form="${evalSlug}" text="Wow, a great form!"}\n\n`,
+							},
+						},
+					],
 				},
 			},
 		},
@@ -198,7 +219,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 			community.pubs[0].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction(ACTION_NAME_USER, async (runActionDialog) => {
+		await pubDetailsPage.runAutomation(ACTION_NAME_USER, async (runActionDialog) => {
 			// Clear the default recipient email field
 			await runActionDialog.getByLabel("Recipient Email").clear()
 			// Invite a new user to fill out the form
@@ -313,7 +334,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		)
 		await pubDetailsPage.goTo()
 
-		await pubDetailsPage.runAction(
+		await pubDetailsPage.runAutomation(
 			ACTION_NAME_EMAIL,
 			async (runActionDialog) => {
 				await runActionDialog
@@ -324,10 +345,10 @@ test.describe("Inviting a new user to fill out a form", () => {
 			},
 			false
 		)
-		await page.getByText("Failed to Send Email", { exact: true }).waitFor()
+		await page.getByText("Error", { exact: true }).first().waitFor()
 		await expect(
 			page
-				.getByLabel("Notifications (F8)")
+				.getByRole("listitem")
 				.getByText(
 					"Invitation failed. The specified form is for Evaluation pubs but this pub's type is Submission"
 				)
@@ -343,7 +364,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 			community.pubs[0].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction(ACTION_NAME_USER, async (dialog) => {
+		await pubDetailsPage.runAutomation(ACTION_NAME_USER, async (dialog) => {
 			await dialog.getByLabel("Recipient Email").fill(email1)
 			await dialog
 				.getByRole("textbox", { name: "Body" })
@@ -377,7 +398,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 			)
 			await pubDetailsPage.goTo()
 
-			await pubDetailsPage.runAction(ACTION_NAME_EMAIL)
+			await pubDetailsPage.runAutomation(ACTION_NAME_EMAIL)
 		})
 
 		await test.step("user clicks link in email", async () => {

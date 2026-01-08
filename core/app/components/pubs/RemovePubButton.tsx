@@ -22,6 +22,7 @@ export type Props = PubRemoveProps & {
 export const RemovePubButton = ({
 	pubId,
 	variant,
+	size,
 	className,
 	iconOnly,
 	redirectTo,
@@ -36,6 +37,7 @@ export const RemovePubButton = ({
 			param="remove-pub-form"
 			buttonText={buttonText}
 			buttonVariant={variant}
+			buttonSize={size}
 			className={className}
 			iconOnly={iconOnly}
 		>

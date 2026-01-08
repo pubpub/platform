@@ -67,7 +67,12 @@ export default async function Page(props: {
 			<ContentLayout
 				title={
 					<>
-						<ToyBrick size={24} strokeWidth={1} className="mr-2 text-gray-500" /> Types
+						<ToyBrick
+							size={24}
+							strokeWidth={1}
+							className="mr-2 text-muted-foreground"
+						/>{" "}
+						Types
 					</>
 				}
 				right={<CreatePubTypeButton />}

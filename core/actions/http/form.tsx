@@ -2,10 +2,10 @@
 
 import { useEffect } from "react"
 
+import { PlainTextWithTokensEditor } from "ui/editors"
 import { FieldSet } from "ui/field"
 import { FieldOutputMap } from "ui/outputMap"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
-import { Textarea } from "ui/textarea"
 
 import { ActionField } from "../_lib/ActionField"
 import { useActionForm } from "../_lib/ActionForm"
@@ -54,7 +54,12 @@ export default function HttpActionForm() {
 					name="body"
 					label="Request Body"
 					render={({ field, fieldState }) => (
-						<Textarea {...field} id={field.name} aria-invalid={fieldState.invalid} />
+						<PlainTextWithTokensEditor
+							{...field}
+							multiLine
+							aria-invalid={fieldState.invalid}
+							className="min-h-30 font-mono"
+						/>
 					)}
 				/>
 			)}

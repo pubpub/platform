@@ -213,7 +213,7 @@ const IsRelationCheckbox = ({ form, isDisabled }: { form: FormType; isDisabled: 
 										field.onChange(change)
 									}
 								}}
-								className="rounded"
+								className="rounded-sm"
 								data-testid="isRelation-checkbox"
 							/>
 						</FormControl>
@@ -258,7 +258,7 @@ export const FieldForm = ({
 				isRelation: values.isRelation,
 			})
 			if (didSucceed(result)) {
-				toast({ title: `Created field ${values.name}` })
+				toast.success(`Created field ${values.name}`)
 				onSubmitSuccess()
 			}
 		},
@@ -268,7 +268,7 @@ export const FieldForm = ({
 	const handleUpdate = useCallback(async (values: FormValues) => {
 		const result = await updateFieldName(values.id, values.name)
 		if (didSucceed(result)) {
-			toast({ title: `Updated field ${values.name}` })
+			toast.success(`Updated field ${values.name}`)
 			onSubmitSuccess()
 		}
 	}, [])
@@ -276,13 +276,13 @@ export const FieldForm = ({
 	const handleSubmit = useCallback(
 		async (values: FormValues & { schemaName: CoreSchemaType | null | undefined }) => {
 			if (isEditing) {
-				handleUpdate(values)
+				await handleUpdate(values)
 				return
 			}
 
 			const slug = `${community?.slug}:${slugifyString(values.slug)}`
 			const schemaName = values.schemaName ?? CoreSchemaType.Null
-			handleCreate({ ...values, slug, schemaName })
+			await handleCreate({ ...values, slug, schemaName })
 		},
 		[handleUpdate, handleCreate]
 	)

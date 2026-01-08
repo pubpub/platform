@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -10,13 +11,15 @@ import { Loader2 } from "ui/icon"
 import { Input } from "ui/input"
 import { toast } from "ui/use-toast"
 
+import { AvatarEditor } from "~/app/(user)/settings/AvatarEditor"
+import { uploadTempAvatar } from "~/app/login/actions"
 import { didSucceed, useServerAction } from "~/lib/serverActions"
 import { createCommunity } from "./actions"
 
 export const communityCreateFormSchema = z.object({
 	name: z.string().min(1),
 	slug: z.string().min(1),
-	avatar: z.string().url().optional().or(z.literal("")),
+	avatar: z.string().url().nullable().optional(),
 })
 
 type Props = {
@@ -25,15 +28,13 @@ type Props = {
 
 export const AddCommunityForm = (props: Props) => {
 	const runCreateCommunity = useServerAction(createCommunity)
+	const runUpload = useServerAction(uploadTempAvatar)
 
 	async function onSubmit(data: z.infer<typeof communityCreateFormSchema>) {
 		const result = await runCreateCommunity({ ...data })
 		if (didSucceed(result)) {
 			props.setOpen(false)
-			toast({
-				title: "Success",
-				description: "Community created",
-			})
+			toast.success("Community created")
 		}
 	}
 	const form = useForm<z.infer<typeof communityCreateFormSchema>>({
@@ -41,9 +42,26 @@ export const AddCommunityForm = (props: Props) => {
 		defaultValues: {
 			name: "",
 			slug: "",
-			avatar: "",
+			avatar: null,
 		},
 	})
+
+	const signedUploadUrl = (fileName: string) => {
+		return runUpload({ fileName })
+	}
+
+	const communityName = form.watch("name")
+
+	const communityInitials = useMemo(() => {
+		return (
+			communityName
+				.split(" ")
+				.slice(0, 2)
+				.map((word) => word[0])
+				.join("")
+				.toUpperCase() || "C"
+		)
+	}, [communityName])
 
 	return (
 		<Form {...form}>
@@ -79,11 +97,15 @@ export const AddCommunityForm = (props: Props) => {
 					name="avatar"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Avatar</FormLabel>
-							<Input {...field} />
-							<FormDescription>
-								What is the url path to the avatar for your community (optional)
-							</FormDescription>
+							<FormLabel>Avatar (optional)</FormLabel>
+							<AvatarEditor
+								initials={communityInitials}
+								avatar={field.value ?? null}
+								onEdit={field.onChange}
+								upload={signedUploadUrl}
+								label="Community Avatar"
+								showDeleteButton={false}
+							/>
 							<FormMessage />
 						</FormItem>
 					)}

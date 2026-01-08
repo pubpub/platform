@@ -43,11 +43,11 @@ is not assumed all developers have access to this. To run these commands, set
 
 **OPTIONS**
 
--   proper_name
-    -   flags: -n --proper-name
-    -   type: string
-    -   desc: proper name of AWS environment (see `./aws` module); e.g. blake
-    -   required
+- proper_name
+    - flags: -n --proper-name
+    - type: string
+    - desc: proper name of AWS environment (see `./aws` module); e.g. blake
+    - required
 
 <!-- A code block defines the script to be executed -->
 
@@ -76,11 +76,11 @@ is not assumed all developers have access to this. To run these commands, set
 
 **OPTIONS**
 
--   proper_name
-    -   flags: -n --proper-name
-    -   type: string
-    -   desc: proper name of AWS environment (see `./aws` module); e.g. blake
-    -   required
+- proper_name
+    - flags: -n --proper-name
+    - type: string
+    - desc: proper name of AWS environment (see `./aws` module); e.g. blake
+    - required
 
 <!-- A code block defines the script to be executed -->
 
@@ -109,11 +109,11 @@ is not assumed all developers have access to this. To run these commands, set
 
 **OPTIONS**
 
--   proper_name
-    -   flags: -n --proper-name
-    -   type: string
-    -   desc: proper name of AWS environment (see `./aws` module); e.g. blake
-    -   required
+- proper_name
+    - flags: -n --proper-name
+    - type: string
+    - desc: proper name of AWS environment (see `./aws` module); e.g. blake
+    - required
 
 ```bash
 
@@ -134,20 +134,20 @@ is not assumed all developers have access to this. To run these commands, set
 
 **OPTIONS**
 
--   image_tag_override
-    -   flags: -t --tag
-    -   type: string
-    -   desc: ECR image tag to use for this deploy (usually a Git SHA; default HEAD)
--   proper_name
-    -   flags: -n --proper-name
-    -   type: string
-    -   desc: proper name of AWS environment (see `./aws` module); e.g. blake
-    -   required
--   environment
-    -   flags: -e --environment
-    -   type: string
-    -   desc: environment name of AWS environment (see `./aws` module) e.g. staging
-    -   required
+- image_tag_override
+    - flags: -t --tag
+    - type: string
+    - desc: ECR image tag to use for this deploy (usually a Git SHA; default HEAD)
+- proper_name
+    - flags: -n --proper-name
+    - type: string
+    - desc: proper name of AWS environment (see `./aws` module); e.g. blake
+    - required
+- environment
+    - flags: -e --environment
+    - type: string
+    - desc: environment name of AWS environment (see `./aws` module) e.g. staging
+    - required
 
 ```bash
 ( cd ..
@@ -179,25 +179,25 @@ is not assumed all developers have access to this. To run these commands, set
 
 **OPTIONS**
 
--   image_tag_override
-    -   flags: -t --tag
-    -   type: string
-    -   desc: ECR image tag to use for this deploy (usually a Git SHA; default HEAD)
--   service
-    -   flags: -s --service
-    -   type: string
-    -   desc: service name to update (example: core)
-    -   required
--   proper_name
-    -   flags: -n --proper-name
-    -   type: string
-    -   desc: proper name of AWS environment (see `./aws` module); e.g. blake
-    -   required
--   environment
-    -   flags: -e --environment
-    -   type: string
-    -   desc: environment name of AWS environment (see `./aws` module) e.g. staging
-    -   required
+- image_tag_override
+    - flags: -t --tag
+    - type: string
+    - desc: ECR image tag to use for this deploy (usually a Git SHA; default HEAD)
+- service
+    - flags: -s --service
+    - type: string
+    - desc: service name to update (example: core)
+    - required
+- proper_name
+    - flags: -n --proper-name
+    - type: string
+    - desc: proper name of AWS environment (see `./aws` module); e.g. blake
+    - required
+- environment
+    - flags: -e --environment
+    - type: string
+    - desc: environment name of AWS environment (see `./aws` module) e.g. staging
+    - required
 
 ```bash
 ( cd ..
@@ -254,20 +254,20 @@ No options are required -- the workflow infers them all.
 
 **OPTIONS**
 
--   region
-    -   flags: -r --region
-    -   type: string
-    -   desc: Which AWS region to use (default us-east-1)
--   proper_name
-    -   flags: -n --proper-name
-    -   type: string
-    -   desc: proper name of AWS environment (see `./aws` module); e.g. blake
-    -   required
--   environment
-    -   flags: -e --environment
-    -   type: string
-    -   desc: environment name of AWS environment (see `./aws` module) e.g. staging
-    -   required
+- region
+    - flags: -r --region
+    - type: string
+    - desc: Which AWS region to use (default us-east-1)
+- proper_name
+    - flags: -n --proper-name
+    - type: string
+    - desc: proper name of AWS environment (see `./aws` module); e.g. blake
+    - required
+- environment
+    - flags: -e --environment
+    - type: string
+    - desc: environment name of AWS environment (see `./aws` module) e.g. staging
+    - required
 
 ```bash
 AWS_REGION=${region:-us-east-1}
@@ -317,10 +317,10 @@ docker build \
 
 **OPTIONS**
 
--   region
-    -   flags: -r --region
-    -   type: string
-    -   desc: Which AWS region to use (default us-east-1)
+- region
+    - flags: -r --region
+    - type: string
+    - desc: Which AWS region to use (default us-east-1)
 
 ```bash
 echo "Determining AWS Account ID..."

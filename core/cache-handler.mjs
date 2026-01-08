@@ -1,4 +1,5 @@
 // Based on https://github.com/fortedigital/nextjs-cache-handler#full-example
+/** biome-ignore-all lint/suspicious/noConsole: can't import logger here */
 
 import { PHASE_PRODUCTION_BUILD } from "next/constants.js"
 import createBufferStringHandler from "@fortedigital/nextjs-cache-handler/buffer-string-decorator"

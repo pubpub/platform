@@ -22,6 +22,8 @@ import {
 import { Input } from "ui/input"
 import { FormSubmitButton } from "ui/submit-button"
 
+import { AvatarEditor } from "~/app/(user)/settings/AvatarEditor"
+import { uploadTempAvatar } from "~/app/login/actions"
 import { useServerAction } from "~/lib/serverActions"
 import { compiledSignupFormSchema } from "./schema"
 
@@ -31,6 +33,7 @@ type SignupAction = (input: {
 	lastName: string
 	email: string
 	password: string
+	avatar?: string | null
 	redirectTo?: string
 	slug?: string
 }) => Promise<
@@ -55,6 +58,18 @@ export function SignupForm(props: {
 	})
 
 	const runSignup = useServerAction(props.signupAction)
+	const runUpload = useServerAction(uploadTempAvatar)
+
+	const signedUploadUrl = (fileName: string) => {
+		return runUpload({ fileName })
+	}
+
+	const firstName = form.watch("firstName")
+	const lastName = form.watch("lastName")
+
+	const userInitials = useMemo(() => {
+		return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "U"
+	}, [firstName, lastName])
 
 	const handleSubmit = useCallback(
 		async (data: SignupFormSchema) => {
@@ -80,6 +95,26 @@ export function SignupForm(props: {
 					</CardHeader>
 					<CardContent>
 						<div className="grid gap-4">
+							<FormField
+								name="avatar"
+								control={form.control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Avatar (optional)</FormLabel>
+										<FormControl>
+											<AvatarEditor
+												initials={userInitials}
+												avatar={field.value ?? null}
+												onEdit={field.onChange}
+												upload={signedUploadUrl}
+												label="Your Avatar"
+												showDeleteButton={false}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 							<div className="grid grid-cols-2 gap-4">
 								<FormField
 									name="firstName"

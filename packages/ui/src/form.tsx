@@ -79,18 +79,16 @@ FormItem.displayName = "FormItem"
 
 const FormLabel = React.forwardRef<
 	React.ElementRef<typeof LabelPrimitive.Root>,
-	React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & { disabled?: boolean }
+	React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & {
+		disabled?: boolean
+	}
 >(({ className, disabled, ...props }, ref) => {
 	const { error, formItemId } = useFormField()
 
 	return (
 		<Label
 			ref={ref}
-			className={cn(
-				error && "text-red-500 dark:text-red-900",
-				{ "opacity-50": disabled },
-				className
-			)}
+			className={cn(error && "text-destructive", { "opacity-50": disabled }, className)}
 			htmlFor={formItemId}
 			{...props}
 		/>
@@ -126,7 +124,7 @@ const FormDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HT
 			<div
 				ref={ref}
 				id={formDescriptionId}
-				className={cn("text-[0.8rem] text-gray-500 dark:text-gray-400", className)}
+				className={cn("text-[0.8rem] text-muted-foreground", className)}
 				{...props}
 			/>
 		)
@@ -159,7 +157,7 @@ const FormMessage = React.forwardRef<
 		<p
 			ref={ref}
 			id={formMessageId}
-			className={cn("font-medium text-[0.8rem] text-red-500 dark:text-red-900", className)}
+			className={cn("font-medium text-[0.8rem] text-destructive", className)}
 			{...props}
 		>
 			{body}

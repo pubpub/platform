@@ -13,6 +13,7 @@ import { FormsEditPage } from "./fixtures/forms-edit-page"
 import { FormsPage } from "./fixtures/forms-page"
 import { LoginPage } from "./fixtures/login-page"
 import { PubsPage } from "./fixtures/pubs-page"
+import { retryAction } from "./helpers"
 
 const seed = createSeed({
 	community: {
@@ -236,15 +237,25 @@ test.describe("Multivalue inputs", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`)
-		await page.getByRole("link", { name: title, exact: true }).click()
+
+		await retryAction(async () => {
+			await page.getByRole("link", { name: title, exact: true }).click()
+			await page.waitForURL(`/c/${community.community.slug}/pubs/*`, { timeout: 5000 })
+		})
 		// Make sure pub details page has loaded before making assertions
-		await page.waitForURL(`/c/${community.community.slug}/pubs/*`)
 		await expect(page.getByText(numberElement.name)).toHaveCount(1)
-		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("0")
-		await expect(page.getByText(animalElement.name)).toHaveCount(1)
-		await expect(page.getByTestId(`${animalElement.name}-value`)).toHaveText("cats,otters")
+		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("[0]", {
+			timeout: 5000,
+		})
+		await expect(page.getByText(animalElement.name)).toHaveCount(1, { timeout: 5000 })
+		const animalValue = page.getByTestId(`${animalElement.name}-value`)
+		await expect(animalValue.getByText("cats")).toHaveCount(1, { timeout: 5000 })
+		await expect(animalValue.getByText("otters")).toHaveCount(1, { timeout: 5000 })
+
 		await expect(page.getByText(fruitElement.name)).toHaveCount(1)
-		await expect(page.getByTestId(`${fruitElement.name}-value`)).toHaveText("mangos")
+		await expect(page.getByTestId(`${fruitElement.name}-value`)).toHaveText("mangos", {
+			timeout: 5000,
+		})
 	})
 })
 
@@ -257,7 +268,7 @@ test.describe("Rich text editor", () => {
 
 		// Add a new form
 		const formsPage = new FormsPage(page, community.community.slug)
-		formsPage.goto()
+		await formsPage.goto()
 		await page.waitForURL(`/c/${community.community.slug}/forms`)
 		const formSlug = "rich-text-test"
 		await formsPage.addForm("Rich text test", formSlug)
@@ -289,7 +300,9 @@ test.describe("Rich text editor", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`)
-		await expect(page.getByRole("link", { name: actualTitle, exact: true })).toHaveCount(1)
+		await expect(page.getByRole("link", { name: actualTitle, exact: true })).toHaveCount(1, {
+			timeout: 5000,
+		})
 	})
 })
 
@@ -324,7 +337,7 @@ test.describe("Member select", async () => {
 		const title = "member test"
 		await page.getByTestId(`${community.community.slug}:title`).fill(title)
 		await page.getByTestId(`${community.community.slug}:content`).fill("content")
-		await memberInput.fill(community.users.user2.email)
+		await memberInput.pressSequentially(community.users.user2.email)
 		await page.getByLabel(community.users.user2.email).click()
 		await expect(memberInput).toHaveValue(community.users.user2.email)
 
@@ -342,7 +355,7 @@ test.describe("Member select", async () => {
 		await page.getByLabel("First name").fill(faker.person.firstName())
 		await page.getByLabel("Last Name").fill(faker.person.lastName())
 		await page.getByLabel("Suggestions").getByRole("button", { name: "Submit" }).click()
-		await page.getByText("User successfully invited", { exact: true }).waitFor()
+		await page.getByText("User invited", { exact: true }).waitFor({ timeout: 5000 })
 		await page.getByLabel(newUser).click()
 		await expect(memberInput).toHaveValue(newUser)
 
@@ -414,8 +427,10 @@ test.describe("Related pubs", () => {
 		// string related field
 		const stringRelated = page.getByTestId("related-pubs-string")
 		await stringRelated.getByRole("button", { name: "Add" }).click()
+		await page.getByTestId("form-pub-search-select-input").fill(relatedPubTitle)
+		await page.waitForTimeout(1_000)
 		await page
-			.getByRole("checkbox", { name: `Select pub ${relatedPubTitle}` })
+			.getByRole("checkbox", { name: `Select pub` })
 			// .getByLabel("Select row")
 			.click({
 				timeout: 10_000,
@@ -431,7 +446,9 @@ test.describe("Related pubs", () => {
 		// array related field
 		const arrayRelated = page.getByTestId("related-pubs-array")
 		await arrayRelated.getByRole("button", { name: "Add" }).click()
-		await page.getByRole("checkbox", { name: `Select pub ${relatedPubTitle}` }).click()
+		await page.getByTestId("form-pub-search-select-input").fill(relatedPubTitle)
+		await page.waitForTimeout(1_000)
+		await page.getByRole("checkbox", { name: `Select pub` }).click()
 		await page.getByTestId("add-related-pub-button").click()
 		await expect(arrayRelated.getByText(relatedPubTitle)).toHaveCount(1)
 		await arrayRelated.getByRole("button", { name: "Add array" }).click()
@@ -451,7 +468,11 @@ test.describe("Related pubs", () => {
 		// null related field
 		const nullRelated = page.getByTestId("related-pubs-null")
 		await nullRelated.getByRole("button", { name: "Add" }).click()
-		await page.getByRole("checkbox", { name: `Select pub ${relatedPubTitle}` }).click()
+		await page.getByTestId("form-pub-search-select-input").fill(relatedPubTitle)
+		await page.waitForTimeout(400)
+		await page.getByRole("checkbox", { name: `Select pub` }).click({
+			timeout: 10_000,
+		})
 		await page.getByTestId("add-related-pub-button").click()
 		await expect(nullRelated.getByText(relatedPubTitle)).toHaveCount(1)
 		// Can't add a value to a null related field
@@ -461,10 +482,12 @@ test.describe("Related pubs", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`)
-		await page.getByRole("link", { name: title, exact: true }).click()
+		await retryAction(async () => {
+			await page.getByRole("link", { name: title, exact: true }).click({})
+			await page.waitForURL(`/c/${community.community.slug}/pubs/*`, { timeout: 5000 })
+		})
 		// Make sure pub details page has loaded before making assertions
-		await page.waitForURL(`/c/${community.community.slug}/pubs/*`)
-		await expect(page.getByText("admin:related pub")).toHaveCount(1)
-		await expect(page.getByText("nullrelated pub")).toHaveCount(1)
+		await page.getByTestId("string-value").getByText("admin").waitFor()
+		await page.getByTestId(`null-value`).getByText("related pub").waitFor()
 	})
 })

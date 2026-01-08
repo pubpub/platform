@@ -35,6 +35,7 @@ export type FileUploadProps = {
 	disabled?: boolean
 	id?: string
 	restrictions?: Partial<Restrictions>
+	theme?: "light" | "dark"
 }
 
 const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, _ref) {
@@ -96,7 +97,16 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, _ref) 
 		})
 	}, [props.upload, uppy.getPlugin])
 
-	return <Dashboard uppy={uppy} disabled={props.disabled} id={id} width="100%" />
+	return (
+		<Dashboard
+			uppy={uppy}
+			disabled={props.disabled}
+			theme={props.theme}
+			id={id}
+			width="100%"
+			height="250px"
+		/>
+	)
 })
 
 export { FileUpload }

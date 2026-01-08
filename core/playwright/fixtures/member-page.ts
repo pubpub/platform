@@ -21,7 +21,7 @@ export class MembersPage {
 	}
 
 	async searchMembers(email: string) {
-		await this.page.getByPlaceholder("Search table by email").pressSequentially(email)
+		await this.page.getByPlaceholder("Search by name or email...").pressSequentially(email)
 	}
 
 	async openAddMemberDialog() {
@@ -73,9 +73,9 @@ export class MembersPage {
 
 	async removeMember(email: string) {
 		await this.searchMembers(email)
-		await this.page.getByRole("button", { name: "Open menu", exact: true }).click()
 		await this.page.getByRole("button", { name: "Remove member", exact: true }).click()
-		await this.page.getByRole("button", { name: "Remove", exact: true }).click()
-		await this.page.getByText("Member successfully removed", { exact: true }).waitFor()
+		// await this.page.getByRole("button", { name: "Remove member", exact: true }).click()
+		// await this.page.getByRole("button", { name: "Remove", exact: true }).click()
+		await this.page.getByText("Member removed", { exact: true }).waitFor()
 	}
 }

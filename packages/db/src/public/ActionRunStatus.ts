@@ -8,6 +8,7 @@ export enum ActionRunStatus {
 	success = "success",
 	failure = "failure",
 	scheduled = "scheduled",
+	pending = "pending",
 }
 
 /** Zod schema for ActionRunStatus */

@@ -30,11 +30,15 @@ export class FormsEditPage {
 	}
 
 	async saveFormElementConfiguration() {
-		await this.page.getByTestId("save-configuration-button").click()
+		await this.page.getByTestId("save-configuration-button").click({
+			timeout: 5000,
+		})
 	}
 
 	async saveForm() {
-		await this.page.getByTestId("save-form-button").click()
-		await this.page.getByText("Form Successfully Saved", { exact: true }).waitFor()
+		await this.page.getByTestId("save-form-button").first().click({
+			timeout: 5000,
+		})
+		await this.page.getByText("Form saved", { exact: true }).waitFor()
 	}
 }

@@ -77,7 +77,8 @@ export default async function Page(_props: { params: { communitySlug: string } }
 		<ContentLayout
 			title={
 				<>
-					<Key size={24} strokeWidth={1} className="mr-2 text-gray-500" /> API Tokens
+					<Key size={24} strokeWidth={1} className="mr-2 text-muted-foreground" /> API
+					Tokens
 				</>
 			}
 			right={<CreateTokenButton stages={stagesOptions} pubTypes={pubTypesOptions} />}

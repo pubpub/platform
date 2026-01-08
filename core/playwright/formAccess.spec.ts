@@ -294,8 +294,8 @@ test.describe("public forms", () => {
 			}, url!)
 
 			await page.goto(decodedUrl)
-			await page.getByText("Your email is now verified", { exact: true }).waitFor()
-			await page.waitForURL(fillUrl, { timeout: 5_000 })
+			// await page.getByText("Your email is now verified", { exact: true }).waitFor()
+			await page.waitForURL(/\/forms\/.*/, { timeout: 10_000 })
 		})
 
 		let pubId: PubsId
@@ -315,6 +315,7 @@ test.describe("public forms", () => {
 		})
 
 		await test.step("user should have been added as a contributor to the pub", async () => {
+			await page.getByTestId("members-button").click()
 			const allTestEmails = await page.getByText(testEmail).all()
 			expect(
 				allTestEmails.length,

@@ -70,7 +70,7 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 	const isDark = isColorDark(props.color || "#000000")
 
 	return (
-		<div className="flex gap-2 bg-transparent p-10">
+		<div className="flex gap-2 bg-transparent">
 			{!presetsOnly && (
 				<div className="flex h-fit flex-col overflow-clip rounded-md bg-transparent shadow-lg">
 					<HexAlphaColorPicker
@@ -79,6 +79,7 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 						{...props}
 					/>
 					<HexColorInput
+						data-testid="color-picker-input"
 						alpha={true}
 						className={cn(
 							"w-[200px] border-none text-center font-medium font-mono uppercase tracking-wider",

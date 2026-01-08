@@ -52,11 +52,7 @@ export const RemoveMemberButton = ({ member }: { member: TableMember }) => {
 							onClick={async () => {
 								const response = await runRemoveMember({ member })
 								if (didSucceed(response)) {
-									toast({
-										title: "Success",
-										description: "Member successfully removed",
-										variant: "default",
-									})
+									toast.success("Member successfully removed")
 								}
 							}}
 						>

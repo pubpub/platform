@@ -83,7 +83,10 @@ const updateCapabilitiesInPrismaFile = (newValues: string[]): void => {
 			capabilitiesCount: newValues.length,
 		})
 	} catch (error) {
-		logger.error({ msg: "failed to update capabilities in prisma file", error })
+		logger.error({
+			msg: "failed to update capabilities in prisma file",
+			error,
+		})
 		throw error
 	}
 }

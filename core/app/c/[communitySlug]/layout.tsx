@@ -9,11 +9,11 @@ import { cn } from "utils"
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants"
 import SetLastVisited from "~/app/components/LastVisitedCommunity/SetLastVisited"
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider"
-import { SearchDialog } from "~/app/components/SearchDialog"
+import { SearchDialogProvider } from "~/app/components/Search/SearchDialogProvider"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { getCommunityRole } from "~/lib/authentication/roles"
 import { findCommunityBySlug } from "~/lib/server/community"
-import SideNav, { COLLAPSIBLE_TYPE } from "./SideNav"
+import SideNav from "./SideNav"
 
 type Props = { children: React.ReactNode; params: Promise<{ communitySlug: string }> }
 
@@ -64,22 +64,36 @@ export default async function MainLayout(props: Props) {
 
 	return (
 		<CommunityProvider community={community}>
-			{params.communitySlug !== lastVisited?.value && (
-				<SetLastVisited communitySlug={params.communitySlug} />
-			)}
-			<div className="flex min-h-screen flex-col md:flex-row">
-				<SidebarProvider defaultOpen={defaultOpen}>
-					<SideNav community={community} availableCommunities={availableCommunities} />
-					<div className="relative flex-auto px-4 py-4 md:px-12">{children}</div>
-					<SidebarTrigger
-						className={cn(
-							"fixed right-2 bottom-2 z-50",
-							COLLAPSIBLE_TYPE === "icon" && "md:hidden"
-						)}
-					/>
-					<SearchDialog />
-				</SidebarProvider>
-			</div>
+			<SearchDialogProvider>
+				{params.communitySlug !== lastVisited?.value && (
+					<SetLastVisited communitySlug={params.communitySlug} />
+				)}
+				<div className="flex min-h-screen flex-col md:flex-row">
+					<SidebarProvider
+						defaultOpen={defaultOpen}
+						style={
+							{
+								"--sidebar-width": "13rem",
+								"--sidebar-width-mobile": "20rem",
+							} as React.CSSProperties
+						}
+					>
+						<SideNav
+							community={community}
+							availableCommunities={availableCommunities}
+						/>
+						<div className="relative flex-auto bg-sidebar px-4 py-4 md:px-12">
+							{children}
+						</div>
+						<SidebarTrigger
+							className={cn(
+								"fixed right-2 bottom-2 z-[1000]"
+								// COLLAPSIBLE_TYPE === "icon" && "md:hidden"
+							)}
+						/>
+					</SidebarProvider>
+				</div>
+			</SearchDialogProvider>
 		</CommunityProvider>
 	)
 }

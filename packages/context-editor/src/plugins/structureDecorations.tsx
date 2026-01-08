@@ -4,7 +4,7 @@ import { type Decoration, DecorationSet } from "prosemirror-view"
 
 import { BlockDecoration, InlineDecoration } from "../components/StructureDecoration"
 
-export default () => {
+export default function structureDecorationsPlugin() {
 	return new Plugin({
 		props: {
 			decorations: (state) => {

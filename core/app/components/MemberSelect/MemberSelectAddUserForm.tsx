@@ -63,10 +63,7 @@ export const MemberSelectAddUserForm = ({ email, community, onSubmitSuccess }: P
 						})
 
 						if (didSucceed(result)) {
-							toast({
-								title: "Success",
-								description: "User successfully invited",
-							})
+							toast.success("User invited")
 							onSubmitSuccess()
 						}
 					},

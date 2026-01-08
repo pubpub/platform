@@ -8,7 +8,8 @@
 		"build": "next build",
 		"postbuild": "pagefind --site .next/server/app --output-path out/_pagefind",
 		"start": "serve ./out -p 3006",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"type-check:go": "tsgo --noEmit"
 	},
 	"dependencies": {
 		"next": "catalog:",
@@ -29,6 +30,7 @@
 		"serve": "^14.2.4",
 		"tailwindcss": "^4.1.12",
 		"tsconfig": "workspace:^",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"@typescript/native-preview": "catalog:"
 	}
 }

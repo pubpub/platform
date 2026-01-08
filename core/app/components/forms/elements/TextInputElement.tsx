@@ -1,7 +1,6 @@
 "use client"
 
 import type { InputComponent } from "db/public"
-import type { InputProps } from "ui/input"
 import type { ElementProps } from "../types"
 
 import { Value } from "@sinclair/typebox/value"
@@ -19,7 +18,7 @@ export const TextInputElement = ({
 	slug,
 	label,
 	...rest
-}: ElementProps<InputComponent.textInput> & InputProps) => {
+}: ElementProps<InputComponent.textInput> & React.InputHTMLAttributes<HTMLInputElement>) => {
 	const { control } = useFormContext()
 	const formElementToggle = useFormElementToggleContext()
 	const isEnabled = formElementToggle.isEnabled(slug)

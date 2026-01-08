@@ -6,7 +6,8 @@
 	"scripts": {
 		"start": "tsx --import ./src/tracing.ts ./src/index.ts",
 		"dev": "tsx --env-file .env.local --env-file .env.development --watch ./src/index.ts | pino-pretty",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"type-check:go": "tsgo --noEmit"
 	},
 	"files": ["src"],
 	"dependencies": {
@@ -25,6 +26,7 @@
 		"@types/node": "catalog:",
 		"dotenv-cli": "^7.4.4",
 		"tsconfig": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"@typescript/native-preview": "catalog:"
 	}
 }

@@ -1,7 +1,36 @@
-export type AutomationConfig = {
-	automationConfig: Record<string, unknown> | null
-	/**
-	 * The config for the action instance that will be trigger by the automation
-	 */
-	actionConfig: Record<string, unknown> | null
+import type {
+	ActionInstances,
+	ActionRunStatus,
+	ActionRuns,
+	AutomationConditionBlocks,
+	AutomationConditions,
+	AutomationEvent,
+	AutomationRuns,
+	Automations,
+	AutomationTriggers,
+} from "../public"
+import type { IconConfig } from "./Icon"
+
+export type AutomationConfig = Partial<Record<AutomationEvent, Record<string, unknown>>>
+
+export type ActionInstanceWithConfigDefaults = ActionInstances & {
+	defaultedActionConfigKeys: string[] | null
+}
+
+export type ConditionBlock = AutomationConditionBlocks & {
+	kind: "block"
+	items: (ConditionBlock | (AutomationConditions & { kind: "condition" }))[]
+}
+
+export type FullAutomation = Automations & {
+	triggers: AutomationTriggers[]
+	actionInstances: ActionInstanceWithConfigDefaults[]
+	condition: ConditionBlock | null
+	icon: IconConfig | null
+	lastAutomationRun:
+		| (Omit<AutomationRuns, "status"> & {
+				actionRuns: ActionRuns[]
+				status: ActionRunStatus | "partial"
+		  })
+		| null
 }

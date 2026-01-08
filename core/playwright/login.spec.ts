@@ -130,7 +130,7 @@ test.describe("Auth with lucia", () => {
 		await page.waitForURL("/settings")
 		await page.getByRole("button", { name: "Reset" }).click()
 		await expect(
-			page.getByRole("status").filter({ hasText: "Password reset email sent" })
+			page.getByRole("listitem").filter({ hasText: "Password reset email sent" })
 		).toHaveCount(1)
 
 		const message2 = await (

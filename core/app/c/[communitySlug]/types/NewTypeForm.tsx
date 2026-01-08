@@ -2,7 +2,6 @@ import type { Static } from "@sinclair/typebox"
 import type { PubFieldsId, PubTypesId } from "db/public"
 import type { ReactNode } from "react"
 import type { FieldValues, UseFormReturn } from "react-hook-form"
-import type { PubFieldContext } from "ui/pubFields"
 
 import { useCallback, useMemo } from "react"
 import { typeboxResolver } from "@hookform/resolvers/typebox"
@@ -21,7 +20,7 @@ import {
 } from "ui/form"
 import { Input } from "ui/input"
 import { MultiSelect } from "ui/multi-select"
-import { usePubFieldContext } from "ui/pubFields"
+import { type PubFieldContext, usePubFieldContext } from "ui/pubFields"
 import { toast } from "ui/use-toast"
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
@@ -103,7 +102,7 @@ export const NewTypeForm = ({
 					fields: [],
 				})
 				if (result && didSucceed(result)) {
-					toast({ title: `Type ${values.name} updated` })
+					toast.success(`Type ${values.name} updated`)
 					onSubmitSuccess(props.pubTypeId)
 					return
 				}
@@ -119,7 +118,7 @@ export const NewTypeForm = ({
 				values.fields
 			)
 			if (result && didSucceed(result)) {
-				toast({ title: `Type ${values.name} created` })
+				toast.success(`Type ${values.name} created`)
 				onSubmitSuccess(result.data.id)
 				return
 			}
@@ -172,7 +171,7 @@ export const NewTypeForm = ({
 					/>
 					{props.mode === "create" && <FieldSelector pubFields={pubFields} form={form} />}
 					{form.formState.errors.root && (
-						<div className="text-red-500 text-sm">
+						<div className="text-destructive text-sm">
 							{form.formState.errors.root.message}
 						</div>
 					)}

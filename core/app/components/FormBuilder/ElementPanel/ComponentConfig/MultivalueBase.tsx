@@ -53,6 +53,7 @@ export default ({
 						<FormLabel>{label} Values</FormLabel>
 						<FormControl>
 							<MultiValueInput
+								defaultValue={""}
 								type={isNumeric ? "number" : undefined}
 								onChange={(e: string[]) => {
 									if (isNumeric) {

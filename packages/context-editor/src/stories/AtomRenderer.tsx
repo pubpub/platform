@@ -45,7 +45,7 @@ export const AtomRenderer = forwardRef<
 	useEffect(() => {
 		if (isDataset && isDataUrl(activeNode.attrs.data["rd:source"])) {
 			// console.log("ok");
-			fetch(activeNode.attrs.data["rd:source"])
+			void fetch(activeNode.attrs.data["rd:source"])
 				.then((r) => r.text())
 				.then((text) => {
 					setActiveData(text)
@@ -68,7 +68,7 @@ export const AtomRenderer = forwardRef<
 			{activeNode.attrs.pubTypeId === "9956ccd9-50b5-42b1-a14b-199eb26f2a12" && (
 				<>
 					{!activeNode.attrs.data["rd:source"] && (
-						<div className="rounded bg-neutral-200 p-8 text-center">
+						<div className="rounded-xs bg-neutral-200 p-8 text-center">
 							Add Media Source
 						</div>
 					)}
@@ -98,7 +98,7 @@ export const AtomRenderer = forwardRef<
 			{isDataset && (
 				<>
 					{!activeNode.attrs.data["rd:source"] && !activeNode.attrs.data["rd:data"] && (
-						<div className="rounded bg-neutral-200 p-8 text-center">
+						<div className="rounded-xs bg-neutral-200 p-8 text-center">
 							Add Data Source
 						</div>
 					)}

@@ -7,6 +7,8 @@
 		"clean": "turbo clean",
 		"start": "turbo start",
 		"type-check": "turbo type-check",
+		"type-check:go": "turbo type-check:go",
+		"type-check:go:watch": "turbo watch type-check:go",
 		"playwright:test": "turbo run playwright:test --continue",
 		"p:dev": "preconstruct dev",
 		"p:build": "turbo run turbo:p:build",
@@ -50,9 +52,6 @@
 		"lint-staged": "^13.3.0",
 		"pino-pretty": "^10.3.1",
 		"turbo": "^2.5.6"
-	},
-	"lint-staged": {
-		"schema.prisma": ["npx prisma format"]
 	},
 	"preconstruct": {
 		"packages": ["packages/*"],

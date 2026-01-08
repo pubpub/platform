@@ -29,10 +29,7 @@ export const ActionConfigDefaultForm = (props: Props) => {
 		async (values: z.infer<typeof schema>) => {
 			const result = await updateActionConfigDefault(props.action, values)
 			if (didSucceed(result)) {
-				toast({
-					title: "Success",
-					description: "Action config defaults updated",
-				})
+				toast.success("Action config defaults updated")
 			}
 		},
 		[props.action]
@@ -52,7 +49,7 @@ export const ActionConfigDefaultForm = (props: Props) => {
 				successText: "Submitted",
 				errorText: "Failed to submit",
 			}}
-			context={{ type: "default" }}
+			context={{ type: "default", stageId: null }}
 		>
 			<ActionFormComponent />
 		</ActionForm>

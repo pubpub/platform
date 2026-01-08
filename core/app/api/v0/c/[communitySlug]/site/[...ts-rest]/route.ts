@@ -1,11 +1,4 @@
-import type {
-	AutomationsId,
-	CommunitiesId,
-	CommunityMembershipsId,
-	PubsId,
-	PubTypesId,
-	StagesId,
-} from "db/public"
+import type { CommunitiesId, CommunityMembershipsId, PubsId, PubTypesId, StagesId } from "db/public"
 
 import { createNextHandler } from "@ts-rest/serverless/next"
 
@@ -13,15 +6,15 @@ import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts"
 import {
 	ApiAccessScope,
 	ApiAccessType,
+	AutomationEvent,
 	Capabilities,
 	ElementType,
-	Event,
 	InputComponent,
 	MembershipType,
 } from "db/public"
 import { logger } from "logger"
 
-import { scheduleActionInstances } from "~/actions/api/server"
+import { runAutomation } from "~/actions/_lib/runAutomation"
 import {
 	checkAuthorization,
 	getAuthorization,
@@ -29,7 +22,7 @@ import {
 	shouldReturnRepresentation,
 } from "~/lib/authentication/api"
 import { userHasAccessToForm } from "~/lib/authorization/capabilities"
-import { getStage } from "~/lib/db/queries"
+import { getAutomationsByTriggerConfig, getStage } from "~/lib/db/queries"
 import {
 	BadRequestError,
 	createPubRecursiveNew,
@@ -39,6 +32,8 @@ import {
 	fullTextSearch,
 	getPubsCount,
 	getPubsWithRelatedValues,
+	getPubType,
+	getPubTypesForCommunity,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
 	removePubRelations,
@@ -47,11 +42,9 @@ import {
 	updatePub,
 	upsertPubRelations,
 } from "~/lib/server"
-import { getAutomation } from "~/lib/server/automations"
 import { findCommunityBySlug } from "~/lib/server/community"
-import { getForm } from "~/lib/server/form"
+import { getForm, getFormsForCommunity } from "~/lib/server/form"
 import { validateFilter } from "~/lib/server/pub-filters-validate"
-import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype"
 import { getStages } from "~/lib/server/stages"
 import { getMember, getSuggestedUsers } from "~/lib/server/user"
 
@@ -633,6 +626,50 @@ const handler = createNextHandler(
 			},
 		},
 		forms: {
+			getForm: async ({ params }) => {
+				const { user, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.form, type: ApiAccessType.read },
+					cookies: "community-member",
+				})
+
+				const [form, userCanAccessForm] = await Promise.all([
+					getForm({
+						slug: params.formSlug,
+						communityId: community.id,
+					}).executeTakeFirst(),
+					userHasAccessToForm({
+						userId: user.id,
+						communityId: community.id,
+						formSlug: params.formSlug,
+					}),
+				])
+
+				if (!form) {
+					throw new NotFoundError()
+				}
+
+				if (!userCanAccessForm) {
+					throw new ForbiddenError()
+				}
+
+				return {
+					status: 200,
+					body: form,
+				}
+			},
+			getForms: async () => {
+				const { user, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.form, type: ApiAccessType.read },
+					cookies: "community-member",
+				})
+
+				const forms = await getFormsForCommunity(community.id).execute()
+
+				return {
+					status: 200,
+					body: forms,
+				}
+			},
 			getPubsForFormField: async ({ params, query }, { responseHeaders }) => {
 				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
@@ -733,12 +770,14 @@ const handler = createNextHandler(
 				throw new NotFoundError(`Community not found`)
 			}
 
-			const automationId = params.automationId as AutomationsId
+			const path = params.path as string
 
-			const automation = await getAutomation(automationId, community.id).executeTakeFirst()
+			const automations = await getAutomationsByTriggerConfig("path", path, {
+				event: AutomationEvent.webhook,
+			})
 
-			if (!automation) {
-				throw new NotFoundError(`Automation ${automationId} not found`)
+			if (!automations || automations.length === 0) {
+				throw new NotFoundError(`No webhoook automations found for path ${path}`)
 			}
 
 			if (!body) {
@@ -748,13 +787,22 @@ const handler = createNextHandler(
 			}
 
 			try {
-				await scheduleActionInstances({
-					event: Event.webhook,
-					stack: [],
-					stageId: automation.actionInstance.stageId,
-					json: body,
-					config: automation.config?.actionConfig,
-				})
+				for (const automation of automations) {
+					await runAutomation({
+						automationId: automation.id,
+						json: body,
+						trigger: {
+							event: AutomationEvent.webhook,
+							config: automation.triggers.find(
+								(t) => t.event === AutomationEvent.webhook
+							)?.config as Record<string, unknown> | null,
+						},
+						manualActionInstancesOverrideArgs: null,
+						communityId: community.id as CommunitiesId,
+						stack: [],
+						user: null,
+					})
+				}
 
 				return {
 					status: 201,

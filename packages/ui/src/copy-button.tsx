@@ -38,7 +38,7 @@ export function CopyButton({
 			variant={variant}
 			className={cn("relative z-10 h-6 w-6 [&_svg]:size-3", className)}
 			onClick={() => {
-				copyToClipboardWithMeta(value)
+				void copyToClipboardWithMeta(value)
 				setHasCopied(true)
 			}}
 			{...props}

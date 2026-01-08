@@ -1,37 +1,30 @@
 "use server"
 
-import type {
-	Action,
-	ActionInstancesId,
-	AutomationsId,
-	CommunitiesId,
-	FormsId,
-	StagesId,
-	UsersId,
+import type { CreateAutomationsSchema } from "./components/panel/automationsTab/StagePanelAutomationForm"
+
+import {
+	type AutomationsId,
+	Capabilities,
+	type CommunitiesId,
+	type FormsId,
+	type MemberRole,
+	MembershipType,
+	type StagesId,
+	stagesIdSchema,
+	type UsersId,
 } from "db/public"
-import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm"
-
-import { captureException } from "@sentry/nextjs"
-
-import { Capabilities, Event, type MemberRole, MembershipType, stagesIdSchema } from "db/public"
 import { logger } from "logger"
 
-import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance"
 import { db } from "~/kysely/database"
 import { isUniqueConstraintError } from "~/kysely/errors"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
 import { ApiError } from "~/lib/server"
 import {
-	createActionInstance,
-	getActionInstance,
-	removeActionInstance,
-	updateActionInstance,
-} from "~/lib/server/actions"
-import {
 	AutomationError,
-	createOrUpdateAutomationWithCycleCheck,
+	duplicateAutomation as duplicateAutomationDb,
 	removeAutomation,
+	upsertAutomationWithCycleCheck,
 } from "~/lib/server/automations"
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate"
@@ -41,7 +34,7 @@ import { insertStageMemberships } from "~/lib/server/member"
 import {
 	createMoveConstraint as createMoveConstraintDb,
 	createStage as createStageDb,
-	getPubIdsInStage,
+	duplicateStages as duplicateStagesDb,
 	removeStages,
 	updateStage,
 } from "~/lib/server/stages"
@@ -115,6 +108,42 @@ export const createStage = defineServerAction(async function createStage(
 	}
 })
 
+export const duplicateStages = defineServerAction(async function createStage(
+	communityId: CommunitiesId,
+	stageIds: StagesId[],
+	newStageIds: StagesId[]
+) {
+	const loginData = await getLoginData()
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN
+	}
+
+	const { user } = loginData
+
+	const authorized = await userCan(
+		Capabilities.createStage,
+		{ type: MembershipType.community, communityId },
+		user.id
+	)
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED
+	}
+
+	const validatedStageIds = stageIds.map((id) => stagesIdSchema.parse(id))
+	const validatedNewStageIds = newStageIds.map((id) => stagesIdSchema.parse(id))
+
+	try {
+		await duplicateStagesDb(communityId, validatedStageIds, validatedNewStageIds)
+	} catch (error) {
+		logger.error(error)
+		return {
+			error: "Failed to duplicate stages",
+			cause: error,
+		}
+	}
+})
+
 export const deleteStage = defineServerAction(async function deleteStage(stageId: StagesId) {
 	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
@@ -136,12 +165,11 @@ export const deleteStage = defineServerAction(async function deleteStage(stageId
 	try {
 		await removeStages([stageId]).executeTakeFirstOrThrow()
 	} catch (error) {
+		logger.error(error)
 		return {
 			error: "Failed to delete stage",
 			cause: error,
 		}
-	} finally {
-		await revalidateTagsForCommunity(["stages", "PubsInStages"])
 	}
 })
 
@@ -180,8 +208,6 @@ export const createMoveConstraint = defineServerAction(async function createMove
 			error: "Failed to connect stages",
 			cause: error,
 		}
-	} finally {
-		await revalidateTagsForCommunity(["move_constraint"])
 	}
 })
 
@@ -224,8 +250,6 @@ export const deleteStagesAndMoveConstraints = defineServerAction(
 				error: "Failed to delete stages and/or connections",
 				cause: error,
 			}
-		} finally {
-			await revalidateTagsForCommunity(["move_constraint"])
 		}
 	}
 )
@@ -259,8 +283,6 @@ export const updateStageName = defineServerAction(async function updateStageName
 			error: "Failed to update stage name",
 			cause: error,
 		}
-	} finally {
-		await revalidateTagsForCommunity(["stages"])
 	}
 })
 
@@ -273,107 +295,6 @@ export const revalidateStages = defineServerAction(async function revalidateStag
 	await revalidateTagsForCommunity(["stages", "PubsInStages"])
 })
 
-export const addAction = defineServerAction(async function addAction(
-	stageId: StagesId,
-	actionName: Action
-) {
-	const loginData = await getLoginData()
-	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN
-	}
-
-	const { user } = loginData
-
-	const authorized = await userCan(
-		Capabilities.manageStage,
-		{ type: MembershipType.stage, stageId },
-		user.id
-	)
-
-	if (!authorized) {
-		return ApiError.UNAUTHORIZED
-	}
-	try {
-		await createActionInstance({
-			name: actionName,
-			action: actionName,
-			stageId,
-		}).executeTakeFirstOrThrow()
-	} catch (error) {
-		return {
-			error: "Failed to add action",
-			cause: error,
-		}
-	}
-})
-
-export const updateAction = defineServerAction(async function updateAction(
-	actionInstanceId: ActionInstancesId,
-	stageId: StagesId,
-	props:
-		| {
-				config: Record<string, any>
-				name?: undefined
-		  }
-		| { name: string; config?: undefined }
-) {
-	const loginData = await getLoginData()
-	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN
-	}
-
-	const authorized = await userCan(
-		Capabilities.manageStage,
-		{ type: MembershipType.stage, stageId },
-		loginData.user.id
-	)
-
-	if (!authorized) {
-		return ApiError.UNAUTHORIZED
-	}
-
-	await updateActionInstance(actionInstanceId, {
-		config: props.config,
-		name: props.name,
-	}).executeTakeFirstOrThrow()
-
-	return {
-		success: true,
-		report: "Action updated",
-	}
-})
-
-export const deleteAction = defineServerAction(async function deleteAction(
-	actionId: ActionInstancesId,
-	stageId: StagesId
-) {
-	const loginData = await getLoginData()
-	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN
-	}
-
-	const authorized = await userCan(
-		Capabilities.manageStage,
-		{ type: MembershipType.stage, stageId },
-		loginData.user.id
-	)
-
-	if (!authorized) {
-		return ApiError.UNAUTHORIZED
-	}
-
-	try {
-		await removeActionInstance(actionId).executeTakeFirstOrThrow()
-	} catch (error) {
-		return {
-			error: "Failed to delete action",
-			cause: error,
-		}
-	} finally {
-		await revalidateTagsForCommunity(["action_instances"])
-	}
-})
-
 export const addOrUpdateAutomation = defineServerAction(async function addOrUpdateAutomation({
 	stageId,
 	automationId,
@@ -383,7 +304,10 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 	automationId?: AutomationsId
 	data: CreateAutomationsSchema
 }) {
-	const loginData = await getLoginData()
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()])
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND
+	}
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN
 	}
@@ -399,19 +323,27 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 	}
 
 	try {
-		await createOrUpdateAutomationWithCycleCheck({
-			automationId,
-			actionInstanceId: data.actionInstanceId as ActionInstancesId,
-			event: data.event,
-			config: {
-				actionConfig: data.actionConfig ?? null,
-				automationConfig:
-					"automationConfig" in data && data.automationConfig
-						? data.automationConfig
-						: null,
-			},
-			sourceActionInstanceId:
-				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
+		await upsertAutomationWithCycleCheck({
+			id: automationId,
+			name: data.name,
+			description: data.description ?? null,
+			icon: data.icon ?? null,
+			communityId: community.id,
+			stageId,
+			conditionEvaluationTiming: data.conditionEvaluationTiming ?? null,
+
+			triggers: data.triggers.map((trigger) => ({
+				event: trigger.event,
+				config: trigger.config ?? null,
+				sourceAutomationId: trigger.sourceAutomationId ?? null,
+			})),
+			actionInstances: [
+				{
+					...data.action,
+					id: data.action.actionInstanceId,
+				},
+			],
+			condition: data.condition,
 		})
 	} catch (error) {
 		logger.error(error)
@@ -427,7 +359,6 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			error: automationId ? "Failed to update automation" : "Failed to create automation",
 			cause: error,
 		}
-	} finally {
 	}
 })
 
@@ -451,52 +382,14 @@ export const deleteAutomation = defineServerAction(async function deleteAutomati
 	}
 
 	try {
-		const deletedAutomation = await autoRevalidate(
+		const _deletedAutomation = await autoRevalidate(
 			removeAutomation(automationId).qb.returningAll()
 		).executeTakeFirstOrThrow()
 
-		if (!deletedAutomation) {
-			return {
-				error: "Failed to delete automation",
-				cause: `Automation with id ${automationId} not found`,
-			}
+		return {
+			success: true,
+			report: "Automation deleted",
 		}
-
-		if (deletedAutomation.event !== Event.pubInStageForDuration) {
-			return
-		}
-
-		const actionInstance = await getActionInstance(
-			deletedAutomation.actionInstanceId
-		).executeTakeFirst()
-
-		if (!actionInstance) {
-			// something is wrong here
-			captureException(
-				new Error(
-					`Action instance not found for automation ${automationId} while trying to unschedule jobs`
-				)
-			)
-			return
-		}
-
-		const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst()
-		if (!pubsInStage) {
-			// we don't need to unschedule any jobs, as there are no pubs this automation could have been applied to
-			return
-		}
-
-		logger.debug(`Unscheduling jobs for automation ${automationId}`)
-		await Promise.all(
-			pubsInStage.pubIds.map(async (pubInStageId) =>
-				unscheduleAction({
-					actionInstanceId: actionInstance.id,
-					pubId: pubInStageId,
-					stageId: actionInstance.stageId,
-					event: Event.pubInStageForDuration,
-				})
-			)
-		)
 	} catch (error) {
 		logger.error(error)
 		return {
@@ -506,6 +399,36 @@ export const deleteAutomation = defineServerAction(async function deleteAutomati
 	} finally {
 		// 		revalidateTag(`community-stages_${communityId}`);
 		// 		revalidateTag(`community-action-runs_${communityId}`);
+	}
+})
+
+export const duplicateAutomation = defineServerAction(async function duplicateAutomation(
+	automationId: AutomationsId,
+	stageId: StagesId
+) {
+	const loginData = await getLoginData()
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN
+	}
+
+	const authorized = await userCan(
+		Capabilities.manageStage,
+		{ type: MembershipType.stage, stageId },
+		loginData.user.id
+	)
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED
+	}
+
+	try {
+		const _duplicatedAutomation = await duplicateAutomationDb(automationId)
+	} catch (error) {
+		logger.error(error)
+		return {
+			error: "Failed to duplicate automation",
+			cause: error,
+		}
 	}
 })
 

@@ -40,6 +40,7 @@ const schema = z.object({
 			"Someone who is a member of the community. Either this or 'Recipient Email' must be set."
 		),
 	subject: stringWithTokens()
+		.min(1, { message: "Subject is required" })
 		.max(500)
 		.describe(
 			"The subject of the email. Tokens can be used to dynamically insert values from the pub or config."
@@ -54,6 +55,7 @@ const schema = z.object({
 export const action = defineAction({
 	accepts: ["pub"],
 	name: Action.email,
+	niceName: "Send Email",
 	config: { schema },
 	description: "Send an email to one or more users",
 	icon: Mail,

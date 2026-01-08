@@ -31,11 +31,12 @@ const schema = z.object({
 
 export const action = defineAction({
 	name: Action.http,
+	niceName: "HTTP Request",
+	description: "Make an arbitrary HTTP request",
 	accepts: ["json", "pub"],
 	config: {
 		schema,
 	},
-	description: "Make an arbitrary HTTP request",
 	icon: Globe,
 	experimental: true,
 })

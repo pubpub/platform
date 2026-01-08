@@ -251,7 +251,7 @@ const ParagraphDropdown = () => {
 					{activeType ? activeType.name : "Paragraph"}
 				</SelectValue>
 			</SelectTrigger>
-			<SelectContent className="bg-white">
+			<SelectContent className="bg-card">
 				{paragraphTypeItems.map(({ key, icon }) => {
 					return (
 						<SelectItem key={key} value={key}>
@@ -278,7 +278,7 @@ const ImagePopoverMenuItem = ({ upload }: { upload: Upload }) => {
 					variant="ghost"
 					size="sm"
 					title="Image"
-					className={cn("h-fit rounded-sm p-1", {
+					className={cn("h-fit rounded-xs p-1", {
 						"bg-blue-200 hover:bg-blue-300": isActive,
 					})}
 				>
@@ -322,7 +322,7 @@ const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 			size="sm"
 			disabled={!canRun}
 			type="button"
-			className={cn("h-fit rounded-sm p-1", {
+			className={cn("h-fit rounded-xs p-1", {
 				"bg-blue-200 hover:bg-blue-300": isActive,
 			})}
 			title={name}
@@ -344,7 +344,7 @@ const Separator = () => {
 export const MenuBar = ({ upload }: { upload: Upload }) => {
 	return (
 		<div
-			className="flex items-center overflow-x-auto rounded-t border bg-gray-50 p-4"
+			className="flex items-center overflow-x-auto rounded-t border bg-muted p-4"
 			role="toolbar"
 			aria-label="Formatting tools"
 			style={{ height: `${MENU_BAR_HEIGHT}px` }}

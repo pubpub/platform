@@ -61,7 +61,7 @@ export default function PubsPanel({ editorState, pubId }: Props) {
 				<div className="mt-8 mb-2 font-bold">Updates Pubs</div>
 				{Object.keys(pubValues).map((key) => {
 					return (
-						<div key={key} className="mb-8 rounded border border-neutral-400">
+						<div key={key} className="mb-8 rounded-xs border border-neutral-400">
 							<div className="border-neutral-400 border-b bg-neutral-200 p-2">
 								<span className="font-bold">
 									{getPubTypeName(pubValues[key].pubTypeId)}

@@ -1,3 +1,5 @@
+// biome-ignore lint/suspicious/noExplicitAny: it's autoform, not my problem
+
 import type { CoreSchemaType } from "db/public"
 import type { ControllerRenderProps, FieldValues } from "react-hook-form"
 import type * as z from "zod"

@@ -29,7 +29,7 @@ export const AtomDataMenu = (props: Props) => {
 							{attrKey}
 						</Label>
 						<Input
-							className="h-8 rounded-sm border-neutral-300 text-xs"
+							className="h-8 rounded-xs border-neutral-300 text-xs"
 							type="text"
 							value={props.node.attrs.data[attrKey] || ""}
 							onChange={onChange}

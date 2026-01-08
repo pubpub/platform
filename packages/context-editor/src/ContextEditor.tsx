@@ -128,7 +128,7 @@ const ContextEditor = (props: ContextEditorProps) => {
 		<div
 			id={containerId}
 			ref={containerRef}
-			className={cn("relative isolate max-w-screen-sm", {
+			className={cn("relative isolate max-w-(--breakpoint-sm)", {
 				"editor-disabled": props.disabled,
 			})}
 		>

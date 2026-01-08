@@ -15,6 +15,10 @@
 			"dependsOn": ["^topo"],
 			"outputs": [".cache/tsbuildinfo.json"]
 		},
+		"type-check:go": {
+			"dependsOn": ["^topo"],
+			"outputs": [".cache/tsbuildinfo.json"]
+		},
 		"dev": {
 			"cache": false,
 			"persistent": true

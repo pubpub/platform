@@ -91,6 +91,11 @@ export const permissionsSchema = z.object({
 		write: z.boolean().optional(),
 		archive: z.boolean().optional(),
 	}),
+	[ApiAccessScope.form]: z.object({
+		read: z.boolean().optional(),
+		write: z.boolean().optional(),
+		archive: z.boolean().optional(),
+	}),
 }) satisfies z.Schema<ApiAccessPermissionContraintsObjectShape>
 
 export type CreateTokenFormContext = {

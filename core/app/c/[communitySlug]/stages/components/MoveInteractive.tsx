@@ -7,9 +7,14 @@ import { useState, useTransition } from "react"
 import Link from "next/link"
 
 import { Button } from "ui/button"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "ui/dropdown-menu"
 import { ArrowLeft, ArrowRight, FlagTriangleRightIcon } from "ui/icon"
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
-import { useToast } from "ui/use-toast"
+import { toast } from "ui/use-toast"
 
 import { move } from "~/app/c/[communitySlug]/stages/components/lib/actions"
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
@@ -42,7 +47,6 @@ export function MoveInteractive({
 	hideIfNowhereToMove,
 }: Props) {
 	const [popoverIsOpen, setPopoverIsOpen] = useState(false)
-	const { toast } = useToast()
 	const community = useCommunity()
 
 	const [isMoving, startTransition] = useTransition()
@@ -56,10 +60,7 @@ export function MoveInteractive({
 			return
 		}
 
-		toast({
-			title: "Success",
-			description: "Pub was successfully moved",
-			variant: "default",
+		toast("Pub was successfully moved", {
 			action: (
 				<Button
 					onClick={async () => {
@@ -68,11 +69,7 @@ export function MoveInteractive({
 						if (isClientException(result)) {
 							return
 						}
-						toast({
-							variant: "default",
-							title: "Success",
-							description: "Pub was successfully moved back",
-						})
+						toast("Pub was successfully moved back")
 					}}
 				>
 					Undo
@@ -91,30 +88,28 @@ export function MoveInteractive({
 	}
 
 	return (
-		<Popover open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>
-			<PopoverTrigger asChild>{button}</PopoverTrigger>
-			<PopoverContent side="bottom" className="w-fit p-[5px]" align="start">
+		<DropdownMenu open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>
+			<DropdownMenuTrigger asChild>{button}</DropdownMenuTrigger>
+			<DropdownMenuContent side="bottom" className="w-fit p-[5px]" align="start">
 				<div className="flex flex-col gap-x-4">
 					{canMovePub && sources.length > 0 && (
 						<div className="flex flex-col" data-testid="sources">
 							{sources.map((stage) => {
 								return stage.id === stageId ? null : (
-									<Button
+									<DropdownMenuItem
 										disabled={isMoving}
-										variant="ghost"
 										key={stage.id}
 										onClick={() =>
 											startTransition(async () => {
 												await onMove(pubId, stageId, stage.id)
 											})
 										}
-										className="flex w-full justify-start gap-x-2 px-2 py-0"
 									>
-										<ArrowLeft strokeWidth="1px" />
+										<ArrowLeft size={14} className="size-4" />
 										<span className="overflow-clip text-ellipsis whitespace-nowrap">
 											Move to {stage.name}
 										</span>
-									</Button>
+									</DropdownMenuItem>
 								)
 							})}
 						</div>
@@ -124,8 +119,7 @@ export function MoveInteractive({
 						<div className="flex flex-col" data-testid="destinations">
 							{destinations.map((stage) => {
 								return stage.id === stageId ? null : (
-									<Button
-										variant="ghost"
+									<DropdownMenuItem
 										disabled={isMoving}
 										key={stage.id}
 										onClick={() =>
@@ -133,13 +127,12 @@ export function MoveInteractive({
 												await onMove(pubId, stageId, stage.id)
 											})
 										}
-										className="flex w-full justify-start gap-x-2 px-2 py-0"
 									>
-										<ArrowRight strokeWidth="1px" />
+										<ArrowRight size={14} className="size-4" />
 										<span className="overflow-clip text-ellipsis whitespace-nowrap">
 											Move to {stage.name}
 										</span>
-									</Button>
+									</DropdownMenuItem>
 								)
 							})}
 						</div>
@@ -147,24 +140,19 @@ export function MoveInteractive({
 
 					{canViewStage && (
 						<div>
-							<Button
-								disabled={isMoving}
-								variant="ghost"
-								className="w-full justify-start px-2 py-0"
-								asChild
-							>
+							<DropdownMenuItem disabled={isMoving} asChild>
 								<Link
 									href={`/c/${community.slug}/stages/${stageId}`}
-									className="block flex w-full gap-x-2"
+									className="flex w-full gap-x-2"
 								>
-									<FlagTriangleRightIcon strokeWidth="1px" />
+									<FlagTriangleRightIcon size={14} className="size-4" />
 									<span>View Stage</span>
 								</Link>
-							</Button>
+							</DropdownMenuItem>
 						</div>
 					)}
 				</div>
-			</PopoverContent>
-		</Popover>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	)
 }

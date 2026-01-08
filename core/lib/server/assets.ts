@@ -98,7 +98,7 @@ export const getS3Client = () => {
 // we create a separate client for generating signed URLs that uses the public endpoint
 // this is bc, when using `minio` locally, the server
 // uses `minio:9000`, but for the client this does not make sense
-const getPublicS3Client = () => {
+export const getPublicS3Client = () => {
 	const region = env.ASSETS_REGION
 	const key = env.ASSETS_UPLOAD_KEY
 	const secret = env.ASSETS_UPLOAD_SECRET_KEY
@@ -118,10 +118,10 @@ const getPublicS3Client = () => {
 export const generateSignedAssetUploadUrl = async (
 	userId: UsersId,
 	fileName: string,
-	_pubId?: PubsId
+	kind: "temporary" | "permanent"
 ) => {
 	const communitySlug = await getCommunitySlug()
-	const key = `temporary/${communitySlug}/${userId}/${crypto.randomUUID()}/${fileName}`
+	const key = `${kind === "temporary" ? "temporary/" : ""}${communitySlug}/${userId}/${crypto.randomUUID()}/${fileName}`
 
 	const client = getPublicS3Client() // use public client for signed URLs
 
@@ -131,7 +131,36 @@ export const generateSignedAssetUploadUrl = async (
 		Key: key,
 	})
 
-	return await getSignedUrl(client, command, { expiresIn: 3600 })
+	return await getSignedUrl(
+		client,
+		command,
+		kind === "temporary" ? { expiresIn: 3600 } : undefined
+	)
+}
+
+const generateSignedUploadUrl = async (key: string) => {
+	const client = getPublicS3Client()
+	const bucket = env.ASSETS_BUCKET_NAME
+	const command = new PutObjectCommand({
+		Bucket: bucket,
+		Key: key,
+	})
+	return await getSignedUrl(client, command)
+}
+
+export const generateSignedUserAvatarUploadUrl = async (userId: UsersId, fileName: string) => {
+	return generateSignedUploadUrl(`avatars/${userId}/${fileName}`)
+}
+
+export const generateSignedCommunityAvatarUploadUrl = async (
+	communityId: string,
+	fileName: string
+) => {
+	return generateSignedUploadUrl(`avatars/communities/${communityId}/${fileName}`)
+}
+
+export const generateSignedTempAvatarUploadUrl = async (fileName: string) => {
+	return generateSignedUploadUrl(`avatars/temp/${Date.now()}-${fileName}`)
 }
 
 export class InvalidFileUrlError extends Error {

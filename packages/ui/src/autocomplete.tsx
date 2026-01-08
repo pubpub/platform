@@ -135,14 +135,13 @@ export const AutoComplete = ({
 				onFocus={() => setOpen(true)}
 				placeholder={placeholder}
 				disabled={disabled}
-				icon={icon}
 				data-testid={`autocomplete-${name}`}
 			/>
 			{onClear ? (
 				<Button
 					variant="ghost"
 					size="icon"
-					className="-translate-y-1/2 absolute top-1/2 right-1 h-7 w-7 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+					className="-translate-y-1/2 absolute top-1/2 right-1 h-7 w-7 text-muted-foreground hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
 					onClick={() => {
 						setInputValue("")
 						onClear()
@@ -155,7 +154,7 @@ export const AutoComplete = ({
 			<div className="relative mt-1 flex">
 				<div
 					className={cn(
-						"fade-in-0 zoom-in-95 absolute top-0 z-10 w-full animate-in rounded-xl bg-background shadow-lg outline-none",
+						"fade-in-0 zoom-in-95 absolute top-0 z-10 w-full animate-in rounded-xl bg-background shadow-lg outline-hidden",
 						isOpen ? "block" : "hidden"
 					)}
 				>
@@ -197,7 +196,7 @@ export const AutoComplete = ({
 						{!isLoading ? (
 							<CommandPrimitive.Empty
 								asChild
-								className="select-none rounded-sm px-2 py-3 text-center text-sm"
+								className="select-none rounded-xs px-2 py-3 text-center text-sm"
 							>
 								{empty}
 							</CommandPrimitive.Empty>

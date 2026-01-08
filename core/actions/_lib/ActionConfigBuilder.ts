@@ -2,7 +2,7 @@ import type { Action } from "db/public"
 import type { ZodError, z } from "zod"
 
 import { getActionByName } from "../api"
-import { extractJsonata, schemaWithJsonFields } from "./schemaWithJsonFields"
+import { extractJsonata, needsInterpolation, schemaWithJsonFields } from "./schemaWithJsonFields"
 
 // error codes for clear error handling
 export enum ActionConfigErrorCode {
@@ -30,11 +30,6 @@ export type ActionConfigResult<T = Record<string, unknown>> =
 	| { success: false; error: ActionConfigError }
 
 type BuilderState = "initial" | "validated" | "interpolated"
-
-// helper to check if a value needs interpolation
-const needsInterpolation = (value: string): boolean => {
-	return value.includes("{{") || value.includes("$.") || value.startsWith("<<<")
-}
 
 const collectActionFieldReferences = (obj: Record<string, unknown>): Record<string, string[]> => {
 	const refMap = {} as Record<string, string[]>

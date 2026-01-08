@@ -145,7 +145,7 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 								</div>
 
 								{form.formState.errors?.permissions && (
-									<div className="text-red-500 text-sm">
+									<div className="text-destructive text-sm">
 										<p>{form.formState.errors?.permissions?.root?.message}</p>
 									</div>
 								)}
@@ -154,7 +154,9 @@ export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 					}}
 				/>
 				{form.formState.errors?.root && (
-					<p className="text-red-500 text-sm">{form.formState.errors?.root?.message}</p>
+					<p className="text-destructive text-sm">
+						{form.formState.errors?.root?.message}
+					</p>
 				)}
 
 				<FormSubmitButton

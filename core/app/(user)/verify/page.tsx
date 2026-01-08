@@ -43,7 +43,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 	}
 
 	return (
-		<div className="prose mx-auto max-w-sm">
+		<div className="prose dark:prose-invert mx-auto max-w-sm">
 			<h1>Verify your email</h1>
 			<p>{description}</p>
 			<ResendVerificationButton email={user.email} redirectTo={redirectTo} />

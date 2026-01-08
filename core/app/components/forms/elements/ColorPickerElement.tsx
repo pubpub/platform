@@ -34,6 +34,7 @@ export const ColorPickerPopover = ({
 				<Button
 					variant="outline"
 					className="flex h-full items-center gap-2"
+					data-testid="color-picker-button"
 					aria-label={`Select color: currently ${label || color}`}
 				>
 					<span className="sr-only">Pick a color</span>
@@ -47,7 +48,7 @@ export const ColorPickerPopover = ({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
-				className="w-auto overflow-clip border-none bg-transparent p-0 shadow-none"
+				className="w-auto overflow-clip border-0! border-transparent bg-transparent p-0 shadow-none"
 				aria-label="Color picker"
 				side="top"
 			>
@@ -68,8 +69,7 @@ export const ColorPickerElement = ({
 	config,
 }: ElementProps<InputComponent.colorPicker>) => {
 	const { control } = useFormContext()
-	const formElementToggle = useFormElementToggleContext()
-	const _isEnabled = formElementToggle.isEnabled(slug)
+	const _formElementToggle = useFormElementToggleContext()
 
 	Value.Default(colorPickerConfigSchema, config)
 	if (!Value.Check(colorPickerConfigSchema, config)) {

@@ -5,15 +5,14 @@ import type { FieldValues, UseFormReturn } from "react-hook-form"
 
 import React from "react"
 import { Accordion } from "@radix-ui/react-accordion"
-import { useFieldArray } from "react-hook-form"
+import { Controller, useFieldArray } from "react-hook-form"
 
 import { AccordionContent, AccordionItem, AccordionTrigger } from "../accordion"
 import { Button } from "../button"
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form"
+import { Field, FieldError, FieldLabel } from "../field"
 import { ArrowRight, Info, Plus, Trash } from "../icon"
 import { Input } from "../input"
 import { usePubFieldContext } from "../pubFields"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select"
 import { Separator } from "../separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../tooltip"
 
@@ -27,25 +26,43 @@ type PubField = {
 const OutputMapField = ({
 	disabled,
 	unselectedPubFields,
+	form,
 	fieldName,
 }: {
 	disabled?: boolean
 	unselectedPubFields: PubField[]
+	form: UseFormReturn<
+		{
+			[K in string]: {
+				responseField: string
+				pubField: string
+			}[]
+		},
+		unknown,
+		FieldValues | undefined
+	>
 	fieldName: string
 }) => (
 	<TooltipProvider>
 		<div className="flex items-start gap-x-2 overflow-visible">
-			<FormField
+			<Controller
+				control={form.control}
 				name={`${fieldName}.responseField`}
-				render={({ field }) => (
-					<FormItem className="flex w-1/2 flex-col gap-y-1">
-						<FormLabel className="flex items-center gap-x-2 font-normal text-gray-700 text-sm">
+				render={({ field, fieldState }) => (
+					<Field
+						className="flex w-1/2 flex-col gap-y-1"
+						data-invalid={fieldState.invalid}
+					>
+						<FieldLabel
+							htmlFor={field.name}
+							className="flex items-center gap-x-2 font-normal text-gray-700 text-sm"
+						>
 							<span>Response field</span>
 							<Tooltip>
 								<TooltipTrigger>
 									<Info size="12" />
 								</TooltipTrigger>
-								<TooltipContent className="prose max-w-sm text-xs">
+								<TooltipContent className="prose dark:prose-invert max-w-sm text-xs">
 									You can use{" "}
 									<a
 										href="https://goessner.net/articles/JsonPath/"
@@ -58,31 +75,38 @@ const OutputMapField = ({
 									syntax to select a field from the JSON body.
 								</TooltipContent>
 							</Tooltip>
-						</FormLabel>
+						</FieldLabel>
 						<Input
 							{...field}
+							id={field.name}
 							disabled={disabled}
 							aria-disabled={disabled}
 							className="font-mono"
 						/>
-						<FormMessage />
-					</FormItem>
+						<FieldError errors={[fieldState.error]} />
+					</Field>
 				)}
 			/>
 			<ArrowRight className="mt-10 h-4 w-4" />
-			<FormField
+			<Controller
 				name={`${fieldName}.pubField`}
-				render={({ field }) => {
+				render={({ field, fieldState }) => {
 					return (
-						<FormItem className="flex w-1/2 flex-col gap-y-1">
-							<FormLabel className="flex items-center gap-x-2 font-normal text-gray-700 text-sm">
+						<Field
+							className="flex w-1/2 flex-col gap-y-1"
+							data-invalid={fieldState.invalid}
+						>
+							<FieldLabel
+								htmlFor={field.name}
+								className="flex items-center gap-x-2 font-normal text-gray-700 text-sm"
+							>
 								<span> Pub field</span>
 
 								<Tooltip>
 									<TooltipTrigger>
 										<Info size="12" />
 									</TooltipTrigger>
-									<TooltipContent className="prose max-w-sm text-xs">
+									<TooltipContent className="prose dark:prose-invert max-w-sm text-xs">
 										The pub field to overwrite with the specified field of the
 										response.{" "}
 										<ul>
@@ -90,36 +114,19 @@ const OutputMapField = ({
 												When configuring the action, you can select any pub
 												field that is used in your community.{" "}
 											</li>
-											<li>
-												When running the action manually, only the pub
-												fields on the pub are available to select.
-											</li>
 										</ul>
 									</TooltipContent>
 								</Tooltip>
-							</FormLabel>
-							<FormControl>
-								<Select
-									{...field}
-									onValueChange={field.onChange}
-									disabled={disabled}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Select a field">
-											{/* without the {" "} the field.value sometimes doesn't render, weird */}
-											{field.value}{" "}
-										</SelectValue>
-									</SelectTrigger>
-									<SelectContent>
-										{unselectedPubFields.map(({ name, slug }) => (
-											<SelectItem value={slug} key={name}>
-												{slug}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</FormControl>
-						</FormItem>
+							</FieldLabel>
+							<Input
+								{...field}
+								id={field.name}
+								disabled={disabled}
+								aria-disabled={disabled}
+								className="font-mono"
+							/>
+							<FieldError errors={[fieldState.error]} />
+						</Field>
 					)
 				}}
 			/>
@@ -174,21 +181,16 @@ export const FieldOutputMap = <F extends string>({
 					{alreadySelectedPubFields.map((_field, index) => {
 						return (
 							<div className="flex flex-col gap-y-2" key={`outputMap.${index}`}>
-								<FormField
+								<Controller
 									name={`outputMap.[${index}]`}
-									render={() => {
+									render={({ field }) => {
 										return (
-											<FormItem
-												className="flex flex-col gap-y-2"
-												key={`outputMap.${index}`}
-												aria-disabled={disabled}
-											>
-												<OutputMapField
-													disabled={disabled}
-													unselectedPubFields={unselectedPubFields}
-													fieldName={`outputMap.[${index}]`}
-												/>
-											</FormItem>
+											<OutputMapField
+												form={form as any}
+												disabled={disabled}
+												unselectedPubFields={unselectedPubFields}
+												fieldName={`outputMap.[${index}]`}
+											/>
 										)
 									}}
 								/>

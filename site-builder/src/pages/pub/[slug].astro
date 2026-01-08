@@ -34,7 +34,6 @@ export async function getStaticPaths() {
 }
 
 const { pub, journal, header } = Astro.props
-console.log("header", header)
 
 const title = getFieldValue<string>(pub, "Title")
 const abstract = getFieldValue<string>(pub, "Abstract")

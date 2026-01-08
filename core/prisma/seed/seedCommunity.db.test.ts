@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest"
 
 import {
 	Action,
+	AutomationEvent,
 	CoreSchemaType,
 	ElementType,
 	InputComponent,
@@ -73,14 +74,24 @@ describe("seedCommunity", () => {
 				"Stage 1": {
 					id: stage1Id,
 					members: { hih: MemberRole.contributor },
-					actions: {
+					automations: {
 						"1": {
-							action: Action.email,
-							config: {
-								body: "hello nerd",
-								subject: "hello nerd",
-								recipientEmail: "all@pubpub.org",
-							},
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.email,
+									config: {
+										body: "hello nerd",
+										subject: "hello nerd",
+										recipientEmail: "all@pubpub.org",
+									},
+								},
+							],
 						},
 					},
 				},
@@ -193,16 +204,20 @@ describe("seedCommunity", () => {
 			name: "test",
 		})
 
-		expect(seededCommunity.actions, "actions").toMatchObject([
-			{
-				action: "email",
-				config: {
-					body: "hello nerd",
-					subject: "hello nerd",
-				},
-				name: "1",
+		expect(seededCommunity.automations, "automations").toMatchObject({
+			"1": {
+				triggers: expect.any(Array),
+				actionInstances: expect.arrayContaining([
+					expect.objectContaining({
+						action: "email",
+						config: expect.objectContaining({
+							body: "hello nerd",
+							subject: "hello nerd",
+						}),
+					}),
+				]),
 			},
-		])
+		})
 
 		expect(seededCommunity.users, "users").toMatchObject({
 			hih: {},

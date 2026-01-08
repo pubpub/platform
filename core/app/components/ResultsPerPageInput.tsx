@@ -23,7 +23,7 @@ export const ResultsPerPageInput = () => {
 					setPaging({ perPage: parseInt(value, 10) }, { shallow: false })
 				}}
 			>
-				<SelectTrigger className="h-8 w-[4.5rem]">
+				<SelectTrigger className="h-8 w-18">
 					<SelectValue placeholder={perPage} />
 				</SelectTrigger>
 				<SelectContent side="top">

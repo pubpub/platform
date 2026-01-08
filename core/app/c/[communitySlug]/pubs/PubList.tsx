@@ -5,6 +5,7 @@ import type { AutoReturnType } from "~/lib/types"
 import { Suspense } from "react"
 import { BookOpen } from "lucide-react"
 
+import { AutomationEvent } from "db/public"
 import {
 	Empty,
 	EmptyContent,
@@ -19,7 +20,7 @@ import { StagesProvider, stagesDAO } from "ui/stages"
 import { cn } from "utils"
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import { PubCardServer } from "~/app/components/pubs/PubCard/PubCardServer"
 import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton"
 import {
 	userCanArchiveAllPubs,
@@ -89,7 +90,7 @@ const PaginatedPubListInner = async (
 		(props.searchParams.pubTypes?.length ?? 0) > 0 ||
 		(props.searchParams.stages?.length ?? 0) > 0
 	return (
-		<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
+		<div className="mr-auto flex flex-col gap-3 md:max-w-(--breakpoint-lg)">
 			{pubs.length === 0 && (
 				<Empty className="">
 					<EmptyHeader>
@@ -123,13 +124,18 @@ const PaginatedPubListInner = async (
 				const stageForPub = stages.find((stage) => stage.id === pub.stage?.id)
 
 				return (
-					<PubCard
+					<PubCardServer
+						data-pulse={true}
 						key={pub.id}
 						pub={pub}
 						communitySlug={props.communitySlug}
 						moveFrom={stageForPub?.moveConstraintSources}
 						moveTo={stageForPub?.moveConstraints}
-						actionInstances={stageForPub?.actionInstances}
+						manualAutomations={stageForPub?.fullAutomations?.filter((automation) =>
+							automation?.triggers.some(
+								(trigger) => trigger.event === AutomationEvent.manual
+							)
+						)}
 						userId={props.userId}
 						canEditAllPubs={canEditAllPubs}
 						canArchiveAllPubs={canArchiveAllPubs}
@@ -240,7 +246,7 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 		}),
 		getStages(
 			{ communityId: props.communityId, userId: props.userId },
-			{ withActionInstances: "full" }
+			{ withAutomations: { detail: "full", filter: [AutomationEvent.manual] } }
 		).execute(),
 		getPubFields({ communityId: props.communityId }).executeTakeFirstOrThrow(),
 	])

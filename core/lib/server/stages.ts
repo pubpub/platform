@@ -1,25 +1,32 @@
-import type {
-	CommunitiesId,
-	NewMoveConstraint,
-	NewStages,
-	PublicSchema,
-	PubsId,
-	StagesId,
-	StagesUpdate,
-	UsersId,
-} from "db/public"
-import type { ExpressionBuilder } from "kysely"
+import type { StageAutomationSelectOptions } from "contracts"
+import type { ConditionBlock } from "db/types"
+import type { ExpressionBuilder, QueryCreator, SelectQueryBuilder } from "kysely"
 import type { AutoReturnType } from "../types"
 
 import { cache } from "react"
-import { type QueryCreator, sql } from "kysely"
-import { jsonArrayFrom } from "kysely/helpers/postgres"
+import { sql } from "kysely"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
-import { Capabilities, MembershipType } from "db/public"
+import {
+	type AutomationEvent,
+	Capabilities,
+	type CommunitiesId,
+	MembershipType,
+	type NewMoveConstraint,
+	type NewStages,
+	type PublicSchema,
+	type PubsId,
+	type StagesId,
+	type StagesUpdate,
+	type UsersId,
+} from "db/public"
+import { expect } from "utils"
 
 import { db } from "~/kysely/database"
+import { duplicateAutomation } from "./automations"
 import { autoCache } from "./cache/autoCache"
 import { autoRevalidate } from "./cache/autoRevalidate"
+import { maybeWithTrx } from "./maybeWithTrx"
 
 export const createStage = (props: NewStages) =>
 	autoRevalidate(db.insertInto("stages").values(props))
@@ -132,10 +139,18 @@ export const getStagesViewableByUser = cache(
 	}
 )
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId }
-type CommunityStageOptions = {
-	withActionInstances?: "count" | "full" | false
-	withMembers?: "count" | "full" | false
+type CommunityStageProps = {
+	communityId: CommunitiesId
+	stageId?: StagesId
+	// use null if you want to specifically circument the viewableStages CTE
+	// eg when fetching stages in a non-user context, such as running an automation
+	userId: UsersId | null
+}
+
+export type CommunityStageOptions = {
+	/* AutomationEvent = "full" and filters by AutomationEvent */
+	withAutomations?: StageAutomationSelectOptions
+	withMembers?: "count" | "all" | false
 }
 
 export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any>>(eb: EB) => {
@@ -157,6 +172,113 @@ export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any
 	)
 }
 
+export const filterAutomationsByEvent = <
+	QB extends SelectQueryBuilder<PublicSchema, "automations", any>,
+>(
+	qb: QB,
+	events: AutomationEvent[]
+) => {
+	return qb
+		.innerJoin("automation_triggers", "automation_triggers.automationId", "automations.id")
+		.where("automation_triggers.event", "in", events) as typeof qb
+}
+
+// .$if(withAutomations === "count", (qb) =>
+// 	qb.select((eb) =>
+// 		eb
+// 			.selectFrom("automations")
+// 			.whereRef("automations.stageId", "=", "stages.id")
+// 			.select((eb) =>
+// 				eb.fn.count<number>("automations.id").as("automationsCount")
+// 			)
+// 			.as("actionInstancesCount")
+// 	)
+// )
+
+export const countAutomations = <EB extends ExpressionBuilder<PublicSchema, "stages">>(
+	eb: EB,
+	filter: StageAutomationSelectOptions["filter"]
+) => {
+	return eb
+		.selectFrom("automations")
+		.whereRef("automations.stageId", "=", "stages.id")
+		.select((eb) => eb.fn.countAll<number>().as("automationsCount"))
+		.$if(filter !== "all", (qb) => filterAutomationsByEvent(qb, filter as AutomationEvent[]))
+		.as("automationsCount")
+}
+
+// types are a bit unsafe here, bc that's how kysely works
+// if you enconter issues, set the QB to
+// SelectQueryBuilder<PublicSchema, keyof PublicSchema, any>
+// to debug
+export const nestedBaseAutomationsSelect = <EB extends ExpressionBuilder<PublicSchema, "stages">>(
+	eb: EB,
+	filter: StageAutomationSelectOptions["filter"]
+) => {
+	return jsonArrayFrom(
+		eb
+			.selectFrom("automations")
+			.whereRef("automations.stageId", "=", "stages.id")
+			.selectAll("automations")
+			.$if(filter !== "all", (qb) =>
+				filterAutomationsByEvent(qb, filter as AutomationEvent[])
+			)
+	)
+}
+
+export const nestedFullAutomationsSelect = <EB extends ExpressionBuilder<PublicSchema, "stages">>(
+	eb: EB,
+	filter: StageAutomationSelectOptions["filter"]
+) => {
+	return jsonArrayFrom(
+		eb
+			.selectFrom("automations")
+			.whereRef("automations.stageId", "=", "stages.id")
+			.selectAll("automations")
+			.select((eb) => [
+				jsonArrayFrom(
+					eb
+						.selectFrom("automation_triggers")
+						.selectAll("automation_triggers")
+						.whereRef("automation_triggers.automationId", "=", "automations.id")
+				)
+					.$notNull()
+					.as("triggers"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("action_instances")
+						.selectAll("action_instances")
+						.whereRef("action_instances.automationId", "=", "automations.id")
+						.select((eb) =>
+							actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys")
+						)
+				)
+					.$notNull()
+					.as("actionInstances"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("automation_condition_blocks")
+						.whereRef("automation_condition_blocks.automationId", "=", "automations.id")
+						.where("automation_condition_blocks.automationConditionBlockId", "is", null)
+						.selectAll("automation_condition_blocks")
+						.select(sql.lit<"block">("block").as("kind"))
+						.select((eb) =>
+							// this function is what recursively builds the condition blocks and conditions
+							// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
+							eb
+								.fn<ConditionBlock[]>("get_condition_block_items", [
+									"automation_condition_blocks.id",
+								])
+								.as("items")
+						)
+				).as("condition"),
+			])
+			.$if(filter !== "all", (qb) =>
+				filterAutomationsByEvent(qb, filter as AutomationEvent[])
+			)
+	)
+}
+
 /**
  * Get all stages the given user has access to
  */
@@ -164,13 +286,24 @@ export const getStages = (
 	{ communityId, stageId, userId }: CommunityStageProps,
 	options: CommunityStageOptions = {}
 ) => {
-	const withActionInstances = options.withActionInstances ?? "count"
+	const withAutomations = options.withAutomations ?? { detail: "count", filter: "all" }
+
+	const basicStart = db.selectFrom("stages").selectAll("stages")
+
+	const start = userId
+		? (db
+				.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
+				.selectFrom("stages")
+				.selectAll("stages")
+				.innerJoin(
+					"viewableStages",
+					"viewableStages.stageId",
+					"stages.id"
+				) as typeof basicStart)
+		: basicStart
 
 	return autoCache(
-		db
-			.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
-			.selectFrom("stages")
-			.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
+		start
 			.where("communityId", "=", communityId)
 			.$if(Boolean(stageId), (qb) => qb.where("stages.id", "=", stageId!))
 			.select((eb) => [
@@ -208,31 +341,20 @@ export const getStages = (
 					)
 					.as("memberCount"),
 			])
-			.$if(withActionInstances === "count", (qb) =>
+			.$if(withAutomations && withAutomations?.detail === "full", (qb) =>
 				qb.select((eb) =>
-					eb
-						.selectFrom("action_instances")
-						.whereRef("action_instances.stageId", "=", "stages.id")
-						.select((eb) =>
-							eb.fn.count<number>("action_instances.id").as("actionInstancesCount")
-						)
-						.as("actionInstancesCount")
+					nestedFullAutomationsSelect(eb, withAutomations.filter).as("fullAutomations")
 				)
 			)
-			.$if(withActionInstances === "full", (qb) =>
+
+			.$if(withAutomations && withAutomations?.detail === "base", (qb) =>
 				qb.select((eb) =>
-					jsonArrayFrom(
-						eb
-							.selectFrom("action_instances")
-							.whereRef("action_instances.stageId", "=", "stages.id")
-							.selectAll("action_instances")
-							.select((eb) =>
-								actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys")
-							)
-					).as("actionInstances")
+					nestedBaseAutomationsSelect(eb, withAutomations.filter).as("baseAutomations")
 				)
 			)
-			.selectAll("stages")
+			.$if(withAutomations?.detail === "count", (qb) =>
+				qb.select((eb) => countAutomations(eb, withAutomations.filter))
+			)
 			.orderBy("order asc")
 	)
 }
@@ -246,4 +368,67 @@ export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
 			.insertInto("PubsInStages")
 			.values([{ pubId, stageId }])
 	)
+}
+
+export const duplicateStages = async (
+	communityId: CommunitiesId,
+	stageIds: StagesId[],
+	newStageIds: StagesId[]
+) => {
+	const res = await maybeWithTrx(db, async (trx) => {
+		const newStages = await autoRevalidate(
+			trx.insertInto("stages").values(
+				stageIds.map((oldStageId, idx) => ({
+					id: newStageIds[idx],
+					communityId,
+					name: trx
+						.selectFrom("stages")
+						.select(sql<string>`'Copy of ' || name`.as("name"))
+						.where("id", "=", oldStageId),
+					order: "aa",
+				}))
+			)
+		).execute()
+
+		const existingAutomations = await autoCache(
+			trx.selectFrom("automations").where("stageId", "in", stageIds).selectAll("automations")
+		).execute()
+
+		const duplicateAutomations = await Promise.all(
+			existingAutomations.map((automation) =>
+				duplicateAutomation(
+					automation.id,
+					newStageIds[stageIds.indexOf(expect(automation.stageId))],
+					trx
+				)
+			)
+		)
+
+		const existingMembers = await autoCache(
+			trx
+				.selectFrom("stage_memberships")
+				.where("stageId", "in", stageIds)
+				.selectAll("stage_memberships")
+		).execute()
+
+		const duplicateMembers = await autoRevalidate(
+			trx
+				.insertInto("stage_memberships")
+				.values(
+					existingMembers.map(({ id, ...member }) => ({
+						...member,
+						stageId: newStageIds[stageIds.indexOf(member.stageId)],
+					}))
+				)
+				.returningAll()
+		).execute()
+
+		return {
+			newStages,
+			duplicateAutomations,
+			duplicateMembers,
+		}
+	})
+
+	return res
 }

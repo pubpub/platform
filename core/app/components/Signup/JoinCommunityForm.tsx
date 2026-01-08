@@ -34,8 +34,7 @@ export const JoinCommunityForm = ({
 	const onSubmit = useCallback(async () => {
 		const result = await runJoin()
 		if ("success" in result) {
-			toast({
-				title: "Success",
+			toast.success("Success", {
 				description: result.report,
 			})
 			router.push(redirectPath)

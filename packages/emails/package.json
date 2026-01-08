@@ -10,6 +10,7 @@
 	"scripts": {
 		"dev": "cp .env.development ./node_modules/react-email/ && pnpm email dev -d src -p 3003",
 		"type-check": "tsc --noEmit",
+		"type-check:go": "tsgo --noEmit",
 		"export": "email export"
 	},
 	"devDependencies": {
@@ -27,7 +28,8 @@
 		"react": "catalog:react19",
 		"react-email": "3.0.4",
 		"tsconfig": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"@typescript/native-preview": "catalog:"
 	},
 	"preconstruct": {
 		"entrypoints": ["index.tsx"],

@@ -8,6 +8,7 @@ import { expect, test } from "@playwright/test"
 
 import {
 	Action,
+	AutomationEvent,
 	CoreSchemaType,
 	ElementType,
 	InputComponent,
@@ -107,22 +108,42 @@ const seed = createSeed({
 	},
 	stages: {
 		Evaluating: {
-			actions: {
+			automations: {
 				[ACTION_NAME_USER]: {
-					action: Action.email,
-					config: {
-						subject: "Hello",
-						body: "Greetings",
-						recipientEmail: email1,
-					},
+					triggers: [
+						{
+							event: AutomationEvent.manual,
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.email,
+							config: {
+								subject: "Hello",
+								body: "Greetings",
+								recipientEmail: email1,
+							},
+						},
+					],
 				},
 				[ACTION_NAME_EMAIL]: {
-					action: Action.email,
-					config: {
-						subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
-						recipientEmail: email2,
-						body: `You are invited to fill in a form.\n\n\n\n:link{form="${evalSlug}" text="Wow, a great form!"}\n\n`,
-					},
+					triggers: [
+						{
+							event: AutomationEvent.manual,
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.email,
+							config: {
+								subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
+								recipientEmail: email2,
+								body: `You are invited to fill in a form.\n\n\n\n:link{form="${evalSlug}" text="Wow, a great form!"}\n\n`,
+							},
+						},
+					],
 				},
 			},
 		},
@@ -543,12 +564,6 @@ test.describe("email invite flow", () => {
 				state: "visible",
 				timeout: 1000,
 			})
-
-			// dismiss notification
-			await page
-				.getByRole("region", { name: "Notifications (F8)" })
-				.getByRole("button")
-				.click()
 		})
 
 		await test.step("user can signup with the correct email", async () => {
@@ -738,7 +753,7 @@ test.describe("invite reject flow", () => {
 			})
 
 			await expect(page.getByText("You have rejected the invite")).toBeVisible({
-				timeout: 1000,
+				timeout: 5000,
 			})
 		})
 

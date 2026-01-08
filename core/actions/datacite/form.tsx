@@ -1,6 +1,6 @@
+import { Checkbox } from "ui/checkbox"
 import { DatePicker } from "ui/date-picker"
 import { FieldSet } from "ui/field"
-import { Input } from "ui/input"
 
 import { ActionField } from "../_lib/ActionField"
 
@@ -32,12 +32,11 @@ export default function LogActionForm() {
 				name="bylineContributorFlag"
 				label="Byline Contributor Flag"
 				render={({ field, fieldState }) => (
-					<Input
-						type="checkbox"
-						{...field}
-						id={field.name}
+					<Checkbox
+						className="!w-4 shrink"
 						aria-invalid={fieldState.invalid}
 						checked={field.value}
+						onCheckedChange={field.onChange}
 					/>
 				)}
 			/>

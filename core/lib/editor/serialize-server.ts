@@ -46,7 +46,7 @@ type RichTextToProsemirrorOpts = {
  *
  * only up to depth 1
  */
-export const transformRichTextValuesToProsemirror = <T extends PubLike>(
+export const transformRichTextValuesToProsemirrorServer = <T extends PubLike>(
 	pub: T,
 	opts?: RichTextToProsemirrorOpts
 ): T => {
@@ -60,6 +60,21 @@ export const transformRichTextValuesToProsemirror = <T extends PubLike>(
 				return {
 					...value,
 					value: maybeJSON,
+				}
+			}
+			return value
+		}),
+	}
+}
+
+export const transformRichTextValuesToProsemirrorClient = <T extends PubLike>(pub: T): T => {
+	return {
+		...pub,
+		values: pub.values.map((value) => {
+			if (value.schemaName === CoreSchemaType.RichText && typeof value.value === "string") {
+				return {
+					...value,
+					value: htmlToProsemirror(value.value),
 				}
 			}
 			return value

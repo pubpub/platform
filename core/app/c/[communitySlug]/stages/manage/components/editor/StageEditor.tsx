@@ -23,6 +23,7 @@ import type { CommunityStage } from "~/lib/server/stages"
 import { expect } from "utils"
 
 import { useStages } from "../../StagesContext"
+import { useEditingStageId } from "../panel/usePanelQueryParams"
 import { useStageEditor } from "./StageEditorContext"
 import { StageEditorContextMenu } from "./StageEditorContextMenu"
 import { StageEditorKeyboardControls } from "./StageEditorKeyboardControls"
@@ -151,6 +152,7 @@ export const StageEditorGraph = () => {
 	const store = useStoreApi().getState()
 	const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes)
 	const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges)
+	const { editingStageId } = useEditingStageId()
 
 	const onNodeContextMenu: NodeMouseHandler = (_, node) =>
 		store.addSelectedNodes([...selectedStages.map((stage) => stage.id), node.id])
@@ -201,6 +203,9 @@ export const StageEditorGraph = () => {
 				nodes={nodes}
 				edges={edges}
 				nodeTypes={nodeTypes}
+				// otherwise zooming in on the node breaks the highlight effect
+				zoomOnScroll={!editingStageId}
+				zoomOnPinch={!editingStageId}
 				onSelectionChange={onSelectionChange}
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}
@@ -211,7 +216,10 @@ export const StageEditorGraph = () => {
 				fitView
 			>
 				<Background />
-				<Controls />
+				{/* otherwise it may overlap with the node when the panel is open */}
+				{editingStageId ? null : (
+					<Controls className="[&>button]:!bg-muted [&_svg]:!fill-muted-foreground [&>button]:!border-0 rounded-sm border border-transparent" />
+				)}
 			</ReactFlow>
 		</div>
 	)

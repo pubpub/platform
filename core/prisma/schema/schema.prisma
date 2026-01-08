@@ -44,6 +44,7 @@ model User {
   InvitedUser          Invite[]              @relation("invited_user")
   InvitedByUser        Invite[]              @relation("invited_by")
   InviteHistory        InviteHistory[]
+  automationRuns       AutomationRun[]
 
   @@map(name: "users")
 }
@@ -106,6 +107,7 @@ model Community {
   members             CommunityMembership[]
   Invite              Invite[]
   ActionConfigDefault ActionConfigDefault[]
+  automations         Automation[]
 
   @@map(name: "communities")
 }
@@ -115,7 +117,7 @@ model Pub {
   valuesBlob  Json?
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String
-  community   Community @relation(fields: [communityId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
   createdAt   DateTime  @default(now())
   // updatedAt is also updated once a value is updated
@@ -131,8 +133,9 @@ model Pub {
   relatedValues PubValue[]      @relation("related_pub")
   members       PubMembership[]
 
-  searchVector Unsupported("tsvector")?
-  Invite       Invite[]
+  searchVector   Unsupported("tsvector")?
+  Invite         Invite[]
+  automationRuns AutomationRun[]
 
   @@index([searchVector], type: Gin)
   @@map(name: "pubs")
@@ -148,7 +151,7 @@ model PubField {
   schemaName       CoreSchemaType?
   pubFieldSchemaId String?
   isArchived       Boolean         @default(false)
-  community        Community       @relation(fields: [communityId], references: [id])
+  community        Community       @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId      String
   isRelation       Boolean         @default(false)
 
@@ -221,7 +224,7 @@ model PubType {
   id          String    @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   description String?
-  community   Community @relation(fields: [communityId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
@@ -257,7 +260,7 @@ model Stage {
   id          String    @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   order       String
-  community   Community @relation(fields: [communityId], references: [id])
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
@@ -265,10 +268,10 @@ model Stage {
   pubs                  PubsInStages[]
   moveConstraints       MoveConstraint[]  @relation("move_constraint")
   moveConstraintSources MoveConstraint[]  @relation("move_constraint_destination")
-  actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]
   Invite                Invite[]
+  automations           Automation[]
 
   @@map(name: "stages")
 }
@@ -297,18 +300,16 @@ model MoveConstraint {
 }
 
 model ActionInstance {
-  id          String       @id @default(dbgenerated("gen_random_uuid()"))
-  name        String       @default("")
-  action      Action
-  stage       Stage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId     String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @default(now()) @updatedAt
+  id           String     @id @default(dbgenerated("gen_random_uuid()"))
+  action       Action
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @default(now()) @updatedAt
   /// @type(BaseActionInstanceConfig, '../types', true, false, true)
-  config      Json?
-  automations Automation[]
-  runs        ActionRun[]
-  watchedBy   Automation[] @relation("source_action_instance")
+  config       Json?
+  automationId String
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  runs ActionRun[]
 
   @@map(name: "action_instances")
 }
@@ -321,6 +322,7 @@ enum Action {
   googleDriveImport
   datacite
   buildJournalSite
+  createPub
 }
 
 model ActionConfigDefault {
@@ -336,65 +338,184 @@ model ActionConfigDefault {
   @@map(name: "action_config_defaults")
 }
 
-model ActionRun {
-  id               String            @id @default(dbgenerated("gen_random_uuid()"))
-  actionInstance   ActionInstance?   @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
-  actionInstanceId String?
-  pub              Pub?              @relation(fields: [pubId], references: [id])
-  pubId            String?
-  json             Json?
-  config           Json?
-  event            Event?
-  params           Json?
-  status           ActionRunStatus
-  result           Json
-  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId           String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @default(now()) @updatedAt
-  PubValueHistory  PubValueHistory[]
+model AutomationRun {
+  id           String     @id @default(dbgenerated("gen_random_uuid()"))
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  automationId String
+
+  // status is automatically computed by database trigger compute_automation_run_status()
+  // based on the aggregate status of all child action_runs
+  // null means no action_runs have been created yet
+  // 'scheduled' = all actions scheduled, 'pending' = mixed states, 'success' = all succeeded, 'failure' = any failed
+  status ActionRunStatus?
+
+  triggerEvent  AutomationEvent
+  triggerConfig Json?
+  sourceUserId  String?
+  sourceUser    User?           @relation(fields: [sourceUserId], references: [id], onDelete: Cascade)
+
+  // db constraint: at least one of inputPubId or non-empty inputJson must be defined
+  inputPubId String?
+  inputPub   Pub?    @relation(fields: [inputPubId], references: [id], onDelete: Cascade)
+  inputJson  Json?
+
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @default(now()) @updatedAt
+  actionRuns ActionRun[]
 
   // action run that triggered this action run
-  sourceActionRunId String?
-  sourceActionRun   ActionRun? @relation("source_action_run", fields: [sourceActionRunId], references: [id], onDelete: SetNull)
+  sourceAutomationRunId String?
+  sourceAutomationRun   AutomationRun? @relation("source_automation_run", fields: [sourceAutomationRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
-  sequentialActionRuns ActionRun[]     @relation("source_action_run")
-  InvitedByActionRun   Invite[]        @relation("invited_by_action_run")
-  InviteHistory        InviteHistory[]
+  sequentialAutomationRuns AutomationRun[] @relation("source_automation_run")
+
+  @@map(name: "automation_runs")
+}
+
+// TODO: move more of the fields from ActionRun to AutomationRun
+// once we allow running multiple actions in a single automation run
+model ActionRun {
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
+  actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: SetNull)
+  actionInstanceId String?
+
+  automationRun   AutomationRun? @relation(fields: [automationRunId], references: [id])
+  automationRunId String?
+
+  pub             Pub?              @relation(fields: [pubId], references: [id])
+  pubId           String?
+  json            Json?
+  config          Json?
+  action          Action?
+  event           AutomationEvent?
+  params          Json?
+  status          ActionRunStatus
+  result          Json
+  user            User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId          String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now()) @updatedAt
+  PubValueHistory PubValueHistory[]
+
+  InvitedByActionRun Invite[]        @relation("invited_by_action_run")
+  InviteHistory      InviteHistory[]
 
   @@map(name: "action_runs")
 }
 
 enum ActionRunStatus {
   scheduled
+  pending
   success
   failure
 }
 
 model Automation {
-  id                     String          @id @default(dbgenerated("gen_random_uuid()"))
-  event                  Event
-  actionInstance         ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
-  actionInstanceId       String
-  /// @type(AutomationConfig, '../types', true, false, true)
-  config                 Json?
-  // as the trigger for "actionSucceeded" or "actionFailed"
-  sourceActionInstanceId String?
-  sourceActionInstance   ActionInstance? @relation("source_action_instance", fields: [sourceActionInstanceId], references: [id], onDelete: SetNull)
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @default(now()) @updatedAt
+  id          String  @id @default(dbgenerated("gen_random_uuid()"))
+  name        String
+  description String?
+  /// @type(IconConfig, '../types', true, false, true)
+  icon        Json?
+
+  // as the trigger for "automationSucceeded" or "automationFailed"
+  watchedAutomations AutomationTrigger[] @relation("source_automation")
+
+  // stage is nullable to allow one dummy automation per community for re-parenting deleted automation runs
+  stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId String?
+
+  // community is required for all automations, allows dummy automations with null stageId to be community-scoped
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  communityId String
+
+  conditionEvaluationTiming ConditionEvaluationTiming?
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @default(now()) @updatedAt
+  AutomationConditionBlock  AutomationConditionBlock[]
+  actionInstances           ActionInstance[]
+  automationRuns            AutomationRun[]
+  automationTriggers        AutomationTrigger[]
 
   @@map(name: "automations")
 }
 
-enum Event {
+enum AutomationEvent {
   pubEnteredStage
   pubLeftStage
   pubInStageForDuration
-  actionSucceeded
-  actionFailed
+  automationSucceeded
+  automationFailed
   webhook
+  manual
+}
+
+model AutomationTrigger {
+  id     String          @id @default(dbgenerated("gen_random_uuid()"))
+  event  AutomationEvent
+  config Json?
+
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  automationId String
+
+  sourceAutomationId String?
+  sourceAutomation   Automation? @relation("source_automation", fields: [sourceAutomationId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map(name: "automation_triggers")
+}
+
+enum ConditionEvaluationTiming {
+  onTrigger
+  onExecution
+  both
+}
+
+model AutomationConditionBlock {
+  id   String                       @id @default(dbgenerated("gen_random_uuid()"))
+  type AutomationConditionBlockType
+  rank String // Uses "C" collation
+
+  // nested automation condition blocks
+  automationConditionBlockId String?
+  automationConditionBlock   AutomationConditionBlock?  @relation("automation_condition_block", fields: [automationConditionBlockId], references: [id], onDelete: Cascade)
+  automationConditionBlocks  AutomationConditionBlock[] @relation("automation_condition_block")
+
+  automationId String
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @default(now()) @updatedAt
+  AutomationCondition AutomationCondition[]
+
+  @@map(name: "automation_condition_blocks")
+}
+
+enum AutomationConditionBlockType {
+  AND
+  OR
+  NOT
+}
+
+model AutomationCondition {
+  id                         String                   @id @default(dbgenerated("gen_random_uuid()"))
+  automationConditionBlockId String
+  automationConditionBlock   AutomationConditionBlock @relation(fields: [automationConditionBlockId], references: [id], onDelete: Cascade)
+
+  type       AutomationConditionType
+  expression String
+
+  rank      String // Uses "C" collation
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map(name: "automation_conditions")
+}
+
+enum AutomationConditionType {
+  jsonata
 }
 
 enum FormAccessType {
@@ -551,6 +672,7 @@ enum ApiAccessScope {
   stage
   member
   pubType
+  form
 }
 
 /// Status of an invite

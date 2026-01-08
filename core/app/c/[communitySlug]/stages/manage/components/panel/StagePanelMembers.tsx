@@ -1,31 +1,24 @@
-import type { StagesId } from "db/public"
 import type { User } from "lucia"
 
-import { Suspense } from "react"
+import { Users } from "lucide-react"
 
-import { Capabilities, MembershipType } from "db/public"
-import { Card, CardContent } from "ui/card"
-import { cn } from "utils"
+import { Capabilities, MembershipType, type StagesId } from "db/public"
+import { Card, CardAction, CardContent, CardTitle } from "ui/card"
 
-import { MembersList } from "~/app/components//Memberships/MembersList"
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
+import { MembersCardList } from "~/app/components/Memberships/MembersCardList"
 import { userCan } from "~/lib/authorization/capabilities"
 import { getStageMembers } from "~/lib/db/queries"
 import { getSimpleForms } from "~/lib/server/form"
-import {
-	addStageMember,
-	addUserWithStageMembership,
-	removeStageMember,
-	setStageMemberRole,
-} from "../../actions"
+import { addStageMember, addUserWithStageMembership, removeStageMember } from "../../actions"
+import { StagePanelCardHeader } from "../editor/StagePanelCard"
 
-type PropsInner = {
+type Props = {
 	stageId: StagesId
 	user: User
 }
 
-const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
+export const StagePanelMembers = async ({ stageId, user }: Props) => {
 	const [members, canManage, availableForms] = await Promise.all([
 		getStageMembers(stageId).execute(),
 		userCan(Capabilities.removeStageMember, { type: MembershipType.stage, stageId }, user.id),
@@ -33,16 +26,15 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 	])
 
 	return (
-		<Card>
-			<CardContent className="space-y-4 p-4">
-				<div
-					className={cn(
-						"flex items-center justify-between",
-						members.length && "border-b-2 border-b-gray-200 pb-4"
-					)}
-				>
-					<h4 className="mb-2 inline font-semibold text-base">Members</h4>
+		<Card className="h-full">
+			<StagePanelCardHeader>
+				<div className="flex items-center gap-2">
+					<Users size={16} />
+					<CardTitle>Members</CardTitle>
+				</div>
+				<CardAction>
 					<AddMemberDialog
+						className="!bg-transparent m-0 h-6 border-none p-0 text-muted-foreground text-xs shadow-none hover:bg-transparent hover:text-foreground"
 						addMember={addStageMember.bind(null, stageId)}
 						addUserMember={addUserWithStageMembership.bind(null, stageId)}
 						existingMembers={members.map((member) => member.id)}
@@ -50,11 +42,12 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 						membershipType={MembershipType.stage}
 						availableForms={availableForms}
 					/>
-				</div>
-				<MembersList
+				</CardAction>
+			</StagePanelCardHeader>
+			<CardContent>
+				<MembersCardList
 					members={members}
 					membershipType={MembershipType.stage}
-					setRole={setStageMemberRole}
 					removeMember={removeStageMember}
 					targetId={stageId}
 					readOnly={!canManage}
@@ -62,22 +55,5 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 				/>
 			</CardContent>
 		</Card>
-	)
-}
-
-type Props = {
-	stageId?: StagesId
-	user: User
-}
-
-export const StagePanelMembers = async (props: Props) => {
-	if (props.stageId === undefined) {
-		return <SkeletonCard />
-	}
-
-	return (
-		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelMembersInner stageId={props.stageId} user={props.user} />
-		</Suspense>
 	)
 }

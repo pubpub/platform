@@ -8,6 +8,7 @@ import { defineAction } from "../types"
 
 export const action = defineAction({
 	name: Action.move,
+	niceName: "Move Pub",
 	accepts: ["pub"],
 	config: {
 		schema: z.object({

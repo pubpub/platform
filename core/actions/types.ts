@@ -1,22 +1,25 @@
-import type { Json, ProcessedPub } from "contracts"
+import type { Prettify } from "@ts-rest/core"
+import type { ProcessedPub } from "contracts"
 import type {
-	ActionInstances,
+	ActionInstancesId,
 	Action as ActionName,
 	ActionRunsId,
+	AutomationRunsId,
 	Automations,
 	Communities,
 	CommunitiesId,
 	StagesId,
-	UsersId,
 } from "db/public"
-import type { LastModifiedBy } from "db/types"
+import type { FullAutomation, Json, LastModifiedBy } from "db/types"
+import type { User } from "lucia"
+import type React from "react"
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form"
 import type * as Icons from "ui/icon"
-import type { Prettify, XOR } from "utils/types"
-import type * as z from "zod"
+import type { XOR } from "utils/types"
+import type z from "zod"
 import type { ClientExceptionOptions } from "~/lib/serverActions"
 
-import { Event } from "db/public"
+import { AutomationEvent } from "db/public"
 
 export type ActionPub = ProcessedPub<{
 	withPubType: true
@@ -40,11 +43,19 @@ export type RunProps<T extends Action> = T extends Action<
 				 */
 				lastModifiedBy: LastModifiedBy
 				actionRunId: ActionRunsId
+				automation: FullAutomation
 				/**
-				 * The user ID of the user who initiated the action, if any
+				 * The automation run context
 				 */
-				userId?: UsersId
-				actionInstance: ActionInstances
+				automationRunId: AutomationRunsId
+				/**
+				 * The action instance being run
+				 */
+				actionInstanceId: ActionInstancesId
+				/**
+				 * The user who is running the action, if any
+				 */
+				user: User | null
 			} & ("pub" | "json" extends Acc[number] // if only one's accepted, it's only that one // if both are accepted, it's one or the other.
 				? XOR<{ pub: ActionPub }, { json: Json }>
 				: ("pub" extends Acc[number]
@@ -76,6 +87,7 @@ export type Action<
 > = {
 	id?: string
 	name: N
+	niceName: string
 	description: string
 	accepts: Accepts
 	/**
@@ -126,7 +138,10 @@ export type ActionSuccess = {
 	/**
 	 * Optionally provide a report to be displayed to the user
 	 */
-	report?: React.ReactNode
+	report?: string | React.ReactNode
+	/**
+	 * The data is something stored in the action log, like a URL or a file
+	 */
 	data: unknown
 }
 
@@ -136,29 +151,30 @@ export const defineRun = <T extends Action = Action>(
 
 export type Run = ReturnType<typeof defineRun>
 
-export const sequentialAutomationEvents = [Event.actionSucceeded, Event.actionFailed] as const
+export const sequentialAutomationEvents = [
+	AutomationEvent.automationSucceeded,
+	AutomationEvent.automationFailed,
+] as const
 export type SequentialAutomationEvent = (typeof sequentialAutomationEvents)[number]
 
-export const isSequentialAutomationEvent = (event: Event): event is SequentialAutomationEvent =>
-	sequentialAutomationEvents.includes(event as any)
+export const isSequentialAutomationEvent = (
+	event: AutomationEvent
+): event is SequentialAutomationEvent => sequentialAutomationEvents.some((e) => e === event)
 
-export const schedulableAutomationEvents = [
-	Event.pubInStageForDuration,
-	Event.actionFailed,
-	Event.actionSucceeded,
-] as const
+export const schedulableAutomationEvents = [AutomationEvent.pubInStageForDuration] as const
 export type SchedulableAutomationEvent = (typeof schedulableAutomationEvents)[number]
 
-export const isSchedulableAutomationEvent = (event: Event): event is SchedulableAutomationEvent =>
-	schedulableAutomationEvents.includes(event as any)
+export const isSchedulableAutomationEvent = (
+	event: AutomationEvent
+): event is SchedulableAutomationEvent => schedulableAutomationEvents.some((e) => e === event)
 
 export type EventAutomationOptionsBase<
-	E extends Event,
+	E extends AutomationEvent,
 	AC extends Record<string, any> | undefined = undefined,
 > = {
 	event: E
 	canBeRunAfterAddingAutomation?: boolean
-	additionalConfig?: AC extends Record<string, any> ? z.ZodType<AC> : undefined
+	config: undefined extends AC ? undefined : z.ZodType<AC>
 	/**
 	 * The display name options for this event
 	 */
@@ -173,26 +189,31 @@ export type EventAutomationOptionsBase<
 		 * Useful if you want to show some configuration or automation-specific information
 		 */
 		hydrated?: (
-			options: {
-				automation: Automations
-				community: Communities
-			} & (AC extends Record<string, any>
-				? { config: AC }
-				: E extends SequentialAutomationEvent
-					? { config: ActionInstances }
-					: {})
+			options: NonNullable<AC> extends undefined
+				? {
+						automation: Automations
+						community: Communities
+						sourceAutomation?: Automations
+						config?: never
+					}
+				: {
+						automation: Automations
+						community: Communities
+						sourceAutomation?: Automations
+						config: NonNullable<AC>
+					}
 		) => React.ReactNode
 	}
 }
 
 export const defineAutomation = <
-	E extends Event,
+	E extends AutomationEvent,
 	AC extends Record<string, any> | undefined = undefined,
 >(
 	options: EventAutomationOptionsBase<E, AC>
 ) => options
 
-export type { AutomationConfig, AutomationConfigs } from "./_lib/automations"
+export type { AutomationConfig, AutomationConfigs } from "./_lib/triggers"
 
 export type ConfigOf<T extends Action> = T extends Action<infer C, any, any> ? z.infer<C> : never
 
