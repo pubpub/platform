@@ -259,7 +259,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		})
 	})
 	// fails with large number of pubs in the db
-	test("New user can fill out the form from the email link", async ({ browser }) => {
+	test("New user can fill out the form from the email link", async ({ page: newPage }) => {
 		const { message } = await (await inbucketClient.getMailbox(firstName1)).getLatestMessage()
 		const url = message.body.html?.match(/a href="([^"]+)"/)?.[1]
 		expect(url).toBeTruthy()
@@ -272,7 +272,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		}, url!)
 
 		// Open a new page so that we're no longer logged in as admin
-		const newPage = await browser.newPage()
+		// const newPage = await browser.newPage()
 		await newPage.goto(decodedUrl)
 		await newPage.getByText("Form will save every few seconds while editing").waitFor()
 
