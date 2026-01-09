@@ -19,18 +19,10 @@ export const ResetPasswordButton = ({ user }: { user: UserLoginData }) => {
 		const result = await runResetPassword({ email: user.email })
 
 		if (result && "error" in result) {
-			toast({
-				title: "Error",
-				description: result.error,
-				variant: "destructive",
-			})
+			toast.error(result.error)
 		}
 
-		toast({
-			title: "Success",
-			description: "Password reset email sent! Please check your inbox.",
-			duration: 5000,
-		})
+		toast.success("Password reset email sent! Please check your inbox.")
 	}
 
 	return (

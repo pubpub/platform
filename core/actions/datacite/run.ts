@@ -258,7 +258,7 @@ const checkDoi = async (doi: string) => {
 	return response.ok
 }
 
-const createPubDeposit = async (depositPayload: Payload) => {
+const createPubDeposit = async (depositPayload: Payload, config: Config) => {
 	logger.info({
 		msg: "Datacite deposit publish",
 		payload: {
@@ -295,15 +295,17 @@ const createPubDeposit = async (depositPayload: Payload) => {
 			},
 		})
 		return {
+			success: false,
 			title: "Failed to create DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
+			config,
 		}
 	}
 
 	return response.json()
 }
 
-const updatePubDeposit = async (depositPayload: Payload) => {
+const updatePubDeposit = async (depositPayload: Payload, config: Config) => {
 	logger.info({
 		msg: "Datacite deposit update",
 		payload: depositPayload,
@@ -326,8 +328,10 @@ const updatePubDeposit = async (depositPayload: Payload) => {
 			},
 		})
 		return {
+			success: false,
 			title: "Failed to update DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
+			config,
 		}
 	}
 
@@ -343,9 +347,11 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 	} catch (error) {
 		if (error instanceof AssertionError) {
 			return {
+				success: false,
 				title: "Failed to create DataCite deposit",
 				error: error.message,
 				cause: undefined,
+				config,
 			}
 		}
 		throw error
@@ -356,9 +362,9 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 		// If the pub already has a DOI, and DataCite recognizes it,
 		depositPayloadDoi && (await checkDoi(depositPayloadDoi))
 			? // Update the pub metadata in DataCite
-				await updatePubDeposit(depositPayload)
+				await updatePubDeposit(depositPayload, config)
 			: // Otherwise, deposit the pub to DataCite
-				await createPubDeposit(depositPayload)
+				await createPubDeposit(depositPayload, config)
 
 	if (isClientExceptionOptions(depositResult)) {
 		return depositResult
@@ -381,9 +387,11 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 			})
 		} catch (error) {
 			return {
+				success: false,
 				title: "Failed to save DOI",
 				error: "The pub was deposited to DataCite, but we were unable to update the pub's DOI in PubPub",
 				cause: error.message,
+				config,
 			}
 		}
 	}

@@ -84,11 +84,15 @@ export const isInputElement = <I extends InputComponent>(
 	element: BasicPubFieldElement,
 	component: I
 ): element is BasicPubFieldElement & {
-	component: I | null
+	component: I
 	schemaName: SchemaTypeByInputComponent[I]
 	config: InputComponentConfigSchema<I>
 } => {
 	return element.type === ElementType.pubfield && element.component === component
+}
+
+export const isPubFieldElement = (element: BasicFormElements): element is PubFieldElement => {
+	return element.type === ElementType.pubfield
 }
 
 export type ButtonElement = {

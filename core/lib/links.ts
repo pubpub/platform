@@ -1,4 +1,4 @@
-import type { PubsId, StagesId } from "db/public"
+import type { Action, AutomationsId, PubsId, StagesId } from "db/public"
 import type { NoticeParams } from "~/app/components/Notice"
 
 export const maybeWithSearchParams = (basePath: string, searchParams: URLSearchParams) => {
@@ -117,10 +117,12 @@ export const constructRedirectToPubDetailPage = (opts: {
 	return maybeWithSearchParams(basePath, searchParams)
 }
 
+export type StageManageTab = "overview" | "pubs" | "automations" | "members"
+
 export const constructStageMangePanel = (opts: {
 	stageId: StagesId
 	communitySlug: string
-	tab?: "overview" | "pubs" | "actions" | "members"
+	tab?: StageManageTab
 }) => {
 	const searchParams = new URLSearchParams()
 	if (opts.tab) {
@@ -131,4 +133,27 @@ export const constructStageMangePanel = (opts: {
 
 	const basePath = `/c/${opts.communitySlug}/stages/manage`
 	return maybeWithSearchParams(basePath, searchParams)
+}
+
+export const constructAutomationRunPage = (opts: {
+	communitySlug: string
+	automationId?: AutomationsId
+	stageId?: StagesId
+	action?: Action
+}) => {
+	const basePath = `/c/${opts.communitySlug}/activity/automations`
+
+	const searchParams = new URLSearchParams()
+	if (opts.automationId) {
+		searchParams.set("automations", opts.automationId.toString())
+	}
+	if (opts.stageId) {
+		searchParams.set("stages", opts.stageId.toString())
+	}
+	if (opts.action) {
+		searchParams.set("actions", opts.action)
+	}
+	const searchParamsString = searchParams.toString()
+
+	return searchParamsString ? `${basePath}?${searchParamsString}` : basePath
 }

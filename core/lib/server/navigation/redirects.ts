@@ -6,6 +6,8 @@ import type { LoginRedirectOpts } from "../../links"
 import { redirect } from "next/navigation"
 import { getPathname } from "@nimpl/getters/get-pathname"
 
+import { logger } from "logger"
+
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCanViewStagePage } from "~/lib/authorization/capabilities"
 import {
@@ -104,14 +106,26 @@ type RedirectToBaseCommunityPageOpts = XOR<
 export const constructRedirectToBaseCommunityPage = async (
 	opts?: RedirectToBaseCommunityPageOpts
 ) => {
-	const [{ user }, community] = await Promise.all([
+	let [{ user }, community] = await Promise.all([
 		getLoginData(),
 		// weird ternary bc no-params findCommunityBySlug is likely cached, while findCommunityBySlug(undefined) likely isn't
 		!opts?.communitySlug ? findCommunityBySlug() : findCommunityBySlug(opts?.communitySlug),
 	])
 
-	if (!user || !community) {
+	if (!user) {
 		redirectToLogin()
+	}
+	if (!community) {
+		logger.error({
+			msg: "No community found for user. Likely had LAST_VISITED_COOKIE set to a community that no longer exists",
+			userId: user.id,
+			opts,
+		})
+		community = user.memberships[0]?.community
+
+		if (!community) {
+			redirectToLogin()
+		}
 	}
 
 	const isAbleToViewStages = await userCanViewStagePage(

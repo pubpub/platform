@@ -7,6 +7,7 @@ import { defineAction } from "../types"
 
 export const action = defineAction({
 	name: Action.log,
+	niceName: "Log to Console",
 	accepts: ["pub", "json"],
 	config: {
 		schema: z.object({
@@ -17,7 +18,7 @@ export const action = defineAction({
 			debounce: z.number().default(0).describe("Debounce time in milliseconds"),
 		}),
 	},
-	description: "Log a pub to the console",
+	description: "Log information to the console. Useful for debugging and testing.",
 	icon: Terminal,
 	superAdminOnly: true,
 })

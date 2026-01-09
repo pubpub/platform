@@ -2,64 +2,91 @@
 // but this way we can make the jobsClient typesafe in `core`
 // by augmenting the `GraphileWorker.Tasks` interface, see `./index.ts`
 
-import type { ActionInstancesId, ActionRunsId, Event, PubsId, StagesId } from "../../public"
-import type { Json } from "../json"
+import { z } from "zod"
 
-export type PubInStagesRow = {
-	pubId: PubsId
-	stageId: StagesId
-}
+import { AutomationEvent, automationEventSchema } from "../../public/AutomationEvent"
+import { automationRunsIdSchema } from "../../public/AutomationRuns"
+import { automationsIdSchema } from "../../public/Automations"
+import { pubsIdSchema } from "../../public/Pubs"
+import { stagesIdSchema } from "../../public/Stages"
 
-export type DBTriggerEventPayload<T> = {
-	table: string
-	operation: string
-	new: T
-	old: T
-	community: {
-		slug: string
-	}
-}
+// zod schemas for event payloads
 
-export type ScheduledEventPayload = {
-	event: Event
-	duration: number
-	interval: "minute" | "hour" | "day" | "week" | "month" | "year"
-	runAt: Date
-	stageId: StagesId
-	actionInstanceId: ActionInstancesId
-	community: {
-		slug: string
-	}
-	sourceActionRunId?: ActionRunsId
-	stack?: ActionRunsId[]
-	scheduledActionRunId: ActionRunsId
-	/**
-	 * The config for the action instance to use when scheduling the action
-	 */
-	config?: Record<string, unknown> | null
-} & (
-	| {
-			pubId: PubsId
-			json?: never
-	  }
-	| {
-			pubId?: never
-			json: Json
-	  }
-)
+const runAutomationPayloadSchema = z.object({
+	type: z.literal("RunAutomation"),
+	automationId: automationsIdSchema,
+	pubId: pubsIdSchema,
+	stageId: stagesIdSchema,
+	trigger: z.object({
+		event: z.enum([
+			AutomationEvent.pubEnteredStage,
+			AutomationEvent.pubLeftStage,
+			AutomationEvent.automationSucceeded,
+			AutomationEvent.automationFailed,
+		]),
+		config: z.record(z.unknown()).nullable(),
+	}),
+	community: z.object({
+		slug: z.string(),
+	}),
+	stack: z.array(automationRunsIdSchema),
+})
 
-export type EmitEventPayload = DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload
+const scheduleDelayedAutomationPayloadSchema = z.object({
+	type: z.literal("ScheduleDelayedAutomation"),
+	automationId: automationsIdSchema,
+	pubId: pubsIdSchema,
+	stageId: stagesIdSchema,
+	trigger: z.object({
+		event: automationEventSchema,
+		config: z.record(z.unknown()).nullable(),
+	}),
+	community: z.object({
+		slug: z.string(),
+	}),
+	stack: z.array(automationRunsIdSchema),
+})
 
-export type PubEnteredStageEventPayload = PubInStagesRow & {
-	event: Event.pubEnteredStage
-	community: { slug: string }
-}
-export type PubLeftStageEventPayload = PubInStagesRow & {
-	event: Event.pubLeftStage
-	community: { slug: string }
-}
+const runDelayedAutomationPayloadSchema = z.object({
+	type: z.literal("RunDelayedAutomation"),
+	automationId: automationsIdSchema,
+	pubId: pubsIdSchema,
+	stageId: stagesIdSchema,
+	trigger: z.object({
+		event: automationEventSchema,
+		config: z.record(z.unknown()).nullable(),
+	}),
+	community: z.object({
+		slug: z.string(),
+	}),
+	automationRunId: automationRunsIdSchema,
+	stack: z.array(automationRunsIdSchema),
+})
 
-export type NormalizedEventPayload =
-	| PubEnteredStageEventPayload
-	| PubLeftStageEventPayload
-	| ScheduledEventPayload
+const cancelScheduledAutomationPayloadSchema = z.object({
+	type: z.literal("CancelScheduledAutomation"),
+	automationRunId: automationRunsIdSchema,
+	pubId: pubsIdSchema,
+	stageId: stagesIdSchema,
+	community: z.object({
+		slug: z.string(),
+	}),
+})
+
+export const emitEventPayloadSchema = z.discriminatedUnion("type", [
+	runAutomationPayloadSchema,
+	scheduleDelayedAutomationPayloadSchema,
+	runDelayedAutomationPayloadSchema,
+	cancelScheduledAutomationPayloadSchema,
+])
+
+// derive types from schemas
+export type RunAutomationPayload = z.infer<typeof runAutomationPayloadSchema>
+export type ScheduleDelayedAutomationPayload = z.infer<
+	typeof scheduleDelayedAutomationPayloadSchema
+>
+export type RunDelayedAutomationPayload = z.infer<typeof runDelayedAutomationPayloadSchema>
+export type CancelScheduledAutomationPayload = z.infer<
+	typeof cancelScheduledAutomationPayloadSchema
+>
+export type EmitEventPayload = z.infer<typeof emitEventPayloadSchema>

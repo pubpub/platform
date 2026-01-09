@@ -6,10 +6,11 @@ import { notFound } from "next/navigation"
 import { Button } from "ui/button"
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout"
-import { PubPageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus"
+import { PubPageStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus"
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { getAuthorizedCreateForms } from "~/lib/authorization/capabilities"
+import { getPubType } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { resolveFormAccess } from "~/lib/server/form-access"
 import { redirectToPubCreatePage, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
@@ -74,11 +75,14 @@ export default async function Page(props: {
 		notFound()
 	}
 
-	const availableForms = await getAuthorizedCreateForms({
-		userId: user.id,
-		communityId: community.id,
-		pubTypeId: searchParams.pubTypeId,
-	}).execute()
+	const [pubType, availableForms] = await Promise.all([
+		getPubType(searchParams.pubTypeId).executeTakeFirstOrThrow(),
+		getAuthorizedCreateForms({
+			userId: user.id,
+			communityId: community.id,
+			pubTypeId: searchParams.pubTypeId,
+		}).execute(),
+	])
 
 	// ensure user has access to at least one form, and resolve the current form
 	const { hasAccessToAnyForm, hasAccessToCurrentForm, canonicalForm } = resolveFormAccess({
@@ -107,15 +111,12 @@ export default async function Page(props: {
 					Save
 				</Button>
 			}
-			title={
-				<PubPageTitleWithStatus
-					title="Create pub"
-					forms={availableForms}
-					defaultFormSlug={searchParams.form}
-				/>
-			}
+			title={`Create ${pubType.name}`}
 			right={<div />}
 		>
+			<div className="sticky top-0 flex w-full flex-col items-center border-b bg-background">
+				<PubPageStatus forms={availableForms} defaultFormSlug={searchParams.form} />
+			</div>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
 					<PubEditor

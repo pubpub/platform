@@ -2,11 +2,13 @@ import type { StagesId, UsersId } from "db/public"
 
 import { Suspense } from "react"
 import assert from "node:assert"
+import { BookOpen } from "lucide-react"
 
-import { Card, CardContent } from "ui/card"
+import { AutomationEvent } from "db/public"
+import { Card, CardAction, CardContent, CardTitle } from "ui/card"
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import { PubCardServer } from "~/app/components/pubs/PubCard/PubCardServer"
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
 import {
 	userCanArchiveAllPubs,
@@ -15,17 +17,18 @@ import {
 	userCanRunActionsAllPubs,
 	userCanViewAllStages,
 } from "~/lib/authorization/capabilities"
-import { getStage } from "~/lib/db/queries"
+import { getStage, getStageAutomations } from "~/lib/db/queries"
 import { getPubsWithRelatedValues } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
+import { StagePanelCardHeader } from "../editor/StagePanelCard"
 
-type PropsInner = {
+type Props = {
 	stageId: StagesId
 	searchParams: Record<string, unknown>
 	userId: UsersId
 }
 
-const StagePanelPubsInner = async (props: PropsInner) => {
+export const StagePanelPubs = async (props: Props) => {
 	const [community] = await Promise.all([findCommunityBySlug()])
 
 	assert(community, "Community not found")
@@ -33,7 +36,9 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 	const [
 		stagePubs,
 		stage,
+		manualAutomations,
 		canArchiveAllPubs,
+
 		canEditAllPubs,
 		canRunActionsAllPubs,
 		canMoveAllPubs,
@@ -43,13 +48,15 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 			{ stageId: [props.stageId], communityId: community.id },
 			{
 				withStage: true,
-				withStageActionInstances: true,
 				withPubType: true,
 				withValues: true,
 				withRelatedPubs: false,
 			}
 		),
 		getStage(props.stageId, props.userId).executeTakeFirst(),
+		getStageAutomations(props.stageId, {
+			event: AutomationEvent.manual,
+		}),
 		userCanArchiveAllPubs(),
 		userCanEditAllPubs(),
 		userCanRunActionsAllPubs(),
@@ -62,55 +69,43 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 	}
 
 	return (
-		<Card>
-			<CardContent className="space-y-2 p-4">
-				<div className="flex flex-wrap items-center justify-between">
-					<h4 className="mb-2 font-semibold text-base">Pubs</h4>
-					<Suspense fallback={<SkeletonCard />}>
-						<CreatePubButton stageId={props.stageId} />
-					</Suspense>
+		<Card className="h-full">
+			<StagePanelCardHeader>
+				<div className="flex items-center gap-2">
+					<BookOpen size={16} />
+					<CardTitle>Pubs </CardTitle>
 				</div>
-				{stagePubs.map((pub) => (
-					<PubCard
-						key={pub.id}
-						pub={{ ...pub, stageId: props.stageId, depth: 0 }}
-						communitySlug={community.slug}
-						userId={props.userId}
-						actionInstances={pub.stage?.actionInstances ?? []}
-						canArchiveAllPubs={canArchiveAllPubs}
-						canEditAllPubs={canEditAllPubs}
-						canRunActionsAllPubs={canRunActionsAllPubs}
-						canMoveAllPubs={canMoveAllPubs}
-						canViewAllStages={canViewAllStages}
-						moveFrom={stage.moveConstraintSources}
-						moveTo={stage.moveConstraints}
-						canFilter={false}
-						withSelection={false}
-					/>
-				))}
+				<CardAction>
+					<Suspense fallback={<SkeletonCard />}>
+						<CreatePubButton
+							stageId={props.stageId}
+							className="!bg-transparent m-0 h-6 border-none p-0 text-muted-foreground text-xs shadow-none hover:bg-transparent hover:text-foreground"
+						/>
+					</Suspense>
+				</CardAction>
+			</StagePanelCardHeader>
+			<CardContent>
+				<div className="flex flex-col gap-2 dark:[&>div]:bg-muted/50">
+					{stagePubs.map((pub) => (
+						<PubCardServer
+							key={pub.id}
+							pub={{ ...pub, stageId: props.stageId, depth: 0 }}
+							communitySlug={community.slug}
+							userId={props.userId}
+							manualAutomations={manualAutomations}
+							canArchiveAllPubs={canArchiveAllPubs}
+							canEditAllPubs={canEditAllPubs}
+							canRunActionsAllPubs={canRunActionsAllPubs}
+							canMoveAllPubs={canMoveAllPubs}
+							canViewAllStages={canViewAllStages}
+							moveFrom={stage.moveConstraintSources}
+							moveTo={stage.moveConstraints}
+							canFilter={false}
+							withSelection={false}
+						/>
+					))}
+				</div>
 			</CardContent>
 		</Card>
-	)
-}
-
-type Props = {
-	stageId?: StagesId
-	searchParams: Record<string, unknown>
-	userId: UsersId
-}
-
-export const StagePanelPubs = async (props: Props) => {
-	if (props.stageId === undefined) {
-		return <SkeletonCard />
-	}
-
-	return (
-		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelPubsInner
-				stageId={props.stageId}
-				searchParams={props.searchParams}
-				userId={props.userId}
-			/>
-		</Suspense>
 	)
 }

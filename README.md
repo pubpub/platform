@@ -30,10 +30,10 @@ root
 └── ...
 ```
 
--   `core` holds the primary web application.
--   `infrastructure` holds the deployment infrastructure for the centrally hosted version of PubPub Platform run by the Knowledge Futures team.
--   `jobs` holds the job queueing and scheduling service used by `core`.
--   `packages` holds libraries and npm packages that are shared by `core`, `jobs`, and `infrastructure`.
+- `core` holds the primary web application.
+- `infrastructure` holds the deployment infrastructure for the centrally hosted version of PubPub Platform run by the Knowledge Futures team.
+- `jobs` holds the job queueing and scheduling service used by `core`.
+- `packages` holds libraries and npm packages that are shared by `core`, `jobs`, and `infrastructure`.
 
 To avoid inconsistencies and difficult-to-track errors, we specify a particular version of node in `/.nvmrc` (currently `v22.13.1`). We recommend using [nvm](https://github.com/nvm-sh/nvm) to ensure you're using the same version.
 
@@ -103,10 +103,10 @@ If you have a feature request, idea, general feedback, or need help with PubPub,
 
 In the coming weeks, we'll be developing more thorough contribution guides, particularly for contributors interested in:
 
--   Extending PubPub Platform with new Actions and Rules
--   Extending the PubPub Platform API
--   Contributing to self-hosting scripts and guides on common cloud hosting
--   Contributing documentation for developers or users
+- Extending PubPub Platform with new Actions and Rules
+- Extending the PubPub Platform API
+- Contributing to self-hosting scripts and guides on common cloud hosting
+- Contributing documentation for developers or users
 
 For now, you can browse the [issue list](https://github.com/pubpub/platform/issues) and comment on any issues you may want
 to take on. We'll be in touch shortly
@@ -117,10 +117,10 @@ Our preferred practice is for contributors to create a branch using the format `
 
 Request names should be prefixed with one of the following categories:
 
--   fix: for commits focused on specific bug fixes
--   feature: for commits that introduce a new feature
--   update: for commits that improve an existing feature
--   dev: for commits that focus solely on documentation, refactoring code, or developer experience updates
+- fix: for commits focused on specific bug fixes
+- feature: for commits that introduce a new feature
+- update: for commits that improve an existing feature
+- dev: for commits that focus solely on documentation, refactoring code, or developer experience updates
 
 Request descriptions should use to our Pull Request template, including a clear rationale for the PR, listing any issues resolved, and describing the test plan for the request, including both tests you wrote and step-by-step descriptions of any manual QA that may be needed.
 

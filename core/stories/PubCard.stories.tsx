@@ -1,12 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import type { ProcessedPub } from "contracts"
-import type { ActionInstancesId, CommunitiesId } from "db/public"
+import type {
+	ActionInstancesId,
+	AutomationsId,
+	AutomationTriggersId,
+	CommunitiesId,
+	StagesId,
+} from "db/public"
 import type { CommunityStage } from "~/lib/server/stages"
 
-import { Action } from "db/public"
+import { Action, AutomationEvent } from "db/public"
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider"
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import { PubCardServer } from "~/app/components/pubs/PubCard/PubCardServer"
 import pubJson from "./assets/pub.json"
 import stagesJson from "./assets/stages.json"
 
@@ -20,11 +26,11 @@ const pub = {
 	withStage: true
 }>
 
-const stages = stagesJson as unknown as CommunityStage[]
+const _stages = stagesJson as unknown as CommunityStage[]
 
-const meta: Meta<typeof PubCard> = {
+const meta: Meta<typeof PubCardServer> = {
 	title: "PubCard",
-	component: PubCard,
+	component: PubCardServer,
 	tags: ["autodocs"],
 	argTypes: {},
 	args: {
@@ -32,16 +38,40 @@ const meta: Meta<typeof PubCard> = {
 		communitySlug: "test-community",
 		moveFrom: [],
 		moveTo: [],
-		actionInstances: [
+		manualAutomations: [
 			{
-				action: Action.log,
-				stageId: stages[0].id,
-				config: {},
-				id: "1" as ActionInstancesId,
+				id: "1" as AutomationsId,
+				name: "test",
+				triggers: [
+					{
+						event: AutomationEvent.manual,
+						config: {},
+						id: "1" as AutomationTriggersId,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+						automationId: "1" as AutomationsId,
+						sourceAutomationId: null,
+					},
+				],
+				actionInstances: [
+					{
+						id: "1" as ActionInstancesId,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+						automationId: "1" as AutomationsId,
+						action: Action.log,
+						config: {},
+						defaultedActionConfigKeys: null,
+					},
+				],
 				createdAt: new Date(),
 				updatedAt: new Date(),
-				name: "test",
-				defaultedActionConfigKeys: null,
+				communityId: "1" as CommunitiesId,
+				description: null,
+				stageId: "1" as StagesId,
+				conditionEvaluationTiming: null,
+				icon: null,
+				condition: null,
 			},
 		],
 	},
@@ -62,14 +92,14 @@ const meta: Meta<typeof PubCard> = {
 					updatedAt: new Date(),
 				}}
 			>
-				<PubCard {...args} />
+				<PubCardServer {...args} />
 			</CommunityProvider>
 		)
 	},
 }
 export default meta
 
-type Story = StoryObj<typeof PubCard>
+type Story = StoryObj<typeof PubCardServer>
 
 export const Base: Story = {
 	args: {},

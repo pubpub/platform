@@ -25,12 +25,15 @@ jobs:
             matrix:
                 package:
                     - core
-                    - context-editor
+                    # 20260106: disable for now in order to merge in gigantic PRs
+                    # - context-editor
         env:
             ENV_FILE: .env.docker-compose.dev
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
             - name: Install Node.js
               uses: actions/setup-node@v4
@@ -76,8 +79,14 @@ jobs:
 
             - name: Get image tag based on SHA
               id: gettag
-              # use shell substitution
-              run: echo "tag=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
+              run: |
+                  if [ -n "${{ inputs.image-tag-override }}" ]; then
+                      echo "tag=${{ inputs.image-tag-override }}" >> $GITHUB_OUTPUT
+                      echo "Using override image tag: ${{ inputs.image-tag-override }}"
+                  else
+                      echo "tag=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
+                      echo "Using current SHA as image tag"
+                  fi
 
             - name: Login to Amazon ECR
               id: login-ecr

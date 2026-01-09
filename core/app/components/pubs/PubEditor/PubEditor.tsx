@@ -20,7 +20,7 @@ import { expect } from "utils"
 import { db } from "~/kysely/database"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { userCan, userCanMoveAllPubs } from "~/lib/authorization/capabilities"
-import { transformRichTextValuesToProsemirror } from "~/lib/editor/serialize-server"
+import { transformRichTextValuesToProsemirrorServer } from "~/lib/editor/serialize-server"
 import { getPubByForm, getPubTitle } from "~/lib/pubs"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getForm } from "~/lib/server/form"
@@ -51,7 +51,7 @@ const RelatedPubValueElement = ({
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="flex flex-col gap-4 rounded border p-2">
+			<div className="flex flex-col gap-4 rounded-sm border p-2">
 				<h2>Related field value</h2>
 				<p className="text-sm">
 					You are creating a Pub related to{" "}
@@ -148,7 +148,7 @@ const getPubEditorData = (
 	const pubId = props.pub.id
 	const pubFields = expect(props.pubTypes.find((pt) => pt.id === props.pub.pubTypeId)).fields
 
-	const pubWithProsemirrorRichText = transformRichTextValuesToProsemirror(props.pub, {
+	const pubWithProsemirrorRichText = transformRichTextValuesToProsemirrorServer(props.pub, {
 		toJson: true,
 	})
 
@@ -232,7 +232,7 @@ export type PubEditorProps = {
 } & (
 	| {
 			pubId: PubsId
-			pubTypeId?: PubTypesId
+			pubTypeId: PubTypesId
 			pub: ProcessedPub<{ withStage: true; withPubType: true }>
 			mode: "edit"
 			stageId?: never
@@ -323,7 +323,6 @@ export async function PubEditor(props: PubEditorProps) {
 					<ContextEditorContextProvider
 						pubId={pubEditorData.pubId}
 						pubTypeId={props.pubTypeId}
-						pubs={pubEditorData.pubsForContext}
 						pubTypes={pubTypes}
 					>
 						<PubEditorWrapper

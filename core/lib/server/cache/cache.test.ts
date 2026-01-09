@@ -8,7 +8,13 @@ import { Kysely, PostgresDialect } from "kysely"
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 import { expect, it, vitest } from "vitest"
 
-import { ActionRunStatus, ApiAccessScope, ApiAccessType, Event, MemberRole } from "db/public"
+import {
+	ActionRunStatus,
+	ApiAccessScope,
+	ApiAccessType,
+	AutomationEvent,
+	MemberRole,
+} from "db/public"
 
 import { autoCache } from "./autoCache"
 import { autoRevalidate } from "./autoRevalidate"
@@ -311,7 +317,7 @@ describe("cachedFindTables", () => {
 					.select("config")
 					.where("action_instances.id", "=", "id" as ActionInstancesId),
 				params: {},
-				event: Event.pubInStageForDuration,
+				event: AutomationEvent.pubInStageForDuration,
 			}))
 			// conflict should only happen if a scheduled action is excecuted
 			// not on user initiated actions or on other events
@@ -319,7 +325,7 @@ describe("cachedFindTables", () => {
 				oc.column("id").doUpdateSet({
 					result: {},
 					params: {},
-					event: Event.pubInStageForDuration,
+					event: AutomationEvent.pubInStageForDuration,
 					status: ActionRunStatus.failure,
 				})
 			)

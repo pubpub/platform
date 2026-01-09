@@ -1,6 +1,8 @@
 import type {
 	ActionInstancesId,
 	ActionRunsId,
+	AutomationRunsId,
+	AutomationsId,
 	CommunitiesId,
 	PubFieldsId,
 	PubsId,
@@ -8,17 +10,16 @@ import type {
 	PubValuesId,
 	StagesId,
 } from "db/public"
-import type { ClientExceptionOptions } from "~/lib/serverActions"
 import type { ActionPub, RunProps } from "../types"
 import type { action } from "./action"
 
 import { afterEach } from "node:test"
 import { describe, expect, it, vitest } from "vitest"
 
-import { Action, CoreSchemaType } from "db/public"
+import { CoreSchemaType } from "db/public"
 
 import { updatePub } from "~/lib/server"
-import { didSucceed } from "~/lib/serverActions"
+import { type ClientExceptionOptions, didSucceed } from "~/lib/serverActions"
 import { run } from "./run"
 
 vitest.mock("~/lib/env/env", () => {
@@ -134,15 +135,24 @@ const pub = {
 } as ActionPub
 
 const RUN_OPTIONS: RunProps<typeof action> = {
-	actionInstance: {
-		id: "" as ActionInstancesId,
+	automation: {
+		id: "" as AutomationsId,
 		name: "deposit to datacite",
 		stageId: "" as StagesId,
 		createdAt: new Date(),
 		updatedAt: new Date(),
-		action: Action.datacite,
-		config: {},
+		actionInstances: [],
+		triggers: [],
+		condition: null,
+		conditionEvaluationTiming: null,
+		icon: null,
+		communityId: "" as CommunitiesId,
+		description: null,
+		lastAutomationRun: null,
 	},
+	user: null,
+	automationRunId: "" as AutomationRunsId,
+	actionInstanceId: "" as ActionInstancesId,
 	actionRunId: "" as ActionRunsId,
 	stageId: "" as StagesId,
 	communityId: "" as CommunitiesId,

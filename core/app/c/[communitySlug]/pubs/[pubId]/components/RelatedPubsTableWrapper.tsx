@@ -3,7 +3,7 @@ import type { FullProcessedPubWithForm } from "~/lib/server"
 import { Info } from "ui/icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
 
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import { PubsRunAutomationsDropDownMenu } from "~/app/components/AutomationUI/PubsRunAutomationDropDownMenu"
 import { RelatedPubsTable } from "./RelatedPubsTable"
 
 const NoActions = () => {
@@ -24,9 +24,16 @@ const NoActions = () => {
 	)
 }
 
-const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
-	return row.stage && row.stage?.actionInstances.length > 0 ? (
-		<PubsRunActionDropDownMenu actionInstances={row.stage.actionInstances} pubId={row.id} />
+const getRelatedPubRunActionsDropdowns = (
+	row: FullProcessedPubWithForm,
+	userCanOverrideAutomationConditions: boolean
+) => {
+	return row.stage && row.stage?.fullAutomations.length > 0 ? (
+		<PubsRunAutomationsDropDownMenu
+			canOverrideAutomationConditions={userCanOverrideAutomationConditions}
+			automations={row.stage.fullAutomations}
+			pubId={row.id}
+		/>
 	) : (
 		<NoActions />
 	)
@@ -35,6 +42,7 @@ const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
 type Props = {
 	pub: FullProcessedPubWithForm
 	userCanRunActions: boolean
+	userCanOverrideAutomationConditions: boolean
 }
 
 export const RelatedPubsTableWrapper = async (props: Props) => {
@@ -46,7 +54,8 @@ export const RelatedPubsTableWrapper = async (props: Props) => {
 						? {
 								...a,
 								[value.relatedPubId]: getRelatedPubRunActionsDropdowns(
-									value.relatedPub
+									value.relatedPub,
+									props.userCanOverrideAutomationConditions
 								),
 							}
 						: a,

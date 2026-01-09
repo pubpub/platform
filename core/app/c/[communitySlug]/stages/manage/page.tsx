@@ -89,11 +89,12 @@ export default async function Page(props: Props) {
 					<PubFieldProvider pubFields={pubFields.fields}>
 						<StageEditorProvider communitySlug={params.communitySlug}>
 							<LocalStorageProvider timeout={200}>
-								<div className="v-full absolute top-0 left-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
+								<div className="v-full absolute top-0 left-0 z-20 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
 									<div className="relative h-full select-none">
 										<StageEditor />
 										{searchParams.editingStageId && (
 											<StagePanel
+												communityId={community.id}
 												stageId={searchParams.editingStageId as StagesId}
 												searchParams={searchParams}
 												user={user}
@@ -106,7 +107,7 @@ export default async function Page(props: Props) {
 					</PubFieldProvider>
 				</StagesProvider>
 			</StagesManageProvider>
-			<SSERevalidator listenTables={["action_runs"]} />
+			<SSERevalidator listenTables={["automation_runs"]} />
 		</>
 	)
 }

@@ -33,7 +33,7 @@ export const DateElement = ({ slug, label, config }: ElementProps<InputComponent
 			name={slug}
 			control={control}
 			render={({ field }) => (
-				<FormItem className="[&>button]:!my-1">
+				<FormItem>
 					<FormLabel>{label}</FormLabel>
 					<DatePicker
 						disabled={!isEnabled}

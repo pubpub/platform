@@ -21,7 +21,7 @@ export const Notice = ({
 		className={cn(
 			"mt-4",
 			!body && "flex flex-row items-center [&>svg]:static",
-			type === "error" && "bg-red-50",
+			type === "error" && "bg-red-50 dark:bg-card",
 			className
 		)}
 	>

@@ -57,10 +57,7 @@ export function MigrationForm() {
 		const result = await runImportFromLegacy(data)
 
 		if (didSucceed(result)) {
-			toast({
-				title: "Import successful!",
-				description: "The import has been completed successfully.",
-			})
+			toast.success("Import successful!")
 		}
 	}
 
@@ -153,10 +150,7 @@ export function UndoMigrationForm({
 		})
 
 		if (didSucceed(result)) {
-			toast({
-				title: "Migration undone",
-				description: "The migration has been undone",
-			})
+			toast.success("Migration undone")
 
 			setUndo(false)
 		}
@@ -350,7 +344,7 @@ export function UndoMigrationForm({
 					<UndoIcon className="mr-1 h-4 w-4" /> Undo Migration
 				</Button>
 			</AlertDialogTrigger>
-			<AlertDialogContent className="max-w-screen-lg">
+			<AlertDialogContent className="max-w-(--breakpoint-lg)">
 				<AlertDialogTitle>Undo Migration</AlertDialogTitle>
 				<AlertDialogDescription>
 					Select what data you want to be deleted

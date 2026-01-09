@@ -12,6 +12,7 @@ export enum Action {
 	googleDriveImport = "googleDriveImport",
 	datacite = "datacite",
 	buildJournalSite = "buildJournalSite",
+	createPub = "createPub",
 }
 
 /** Zod schema for Action */

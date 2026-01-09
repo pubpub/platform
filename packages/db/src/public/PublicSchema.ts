@@ -8,7 +8,11 @@ import type { ApiAccessLogsTable } from "./ApiAccessLogs"
 import type { ApiAccessPermissionsTable } from "./ApiAccessPermissions"
 import type { ApiAccessTokensTable } from "./ApiAccessTokens"
 import type { AuthTokensTable } from "./AuthTokens"
+import type { AutomationConditionBlocksTable } from "./AutomationConditionBlocks"
+import type { AutomationConditionsTable } from "./AutomationConditions"
+import type { AutomationRunsTable } from "./AutomationRuns"
 import type { AutomationsTable } from "./Automations"
+import type { AutomationTriggersTable } from "./AutomationTriggers"
 import type { CommunitiesTable } from "./Communities"
 import type { CommunityMembershipsTable } from "./CommunityMemberships"
 import type { FormElementsTable } from "./FormElements"
@@ -39,6 +43,8 @@ import type { UsersTable } from "./Users"
 export interface PublicSchema {
 	PubFieldSchema: PubFieldSchemaTable
 
+	automation_runs: AutomationRunsTable
+
 	membership_capabilities: MembershipCapabilitiesTable
 
 	sessions: SessionsTable
@@ -67,11 +73,15 @@ export interface PublicSchema {
 
 	pub_types: PubTypesTable
 
+	automation_conditions: AutomationConditionsTable
+
 	pub_fields: PubFieldsTable
 
 	invites_history: InvitesHistoryTable
 
 	communities: CommunitiesTable
+
+	automation_triggers: AutomationTriggersTable
 
 	users: UsersTable
 
@@ -96,6 +106,8 @@ export interface PublicSchema {
 	pub_memberships: PubMembershipsTable
 
 	stages: StagesTable
+
+	automation_condition_blocks: AutomationConditionBlocksTable
 
 	form_elements: FormElementsTable
 

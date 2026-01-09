@@ -9,7 +9,7 @@ import { goToNextCell } from "prosemirror-tables"
 
 import { toggleMarkExpandEmpty } from "../commands/marks"
 
-export default (schema: Schema) => {
+export default function keymapPlugin(schema: Schema) {
 	const mac = typeof navigator !== "undefined" ? /Mac/.test(navigator.platform) : false
 
 	const keys: Record<string, Command> = {}

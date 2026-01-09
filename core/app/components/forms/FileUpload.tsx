@@ -95,8 +95,16 @@ export function FileUploadPreview(props: FileUploadPreviewProps) {
 					>
 						<CardContent className="p-3">
 							<div className="flex items-center gap-3">
-								<div className="flex-shrink-0" aria-hidden="true">
-									<FileIcon className="h-5 w-5 text-muted-foreground" />
+								<div className="shrink-0" aria-hidden="true">
+									{file.fileType.startsWith("image/") ? (
+										<img
+											src={file.fileUploadUrl}
+											alt={file.fileName}
+											className="size-6 object-cover"
+										/>
+									) : (
+										<FileIcon className="h-5 w-5 text-muted-foreground" />
+									)}
 								</div>
 
 								<div className="min-w-0 flex-1">
@@ -116,7 +124,7 @@ export function FileUploadPreview(props: FileUploadPreviewProps) {
 
 								{/** biome-ignore lint/a11y/useSemanticElements: shh */}
 								<div
-									className="flex flex-shrink-0 items-center gap-1"
+									className="flex shrink-0 items-center gap-1"
 									role="group"
 									aria-label="File actions"
 								>

@@ -16,7 +16,8 @@
 		"./package.json": "./package.json"
 	},
 	"scripts": {
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"type-check:go": "tsgo --noEmit"
 	},
 	"dependencies": {
 		"clsx": "catalog:",
@@ -24,7 +25,8 @@
 	},
 	"devDependencies": {
 		"tsconfig": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"@typescript/native-preview": "catalog:"
 	},
 	"preconstruct": {
 		"entrypoints": [

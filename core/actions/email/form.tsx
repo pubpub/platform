@@ -1,3 +1,5 @@
+import { useWatch } from "react-hook-form"
+
 import { InputWithTokens, MarkdownEditor } from "ui/editors"
 import { FieldSet } from "ui/field"
 
@@ -6,27 +8,11 @@ import { useActionForm } from "../_lib/ActionForm"
 import MemberSelectClientFetch from "./DynamicSelectFetch"
 
 export default function EmailActionForm() {
-	const { form } = useActionForm()
-	const [recipientMember, recipientEmail] = form.watch(["recipientMember", "recipientEmail"])
 	return (
 		<FieldSet>
 			<ActionField name="senderName" label="Sender Name" />
 			<ActionField name="replyTo" label="Reply-To" />
-			{!recipientMember && <ActionField name="recipientEmail" label="Recipient Email" />}
-			{!recipientEmail && (
-				<ActionField
-					name="recipientMember"
-					label="Recipient Member"
-					render={({ field, fieldState }) => (
-						<MemberSelectClientFetch
-							name={field.name}
-							aria-invalid={fieldState.invalid}
-							onChange={field.onChange}
-							value={field.value}
-						/>
-					)}
-				/>
-			)}
+			<RecipientAndMemberFields />
 			<ActionField
 				name="subject"
 				label="Subject"
@@ -52,5 +38,38 @@ export default function EmailActionForm() {
 				)}
 			/>
 		</FieldSet>
+	)
+}
+
+function RecipientAndMemberFields() {
+	const { form, path } = useActionForm()
+	const fullPath = path || ""
+	const recipientMember = useWatch({
+		control: form.control,
+		name: fullPath ? `${fullPath}.recipientMember` : "recipientMember",
+	})
+	const recipientEmail = useWatch({
+		control: form.control,
+		name: fullPath ? `${fullPath}.recipientEmail` : "recipientEmail",
+	})
+
+	return (
+		<>
+			{!recipientMember && <ActionField name="recipientEmail" label="Recipient Email" />}
+			{!recipientEmail && (
+				<ActionField
+					name="recipientMember"
+					label="Recipient Member"
+					render={({ field, fieldState }) => (
+						<MemberSelectClientFetch
+							name={field.name}
+							aria-invalid={fieldState.invalid}
+							onChange={field.onChange}
+							value={field.value}
+						/>
+					)}
+				/>
+			)}
+		</>
 	)
 }

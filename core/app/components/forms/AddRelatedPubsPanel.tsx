@@ -1,7 +1,7 @@
 "use client"
 
-import type { NonGenericProcessedPub, ProcessedPub } from "contracts"
 import type { PubsId, PubTypes } from "db/public"
+import type { PubCardClientPub } from "../pubs/PubCard/PubCardClient"
 
 import { useRef, useState } from "react"
 
@@ -14,9 +14,9 @@ type AddRelatedPubsPanelProps = {
 	title: string
 	formSlug: string
 	fieldSlug: string
-	relatedPubs: ProcessedPub<{ withPubType: true }>[]
+	relatedPubs: PubCardClientPub[]
 	onCancel: () => void
-	onChangeRelatedPubs: (pubs: ProcessedPub<{ withPubType: true }>[]) => void
+	onChangeRelatedPubs: (pubs: PubCardClientPub[]) => void
 	disabledPubs?: PubsId[]
 	pubTypes?: Pick<PubTypes, "id" | "name">[]
 	currentPubId?: PubsId
@@ -24,10 +24,10 @@ type AddRelatedPubsPanelProps = {
 
 export const AddRelatedPubsPanel = (props: AddRelatedPubsPanelProps) => {
 	const sidebarRef = useRef(null)
-	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(props.relatedPubs)
+	const [selected, setSelected] = useState<PubCardClientPub[]>(props.relatedPubs)
 
 	const handleUpdate = () => {
-		props.onChangeRelatedPubs(selected as ProcessedPub<{ withPubType: true }>[])
+		props.onChangeRelatedPubs(selected)
 		props.onCancel()
 	}
 
@@ -44,7 +44,7 @@ export const AddRelatedPubsPanel = (props: AddRelatedPubsPanelProps) => {
 					disabledPubIds={props.disabledPubs}
 					pubTypeIds={props.pubTypes?.map((t) => t.id)}
 					mode="multi"
-					placeholder="Search for pubs to add..."
+					placeholder="Search for Pubs to add..."
 					maxHeight="calc(100vh - 200px)"
 				/>
 			</div>

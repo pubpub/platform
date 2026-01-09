@@ -8,7 +8,7 @@
 		"config": "tailwind.config.cjs",
 		"css": "./styles.css",
 		"baseColor": "gray",
-		"cssVariables": false
+		"cssVariables": true
 	},
 	"aliases": {
 		"components": "src",

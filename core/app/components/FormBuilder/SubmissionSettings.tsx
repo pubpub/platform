@@ -30,7 +30,7 @@ export const ButtonOption = ({
 		// overflow-hidden to keep the div that is only a color inside the border radius
 		<div
 			data-testid={`button-option-${label}`}
-			className="relative flex w-full items-center justify-between overflow-hidden rounded border"
+			className="relative flex w-full items-center justify-between overflow-hidden rounded-sm border"
 		>
 			<div
 				className={cn("absolute h-full w-4 bg-foreground", {
@@ -76,7 +76,9 @@ export const SubmissionSettings = () => {
 
 	return (
 		<div>
-			<FormLabel className="text-gray-500 text-sm uppercase">Submission Settings</FormLabel>
+			<FormLabel className="text-muted-foreground text-sm uppercase">
+				Submission Settings
+			</FormLabel>
 			<hr className="my-2" />
 			<div className="flex flex-col items-start gap-3">
 				{buttons.map((b) => {

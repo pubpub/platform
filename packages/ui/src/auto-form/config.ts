@@ -1,4 +1,3 @@
-import { ActionInstanceSelectorInput } from "../actionInstances/ActionInstanceSelectorInput"
 import { InputWithTokens, MarkdownEditor } from "../editors"
 import { PubFieldSelectInput } from "../pubFields/pubFieldSelect/PubFieldSelect"
 import { StagesSelect } from "../stages/StagesSelect"
@@ -24,7 +23,6 @@ export const INPUT_COMPONENTS = {
 	fallback: AutoFormInput,
 	markdown: MarkdownEditor,
 	stringWithTokens: InputWithTokens,
-	actionInstance: ActionInstanceSelectorInput,
 	fieldName: PubFieldSelectInput,
 	stage: StagesSelect,
 }
@@ -43,7 +41,6 @@ export const DEFAULT_ZOD_HANDLERS: {
 	ZodNumber: "number",
 	Markdown: "markdown",
 	StringWithTokens: "stringWithTokens",
-	ActionInstance: "actionInstance",
 	FieldName: "fieldName",
 	Stage: "stage",
 }

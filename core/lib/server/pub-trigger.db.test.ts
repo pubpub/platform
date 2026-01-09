@@ -9,7 +9,14 @@ import type {
 import { sql } from "kysely"
 import { describe, expect, it } from "vitest"
 
-import { Action, ActionRunStatus, CoreSchemaType, MemberRole, OperationType } from "db/public"
+import {
+	Action,
+	ActionRunStatus,
+	AutomationEvent,
+	CoreSchemaType,
+	MemberRole,
+	OperationType,
+} from "db/public"
 
 import {
 	isCheckContraintError,
@@ -782,13 +789,23 @@ describe("pub_values_history trigger", () => {
 			},
 			stages: {
 				"Stage 1": {
-					actions: {
+					automations: {
 						"1": {
-							action: Action.log,
-							name: "Log Action",
-							config: {
-								debounce: 1000,
-							},
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									name: "Log Action",
+									config: {
+										debounce: 1000,
+									},
+								},
+							],
 						},
 					},
 				},
@@ -799,7 +816,7 @@ describe("pub_values_history trigger", () => {
 			const trx = getTrx()
 
 			const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
-			const { pubFields, pubs, users, actions } = await seedCommunity(
+			const { pubFields, pubs, users, stages } = await seedCommunity(
 				{
 					...multiCommunityTestSeed,
 					apiTokens: {
@@ -817,7 +834,7 @@ describe("pub_values_history trigger", () => {
 			const actionRun = await trx
 				.insertInto("action_runs")
 				.values({
-					actionInstanceId: actions[0].id,
+					actionInstanceId: stages["Stage 1"].automations["1"].actionInstances[0].id,
 					pubId: pubs[0].id,
 					status: ActionRunStatus.success,
 					result: JSON.stringify({

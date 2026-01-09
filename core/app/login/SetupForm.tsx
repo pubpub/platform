@@ -2,20 +2,22 @@
 
 import type { z } from "zod"
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Field, FieldError, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
 import { PasswordInput } from "ui/password-input"
 import { FormSubmitButton } from "ui/submit-button"
 
+import { AvatarEditor } from "~/app/(user)/settings/AvatarEditor"
 import { initializeSetup } from "~/lib/authentication/actions"
 import { setupSchema } from "~/lib/authentication/schemas"
 import { useServerAction } from "~/lib/serverActions"
 import { slugifyString } from "~/lib/string"
+import { uploadTempAvatar } from "./actions"
 
 export default function SetupForm() {
 	const form = useForm<z.infer<typeof setupSchema>>({
@@ -25,13 +27,19 @@ export default function SetupForm() {
 			password: "",
 			firstName: "",
 			lastName: "",
+			userAvatar: null,
 			communityName: "",
 			communitySlug: "",
-			communityAvatar: "",
+			communityAvatar: null,
 		},
 	})
 
 	const runInitializeSetup = useServerAction(initializeSetup)
+	const runUpload = useServerAction(uploadTempAvatar)
+
+	const signedUploadUrl = (fileName: string) => {
+		return runUpload({ fileName })
+	}
 
 	const handleSubmit = async (formData: z.infer<typeof setupSchema>) => {
 		const result = await runInitializeSetup(formData)
@@ -42,6 +50,8 @@ export default function SetupForm() {
 	}
 
 	const watchCommunityName = form.watch("communityName")
+	const watchFirstName = form.watch("firstName")
+	const watchLastName = form.watch("lastName")
 
 	useEffect(() => {
 		if (watchCommunityName) {
@@ -49,140 +59,184 @@ export default function SetupForm() {
 		}
 	}, [watchCommunityName, form.setValue])
 
+	const userInitials = useMemo(() => {
+		return `${watchFirstName?.[0] ?? ""}${watchLastName?.[0] ?? ""}`.toUpperCase() || "U"
+	}, [watchFirstName, watchLastName])
+
+	const communityInitials = useMemo(() => {
+		return (
+			watchCommunityName
+				.split(" ")
+				.slice(0, 2)
+				.map((word) => word[0])
+				.join("")
+				.toUpperCase() || "C"
+		)
+	}, [watchCommunityName])
+
 	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(handleSubmit)}>
-				<Card className="w-full max-w-2xl shadow-lg transition-shadow duration-300 hover:shadow-xl">
-					<CardHeader>
-						<CardTitle className="text-2xl">Initial Setup</CardTitle>
-						<CardDescription>
-							Create the first admin account and your first community. You can create
-							additional communities later at /communities.
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="grid gap-6">
-						<div className="space-y-4">
-							<h3 className="font-semibold text-lg">Admin Account</h3>
-							<div className="grid gap-4 md:grid-cols-2">
-								<FormField
-									control={form.control}
-									name="firstName"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>First Name</FormLabel>
-											<FormControl>
-												<Input placeholder="John" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
+		<form onSubmit={form.handleSubmit(handleSubmit)}>
+			<Card className="w-full max-w-2xl shadow-lg transition-shadow duration-300 hover:shadow-xl">
+				<CardHeader>
+					<CardTitle className="text-2xl">Initial Setup</CardTitle>
+					<CardDescription>
+						Create the first admin account and your first community. You can create
+						additional communities later at /communities.
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="grid gap-6">
+					<div className="space-y-4">
+						<h3 className="font-semibold text-lg">Admin Account</h3>
+						<Controller
+							control={form.control}
+							name="userAvatar"
+							render={({ field }) => (
+								<AvatarEditor
+									initials={userInitials}
+									avatar={field.value ?? null}
+									onEdit={field.onChange}
+									upload={signedUploadUrl}
+									label="Admin Avatar"
+									showDeleteButton={false}
 								/>
-								<FormField
-									control={form.control}
-									name="lastName"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Last Name</FormLabel>
-											<FormControl>
-												<Input placeholder="Doe" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Email</FormLabel>
-										<FormControl>
-											<Input placeholder="admin@example.com" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="password"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Password</FormLabel>
-										<FormControl>
-											<PasswordInput {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
-
-						<div className="space-y-4">
-							<h3 className="font-semibold text-lg">First Community</h3>
-							<FormField
-								control={form.control}
-								name="communityName"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Community Name</FormLabel>
-										<FormControl>
-											<Input placeholder="My Organization" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="communitySlug"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Community Slug</FormLabel>
-										<FormControl>
-											<Input placeholder="my-organization" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="communityAvatar"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Community Avatar URL (optional)</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="https://example.com/avatar.png"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
-
-						{form.formState.errors.root && (
-							<div className="rounded-md bg-red-50 p-3 text-red-800 text-sm">
-								{form.formState.errors.root.message}
-							</div>
-						)}
-					</CardContent>
-					<CardFooter>
-						<FormSubmitButton
-							formState={form.formState}
-							idleText="Complete Setup"
-							pendingText="Setting up..."
-							successText="Success!"
-							errorText="Error during setup"
-							className="w-full"
+							)}
 						/>
-					</CardFooter>
-				</Card>
-			</form>
-		</Form>
+						<div className="grid gap-4 md:grid-cols-2">
+							<Controller
+								control={form.control}
+								name="firstName"
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor={field.name}>First Name</FieldLabel>
+
+										<Input
+											aria-label="First Name"
+											placeholder="John"
+											{...field}
+											id={field.name}
+										/>
+
+										<FieldError errors={[fieldState.error]} />
+									</Field>
+								)}
+							/>
+							<Controller
+								control={form.control}
+								name="lastName"
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor={field.name}>Last Name</FieldLabel>
+										<Input
+											aria-label="Last Name"
+											placeholder="Doe"
+											{...field}
+											id={field.name}
+										/>
+										<FieldError errors={[fieldState.error]} />
+									</Field>
+								)}
+							/>
+						</div>
+						<Controller
+							control={form.control}
+							name="email"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>Email</FieldLabel>
+									<Input
+										placeholder="admin@example.com"
+										aria-label="Email"
+										{...field}
+										id={field.name}
+									/>
+									<FieldError errors={[fieldState.error]} />
+								</Field>
+							)}
+						/>
+						<Controller
+							control={form.control}
+							name="password"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>Password</FieldLabel>
+									<PasswordInput
+										aria-label="Password"
+										{...field}
+										id={field.name}
+									/>
+									<FieldError errors={[fieldState.error]} />
+								</Field>
+							)}
+						/>
+					</div>
+
+					<div className="space-y-4">
+						<h3 className="font-semibold text-lg">First Community</h3>
+						<Controller
+							control={form.control}
+							name="communityAvatar"
+							render={({ field }) => (
+								<AvatarEditor
+									initials={communityInitials}
+									avatar={field.value ?? null}
+									onEdit={field.onChange}
+									upload={signedUploadUrl}
+									label="Community Avatar"
+									showDeleteButton={false}
+								/>
+							)}
+						/>
+						<Controller
+							control={form.control}
+							name="communityName"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>Community Name</FieldLabel>
+									<Input
+										aria-label="Community Name"
+										placeholder="My Organization"
+										{...field}
+										id={field.name}
+									/>
+									<FieldError errors={[fieldState.error]} />
+								</Field>
+							)}
+						/>
+						<Controller
+							control={form.control}
+							name="communitySlug"
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>Community Slug</FieldLabel>
+									<Input
+										aria-label="Community Slug"
+										placeholder="my-organization"
+										{...field}
+										id={field.name}
+									/>
+									<FieldError errors={[fieldState.error]} />
+								</Field>
+							)}
+						/>
+					</div>
+
+					{form.formState.errors.root && (
+						<div className="rounded-md bg-red-50 p-3 text-red-800 text-sm">
+							{form.formState.errors.root.message}
+						</div>
+					)}
+				</CardContent>
+				<CardFooter>
+					<FormSubmitButton
+						formState={form.formState}
+						idleText="Complete Setup"
+						pendingText="Setting up..."
+						successText="Success!"
+						errorText="Error during setup"
+						className="w-full"
+					/>
+				</CardFooter>
+			</Card>
+		</form>
 	)
 }

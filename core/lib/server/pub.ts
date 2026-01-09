@@ -7,9 +7,11 @@ import type {
 	ProcessedPub,
 	ProcessedPubWithForm,
 	PubTypePubField,
+	SafeUser,
 } from "contracts"
 import type { Database } from "db/Database"
 import type {
+	AutomationEvent,
 	CommunitiesId,
 	MembershipCapabilitiesRole,
 	PubFieldsId,
@@ -24,18 +26,17 @@ import type {
 	UsersId,
 } from "db/public"
 import type { LastModifiedBy, StageConstraint } from "db/types"
-import type {
-	AliasedSelectQueryBuilder,
-	ExpressionBuilder,
-	Kysely,
-	ReferenceExpression,
-	SelectExpression,
-	StringReference,
-} from "kysely"
 import type { DefinitelyHas, MaybeHas, XOR } from "utils/types"
-import type { SafeUser } from "./user"
 
-import { sql } from "kysely"
+import {
+	type AliasedSelectQueryBuilder,
+	type ExpressionBuilder,
+	type Kysely,
+	type ReferenceExpression,
+	type SelectExpression,
+	type StringReference,
+	sql,
+} from "kysely"
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 import partition from "lodash.partition"
 
@@ -64,7 +65,7 @@ import { maybeWithTrx } from "./maybeWithTrx"
 import { applyFilters } from "./pub-filters"
 import { _getPubFields } from "./pubFields"
 import { getPubTypeBase } from "./pubtype"
-import { actionConfigDefaultsSelect, movePub } from "./stages"
+import { movePub, nestedBaseAutomationsSelect, nestedFullAutomationsSelect } from "./stages"
 import { SAFE_USER_SELECT } from "./user"
 import { validatePubValuesBySchemaName } from "./validateFields"
 
@@ -1210,6 +1211,13 @@ export interface GetPubsWithRelatedValuesOptions
 	 */
 	depth?: number
 	searchConfig?: SearchConfig
+
+	withStageAutomations?:
+		| {
+				detail: "count" | "full" | "base"
+				filter: AutomationEvent[] | "all"
+		  }
+		| false
 	/**
 	 * Whether to include the first pub that is part of a cycle.
 	 * By default, the first "cycled" pub is included, marked with `isCycle: true`.
@@ -1284,6 +1292,7 @@ const DEFAULT_OPTIONS = {
 	cycle: "include",
 	withValues: true,
 	withRelatedCounts: false,
+	withStageAutomations: false,
 	trx: db,
 } as const satisfies GetPubsWithRelatedValuesOptions
 
@@ -1296,7 +1305,7 @@ const COUNT_OPTIONS = {
 	count: true,
 	withPubType: false,
 	withSearchValues: false,
-	withStageActionInstances: false,
+	withStageAutomations: false,
 	withMembers: false,
 	withStage: false,
 	trx: db,
@@ -1339,7 +1348,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		searchConfig,
 		withPubType,
 		withStage,
-		withStageActionInstances,
+		withStageAutomations,
 		withMembers,
 		trx,
 		allowedPubTypes,
@@ -1874,20 +1883,31 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						eb
 							.selectFrom("stages")
 							.selectAll("stages")
-							.$if(Boolean(withStageActionInstances), (qb) =>
-								qb.select(
-									jsonArrayFrom(
-										eb
-											.selectFrom("action_instances")
-											.whereRef("action_instances.stageId", "=", "pt.stageId")
-											.selectAll()
-											.select((eb) =>
-												actionConfigDefaultsSelect(eb).as(
-													"defaultedActionConfigKeys"
-												)
-											)
-									).as("actionInstances")
-								)
+							.$if(
+								withStageAutomations && withStageAutomations.detail === "full",
+								(qb) => {
+									if (!withStageAutomations)
+										throw new Error("withStageAutomations is required")
+									return qb.select((eb) =>
+										nestedFullAutomationsSelect(
+											eb,
+											withStageAutomations.filter
+										).as("fullAutomations")
+									)
+								}
+							)
+							.$if(
+								withStageAutomations && withStageAutomations.detail === "base",
+								(qb) => {
+									if (!withStageAutomations)
+										throw new Error("withStageAutomations is required")
+									return qb.select((eb) =>
+										nestedBaseAutomationsSelect(
+											eb,
+											withStageAutomations.filter
+										).as("baseAutomations")
+									)
+								}
 							)
 							.where("pt.stageId", "is not", null)
 							.whereRef("stages.id", "=", "pt.stageId")
@@ -2109,7 +2129,10 @@ export type FullProcessedPub = ProcessedPub<{
 	withMembers: true
 	withPubType: true
 	withStage: true
-	withStageActionInstances: true
+	withStageAutomations: {
+		detail: "full"
+		filter: "all"
+	}
 }>
 
 export type FullProcessedPubWithForm = ProcessedPubWithForm<{
@@ -2117,7 +2140,10 @@ export type FullProcessedPubWithForm = ProcessedPubWithForm<{
 	withStage: true
 	withPubType: true
 	withMembers: true
-	withStageActionInstances: true
+	withStageAutomations: {
+		detail: "full"
+		filter: "all"
+	}
 }>
 
 export interface SearchConfig {

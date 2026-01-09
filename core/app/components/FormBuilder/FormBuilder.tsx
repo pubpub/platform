@@ -21,7 +21,6 @@ import { formElementsInitializerSchema } from "db/public"
 import { logger } from "logger"
 import { Form, FormControl, FormField, FormItem } from "ui/form"
 import { useUnsavedChangesWarning } from "ui/hooks"
-import { CircleCheck } from "ui/icon"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs"
 import { TokenProvider } from "ui/tokens"
 import { toast } from "ui/use-toast"
@@ -259,14 +258,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 	const onSubmit = async (_formData: FormBuilderSchema) => {
 		const result = await runSaveForm(payload)
 		if (didSucceed(result)) {
-			toast({
-				className: "rounded border-emerald-100 bg-emerald-50",
-				action: (
-					<div className="flex w-full gap-3 text-green-700">
-						<CircleCheck className="" /> Form Successfully Saved
-					</div>
-				),
-			})
+			toast.success("Form saved")
 		}
 	}
 	const addElement = useCallback(

@@ -47,7 +47,7 @@ export const defineServerAction = <
 						redirect(redirectUrl)
 					}
 
-					logger.debug(error)
+					logger.error(error)
 					// https://github.com/vercel/next.js/discussions/49426#discussioncomment-8176059
 					// Because you can't simply wrap a server action call on the client in try/catch
 					// we should provide some sort of error response to the client in the case of an

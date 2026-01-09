@@ -19,22 +19,33 @@ import * as actions from "./actions"
 
 export type StagesContext = {
 	stages: CommunityStage[]
+	activeStageCooridnates: { x: number; y: number; width: number; height: number } | undefined
+	setActiveStageCooridnates: (coordinates: {
+		x: number
+		y: number
+		width: number
+		height: number
+	}) => void
 	deleteStages: (stageIds: StagesId[]) => void
 	createMoveConstraint: (sourceStageId: StagesId, destinationStageId: StagesId) => void
 	deleteMoveConstraints: (moveConstraintIds: StagesId[]) => void
 	deleteStagesAndMoveConstraints: (stageIds: StagesId[], moveConstraintIds: StagesId[]) => void
 	createStage: () => void
 	updateStageName: (stageId: StagesId, name: string) => void
+	duplicateStages: (stageIds: StagesId[]) => void
 	fetchStages: () => void
 }
 
 export const StagesContext = createContext<StagesContext>({
 	stages: [],
+	activeStageCooridnates: undefined,
+	setActiveStageCooridnates: () => {},
 	deleteStages: () => {},
 	createMoveConstraint: () => {},
 	deleteMoveConstraints: () => {},
 	deleteStagesAndMoveConstraints: () => {},
 	createStage: () => {},
+	duplicateStages: () => {},
 	updateStageName: () => {},
 	fetchStages: () => {},
 })
@@ -52,8 +63,13 @@ type Action =
 	| { type: "move_constraint_created"; sourceStageId: StagesId; destinationStageId: StagesId }
 	| { type: "move_constraints_deleted"; moveConstraintIds: StagesId[] }
 	| { type: "stage_name_updated"; stageId: StagesId; name: string }
+	| { type: "stages_duplicated"; stageIds: StagesId[]; newStageIds: StagesId[] }
 
-const makeOptimisticStage = (communityId: CommunitiesId, newId: StagesId): CommunityStage => ({
+const makeOptimisticStage = (
+	communityId: CommunitiesId,
+	newId: StagesId,
+	stageProps?: Partial<CommunityStage>
+): CommunityStage => ({
 	id: newId,
 	name: "Untitled Stage",
 	order: "aa",
@@ -64,7 +80,8 @@ const makeOptimisticStage = (communityId: CommunitiesId, newId: StagesId): Commu
 	updatedAt: new Date(),
 	pubsCount: 0,
 	memberCount: 0,
-	actionInstancesCount: 0,
+	automationsCount: 0,
+	...stageProps,
 })
 
 const makeOptimisitcStagesReducer =
@@ -76,6 +93,19 @@ const makeOptimisitcStagesReducer =
 			}
 			case "stages_deleted":
 				return state.filter((stage) => !action.stageIds.includes(stage.id))
+			case "stages_duplicated":
+				return [
+					...state,
+					...action.stageIds.map((stageId, idx) => {
+						const stage = state.find((s) => s.id === stageId)!
+
+						return makeOptimisticStage(communityId, action.newStageIds[idx], {
+							name: stage.name,
+							automationsCount: stage.automationsCount,
+							memberCount: stage.memberCount,
+						})
+					}),
+				]
 			case "move_constraint_created":
 				return state.map((stage) => {
 					if (stage.id === action.sourceStageId) {
@@ -145,6 +175,7 @@ type DeleteBatch = {
 
 export const StagesManageProvider = (props: StagesProviderProps) => {
 	const runCreateStage = useServerAction(actions.createStage)
+	const runDuplicateStages = useServerAction(actions.duplicateStages)
 	const runDeleteStagesAndMoveConstraints = useServerAction(
 		actions.deleteStagesAndMoveConstraints
 	)
@@ -176,6 +207,17 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 		})
 		runCreateStage(props.communityId, newId)
 	}, [dispatch, props.communityId, runCreateStage])
+
+	const duplicateStages = useCallback(
+		async (stageIds: StagesId[]) => {
+			const newStageIds = stageIds.map((_) => crypto.randomUUID() as StagesId)
+			startTransition(() => {
+				dispatch({ type: "stages_duplicated", stageIds, newStageIds })
+			})
+			runDuplicateStages(props.communityId, stageIds, newStageIds)
+		},
+		[dispatch, props.communityId, runDuplicateStages]
+	)
 
 	const deleteStages = useCallback(
 		async (stageIds: StagesId[]) => {
@@ -255,7 +297,7 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 	)
 
 	const fetchStages = useCallback(() => {
-		actions.revalidateStages()
+		void actions.revalidateStages()
 	}, [])
 
 	useEffect(() => {
@@ -266,14 +308,21 @@ export const StagesManageProvider = (props: StagesProviderProps) => {
 		}
 	}, [deleteBatch, deleteStagesAndMoveConstraints])
 
+	const [activeStageCooridnates, setActiveStageCooridnates] = useState<
+		{ x: number; y: number; width: number; height: number } | undefined
+	>(undefined)
+
 	const value = {
 		stages,
+		activeStageCooridnates,
+		setActiveStageCooridnates,
 		deleteStages,
 		createMoveConstraint,
 		deleteMoveConstraints,
 		deleteStagesAndMoveConstraints,
 		createStage,
 		updateStageName,
+		duplicateStages,
 		fetchStages,
 	} satisfies StagesContext
 	return <StagesContext.Provider value={value}>{props.children}</StagesContext.Provider>

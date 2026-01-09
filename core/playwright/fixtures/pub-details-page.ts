@@ -1,8 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 import type { PubsId } from "db/public"
 
-import { closeToast } from "../helpers"
-
 export class PubDetailsPage {
 	constructor(
 		public readonly page: Page,
@@ -17,27 +15,27 @@ export class PubDetailsPage {
 		}
 	}
 
-	async runAction(
-		actionName: string,
-		configureCallback?: (runActionDialog: Locator) => Promise<void>,
+	async runAutomation(
+		automationName: string,
+		configureCallback?: (runAutomationDialog: Locator) => Promise<void>,
 		waitForSuccess = true
 	) {
-		await this.page.getByTestId("run-action-primary").click()
-		await this.page.getByRole("button", { name: actionName }).click()
+		await this.page.getByTestId("run-automations-primary").first().click()
+		await this.page.getByRole("button", { name: automationName }).click()
 
-		const runActionDialog = this.page.getByRole("dialog", { name: actionName, exact: true })
-		await runActionDialog.waitFor()
+		const runAutomationDialog = this.page.getByRole("dialog", {
+			name: automationName,
+			exact: true,
+		})
+		await runAutomationDialog.waitFor()
 
-		await configureCallback?.(runActionDialog)
+		await configureCallback?.(runAutomationDialog)
 
-		await runActionDialog.getByTestId("action-run-button").click()
+		await runAutomationDialog.getByTestId("action-run-button").click()
 		if (waitForSuccess) {
-			await this.page
-				.getByRole("status")
-				.filter({ hasText: `Successfully ran ${actionName}` })
-				.waitFor()
-			await runActionDialog.getByRole("button", { name: "Cancel", exact: true }).click()
-			await runActionDialog.waitFor({ state: "hidden" })
+			await this.page.getByText(`Successfully ran ${automationName}`).waitFor()
+			await runAutomationDialog.getByRole("button", { name: "Cancel", exact: true }).click()
+			await runAutomationDialog.waitFor({ state: "hidden" })
 		}
 	}
 
@@ -54,10 +52,10 @@ export class PubDetailsPage {
 			timeout: 5000,
 		})
 		await this.page
-			.getByRole("status")
+			.getByRole("listitem")
 			.filter({ hasText: "Successfully removed the pub" })
 			.first()
 			.waitFor()
-		await closeToast(this.page)
+		// await closeToast(this.page)
 	}
 }

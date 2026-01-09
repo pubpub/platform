@@ -3,25 +3,26 @@ import type { KeyboardEvent } from "react"
 import type { NodeProps } from "reactflow"
 import type { CommunityStage } from "~/lib/server/stages"
 
-import { memo, useCallback, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Handle, Position } from "reactflow"
 
 import { Button } from "ui/button"
-import { Settings } from "ui/icon"
+import { BookOpen, Bot, Settings, Users } from "ui/icon"
 import { cn } from "utils"
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
 import { constructStageMangePanel } from "~/lib/links"
 import { slugifyString } from "~/lib/string"
 import { useStages } from "../../StagesContext"
+import { useEditingStageId } from "../panel/usePanelQueryParams"
 
 export const STAGE_NODE_WIDTH = 250
 export const STAGE_NODE_HEIGHT = 50
 
 export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>) => {
 	const community = useCommunity()
-	const { updateStageName } = useStages()
+	const { updateStageName, setActiveStageCooridnates } = useStages()
 	const [isEditingName, setIsEditingName] = useState(false)
 	const nodeRef = useRef<HTMLDivElement>(null)
 	const nameRef = useRef<HTMLHeadingElement>(null)
@@ -58,12 +59,34 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 		}
 	}, [isEditingName])
 
+	const { editingStageId } = useEditingStageId()
+	const isCurrentStage = props.data.stage.id === editingStageId
+	useEffect(() => {
+		if (isCurrentStage) {
+			const updateCoordinates = () => {
+				const coordinates = nodeRef.current?.getBoundingClientRect()
+				if (coordinates) {
+					setActiveStageCooridnates({
+						x: coordinates.left,
+						y: coordinates.top,
+						width: coordinates.width,
+						height: coordinates.height,
+					})
+				}
+			}
+
+			const timeoutId = setTimeout(updateCoordinates, 100)
+
+			return () => clearTimeout(timeoutId)
+		}
+	}, [isCurrentStage, setActiveStageCooridnates, nodeRef])
+
 	return (
-		// biome-ignore lint/a11y/useSemanticElements: it has buttons in it, can't be a button
+		// biome-ignore lint/a11y/useSemanticElements: cant nest buttons man
 		<div
 			className={cn(
-				"flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
-				props.selected ? "border-gray-800" : "border-gray-300"
+				"flex items-center justify-between rounded-md border bg-muted p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
+				props.selected ? "border-gray-800 dark:border-gray-200" : "border-border"
 			)}
 			// Can't use Tailwind for dynamically computed styles
 			style={{
@@ -103,11 +126,11 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 						{props.data.stage.name}
 					</p>
 				</div>
-				<ul className="m-0 flex list-none gap-2 p-0">
+				<ul className="m-0 flex list-none items-center justify-start gap-2 p-0">
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 font-light text-xs"
+							className="!p-0 m-0 h-auto gap-1 font-light text-xs [&_svg]:size-3"
 							asChild
 						>
 							<Link
@@ -116,32 +139,37 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 									communitySlug: community.slug,
 									tab: "pubs",
 								})}
+								aria-label={`View Pubs in ${props.data.stage.name}`}
 							>
-								{props.data.stage.pubsCount} pubs
+								{props.data.stage.pubsCount} <span className="sr-only">Pubs</span>{" "}
+								<BookOpen strokeWidth={1.2} />
 							</Link>
 						</Button>
 					</li>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 font-light text-xs"
+							className="!p-0 m-0 h-auto gap-1 font-light text-xs [&_svg]:size-3.5"
 							asChild
 						>
 							<Link
 								href={constructStageMangePanel({
 									stageId: props.data.stage.id,
 									communitySlug: community.slug,
-									tab: "actions",
+									tab: "automations",
 								})}
+								aria-label={`View Automations in ${props.data.stage.name}`}
 							>
-								{props.data.stage.actionInstancesCount} actions
+								{props.data.stage.automationsCount}
+								<span className="sr-only">automations</span>
+								<Bot strokeWidth={1.2} />
 							</Link>
 						</Button>
 					</li>
 					<li>
 						<Button
 							variant="link"
-							className="m-0 h-auto p-0 font-light text-xs"
+							className="!p-0 m-0 h-auto gap-1 font-light text-xs [&_svg]:size-3.5"
 							asChild
 						>
 							<Link
@@ -150,8 +178,11 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 									communitySlug: community.slug,
 									tab: "members",
 								})}
+								aria-label={`View Members in ${props.data.stage.name}`}
 							>
-								{props.data.stage.memberCount} members
+								{props.data.stage.memberCount}{" "}
+								<span className="sr-only">members</span>
+								<Users strokeWidth={1.2} />
 							</Link>
 						</Button>
 					</li>
@@ -165,7 +196,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 				})}
 				aria-label="Configure stage"
 			>
-				<Settings className="h-4 w-4 hover:text-gray-700" />
+				<Settings className="h-4 w-4 hover:text-accent-foreground" />
 			</Link>
 		</div>
 	)

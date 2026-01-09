@@ -27,7 +27,10 @@ import { createFormInviteLink, getForm, userHasPermissionToForm } from "~/lib/se
 import { maybeWithTrx } from "~/lib/server/maybeWithTrx"
 import { TokenFailureReason, validateTokenSafe } from "~/lib/server/token"
 
-export const upload = defineServerAction(async function upload(fileName: string, pubId?: PubsId) {
+export const upload = defineServerAction(async function upload(
+	fileName: string,
+	kind: "temporary" | "permanent"
+) {
 	if (env.FLAGS?.get("uploads") === false) {
 		return ApiError.FEATURE_DISABLED
 	}
@@ -39,8 +42,8 @@ export const upload = defineServerAction(async function upload(fileName: string,
 	}
 	// TODO: authorization check?
 
-	const signedUrl = await generateSignedAssetUploadUrl(loginData.user.id, fileName, pubId)
-	logger.debug({ msg: "generated signed url for asset upload", fileName, signedUrl, pubId })
+	const signedUrl = await generateSignedAssetUploadUrl(loginData.user.id, fileName, kind)
+	logger.debug({ msg: "generated signed url for asset upload", fileName, signedUrl, kind })
 	return signedUrl
 })
 

@@ -68,9 +68,9 @@ and rotating it requires downtime.
 
 To rotate it, you'll need to perform the following steps:
 
--   Update the value of the Secrets Manager entry through the AWS console
--   Update the value in the RDS instance through the AWS console. (At this point, the core container will stop being able to access the database.)
--   Recreate the core container's service with `aws update-service cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment`
+- Update the value of the Secrets Manager entry through the AWS console
+- Update the value in the RDS instance through the AWS console. (At this point, the core container will stop being able to access the database.)
+- Recreate the core container's service with `aws update-service cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment`
 
 In the future the RDS should probably [manage its own password](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-secrets-manager.html)
 which will probably require changing the service's code

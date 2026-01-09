@@ -15,6 +15,7 @@ import { stageConstraintSchema } from "db/types"
 import {
 	CreatePubRequestBodyWithNullsNew,
 	filterSchema,
+	formSchema,
 	ftsReturnSchema,
 	getPubQuerySchema,
 	jsonSchema,
@@ -133,6 +134,33 @@ export const siteApi = contract.router(
 			},
 		},
 		forms: {
+			getForm: {
+				method: "GET",
+				path: "/forms/:formSlug",
+				summary: "Gets a form",
+				description: "Get a form by its slug.",
+				pathParams: z.object({
+					formSlug: z.string().describe("The slug of the form"),
+				}),
+				responses: {
+					200: formSchema,
+				},
+			},
+			getForms: {
+				method: "GET",
+				path: "/forms",
+				summary: "Gets a list of forms",
+				description: "Get a list of forms available in the community.",
+				responses: {
+					200: z.array(
+						z.object({
+							slug: z.string(),
+							name: z.string(),
+							fields: z.unknown(),
+						})
+					),
+				},
+			},
 			getPubsForFormField: {
 				method: "GET",
 				path: "/forms/:formSlug/:fieldSlug/pubs",
@@ -164,7 +192,7 @@ export const siteApi = contract.router(
 			search: {
 				method: "GET",
 				path: "/pubs/search",
-				summary: "Search for pubs",
+				summary: "Search for Pubs",
 				description: "Search for pubs by title or value.",
 				query: z.object({
 					query: z.string(),
@@ -178,7 +206,7 @@ export const siteApi = contract.router(
 				path: "/pubs/:pubId",
 				summary: "Gets a pub",
 				description:
-					"Get a pub by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
+					"Get a pub by ID. This endpoint is used by the PubPub site builder to get a Pub's details.",
 				pathParams: z.object({
 					pubId: z.string().uuid(),
 				}),
@@ -387,12 +415,12 @@ export const siteApi = contract.router(
 			},
 		},
 		webhook: {
-			path: "/webhook/:automationId",
+			path: "/webhook/:path",
 			method: "POST",
 			summary: "Receive a webhook",
 			description: "Receive a webhook from a automation",
 			pathParams: z.object({
-				automationId: z.string().uuid(),
+				path: z.string(),
 			}),
 			body: jsonSchema,
 			responses: {

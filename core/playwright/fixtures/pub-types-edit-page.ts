@@ -34,7 +34,7 @@ export class PubTypesEditPage {
 
 	async saveType() {
 		await this.page.getByTestId("save-form-button").click()
-		await this.page.getByText("Type Successfully Saved", { exact: true }).waitFor()
+		await this.page.getByText("Type saved", { exact: true }).waitFor()
 	}
 
 	async deleteField(name: string) {
@@ -46,7 +46,7 @@ export class PubTypesEditPage {
 	}
 
 	async setAsTitleField(name: string) {
-		await this.page.getByTestId(`set-as-title-${name}`).click()
+		await this.page.getByTestId(`set-as-title-${name}`).first().click()
 	}
 
 	async toggleDeleteType() {

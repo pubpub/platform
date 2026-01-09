@@ -39,10 +39,16 @@ export function makeClientException(
 }
 
 export const isClientException = (error: unknown): error is ClientException =>
-	typeof error === "object" && error !== null && "isClientException" in error
+	typeof error === "object" &&
+	error !== null &&
+	"isClientException" in error &&
+	!("success" in error && error.success)
 
 export const isClientExceptionOptions = (error: unknown): error is ClientExceptionOptions =>
-	typeof error === "object" && error !== null && "error" in error
+	typeof error === "object" &&
+	error !== null &&
+	"error" in error &&
+	!("success" in error && error.success)
 
 export function useServerAction<T extends unknown[], U>(action: (...args: T) => Promise<U>) {
 	const runServerAction = useCallback(
@@ -50,9 +56,9 @@ export function useServerAction<T extends unknown[], U>(action: (...args: T) => 
 			try {
 				const result = await action(...args)
 				if (isClientException(result)) {
-					toast({
-						title: result.title ?? "Error",
-						variant: "destructive",
+					toast.error(result.title ?? "Error", {
+						closeButton: true,
+						duration: 100_000,
 						description: `${result.error}${result.id ? ` (Error ID: ${result.id})` : ""}`,
 						...(result.issues
 							? {
@@ -76,4 +82,5 @@ export function useServerAction<T extends unknown[], U>(action: (...args: T) => 
 }
 
 export const didSucceed = <T>(result: T): result is Exclude<T, ClientException> =>
-	typeof result !== "object" || (result !== null && !("error" in result))
+	typeof result !== "object" ||
+	(result !== null && (!("error" in result) || ("success" in result && !!result.success)))

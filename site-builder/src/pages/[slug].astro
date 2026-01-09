@@ -46,10 +46,6 @@ export async function getStaticPaths() {
 		})
 		.filter((page) => !!page && page.params.slug)
 
-	console.log(
-		"Paths",
-		paths.filter((p) => p)
-	)
 	return paths
 }
 

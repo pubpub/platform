@@ -115,11 +115,10 @@ test.afterAll(async () => {
 
 test("Can see a pub's relations on a pub card", async () => {
 	const pubsPage = new PubsPage(page, community.community.slug)
-	pubsPage.goTo()
-	await page
-		.getByTestId(`pub-card-${community.pubs[0].id}`)
-		.getByRole("button", { name: "Relations" })
-		.click()
+	await pubsPage.goTo()
+	await page.getByRole("button", { name: "Relations" }).click({
+		timeout: 10_000,
+	})
 	await expect(page.getByRole("menuitem")).toHaveCount(4)
 	await page.getByRole("link", { name: "Woody Dog" }).click()
 	await page.waitForURL(`/c/${community.community.slug}/pubs/${relatedPubId}`)

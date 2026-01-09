@@ -44,7 +44,7 @@ export const CheckboxElement = ({ slug, label, config }: ElementProps<InputCompo
 											field.onChange(change)
 										}
 									}}
-									className="rounded"
+									className="rounded-sm"
 								/>
 							</FormControl>
 							<FormLabel>{config.checkboxLabel}</FormLabel>

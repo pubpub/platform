@@ -1,18 +1,18 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 
-import "ui/styles.css"
+import "./globals.css"
 
-import { Suspense } from "react"
 import Script from "next/script"
 
 import { KeyboardShortcutProvider } from "ui/hooks"
+import { Toaster } from "ui/toaster"
 import { TooltipProvider } from "ui/tooltip"
 
 import { getLoginData } from "~/lib/authentication/loginData"
 import { env } from "~/lib/env/env"
 import { ReactQueryProvider } from "./components/providers/QueryProvider"
 import { UserProvider } from "./components/providers/UserProvider"
-import { RootToaster } from "./RootToaster"
+import { ThemeProvider } from "./components/theme/ThemeProvider"
 
 export const metadata = {
 	title: "PubPub Platform",
@@ -22,7 +22,7 @@ export const metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
 	const loginData = await getLoginData()
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
 				{env.NODE_ENV === "development" && (
 					<Script
@@ -31,16 +31,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 					/>
 				)}
 			</head>
-			<body>
+			<body className="bg-background">
 				<UserProvider {...loginData}>
 					<KeyboardShortcutProvider>
 						<ReactQueryProvider>
 							<NuqsAdapter>
 								<TooltipProvider>
-									{children}
-									<Suspense>
-										<RootToaster />
-									</Suspense>
+									<ThemeProvider
+										attribute="class"
+										defaultTheme="system"
+										enableSystem
+										disableTransitionOnChange
+									>
+										{children}
+										<Toaster />
+									</ThemeProvider>
 								</TooltipProvider>
 							</NuqsAdapter>
 						</ReactQueryProvider>

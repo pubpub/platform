@@ -5,7 +5,7 @@ import type { JsonValue, ProcessedPubWithForm } from "contracts"
 import type { PubsId, StagesId } from "db/public"
 import type React from "react"
 import type { ReactNode } from "react"
-import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form"
+import type { FieldValues, SubmitErrorHandler, UseFormReturn } from "react-hook-form"
 import type { DefinitelyHas } from "utils/types"
 import type { ContextEditorGetters } from "~/app/components/ContextEditor/ContextEditorContext"
 import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext"
@@ -18,7 +18,6 @@ import type {
 } from "~/app/components/forms/types"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
 import { typeboxResolver } from "@hookform/resolvers/typebox"
 import { Type } from "@sinclair/typebox"
 import isEqualWith from "lodash.isequalwith"
@@ -46,7 +45,6 @@ const SAVE_WAIT_MS = 5000
 const preparePayload = ({
 	formElements,
 	formValues,
-	formState,
 	toggleContext,
 	defaultValues,
 	arrayDefaults,
@@ -55,7 +53,6 @@ const preparePayload = ({
 }: {
 	formElements: BasicFormElements[]
 	formValues: FieldValues
-	formState: FormState<FieldValues>
 	toggleContext: FormElementToggleContext
 	defaultValues: Record<
 		string,
@@ -179,9 +176,9 @@ type StaticSchema = {
 	[Property in keyof typeof staticSchema]: Static<(typeof staticSchema)[Property]>
 }
 
-const createSchemaFromElements = (
+export const createSchemaFromElements = (
 	elements: BasicFormElements[],
-	toggleContext: FormElementToggleContext
+	toggleContext: Pick<FormElementToggleContext, "isEnabled">
 ) => {
 	return Type.Object({
 		...Object.fromEntries(
@@ -267,7 +264,7 @@ const getButtonConfig = ({
 
 export interface PubEditorClientProps {
 	elements: BasicFormElements[]
-	children: ReactNode
+	children: ReactNode | ((formInstance: UseFormReturn<FieldValues & StaticSchema>) => ReactNode)
 	mode: "edit" | "create"
 	pub: Pick<ProcessedPubWithForm, "id" | "values" | "pubTypeId">
 	onSuccess: (args: { submitButtonId?: string; isAutoSave: boolean }) => void
@@ -300,8 +297,6 @@ export const PubEditorClient = ({
 	relatedPub,
 	onSuccess,
 }: PubEditorClientProps) => {
-	const _router = useRouter()
-	const _pathname = usePathname()
 	const community = useCommunity()
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>()
 	const runUpdatePub = useServerAction(actions.updatePub)
@@ -349,7 +344,6 @@ export const PubEditorClient = ({
 			const pubValues = preparePayload({
 				formElements,
 				formValues: newValues,
-				formState: formInstance.formState,
 				toggleContext,
 				defaultValues,
 				arrayDefaults,
@@ -369,6 +363,7 @@ export const PubEditorClient = ({
 			let result:
 				| Awaited<ReturnType<typeof runUpdatePub>>
 				| Awaited<ReturnType<typeof runCreatePub>>
+
 			if (mode === "edit") {
 				result = await runUpdatePub({
 					pubId: pubId,
@@ -410,7 +405,6 @@ export const PubEditorClient = ({
 		},
 		[
 			formElements,
-			formInstance.formState,
 			runUpdatePub,
 			pub,
 			community.id,
@@ -435,7 +429,7 @@ export const PubEditorClient = ({
 
 	// Re-validate the form when fields are toggled on/off.
 	useEffect(() => {
-		formInstance.trigger(Object.keys(formInstance.formState.errors))
+		void formInstance.trigger(Object.keys(formInstance.formState.errors))
 	}, [formInstance])
 
 	useUnsavedChangesWarning(formInstance.formState.isDirty)
@@ -450,7 +444,7 @@ export const PubEditorClient = ({
 			const newTimer = setTimeout(async () => {
 				// isValid is always `false` to start with. this makes it so the first autosave doesn't fire
 				// So we also check if saveTimer isn't defined yet as an indicator that this is the first render
-				handleSubmit(values, evt, true)
+				await handleSubmit(values, evt, true)
 			}, SAVE_WAIT_MS)
 			setSaveTimer(newTimer)
 		},
@@ -476,7 +470,7 @@ export const PubEditorClient = ({
 				className={cn("relative isolate flex flex-col gap-6", className)}
 				id={htmlFormId}
 			>
-				{children}
+				{typeof children === "function" ? children(formInstance) : children}
 				{withButtonElements ? (
 					<>
 						<hr />

@@ -1,9 +1,8 @@
 "use client"
 
-import type { DragEndEvent } from "@dnd-kit/core"
-import type { ProcessedPub } from "contracts"
 import type { InputComponent, PubsId, PubValuesId } from "db/public"
 import type { FieldErrors } from "react-hook-form"
+import type { PubCardClientPub } from "~/app/components/pubs/PubCard/PubCardClient"
 import type { PubFieldFormElementProps } from "../PubFieldFormElement"
 import type {
 	ElementProps,
@@ -14,7 +13,14 @@ import type {
 } from "../types"
 
 import { useCallback, useId, useMemo, useState } from "react"
-import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
+import {
+	DndContext,
+	type DragEndEvent,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core"
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
 	SortableContext,
@@ -73,7 +79,7 @@ const RelatedPubBlock = ({
 		<div
 			ref={setNodeRef}
 			style={style}
-			className="flex items-center justify-start rounded border border-l-[12px] border-l-emerald-100 p-3"
+			className="flex items-center justify-start rounded-sm border border-l-12 border-l-emerald-100 p-3"
 		>
 			{/* Max width to keep long 'value's truncated. 90% to leave room for the trash button */}
 			<div className="flex max-w-[90%] flex-col items-start gap-1 text-sm">
@@ -84,7 +90,7 @@ const RelatedPubBlock = ({
 				<Button
 					type="button"
 					variant="ghost"
-					className="p-2 text-neutral-400 hover:bg-white hover:text-red-500"
+					className="p-2 text-muted-foreground hover:text-destructive"
 					aria-label="Delete link to related pub"
 					onClick={onRemove}
 				>
@@ -100,7 +106,7 @@ const RelatedPubBlock = ({
 					{...listeners}
 					{...attributes}
 				>
-					<GripVertical size={24} className="text-neutral-400" />
+					<GripVertical size={24} className="text-muted-foreground" />
 				</Button>
 			</div>
 		</div>
@@ -171,7 +177,7 @@ export const ConfigureRelatedValue = ({
 					className={cn(
 						"flex h-4 max-w-full gap-1 p-0 text-blue-500",
 						{
-							"text-red-500": valueError,
+							"text-destructive": valueError,
 						},
 						className
 					)}
@@ -211,6 +217,7 @@ export const RelatedPubsElement = ({
 	const { pubTypes } = useContextEditorContext()
 	const { form, mode } = usePubForm()
 	const { relatedPubTypes: relatedPubTypeIds } = element
+
 	const relatedPubTypes = pubTypes.filter((pt) => relatedPubTypeIds?.includes(pt.id))
 
 	const [showPanel, setShowPanel] = useState(false)
@@ -218,12 +225,19 @@ export const RelatedPubsElement = ({
 	// Look through existing related pubs in `values` to get their pub titles
 	const initialRelatedPubs = valueComponentProps.values.flatMap((v) =>
 		v.relatedPub && v.relatedPubId
-			? [{ id: v.relatedPubId, pub: v.relatedPub as ProcessedPub<{ withPubType: true }> }]
+			? [
+					{
+						id: v.relatedPubId,
+						pub: v.relatedPub as PubCardClientPub,
+					},
+				]
 			: []
 	)
 	// Keep track of related pubs in state, as we either have 'full' pubs from the initial values,
 	// or from the table when they are added
-	const [relatedPubs, setRelatedPubs] = useState(initialRelatedPubs.map((p) => p.pub))
+	const [relatedPubs, setRelatedPubs] = useState<PubCardClientPub[]>(
+		initialRelatedPubs.map((p) => p.pub)
+	)
 
 	const pubTitles = useMemo(() => {
 		return Object.fromEntries(relatedPubs.map((p) => [p.id, getPubTitle(p)]))
@@ -235,7 +249,10 @@ export const RelatedPubsElement = ({
 	const formElementToggle = useFormElementToggleContext()
 	const isEnabled = formElementToggle.isEnabled(slug)
 
-	const { fields, append, move, update, remove } = useFieldArray({ control, name: slug })
+	const { fields, append, move, update, remove } = useFieldArray({
+		control,
+		name: slug,
+	})
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -296,9 +313,7 @@ export const RelatedPubsElement = ({
 					setRelatedPubs(relatedPubs.filter((p) => p.id !== item.relatedPubId))
 				}
 
-				const handleChangeRelatedPubs = (
-					newPubs: ProcessedPub<{ withPubType: true }>[]
-				) => {
+				const handleChangeRelatedPubs = (newPubs: PubCardClientPub[]) => {
 					for (const [index, value] of field.value.entries()) {
 						const removed = !newPubs.find((p) => p.id === value.relatedPubId)
 						if (removed) {

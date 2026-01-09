@@ -4,14 +4,15 @@ import type { ContextEditorGetter } from "context-editor"
 import type { ProcessedPub } from "contracts"
 import type { PubsId, PubTypes, PubTypesId } from "db/public"
 import type { PropsWithChildren, RefObject } from "react"
+import type { DefinitelyHas } from "utils/types"
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react"
 
 export type ContextEditorContext = {
-	pubs: ContextEditorPub[]
+	// pubs: ContextEditorPub[]
 	pubTypes: Pick<PubTypes, "id" | "name">[]
-	pubId?: PubsId
-	pubTypeId?: PubTypesId
+	pubId: PubsId | null
+	pubTypeId: PubTypesId | null
 	/**
 	 * Refs which are able to retrieve the current state of the context editor
 	 * on demand, rather than having the form state manage the value (which is slower)
@@ -30,8 +31,10 @@ export type ContextEditorGetterRef = RefObject<ContextEditorGetter | null>
 export type ContextEditorGetters = Record<string, ContextEditorGetterRef>
 
 const ContextEditorContext = createContext<ContextEditorContext>({
-	pubs: [],
+	// pubs: [],
 	pubTypes: [],
+	pubId: null,
+	pubTypeId: null,
 	contextEditorGetters: {},
 	registerGetter: () => {},
 })
@@ -40,18 +43,18 @@ export type ContextEditorPub = ProcessedPub<{
 	withStage: true
 	withPubType: true
 }>
-type Props = PropsWithChildren<
-	Omit<ContextEditorContext, "pubs"> & {
-		pubs: ContextEditorPub[]
-	}
->
+type Props = PropsWithChildren<ContextEditorContext>
 
 export const ContextEditorContextProvider = (
-	props: Omit<Props, "contextEditorGetters" | "registerGetter">
+	props: DefinitelyHas<
+		Omit<Props, "contextEditorGetters" | "registerGetter">,
+		"pubId" | "pubTypeId"
+	>
 ) => {
+	const { children, pubId, ...value } = props
 	const cachedPubId = useMemo(() => {
-		return props.pubId
-	}, [props.pubId])
+		return pubId
+	}, [])
 
 	const [contextEditorGetters, setContextEditorGetters] = useState<
 		Record<string, ContextEditorGetterRef>
@@ -61,13 +64,10 @@ export const ContextEditorContextProvider = (
 		setContextEditorGetters((prev) => ({ ...prev, [key]: ref }))
 	}, [])
 
-	const { children, pubId, pubs, ...value } = props
-
 	return (
 		<ContextEditorContext.Provider
 			value={{
 				...value,
-				pubs,
 				pubId: cachedPubId,
 				contextEditorGetters,
 				registerGetter,

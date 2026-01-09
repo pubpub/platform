@@ -14,6 +14,7 @@ const signupFormSchema = Type.Object({
 		minLength: 8,
 		maxLength: 72,
 	}),
+	avatar: Type.Optional(Type.Union([Type.String({ format: "uri" }), Type.Null()])),
 })
 
 export const compiledSignupFormSchema = TypeCompiler.Compile(signupFormSchema)

@@ -67,6 +67,7 @@ export const run = defineRun<typeof action>(async ({ pub, config }) => {
 	if (buildError) {
 		logger.error({ msg: "Failed to build journal site", buildError })
 		return {
+			success: false,
 			title: "Failed to build journal site",
 			error: buildError.message,
 		}

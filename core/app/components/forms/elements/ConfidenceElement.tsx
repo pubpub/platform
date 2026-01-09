@@ -3,7 +3,6 @@
 import type { InputComponent } from "db/public"
 import type { ElementProps } from "../types"
 
-import { forwardRef } from "react"
 import dynamic from "next/dynamic"
 import { Value } from "@sinclair/typebox/value"
 import { useFormContext } from "react-hook-form"
@@ -11,10 +10,11 @@ import { confidenceIntervalConfigSchema } from "schemas"
 
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 import { Skeleton } from "ui/skeleton"
+import { Slider } from "ui/slider"
 
 import { useFormElementToggleContext } from "../FormElementToggleContext"
 
-const Confidence = dynamic(
+const _Confidence = dynamic(
 	async () => import("ui/customRenderers/confidence/confidence").then((mod) => mod.Confidence),
 	{
 		ssr: false,
@@ -22,13 +22,6 @@ const Confidence = dynamic(
 		loading: () => <Skeleton className="relative h-2 w-full" />,
 	}
 )
-
-// Workaround for forwarding refs to dynamic components
-// https://github.com/vercel/next.js/issues/4957#issuecomment-413841689
-const ForwardedRefConfidence = forwardRef<
-	React.ElementRef<typeof import("ui/customRenderers/confidence/confidence").Confidence>,
-	React.ComponentPropsWithoutRef<typeof Confidence>
->((props, ref) => <Confidence {...props} forwardedRef={ref} />)
 
 export const ConfidenceElement = ({
 	slug,
@@ -56,7 +49,7 @@ export const ConfidenceElement = ({
 						<FormItem className="relative mb-6">
 							<FormLabel className="text-[0.9em]">{label}</FormLabel>
 							<FormControl>
-								<ForwardedRefConfidence
+								<Slider
 									{...fieldProps}
 									// Make sure null becomes undefined so that defaultValue can kick in
 									value={field.value == null ? undefined : field.value}
@@ -66,6 +59,7 @@ export const ConfidenceElement = ({
 									max={100}
 									onValueChange={onChange}
 									className="confidence mb-6"
+									withThumbLabels="always"
 								/>
 							</FormControl>
 							<FormMessage />

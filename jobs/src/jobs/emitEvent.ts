@@ -1,251 +1,231 @@
-import type { ActionInstancesId } from "db/public"
 import type {
-	DBTriggerEventPayload,
-	EmitEventPayload,
-	NormalizedEventPayload,
-	PubEnteredStageEventPayload,
-	PubInStagesRow,
-	PubLeftStageEventPayload,
-	ScheduledEventPayload,
+	CancelScheduledAutomationPayload,
+	RunAutomationPayload,
+	RunDelayedAutomationPayload,
+	ScheduleDelayedAutomationPayload,
 } from "db/types"
 import type { logger } from "logger"
 import type { InternalClient } from "../clients"
 
-import { Event } from "db/public"
+import { emitEventPayloadSchema } from "db/types"
 
 import { defineJob } from "../defineJob"
 
 type Logger = typeof logger
 
-// TODO: Use kanel generated types for these
-
-interface OperationConfig<P extends EmitEventPayload, N extends NormalizedEventPayload> {
-	type: string
-	check: (payload: any) => payload is P
-	normalize: (payload: P) => N
-	effects: ((client: InternalClient, payload: N, logger: Logger) => Promise<any>)[]
-}
-
-const defineConfig = <P extends EmitEventPayload, N extends NormalizedEventPayload>(
-	config: OperationConfig<P, N>
-) => config
-
-const scheduleTask = async (
+const handleRunAutomation = async (
 	client: InternalClient,
-	payload: PubEnteredStageEventPayload,
+	payload: RunAutomationPayload,
 	logger: Logger
 ) => {
-	const { stageId, pubId, ...context } = payload
+	const { automationId, pubId, trigger, stageId, stack } = payload
+
 	logger.info({
-		msg: `Attempting to schedule actions for stage ${stageId} and pub ${pubId}`,
-		stageId,
+		msg: `Running automation ${automationId}`,
+		automationId,
 		pubId,
-		...context,
+		trigger,
+		stageId,
+		stack,
 	})
 
 	try {
-		const { status, body } = await client.scheduleAction({
-			params: { stageId, communitySlug: payload.community.slug },
-			body: { pubId },
-		})
-		if (status > 400) {
-			logger.error({
-				msg: "API error scheduling action",
-				error: body,
-				...context,
-			})
-			return
-		}
-
-		if (status === 200 && body?.length > 0) {
-			logger.info({ msg: "Action scheduled", results: body, ...context })
-		}
-	} catch (e) {
-		logger.error({ msg: "Error scheduling action", error: e, ...context })
-	}
-}
-
-const triggerActions = async (
-	client: InternalClient,
-	payload: PubEnteredStageEventPayload | PubLeftStageEventPayload,
-	logger: Logger
-) => {
-	const { stageId, event, pubId } = payload
-
-	try {
-		const { status, body } = await client.triggerActions({
-			params: { stageId, communitySlug: payload.community.slug },
-			body: { event, pubId },
-		})
-
-		if (status > 300) {
-			logger.error({ msg: `API error triggering actions`, body })
-			return
-		}
-
-		logger.info({ msg: "Action run results", results: body })
-	} catch (_e) {
-		logger.error({
-			msg: `Error trigger actions for "${event}" event for Stage ${stageId} and Pub ${pubId}`,
-		})
-	}
-}
-
-const triggerAction = async (
-	client: InternalClient,
-	payload: ScheduledEventPayload,
-	logger: Logger
-) => {
-	const {
-		stageId,
-		stack,
-		event,
-		actionInstanceId,
-		scheduledActionRunId,
-		community,
-		duration,
-		interval,
-		runAt,
-		config,
-		sourceActionRunId,
-		...jsonOrPubId
-	} = payload
-
-	try {
-		const { status, body } = await client.triggerAction({
-			params: {
-				communitySlug: community.slug,
-				actionInstanceId: actionInstanceId as ActionInstancesId,
-			},
-			body: {
-				event,
-				scheduledActionRunId,
-				stack,
-				config,
-				...jsonOrPubId,
-			},
+		const { status, body } = await client.runAutomation({
+			params: { automationId, communitySlug: payload.community.slug },
+			body: { pubId, trigger, stack },
 		})
 
 		if (status >= 400) {
 			logger.error({
-				msg: `API error triggering action`,
-				results: body,
-				...jsonOrPubId,
-				event,
-				scheduledActionRunId,
-				stack,
-				sourceActionRunId,
+				msg: "API error running automation",
+				automationId,
+				pubId,
+				status,
+				body,
 			})
 			return
 		}
 
-		if (status === 200) {
-			logger.info({
-				msg: "Action run results",
-				results: body,
-				...jsonOrPubId,
-				event,
-				scheduledActionRunId,
-				stack,
-				sourceActionRunId,
-			})
-		}
+		logger.info({
+			msg: "Automation ran successfully",
+			automationId,
+			pubId,
+			result: body,
+		})
 	} catch (e) {
 		logger.error({
-			msg: `Error trigger action ${actionInstanceId} for "${event}" event for Stage ${stageId} and Pub ${jsonOrPubId.pubId ?? "json"}`,
+			msg: `Error running automation ${automationId}`,
+			error: e,
 		})
-		if (e instanceof Error) {
-			logger.error({ message: e.message })
-		}
 	}
 }
 
-const eventConfigs = [
-	defineConfig({
-		type: "ScheduledEvent",
-		check: (payload: any): payload is ScheduledEventPayload => "event" in payload,
-		normalize: (payload: ScheduledEventPayload) => payload,
-		effects: [triggerAction],
-	}),
-	defineConfig({
-		type: "InsertOperation",
-		check: (payload: any): payload is DBTriggerEventPayload<PubInStagesRow> =>
-			payload.operation === "INSERT",
-		normalize: (payload: DBTriggerEventPayload<PubInStagesRow>) => ({
-			community: payload.community,
-			event: Event.pubEnteredStage,
-			...payload.new,
-		}),
-		effects: [scheduleTask, triggerActions],
-	}),
-	defineConfig({
-		type: "DeleteOperation",
-		check: (payload: any): payload is DBTriggerEventPayload<PubInStagesRow> =>
-			payload.operation === "DELETE",
-		normalize: (payload: DBTriggerEventPayload<PubInStagesRow>) => ({
-			community: payload.community,
-			event: Event.pubLeftStage,
-			...payload.old,
-		}),
-		effects: [triggerActions],
-	}),
-]
-
-const processEventPayload = (
+const handleScheduleDelayedAutomation = async (
 	client: InternalClient,
-	payload: EmitEventPayload,
-	eventLogger: Logger
+	payload: ScheduleDelayedAutomationPayload,
+	logger: Logger
 ) => {
-	for (const config of eventConfigs) {
-		if (!config.check(payload)) {
-			continue
-		}
-		const normalized = config.normalize(
-			// this is guaranteed to be a valid payload
-			// typescript narrowing just isn't smart enough
-			payload as any
-		)
+	const { automationId, pubId, stack } = payload
 
-		if (!normalized) {
-			continue
+	logger.info({
+		msg: `Scheduling delayed automation ${automationId}`,
+		automationId,
+		pubId,
+		stack,
+	})
+
+	try {
+		const { status, body } = await client.scheduleDelayedAutomation({
+			params: { automationId, communitySlug: payload.community.slug },
+			body: { pubId, stack },
+		})
+
+		if (status >= 400) {
+			logger.error({
+				msg: "API error scheduling delayed automation",
+				error: body,
+				automationId,
+				pubId,
+			})
+			return
 		}
 
-		return config.effects.map((action) =>
-			action(
-				client,
-				// this is guaranteed to be a valid payload
-				// typescript narrowing just isn't smart enough
-				normalized as any,
-				eventLogger
-			)
-		)
+		logger.info({
+			msg: "Delayed automation scheduled",
+			result: body,
+			automationId,
+			pubId,
+		})
+	} catch (e) {
+		logger.error({
+			msg: "Error scheduling delayed automation",
+			error: e,
+			automationId,
+			pubId,
+		})
 	}
-	return []
+}
+
+const handleRunDelayedAutomation = async (
+	client: InternalClient,
+	payload: RunDelayedAutomationPayload,
+	logger: Logger
+) => {
+	const { automationId, pubId, trigger, automationRunId, stack } = payload
+
+	logger.info({
+		msg: `Running delayed automation ${automationId}`,
+		automationId,
+		pubId,
+		trigger,
+		automationRunId,
+		stack,
+	})
+
+	try {
+		const { status, body } = await client.runDelayedAutomation({
+			params: { automationId, communitySlug: payload.community.slug },
+			body: { pubId, trigger, automationRunId, stack },
+		})
+
+		if (status >= 400) {
+			logger.error({
+				msg: "API error running delayed automation",
+				automationId,
+				pubId,
+				status,
+				body,
+			})
+			return
+		}
+
+		logger.info({
+			msg: "Delayed automation ran successfully",
+			automationId,
+			pubId,
+			result: body,
+		})
+	} catch (e) {
+		logger.error({
+			msg: `Error running delayed automation ${automationId}`,
+			error: e,
+		})
+	}
+}
+
+const handleCancelScheduledAutomation = async (
+	client: InternalClient,
+	payload: CancelScheduledAutomationPayload,
+	logger: Logger
+) => {
+	const { automationRunId } = payload
+
+	logger.info({
+		msg: `Cancelling scheduled automation for automation run ${automationRunId}`,
+		automationRunId,
+	})
+
+	try {
+		const { status, body } = await client.cancelScheduledAutomation({
+			params: { automationRunId, communitySlug: payload.community.slug },
+			body: {},
+		})
+
+		if (status >= 400) {
+			logger.error({
+				msg: "API error cancelling scheduled automation",
+				automationRunId,
+				status,
+				body,
+			})
+			return
+		}
+
+		logger.info({
+			msg: "Scheduled automation cancelled successfully",
+			automationRunId,
+			result: body,
+		})
+	} catch (e) {
+		logger.error({
+			msg: `Error cancelling scheduled automation ${automationRunId}`,
+			error: e,
+		})
+	}
 }
 
 export const emitEvent = defineJob(
-	async (client: InternalClient, payload: EmitEventPayload, eventLogger, job) => {
+	async (client: InternalClient, payload: unknown, eventLogger, job) => {
 		eventLogger.info({ msg: "Starting emitEvent", payload })
 
-		if (!payload?.community?.slug) {
+		// parse and validate the payload
+		const parseResult = emitEventPayloadSchema.safeParse(payload)
+
+		if (!parseResult.success) {
 			eventLogger.error({
-				msg: "No community slug found in payload, probably an old scheduled job",
-				job,
+				msg: "Invalid payload for emitEvent",
+				error: parseResult.error.format(),
+				payload,
 			})
 			return
 		}
 
-		const completedEffects = await Promise.allSettled(
-			processEventPayload(client, payload, eventLogger)
-		)
+		const validPayload = parseResult.data
 
-		completedEffects.forEach((effect) => {
-			if (effect.status === "rejected") {
-				eventLogger.error({
-					msg: "Unexpected error running emitEvent action",
-					error: effect.reason,
-				})
-			}
-		})
+		// route based on event type
+		switch (validPayload.type) {
+			case "RunAutomation":
+				await handleRunAutomation(client, validPayload, eventLogger)
+				break
+			case "ScheduleDelayedAutomation":
+				await handleScheduleDelayedAutomation(client, validPayload, eventLogger)
+				break
+			case "RunDelayedAutomation":
+				await handleRunDelayedAutomation(client, validPayload, eventLogger)
+				break
+			case "CancelScheduledAutomation":
+				await handleCancelScheduledAutomation(client, validPayload, eventLogger)
+				break
+		}
 	}
 )

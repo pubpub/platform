@@ -1,8 +1,10 @@
 import type {
-	ActionInstances,
+	AutomationEvent,
+	Automations,
 	CommunitiesId,
 	FormElementsId,
 	FormsId,
+	InputComponent,
 	PubFields,
 	PubFieldsId,
 	PubsId,
@@ -14,8 +16,9 @@ import type {
 	Users,
 	UsersId,
 } from "db/public"
+import type { FullAutomation } from "db/types"
 
-import { z } from "zod"
+import z from "zod"
 
 import {
 	type CoreSchemaType,
@@ -202,17 +205,34 @@ export const upsertPubRelationsSchema = z.record(
  * Only add the `stage` if the `withStage` option has not been set to `false
  */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
-	? Options["withStageActionInstances"] extends true
+	? Options["withStageAutomations"] extends {
+			detail: infer Detail extends "count" | "full" | "base"
+		}
 		? {
 				stage:
-					| (Stages & {
-							actionInstances: (ActionInstances & {
-								defaultedActionConfigKeys: string[] | null
-							})[]
-					  })
+					| (Stages &
+							(Detail extends "count"
+								? {
+										automationsCount: number
+										fullAutomations?: never
+										baseAutomations?: never
+									}
+								: Detail extends "full"
+									? {
+											fullAutomations: FullAutomation[]
+											automationsCount?: never
+											baseAutomations?: never
+										}
+									: {
+											baseAutomations: Automations[]
+											automationsCount?: never
+											fullAutomations?: never
+										}))
 					| null
 			}
-		: { stage: Stages | null }
+		: Options["withStageAutomations"] extends true
+			? { stage: (Stages & { automations: FullAutomation[] }) | null }
+			: { stage: Stages | null }
 	: Options["withStage"] extends false
 		? { stage?: never }
 		: { stage?: Stages | null }
@@ -259,6 +279,13 @@ type MaybePubRelatedCounts<Options extends MaybePubOptions> =
 		? { relatedPubsCount?: never }
 		: { relatedPubsCount?: number }
 
+export type DetailLevel = "count" | "full" | "base"
+
+export type StageAutomationSelectOptions = {
+	detail: DetailLevel
+	filter: AutomationEvent[] | "all"
+}
+
 /**
  * Those options of `getPubsWithRelatedValuesOptions` that affect the output of `ProcessedPub`
  *
@@ -286,10 +313,11 @@ export type MaybePubOptions = {
 	withStage?: boolean
 	/**
 	 * Whether to include action instances for pub stages.
+	 * `true` is the same as `{ detail: "full", filter: "all" }`
 	 *
 	 * @default false
 	 */
-	withStageActionInstances?: boolean
+	withStageAutomations?: StageAutomationSelectOptions | boolean
 	/**
 	 * Whether to include members of the pub.
 	 *
@@ -348,6 +376,8 @@ type ValuesWithFormElements =
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }
 				| null
+			formElementComponent: InputComponent
+			formElementRelatedPubTypes: PubTypesId[]
 	  })
 	// With only value info
 	| ValueBase
@@ -363,6 +393,8 @@ type ValuesWithFormElements =
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }
 				| null
+			formElementComponent: InputComponent
+			formElementRelatedPubTypes: PubTypesId[]
 	  } & ValueFieldInfo)
 
 type ProcessedPubBase = {
@@ -735,6 +767,8 @@ export const getPubQuerySchema = z.object({
 		.describe("Whether to include related pubs with the values"),
 	withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
 	withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
+	withSearchValues: z.boolean().default(false).describe("Whether to show highlighted values."),
+	withValues: z.boolean().default(true).describe("Whether to fetch the pub's values."),
 	withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
 	fieldSlugs: z
 		.array(z.string())

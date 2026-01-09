@@ -12,7 +12,7 @@ export default async function Page() {
 
 	if (!user) {
 		return (
-			<div className="prose mx-auto max-w-sm">
+			<div className="prose dark:prose-invert mx-auto max-w-sm">
 				<h1>Invalid</h1>
 				<p>It looks like this link has expired. Please request a new one.</p>
 			</div>

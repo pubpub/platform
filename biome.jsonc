@@ -67,6 +67,7 @@
 				}
 			},
 			"suspicious": {
+				"noConsole": "error",
 				"noUnknownAtRules": {
 					"level": "error",
 					"options": {
@@ -88,6 +89,7 @@
 				"useJsxKeyInIterable": "error"
 			},
 			"nursery": {
+				"noFloatingPromises": "error",
 				"useSortedClasses": {
 					"fix": "safe",
 					"level": "error",

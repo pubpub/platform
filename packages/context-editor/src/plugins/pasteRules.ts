@@ -10,7 +10,7 @@ type PasteRule = {
 	transform: (match: RegExpExecArray, node: Node, start: number, end: number) => Node
 }
 
-export default (schema: Schema) => {
+export default function pasteRulesPlugin(schema: Schema) {
 	const rules = [
 		{
 			regex: markdownLinkRegex,

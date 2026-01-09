@@ -3,11 +3,11 @@
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form"
+import { Field, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
 import { PasswordInput } from "ui/password-input"
 import { FormSubmitButton } from "ui/submit-button"
@@ -46,60 +46,50 @@ export default function LoginForm() {
 	}
 
 	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(handleSubmit)}>
-				<Card className="w-full max-w-sm shadow-lg transition-shadow duration-300 hover:shadow-xl">
-					<CardHeader>
-						<CardTitle className="text-2xl">Login</CardTitle>
-						<CardDescription>
-							Enter your email below to login to your account.
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="grid gap-4">
-						<FormField
-							control={form.control}
-							name="email"
-							render={({ field, fieldState }) => (
-								<div className="grid gap-2">
-									<FormItem>
-										<FormLabel>Email</FormLabel>
-										<FormControl>
-											<Input placeholder="name@example.com" {...field} />
-										</FormControl>
-									</FormItem>
-								</div>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="password"
-							render={({ field }) => (
-								<div className="grid gap-2">
-									<FormItem>
-										<FormLabel>Password</FormLabel>
-										<FormControl>
-											<PasswordInput {...field} />
-										</FormControl>
-									</FormItem>
-								</div>
-							)}
-						/>
-					</CardContent>
-					<CardFooter className="flex flex-col gap-y-4">
-						<FormSubmitButton
-							formState={form.formState}
-							idleText="Sign in"
-							pendingText="Signing in..."
-							successText="Success!"
-							errorText="Error signing in"
-							className="w-full"
-						/>
-						<Link href="/forgot" className="text-gray-600 text-sm hover:underline">
-							Forgot Password
-						</Link>
-					</CardFooter>
-				</Card>
-			</form>
-		</Form>
+		<form onSubmit={form.handleSubmit(handleSubmit)}>
+			<Card className="w-full max-w-sm shadow-lg transition-shadow duration-300 hover:shadow-xl">
+				<CardHeader>
+					<CardTitle className="text-2xl">Login</CardTitle>
+					<CardDescription>
+						Enter your email below to login to your account.
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="grid gap-4">
+					<Controller
+						control={form.control}
+						name="email"
+						render={({ field }) => (
+							<Field>
+								<FieldLabel htmlFor={field.name}>Email</FieldLabel>
+								<Input id={field.name} placeholder="name@example.com" {...field} />
+							</Field>
+						)}
+					/>
+					<Controller
+						control={form.control}
+						name="password"
+						render={({ field }) => (
+							<Field>
+								<FieldLabel htmlFor={field.name}>Password</FieldLabel>
+								<PasswordInput id={field.name} {...field} />
+							</Field>
+						)}
+					/>
+				</CardContent>
+				<CardFooter className="flex flex-col gap-y-4">
+					<FormSubmitButton
+						formState={form.formState}
+						idleText="Sign in"
+						pendingText="Signing in..."
+						successText="Success!"
+						errorText="Error signing in"
+						className="w-full"
+					/>
+					<Link href="/forgot" className="text-muted-foreground text-sm hover:underline">
+						Forgot Password
+					</Link>
+				</CardFooter>
+			</Card>
+		</form>
 	)
 }

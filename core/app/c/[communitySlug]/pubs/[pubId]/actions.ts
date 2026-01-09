@@ -28,7 +28,7 @@ export const removePubMember = defineServerAction(async function removePubMember
 	) {
 		return {
 			title: "Unauthorized",
-			error: "You are not authorized to remove a pub member",
+			error: "You are not authorized to remove a Pub member",
 		}
 	}
 	await autoRevalidate(
@@ -67,7 +67,7 @@ export const addPubMember = defineServerAction(async function addPubMember(
 		) {
 			return {
 				title: "Unauthorized",
-				error: "You are not authorized to add a pub member",
+				error: "You are not authorized to add a Pub member",
 			}
 		}
 
@@ -76,7 +76,7 @@ export const addPubMember = defineServerAction(async function addPubMember(
 		if (isUniqueConstraintError(error)) {
 			return {
 				title: "Failed to add member",
-				error: "User is already a member of this pub",
+				error: "User is already a member of this Pub",
 			}
 		}
 	}

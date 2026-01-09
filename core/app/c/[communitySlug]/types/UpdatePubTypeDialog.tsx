@@ -31,7 +31,7 @@ export const UpdatePubTypeButton = ({
 		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen}>
 			<DialogOverlay />
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">
+			<DialogContent className="max-h-full min-w-lg max-w-fit overflow-auto">
 				<DialogTitle>Edit Type</DialogTitle>
 
 				{isOpen && (

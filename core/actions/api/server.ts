@@ -1,2 +1,5 @@
-export { runActionInstance, runInstancesForEvent } from "../_lib/runActionInstance"
-export { scheduleActionInstances } from "../_lib/scheduleActionInstance"
+export {
+	runAutomation,
+	// runInstancesForEvent,
+} from "../_lib/runAutomation"
+export { scheduleDelayedAutomation } from "../_lib/scheduleAutomations"

@@ -53,9 +53,11 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 			<DropdownMenuTrigger asChild>
 				<Button
 					variant="outline"
-					className="flex h-[22px] gap-1 px-2 px-[.35rem] font-semibold text-xs shadow-none"
+					className="flex h-5 gap-1 px-2 px-[.35rem] font-semibold text-xs shadow-none"
 				>
-					<span className="rounded bg-slate-100 px-1 text-[10px]">{numRelations}</span>
+					<span className="rounded-sm bg-neutral-100 px-1 text-[10px] dark:bg-neutral-600">
+						{numRelations}
+					</span>
 					Relations
 					<ChevronDown strokeWidth="1px" />
 				</Button>
@@ -78,7 +80,7 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 								<DropdownMenuItem key={relatedPub.id}>
 									<Badge
 										variant="secondary"
-										className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 font-semibold text-[10px] leading-4 tracking-[-.1px]"
+										className="col-span-2 whitespace-nowrap rounded-sm border-gray-300 px-1 py-0 font-semibold text-[10px] leading-4 tracking-[-.1px]"
 									>
 										{relatedPub.pubType.name}
 									</Badge>

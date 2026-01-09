@@ -1,5 +1,5 @@
 import type { ProcessedPub } from "contracts"
-import type { Action as ActionEnum, PubsId } from "db/public"
+import type { Action as ActionEnum, PubsId, StagesId } from "db/public"
 import type z from "zod"
 import type { ActionFormContextContextValue } from "./ActionForm"
 
@@ -12,6 +12,7 @@ import { interpolate } from "@pubpub/json-interpolate"
 import { Alert, AlertDescription } from "ui/alert"
 import { Button } from "ui/button"
 import { Label } from "ui/label"
+import { useStages } from "ui/stages"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs"
 import { Textarea } from "ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
@@ -23,7 +24,7 @@ import { PubSearchSelect } from "~/app/components/pubs/PubSearchSelect"
 import { client } from "~/lib/api"
 import { getActionByName } from "../api"
 import { useActionForm } from "./ActionForm"
-import { createPubProxy } from "./pubProxy"
+import { buildInterpolationContext } from "./interpolationContext"
 import { extractJsonata } from "./schemaWithJsonFields"
 
 export type TestInputType = "current-pub" | "select-pub" | "json-blob"
@@ -49,6 +50,7 @@ export function ActionFieldJsonataTestPanel(props: {
 	pubId: PubsId | undefined
 	contextType: ActionFormContextContextValue
 	actionAccepts: readonly string[]
+	stageId: StagesId | null
 	mode?: "template" | "jsonata"
 }) {
 	const [inputType, setInputType] = useState<TestInputType>(() =>
@@ -103,26 +105,6 @@ export function ActionFieldJsonataTestPanel(props: {
 		}
 	}, [])
 
-	const bodyForTest = useMemo(() => {
-		if (inputType === "current-pub" && selectedPubId && data?.body) {
-			return { pub: createPubProxy(data.body as ProcessedPub, community.slug) }
-		}
-		if (inputType === "select-pub") {
-			if (selectedPubId && data?.body) {
-				return { pub: createPubProxy(data.body as ProcessedPub, community.slug) }
-			}
-			return {}
-		}
-		if (inputType === "json-blob") {
-			try {
-				return { json: JSON.parse(jsonBlob) }
-			} catch {
-				return null
-			}
-		}
-		return null
-	}, [inputType, selectedPubId, jsonBlob, data?.body, community.slug])
-
 	const values = useWatch({ control: form.control, ...(path ? { name: path } : {}) })
 
 	const valuesMinusCurrent = useMemo(() => {
@@ -131,15 +113,55 @@ export function ActionFieldJsonataTestPanel(props: {
 		return rest
 	}, [values, props.configKey])
 
+	const stages = useStages()
+	const stage = stages.find((s) => s.id === props.stageId)
+
 	const bodyWithAction = useMemo(() => {
-		return {
-			...bodyForTest,
-			action: {
-				...action,
-				config: valuesMinusCurrent,
-			},
+		if (!data?.body && inputType !== "json-blob") {
+			return null
 		}
-	}, [bodyForTest, valuesMinusCurrent, action])
+
+		const pubOrJson =
+			inputType === "json-blob"
+				? (() => {
+						try {
+							return { json: JSON.parse(jsonBlob) }
+						} catch {
+							return null
+						}
+					})()
+				: data?.body
+					? { pub: data.body as ProcessedPub }
+					: null
+
+		if (!pubOrJson) {
+			return null
+		}
+
+		return buildInterpolationContext({
+			community: {
+				id: community.id,
+				name: community.name,
+				slug: community.slug,
+				avatar: community.avatar,
+			},
+			stage,
+			env: {
+				PUBPUB_URL: typeof window !== "undefined" ? window.location.origin : "",
+			},
+			useDummyValues: true,
+			...pubOrJson,
+		})
+	}, [
+		data?.body,
+		inputType,
+		jsonBlob,
+		community,
+		stage,
+		action.name,
+		valuesMinusCurrent,
+		community.avatar,
+	])
 
 	const canTest = useMemo(() => {
 		if (inputType === "current-pub") {
@@ -272,7 +294,7 @@ export function ActionFieldJsonataTestPanel(props: {
 		}
 
 		debounceTimerRef.current = setTimeout(() => {
-			handleTest()
+			void handleTest()
 		}, 500)
 
 		return () => {
@@ -320,7 +342,7 @@ export function ActionFieldJsonataTestPanel(props: {
 									"h-7 gap-1.5 px-2 text-xs transition-colors",
 									autoEvaluate
 										? "text-amber-700 hover:bg-amber-50 hover:text-amber-800"
-										: "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+										: "text-muted-foreground hover:bg-gray-100 hover:text-gray-700"
 								)}
 							>
 								{autoEvaluate ? <Zap size={12} /> : <ZapOff size={12} />}
@@ -351,7 +373,7 @@ export function ActionFieldJsonataTestPanel(props: {
 			<div className="min-h-[60px] transition-all duration-200">
 				{/* to make it easier for screen readers to understand the output */}
 				{testResult.status === "pending" && (
-					<div className="flex items-center justify-center py-4 text-gray-500 text-xs">
+					<div className="flex items-center justify-center py-4 text-muted-foreground text-xs">
 						<Loader2 className="mr-2 h-3 w-3 animate-spin" />
 						Evaluating...
 					</div>
@@ -378,7 +400,7 @@ export function ActionFieldJsonataTestPanel(props: {
 								htmlFor={props.configKey}
 								aria-label="Success: JSONata test interpolated value"
 							>
-								<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-gray-900 text-xs">
+								<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded-sm bg-white p-2 font-mono text-gray-900 text-xs">
 									{JSON.stringify(testResult.interpolated, null, 2)}
 								</pre>
 							</output>
@@ -406,7 +428,7 @@ export function ActionFieldJsonataTestPanel(props: {
 									htmlFor={props.configKey}
 									aria-label="Error: JSONata test interpolated value"
 								>
-									<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-gray-900 text-xs">
+									<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded-sm bg-white p-2 font-mono text-gray-900 text-xs">
 										{JSON.stringify(testResult.interpolated, null, 2)}
 									</pre>
 								</output>
@@ -482,14 +504,6 @@ export const InputSelector = (props: {
 					<p className="text-gray-600 text-xs">Test using the current pub context</p>
 				</TabsContent>
 				<TabsContent value="select-pub" className="mt-2 space-y-2">
-					{/* <Input
-								type="text"
-								placeholder="Enter pub ID"
-								value={selectedPubId}
-								onChange={(e) => setSelectedPubId(e.target.value)}
-								className="text-xs"
-							/> */}
-
 					<div className="flex max-w-xs flex-col gap-2">
 						<PubSearchSelect
 							onSelectedPubsChange={(pubs) => {
@@ -499,7 +513,7 @@ export const InputSelector = (props: {
 								}
 								props.setSelectedPubId(pubs[0].id)
 							}}
-							placeholder="Search for a pub to test..."
+							placeholder="Search for a Pub to test..."
 						/>
 					</div>
 				</TabsContent>

@@ -1,7 +1,5 @@
 "use client"
 
-import type { InputProps } from "./input"
-
 // from https://gist.github.com/mjbalcueva/b21f39a8787e558d4c536bf68e267398#file-password-input-tsx
 import * as React from "react"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
@@ -11,7 +9,7 @@ import { cn } from "utils"
 import { Button } from "./button"
 import { Input } from "./input"
 
-const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
+const PasswordInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 	({ className, ...props }, ref) => {
 		const [showPassword, setShowPassword] = React.useState(false)
 		const disabled = props.value === "" || props.value === undefined || props.disabled

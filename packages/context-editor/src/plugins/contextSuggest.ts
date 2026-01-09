@@ -33,7 +33,7 @@ const updateItems = async (view: EditorView, filter: string) => {
 		.map((result) => {
 			return { ...result, parentTypeId: pubTypeId }
 		})
-	const newPubItems = await getPubs(filter)
+	const newPubItems = (await getPubs?.(filter)) ?? []
 	const newItems = [...newTypeItems, ...newFieldItems, ...newPubItems]
 	setSuggestData({
 		...suggestData,
@@ -43,10 +43,10 @@ const updateItems = async (view: EditorView, filter: string) => {
 	})
 }
 
-export default (
+export default function contextSuggestPlugin(
 	_suggestDataOld: SuggestProps,
 	_setSuggestDataOld: React.Dispatch<React.SetStateAction<SuggestProps>>
-) => {
+) {
 	/* The docs say we can either include handler functions or  */
 	/* a single reducer. But the type requires the reducer, incorrectly. */
 	/* Hence, the Omit type below */
@@ -56,7 +56,7 @@ export default (
 			{ name: "reference", trigger: "@" },
 		],
 		onOpen: ({ view, range, filter, trigger, type }) => {
-			updateItems(view, filter || "")
+			void updateItems(view, filter || "")
 			return true
 		},
 		onArrow: ({ view, kind }) => {
@@ -79,7 +79,7 @@ export default (
 			return true
 		},
 		onFilter: ({ view, filter }) => {
-			updateItems(view, filter || "")
+			void updateItems(view, filter || "")
 			return true
 		},
 		onEnter: ({ view, range }) => {

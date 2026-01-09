@@ -13,18 +13,24 @@ export const choosePubType = async ({
 	communitySlug: string
 }) => {
 	const createDialog = page.getByRole("dialog", { name: "Create Pub", exact: true })
-	await createDialog.waitFor()
+	await createDialog.waitFor({ state: "visible", timeout: 5000 })
 
 	// Choose a pub type
-	await createDialog.getByLabel("Pub type").click()
+	await createDialog.getByLabel("Pub type").click({ timeout: 5000 })
 	if (pubType) {
-		await page.getByRole("option", { name: pubType, exact: true }).click()
+		await page.getByRole("option", { name: pubType, exact: true }).click({ timeout: 5000 })
 	} else {
 		// Choose the first pub type
-		await page.getByRole("option").first().click()
+		await page.getByRole("option").first().click({ timeout: 5000 })
 	}
-	await createDialog.getByRole("button", { name: "Create Pub" }).click()
-	await page.waitForURL(`/c/${communitySlug}/pubs/create**`)
+
+	await retryAction(async () => {
+		await page.waitForTimeout(500)
+		await createDialog
+			.getByRole("button", { name: /Create Pub|Redirecting/ })
+			.click({ timeout: 5000 })
+		await page.waitForURL(`/c/${communitySlug}/pubs/create**`, { timeout: 3000 })
+	})
 }
 
 export class PubsPage {
@@ -41,10 +47,6 @@ export class PubsPage {
 		await this.page.goto(`/c/${this.communitySlug}/pubs`)
 	}
 
-	async choosePubType(pubType?: string) {
-		await choosePubType({ page: this.page, pubType, communitySlug: this.communitySlug })
-	}
-
 	async createPub({
 		pubType,
 		stage,
@@ -57,10 +59,15 @@ export class PubsPage {
 		await this.page.waitForURL(`/c/${this.communitySlug}/pubs*`)
 		// this is extremely flaky for some reason
 		await retryAction(async () => {
+			await this.page.waitForTimeout(1000)
+			await this.page
+				.getByRole("button", { name: "Create", exact: true })
+				.click({ timeout: 5000 })
+			await this.page
+				.getByRole("heading", { name: "Create Pub", exact: true })
+				.waitFor({ state: "visible", timeout: 5000 })
 			await this.page.waitForTimeout(500)
-			await this.page.getByRole("button", { name: "Create", exact: true }).click()
-			await this.page.waitForTimeout(500)
-			await this.choosePubType(pubType)
+			await choosePubType({ page: this.page, pubType, communitySlug: this.communitySlug })
 		})
 
 		await this.page.waitForTimeout(500)

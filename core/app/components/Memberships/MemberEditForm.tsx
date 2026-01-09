@@ -57,10 +57,7 @@ export const MemberEditForm = ({
 		})
 
 		if (didSucceed(result)) {
-			toast({
-				title: "Success",
-				description: "Member updated successfully",
-			})
+			toast.success("Member updated")
 
 			closeForm()
 		}

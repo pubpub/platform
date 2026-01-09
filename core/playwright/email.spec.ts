@@ -4,7 +4,7 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
 import { expect, test } from "@playwright/test"
 
-import { Action, CoreSchemaType, MemberRole } from "db/public"
+import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public"
 
 import { createSeed } from "~/prisma/seed/createSeed"
 import { seedCommunity } from "~/prisma/seed/seedCommunity"
@@ -67,15 +67,25 @@ const seed = createSeed({
 	},
 	stages: {
 		Evaluating: {
-			actions: {
+			automations: {
 				[ACTION_NAME]: {
-					action: Action.email,
-					name: ACTION_NAME,
-					config: {
-						subject: "Sup",
-						body: "Yo",
-						recipientEmail: "test@example.com",
-					},
+					triggers: [
+						{
+							event: AutomationEvent.manual,
+							config: {},
+						},
+					],
+					actions: [
+						{
+							action: Action.email,
+							name: ACTION_NAME,
+							config: {
+								subject: "Sup",
+								body: "Yo",
+								recipientEmail: "test@example.com",
+							},
+						},
+					],
 				},
 			},
 		},
@@ -129,7 +139,7 @@ test.describe("Sending an email to an email address", () => {
 			community.pubs[1].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
+		await pubDetailsPage.runAutomation(ACTION_NAME, async (runActionDialog) => {
 			await runActionDialog.getByLabel("Recipient Email").fill(community.users.user2.email)
 			await runActionDialog
 				.getByRole("textbox", { name: "Subject" })
@@ -138,12 +148,12 @@ test.describe("Sending an email to an email address", () => {
 				.getByRole("textbox", { name: "Body" })
 				.fill("Greetings", { timeout: 2_000 })
 		})
-	})
-	test("Static email address recipient recieves the email", async () => {
-		const { message } = await (
-			await inbucketClient.getMailbox(community.users.user2.email.split("@")[0])
-		).getLatestMessage()
-		expect(message.body.html?.trim()).toBe("<p>Greetings</p>")
+		await test.step("Static email address recipient recieves the email", async () => {
+			const { message } = await (
+				await inbucketClient.getMailbox(community.users.user2.email.split("@")[0])
+			).getLatestMessage()
+			expect(message.body.html?.trim()).toBe("<p>Greetings</p>")
+		})
 	})
 })
 
@@ -155,7 +165,7 @@ test.describe("Sending an email containing a MemberId field from a related pub",
 			community.pubs[0].id
 		)
 		await pubDetailsPage.goTo()
-		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
+		await pubDetailsPage.runAutomation(ACTION_NAME, async (runActionDialog) => {
 			await runActionDialog.getByLabel("Recipient Email").fill(community.users.user2.email)
 			await runActionDialog.getByRole("textbox", { name: "Subject" }).fill("Hello")
 			await runActionDialog

@@ -196,3 +196,39 @@ export const removeMember = defineServerAction(async function removeMember({
 		}
 	}
 })
+
+export const removeCommunityMember = defineServerAction(async function removeCommunityMember(
+	userId: UsersId,
+	_communityId: unknown
+) {
+	try {
+		const { error: adminError, community } = await isCommunityAdmin()
+
+		if (adminError !== null) {
+			return {
+				title: "Failed to remove member",
+				error: adminError,
+			}
+		}
+
+		const removedMember = await deleteCommunityMemberships({
+			userId,
+			communityId: community.id,
+		}).executeTakeFirst()
+
+		if (!removedMember) {
+			return {
+				title: "Failed to remove member",
+				error: "An unexpected error occurred",
+			}
+		}
+
+		return { success: true }
+	} catch (error) {
+		return {
+			title: "Failed to remove member",
+			error: "An unexpected error occurred",
+			cause: error,
+		}
+	}
+})

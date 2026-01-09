@@ -1,91 +1,117 @@
 import { initContract } from "@ts-rest/core"
 import { z } from "zod"
 
-import { actionInstancesIdSchema, actionRunsIdSchema, eventSchema, pubsIdSchema } from "db/public"
-
-import { jsonSchema } from "./types"
+import {
+	automationEventSchema,
+	automationRunsIdSchema,
+	automationsIdSchema,
+	pubsIdSchema,
+} from "db/public"
 
 const contract = initContract()
 
 export const internalApi = contract.router(
 	{
-		scheduleAction: {
+		runAutomation: {
 			method: "POST",
-			path: "/actions/:stageId/schedule",
-			summary: "Schedule an action to run",
-			description: "Schedule an action to run on a Pub in a stage to run at a later time.",
+			path: "/automations/:automationId/run",
+			summary: "Run a specific automation",
+			description:
+				"Run a single automation for a specific pub with a stack to prevent infinite loops",
 			pathParams: z.object({
-				stageId: z.string(),
+				automationId: automationsIdSchema,
 			}),
 			body: z.object({
-				pubId: z.string(),
+				pubId: pubsIdSchema,
+				trigger: z.object({
+					event: automationEventSchema,
+					config: z.record(z.unknown()).nullable(),
+				}),
+				stack: z.array(automationRunsIdSchema),
 			}),
-			responses: {
-				200: z.array(
-					z.object({
-						actionInstanceName: z.string(),
-						actionInstanceId: z.string(),
-						runAt: z.string(),
-						result: z.any(),
-					})
-				),
-			},
-		},
-		triggerAction: {
-			method: "POST",
-			path: "/actions/:actionInstanceId/trigger/",
-			summary: "Run a specific action instance in a stage for a specific pub",
-			description:
-				"Flock's emitEvent job uses this endpoint to run jobs in response to asynchronous events",
-			pathParams: z.object({
-				actionInstanceId: actionInstancesIdSchema,
-			}),
-			body: z
-				.object({
-					event: eventSchema,
-					stack: z.array(actionRunsIdSchema).optional(),
-					scheduledActionRunId: actionRunsIdSchema.optional(),
-					config: z.record(z.unknown()).nullish(),
-				})
-				.and(
-					z.union([
-						z.object({
-							pubId: pubsIdSchema,
-						}),
-						z.object({
-							json: jsonSchema,
-						}),
-					])
-				),
 			responses: {
 				200: z.object({
-					actionInstanceId: z.string(),
+					automationId: z.string(),
 					result: z.any(),
 				}),
 			},
 		},
-		triggerActions: {
+		scheduleDelayedAutomation: {
 			method: "POST",
-			path: "/stages/:stageId/actions/trigger",
-			summary: "Run all actions in a stage whose automations match the event",
+			path: "/automations/:automationId/schedule-delayed",
+			summary: "Schedule a delayed automation",
 			description:
-				"Flock's emitEvent job uses this endpoint to run jobs in response to asynchronous events",
+				"Schedule a specific time-based automation (pubInStageForDuration) for a pub entering a stage",
 			pathParams: z.object({
-				stageId: z.string(),
+				automationId: automationsIdSchema,
 			}),
 			body: z.object({
 				pubId: pubsIdSchema,
-				event: eventSchema,
-				sourceActionInstanceId: actionInstancesIdSchema.optional(),
+				stack: z.array(automationRunsIdSchema),
 			}),
 			responses: {
-				200: z.array(
-					z.object({
-						actionInstanceName: z.string(),
-						actionInstanceId: z.string(),
-						result: z.any(),
-					})
-				),
+				200: z.object({
+					automationId: z.string(),
+					runAt: z.string(),
+				}),
+			},
+		},
+		runDelayedAutomation: {
+			method: "POST",
+			path: "/automations/:automationId/run-delayed",
+			summary: "Run a delayed automation",
+			description: "Run a previously scheduled time-based automation",
+			pathParams: z.object({
+				automationId: automationsIdSchema,
+			}),
+			body: z.object({
+				pubId: pubsIdSchema,
+				trigger: z.object({
+					event: automationEventSchema,
+					config: z.record(z.unknown()).nullable(),
+				}),
+				automationRunId: automationRunsIdSchema,
+				stack: z.array(automationRunsIdSchema),
+			}),
+			responses: {
+				200: z.object({
+					automationId: z.string(),
+					result: z.any(),
+				}),
+			},
+		},
+		cancelScheduledAutomation: {
+			method: "POST",
+			path: "/automation-runs/:automationRunId/cancel",
+			summary: "Cancel a scheduled automation run",
+			description: "Cancel a scheduled automation and mark the automation run as cancelled",
+			pathParams: z.object({
+				automationRunId: automationRunsIdSchema,
+			}),
+			body: z.object({}),
+			responses: {
+				200: z.object({
+					success: z.boolean(),
+				}),
+			},
+		},
+		runWebhookAutomation: {
+			method: "POST",
+			path: "/automations/:automationId/run-webhook",
+			summary: "Run a webhook automation",
+			description: "Run a webhook automation with arbitrary JSON input",
+			pathParams: z.object({
+				automationId: automationsIdSchema,
+			}),
+			body: z.object({
+				json: z.record(z.unknown()),
+				stack: z.array(automationRunsIdSchema),
+			}),
+			responses: {
+				200: z.object({
+					automationId: z.string(),
+					result: z.any(),
+				}),
 			},
 		},
 	},

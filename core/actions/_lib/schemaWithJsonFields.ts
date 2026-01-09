@@ -12,6 +12,11 @@ export const isJsonTemplate = (value: unknown): value is string => {
 	return typeof value === "string" && value.startsWith("<<<") && value.endsWith(">>>")
 }
 
+// helper to check if a value needs interpolation
+export const needsInterpolation = (value: string): boolean => {
+	return value.includes("{{") || value.includes("$.") || value.startsWith("<<<")
+}
+
 export const wrapInJsonata = (value: string) => {
 	return `<<<${value.replace(/^<*|>*$/gs, "")}>>>`
 }

@@ -36,7 +36,7 @@ export function ActionFieldJsonataInput(props: {
 							JSONata
 						</TooltipTrigger>
 						{/* TODO: write actual docs */}
-						<TooltipContent className="prose max-w-sm text-xs">
+						<TooltipContent className="prose dark:prose-invert max-w-sm text-xs">
 							You can write
 							<a
 								href="https://jsonata.org/"
