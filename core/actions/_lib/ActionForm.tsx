@@ -143,8 +143,8 @@ export function ActionForm(props: ActionFormProps) {
 			<Button
 				variant="outline"
 				type="button"
-				// className={props.secondaryButton?.className}
-				className="sr-only"
+				size="sm"
+				className={props.secondaryButton?.className}
 				onClick={props.secondaryButton.onClick}
 			>
 				{props.secondaryButton?.text}
