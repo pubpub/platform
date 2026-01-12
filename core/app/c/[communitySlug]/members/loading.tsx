@@ -1,6 +1,7 @@
 import { Users } from "ui/icon"
-import { Skeleton } from "ui/skeleton"
 
+import { SkeletonMemberCardList } from "~/app/components/skeletons/SkeletonMemberCard"
+import { SkeletonSearch } from "~/app/components/skeletons/SkeletonSearch"
 import {
 	ContentLayoutActionsSkeleton,
 	ContentLayoutBody,
@@ -20,17 +21,9 @@ export default function Loading() {
 				<ContentLayoutActionsSkeleton />
 			</ContentLayoutHeader>
 			<ContentLayoutBody>
-				<div className="m-4 space-y-3">
-					{Array.from({ length: 6 }).map((_, idx) => (
-						<div key={idx} className="flex items-center gap-3 rounded-lg border p-4">
-							<Skeleton className="size-10 rounded-full" />
-							<div className="flex-1 space-y-2">
-								<Skeleton className="h-4 w-32" />
-								<Skeleton className="h-3 w-48" />
-							</div>
-							<Skeleton className="h-6 w-20" />
-						</div>
-					))}
+				<div className="m-4 mt-5 flex flex-col gap-6">
+					<SkeletonSearch buttons={0} />
+					<SkeletonMemberCardList amount={6} />
 				</div>
 			</ContentLayoutBody>
 		</ContentLayoutRoot>

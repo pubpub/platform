@@ -18,7 +18,13 @@ export default function Loading() {
 				</ContentLayoutTitle>
 			</ContentLayoutHeader>
 			<ContentLayoutBody>
-				<div className="space-y-2 p-4">
+				<div className="flex flex-col gap-2 p-4">
+					<div className="flex w-full items-center gap-2">
+						<Skeleton className="mb-8 h-9 flex-1" />
+						<Skeleton className="mb-8 h-9 w-20" />
+						<Skeleton className="mb-8 h-9 w-20" />
+						<Skeleton className="mb-8 h-9 w-25" />
+					</div>
 					{Array.from({ length: 8 }).map((_, idx) => (
 						<div key={idx} className="flex items-center gap-3 rounded-lg border p-3">
 							<Skeleton className="size-8 rounded-full" />

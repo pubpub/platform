@@ -26,7 +26,7 @@ export default function Loading() {
 			<ContentLayoutBody>
 				<div className="m-4 max-w-(--breakpoint-lg) space-y-4">
 					{Array.from({ length: 3 }).map((_, idx) => (
-						<div key={idx} className="rounded-lg border p-4">
+						<div key={idx} className="rounded-lg p-4">
 							<Skeleton className="mb-2 h-6 w-32" />
 							<div className="space-y-2">
 								{Array.from({ length: 2 }).map((_, pubIdx) => (

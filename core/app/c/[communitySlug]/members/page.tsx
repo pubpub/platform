@@ -87,7 +87,7 @@ export default async function Page(props: {
 				/>
 			}
 		>
-			<div className="m-4">
+			<div className="m-4 mt-1">
 				<MembersCardList
 					members={flatMembers}
 					membershipType={MembershipType.community}

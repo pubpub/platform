@@ -360,7 +360,7 @@ export const ContentLayout = ({
 				<LegacyHeading title={title} left={left} right={right} />
 				<div
 					className={cn(
-						"h-full flex-1 overflow-auto rounded-tl-xl bg-background",
+						"relative h-full flex-1 overflow-auto rounded-tl-xl bg-background",
 						className
 					)}
 				>

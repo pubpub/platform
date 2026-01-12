@@ -1,7 +1,10 @@
 import { BookOpen } from "lucide-react"
 
-import { Skeleton } from "ui/skeleton"
-
+import {
+	SkeletonSearchBar,
+	SkeletonSearchButton,
+	SkeletonSearchRoot,
+} from "~/app/components/skeletons/SkeletonSearch"
 import {
 	ContentLayoutActionsSkeleton,
 	ContentLayoutBody,
@@ -21,13 +24,13 @@ export default function Loading() {
 				</ContentLayoutTitle>
 				<ContentLayoutActionsSkeleton count={2} />
 			</ContentLayoutHeader>
-			<ContentLayoutBody className="overflow-hidden p-4">
-				<div className="flex w-full items-center gap-2">
-					<Skeleton className="mb-8 h-9 flex-1" />
-					<Skeleton className="mb-8 h-9 w-20" />
-					<Skeleton className="mb-8 h-9 w-20" />
-					<Skeleton className="mb-8 h-9 w-25" />
-				</div>
+			<ContentLayoutBody className="flex flex-col gap-8 overflow-hidden p-4">
+				<SkeletonSearchRoot>
+					<SkeletonSearchBar />
+					<SkeletonSearchButton />
+					<SkeletonSearchButton />
+					<SkeletonSearchButton />
+				</SkeletonSearchRoot>
 				<PubListSkeleton amount={10} />
 			</ContentLayoutBody>
 		</ContentLayoutRoot>

@@ -138,8 +138,8 @@ export const NewTypeForm = ({
 						name="name"
 						render={({ field, fieldState }) => (
 							<Field data-invalid={fieldState.invalid}>
-								<FieldLabel>Type Name</FieldLabel>
-								<Input placeholder="Name" {...field} />
+								<FieldLabel htmlFor="name">Type Name</FieldLabel>
+								<Input placeholder="Name" {...field} id="name" />
 								<FieldError errors={[fieldState.error]} />
 							</Field>
 						)}
@@ -149,8 +149,8 @@ export const NewTypeForm = ({
 						name="description"
 						render={({ field, fieldState }) => (
 							<Field data-invalid={fieldState.invalid}>
-								<FieldLabel>Description</FieldLabel>
-								<Input placeholder="Description" {...field} />
+								<FieldLabel htmlFor="description">Description</FieldLabel>
+								<Input placeholder="Description" {...field} id="description" />
 								<FieldError errors={[fieldState.error]} />
 							</Field>
 						)}
@@ -182,11 +182,12 @@ export const FieldSelector = ({
 			render={({ field, fieldState }) => (
 				<Field data-invalid={fieldState.invalid}>
 					<FieldContent>
-						<FieldLabel>Fields</FieldLabel>
+						<FieldLabel htmlFor="fields">Fields</FieldLabel>
 						<FieldDescription>
 							Select the fields that will be included in the type (minimum of 1).
 						</FieldDescription>
 						<MultiSelect
+							id="fields"
 							onValueChange={field.onChange}
 							defaultValue={field.value}
 							options={Object.values(pubFields).map((field) => ({

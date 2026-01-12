@@ -159,9 +159,9 @@ export const PubListSkeleton = ({
 }) => (
 	<div className={cn(["flex flex-col gap-3", className])}>
 		{Array.from({ length: amount }).map((_, index) => (
-			<Skeleton
+			<div
 				key={index}
-				className="flex h-[94px] w-full flex-col gap-2 px-4 py-3 md:max-w-(--breakpoint-lg)"
+				className="flex h-[94px] w-full flex-col gap-2 rounded-lg border border-card bg-card px-4 py-3 md:max-w-(--breakpoint-lg)"
 			>
 				<div className="flex items-start gap-1">
 					<Skeleton className="h-5 w-24" />
@@ -171,7 +171,7 @@ export const PubListSkeleton = ({
 				<div className="flex items-start gap-1 opacity-50">
 					<Skeleton className="h-4 w-30" />
 				</div>
-			</Skeleton>
+			</div>
 		))}
 	</div>
 )
