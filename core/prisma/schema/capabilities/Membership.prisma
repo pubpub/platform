@@ -19,6 +19,7 @@ model MemberGroup {
     pubMemberships       PubMembership[]
     stageMemberships     StageMembership[]
 
+    @@index([communityId])
     @@map(name: "member_groups")
 }
 
@@ -41,6 +42,9 @@ model CommunityMembership {
     // Indices defined manually in migration to handle null formId case
     // @@unique([communityId, userId, formId])
     // @@unique([communityId, memberGroupId, formId])
+    @@index([communityId])
+    @@index([userId])
+    @@index([memberGroupId])
     @@map(name: "community_memberships")
 }
 
@@ -64,6 +68,9 @@ model PubMembership {
     // Indices defined manually in migration to handle null formId case
     // @@unique([pubId, userId, formId])
     // @@unique([pubId, memberGroupId, formId])
+    @@index([pubId])
+    @@index([userId])
+    @@index([memberGroupId])
     @@map(name: "pub_memberships")
 }
 
@@ -87,6 +94,9 @@ model StageMembership {
     // Indices defined manually in migration to handle null formId case
     // @@unique([stageId, userId, formId])
     // @@unique([stageId, memberGroupId, formId])
+    @@index([stageId])
+    @@index([userId])
+    @@index([memberGroupId])
     @@map(name: "stage_memberships")
 }
 
@@ -102,5 +112,7 @@ model MembershipCapabilities {
     capability Capabilities
 
     @@id([role, type, capability])
+    @@index([role, type])
+    @@index([capability])
     @@map(name: "membership_capabilities")
 }

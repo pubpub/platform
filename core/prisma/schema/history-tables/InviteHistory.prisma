@@ -23,5 +23,7 @@ model InviteHistory {
   // set to `system` if the change was made by the system, eg during seeds
   other            String?
 
+  @@index([userId])
+  @@index([actionRunId])
   @@map(name: "invites_history")
 }
