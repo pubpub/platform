@@ -1,11 +1,11 @@
 import type { Database } from "db/Database"
-import type { AutomationEvent, AutomationsId, StagesId, UsersId } from "db/public"
+import type { AutomationEvent, AutomationsId, CommunitiesId, StagesId, UsersId } from "db/public"
 import type { ConditionBlock, FullAutomation } from "db/types"
 import type { IconConfig } from "ui/dynamic-icon"
 
-import { cache } from "react"
 import { type Kysely, sql } from "kysely"
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
+import { cache } from "react"
 
 import { getAutomationRunStatus } from "~/actions/results"
 import { db } from "~/kysely/database"
@@ -133,10 +133,12 @@ export const getStageMembers = cache((stageId: StagesId) => {
 	)
 })
 
-export type GetEventAutomationOptions =
-	| { trx: Kysely<Database>; event?: never; sourceAutomationId?: never }
+export type GetEventAutomationOptions = {
+	trx?: Kysely<Database>
+	communityId?: CommunitiesId
+} & (
+	| { event?: never; sourceAutomationId?: never }
 	| {
-			trx?: Kysely<Database>
 			event:
 				| AutomationEvent.pubInStageForDuration
 				| AutomationEvent.webhook
@@ -144,10 +146,10 @@ export type GetEventAutomationOptions =
 			sourceAutomationId?: never
 	  }
 	| {
-			trx?: Kysely<Database>
 			event: AutomationEvent.automationFailed | AutomationEvent.automationSucceeded
 			sourceAutomationId: AutomationsId
 	  }
+)
 
 export const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
 	const trx = options?.trx ?? db
@@ -165,6 +167,9 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 			"automations.icon",
 			"automations.resolver",
 		])
+		.$if(!!options?.communityId, (qb) =>
+			qb.where("automations.communityId", "=", options?.communityId as CommunitiesId)
+		)
 		.select((eb) => [
 			jsonArrayFrom(
 				eb
@@ -172,13 +177,17 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 					.selectAll("automation_triggers")
 					.whereRef("automation_triggers.automationId", "=", "automations.id")
 					.$if(!!options?.event, (qb) =>
-						qb.where("automation_triggers.event", "=", options!.event!)
+						qb.where(
+							"automation_triggers.event",
+							"=",
+							options?.event as AutomationEvent
+						)
 					)
 					.$if(!!options?.sourceAutomationId, (qb) =>
 						qb.where(
 							"automation_triggers.sourceAutomationId",
 							"=",
-							options!.sourceAutomationId!
+							options?.sourceAutomationId as AutomationsId
 						)
 					)
 			)
@@ -234,12 +243,12 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 					eb
 						.selectFrom("automation_triggers")
 						.whereRef("automation_triggers.automationId", "=", "automations.id")
-						.where("automation_triggers.event", "=", options!.event!)
+						.where("automation_triggers.event", "=", options?.event as AutomationEvent)
 						.$if(!!options?.sourceAutomationId, (qb) =>
 							qb.where(
 								"automation_triggers.sourceAutomationId",
 								"=",
-								options!.sourceAutomationId!
+								options?.sourceAutomationId as AutomationsId
 							)
 						)
 				)
