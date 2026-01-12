@@ -22,21 +22,21 @@ export interface PubFieldsTable {
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
-	pubFieldSchemaId: ColumnType<
-		PubFieldSchemaId | null,
-		PubFieldSchemaId | null,
-		PubFieldSchemaId | null
-	>
-
 	slug: ColumnType<string, string, string>
 
 	schemaName: ColumnType<CoreSchemaType | null, CoreSchemaType | null, CoreSchemaType | null>
 
 	isArchived: ColumnType<boolean, boolean | undefined, boolean>
 
+	isRelation: ColumnType<boolean, boolean | undefined, boolean>
+
 	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
 
-	isRelation: ColumnType<boolean, boolean | undefined, boolean>
+	pubFieldSchemaId: ColumnType<
+		PubFieldSchemaId | null,
+		PubFieldSchemaId | null,
+		PubFieldSchemaId | null
+	>
 }
 
 export type PubFields = Selectable<PubFieldsTable>
@@ -52,12 +52,12 @@ export const pubFieldsSchema = z.object({
 	name: z.string(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	pubFieldSchemaId: pubFieldSchemaIdSchema.nullable(),
 	slug: z.string(),
 	schemaName: coreSchemaTypeSchema.nullable(),
 	isArchived: z.boolean(),
-	communityId: communitiesIdSchema,
 	isRelation: z.boolean(),
+	communityId: communitiesIdSchema,
+	pubFieldSchemaId: pubFieldSchemaIdSchema.nullable(),
 })
 
 export const pubFieldsInitializerSchema = z.object({
@@ -65,12 +65,12 @@ export const pubFieldsInitializerSchema = z.object({
 	name: z.string(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 	slug: z.string(),
 	schemaName: coreSchemaTypeSchema.optional().nullable(),
 	isArchived: z.boolean().optional(),
-	communityId: communitiesIdSchema,
 	isRelation: z.boolean().optional(),
+	communityId: communitiesIdSchema,
+	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 })
 
 export const pubFieldsMutatorSchema = z.object({
@@ -78,10 +78,10 @@ export const pubFieldsMutatorSchema = z.object({
 	name: z.string().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 	slug: z.string().optional(),
 	schemaName: coreSchemaTypeSchema.optional().nullable(),
 	isArchived: z.boolean().optional(),
-	communityId: communitiesIdSchema.optional(),
 	isRelation: z.boolean().optional(),
+	communityId: communitiesIdSchema.optional(),
+	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 })

@@ -17,21 +17,21 @@ export type PubValuesId = string & { __brand: "PubValuesId" }
 export interface PubValuesTable {
 	id: ColumnType<PubValuesId, PubValuesId | undefined, PubValuesId>
 
-	fieldId: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>
-
 	value: ColumnType<unknown | null, unknown | null, unknown | null>
-
-	pubId: ColumnType<PubsId, PubsId, PubsId>
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
-	relatedPubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
-
 	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>
 
 	rank: ColumnType<string | null, string | null, string | null>
+
+	fieldId: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>
+
+	pubId: ColumnType<PubsId, PubsId, PubsId>
+
+	relatedPubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
 }
 
 export type PubValues = Selectable<PubValuesTable>
@@ -44,36 +44,36 @@ export const pubValuesIdSchema = z.string().uuid() as unknown as z.Schema<PubVal
 
 export const pubValuesSchema = z.object({
 	id: pubValuesIdSchema,
-	fieldId: pubFieldsIdSchema,
 	value: z.unknown().nullable(),
-	pubId: pubsIdSchema,
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	relatedPubId: pubsIdSchema.nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
 	rank: z.string().nullable(),
+	fieldId: pubFieldsIdSchema,
+	pubId: pubsIdSchema,
+	relatedPubId: pubsIdSchema.nullable(),
 })
 
 export const pubValuesInitializerSchema = z.object({
 	id: pubValuesIdSchema.optional(),
-	fieldId: pubFieldsIdSchema,
 	value: z.unknown().optional().nullable(),
-	pubId: pubsIdSchema,
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	relatedPubId: pubsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
 	rank: z.string().optional().nullable(),
+	fieldId: pubFieldsIdSchema,
+	pubId: pubsIdSchema,
+	relatedPubId: pubsIdSchema.optional().nullable(),
 })
 
 export const pubValuesMutatorSchema = z.object({
 	id: pubValuesIdSchema.optional(),
-	fieldId: pubFieldsIdSchema.optional(),
 	value: z.unknown().optional().nullable(),
-	pubId: pubsIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	relatedPubId: pubsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema.optional(),
 	rank: z.string().optional().nullable(),
+	fieldId: pubFieldsIdSchema.optional(),
+	pubId: pubsIdSchema.optional(),
+	relatedPubId: pubsIdSchema.optional().nullable(),
 })

@@ -294,6 +294,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	})
 
 	const result = await maybeWithTrx(trx, async (trx) => {
+		logger.debug("Creating new Pub")
 		const newPub = await autoRevalidate(
 			trx
 				.insertInto("pubs")
@@ -306,6 +307,8 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		).executeTakeFirstOrThrow()
 
 		let createdStageId: StagesId | undefined
+
+		logger.debug("Creating new Pub Stage")
 		if (stageId) {
 			const result = await autoRevalidate(
 				trx
@@ -321,6 +324,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		}
 
 		if (body.members && Object.keys(body.members).length) {
+			logger.debug("Creating new Pub Memberships")
 			const _res = await trx
 				.insertInto("pub_memberships")
 				.values(
@@ -340,6 +344,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			trx,
 		})
 
+		logger.debug("Creating new Pub Values")
 		const pubValues = valuesWithFieldIds.length
 			? await autoRevalidate(
 					trx
@@ -359,6 +364,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				).execute()
 			: []
 
+		logger.debug("Getting plain Pub")
 		const pub = await getPlainPub(newPub.id, trx).executeTakeFirstOrThrow()
 
 		const hydratedValues = pubValues.map((v) => {
@@ -382,6 +388,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			} satisfies ProcessedPub
 		}
 
+		logger.debug("Upserting related Pubs")
 		// this fn itself calls createPubRecursiveNew, be mindful of infinite loops
 		const relatedPubs = await upsertPubRelations(
 			{
@@ -1421,7 +1428,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						"PubsInStages.stageId",
 						sql<number>`1`.as("depth"),
 						sql<boolean>`false`.as("isCycle"),
-						sql<PubsId[]>`array[p.id]`.as("path"),
+						sql<PubsId[]>`array[p.id]::uuid[]`.as("path"),
 					])
 
 					// we don't even need to recurse if we don't want related pubs
@@ -1544,8 +1551,10 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 									// we keep track of the path we've taken so far,
 									// and set a flag if we see a pub that is already in the path
 									// https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-CYCLE
-									sql<boolean>`pubs.id = any(pub_tree."path")`.as("isCycle"),
-									sql<PubsId[]>`array_append(pub_tree."path", pubs.id)`.as(
+									sql<boolean>`pubs.id = any(pub_tree."path"::uuid[])`.as(
+										"isCycle"
+									),
+									sql<PubsId[]>`array_append(pub_tree."path", pubs.id::uuid)`.as(
 										"path"
 									),
 								])
@@ -1553,7 +1562,11 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								.where("pub_tree.isCycle", "=", false)
 								.$if(cycle === "exclude", (qb) =>
 									// this makes sure we don't include the first pub that is part of a cycle
-									qb.where(sql<boolean>`pubs.id = any(pub_tree.path)`, "=", false)
+									qb.where(
+										sql<boolean>`pubs.id = any(pub_tree.path::uuid[])`,
+										"=",
+										false
+									)
 								)
 						)
 					)
@@ -1611,7 +1624,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.$if(!props.userId, (qb) =>
 						qb.select((eb) => [
 							sql<MemberRole>`${MemberRole.admin}::"MemberRole"`.as("role"),
-							eb.val(props.communityId).as("membId"),
+							sql<CommunitiesId>`${props.communityId}::uuid`.as("membId"),
 							sql<MembershipType>`'community'::"MembershipType"`.as("type"),
 						])
 					)
@@ -1640,7 +1653,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 										sql<MemberRole>`${MemberRole.admin}::"MemberRole"`.as(
 											"role"
 										),
-										eb.val(props.communityId).as("membId"),
+										sql<CommunitiesId>`${props.communityId}::uuid`.as("membId"),
 										sql<MembershipType>`'community'::"MembershipType"`.as(
 											"type"
 										),

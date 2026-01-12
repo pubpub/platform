@@ -18,29 +18,29 @@ export type AutomationRunsId = string & { __brand: "AutomationRunsId" }
 export interface AutomationRunsTable {
 	id: ColumnType<AutomationRunsId, AutomationRunsId | undefined, AutomationRunsId>
 
-	automationId: ColumnType<AutomationsId, AutomationsId, AutomationsId>
-
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
-	sourceAutomationRunId: ColumnType<
-		AutomationRunsId | null,
-		AutomationRunsId | null,
-		AutomationRunsId | null
-	>
-
 	inputJson: ColumnType<unknown | null, unknown | null, unknown | null>
-
-	inputPubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
-
-	sourceUserId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
 
 	triggerConfig: ColumnType<unknown | null, unknown | null, unknown | null>
 
 	triggerEvent: ColumnType<AutomationEvent, AutomationEvent, AutomationEvent>
 
 	status: ColumnType<ActionRunStatus | null, ActionRunStatus | null, ActionRunStatus | null>
+
+	automationId: ColumnType<AutomationsId, AutomationsId, AutomationsId>
+
+	sourceUserId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
+
+	inputPubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
+
+	sourceAutomationRunId: ColumnType<
+		AutomationRunsId | null,
+		AutomationRunsId | null,
+		AutomationRunsId | null
+	>
 }
 
 export type AutomationRuns = Selectable<AutomationRunsTable>
@@ -53,42 +53,42 @@ export const automationRunsIdSchema = z.string().uuid() as unknown as z.Schema<A
 
 export const automationRunsSchema = z.object({
 	id: automationRunsIdSchema,
-	automationId: automationsIdSchema,
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	sourceAutomationRunId: automationRunsIdSchema.nullable(),
 	inputJson: z.unknown().nullable(),
-	inputPubId: pubsIdSchema.nullable(),
-	sourceUserId: usersIdSchema.nullable(),
 	triggerConfig: z.unknown().nullable(),
 	triggerEvent: automationEventSchema,
 	status: actionRunStatusSchema.nullable(),
+	automationId: automationsIdSchema,
+	sourceUserId: usersIdSchema.nullable(),
+	inputPubId: pubsIdSchema.nullable(),
+	sourceAutomationRunId: automationRunsIdSchema.nullable(),
 })
 
 export const automationRunsInitializerSchema = z.object({
 	id: automationRunsIdSchema.optional(),
-	automationId: automationsIdSchema,
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	sourceAutomationRunId: automationRunsIdSchema.optional().nullable(),
 	inputJson: z.unknown().optional().nullable(),
-	inputPubId: pubsIdSchema.optional().nullable(),
-	sourceUserId: usersIdSchema.optional().nullable(),
 	triggerConfig: z.unknown().optional().nullable(),
 	triggerEvent: automationEventSchema,
 	status: actionRunStatusSchema.optional().nullable(),
+	automationId: automationsIdSchema,
+	sourceUserId: usersIdSchema.optional().nullable(),
+	inputPubId: pubsIdSchema.optional().nullable(),
+	sourceAutomationRunId: automationRunsIdSchema.optional().nullable(),
 })
 
 export const automationRunsMutatorSchema = z.object({
 	id: automationRunsIdSchema.optional(),
-	automationId: automationsIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	sourceAutomationRunId: automationRunsIdSchema.optional().nullable(),
 	inputJson: z.unknown().optional().nullable(),
-	inputPubId: pubsIdSchema.optional().nullable(),
-	sourceUserId: usersIdSchema.optional().nullable(),
 	triggerConfig: z.unknown().optional().nullable(),
 	triggerEvent: automationEventSchema.optional(),
 	status: actionRunStatusSchema.optional().nullable(),
+	automationId: automationsIdSchema.optional(),
+	sourceUserId: usersIdSchema.optional().nullable(),
+	inputPubId: pubsIdSchema.optional().nullable(),
+	sourceAutomationRunId: automationRunsIdSchema.optional().nullable(),
 })

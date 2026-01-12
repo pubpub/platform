@@ -25,12 +25,6 @@ export interface AutomationConditionsTable {
 		AutomationConditionsId
 	>
 
-	automationConditionBlockId: ColumnType<
-		AutomationConditionBlocksId,
-		AutomationConditionBlocksId,
-		AutomationConditionBlocksId
-	>
-
 	rank: ColumnType<string, string, string>
 
 	type: ColumnType<AutomationConditionType, AutomationConditionType, AutomationConditionType>
@@ -40,6 +34,12 @@ export interface AutomationConditionsTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
+
+	automationConditionBlockId: ColumnType<
+		AutomationConditionBlocksId,
+		AutomationConditionBlocksId,
+		AutomationConditionBlocksId
+	>
 }
 
 export type AutomationConditions = Selectable<AutomationConditionsTable>
@@ -54,30 +54,30 @@ export const automationConditionsIdSchema = z
 
 export const automationConditionsSchema = z.object({
 	id: automationConditionsIdSchema,
-	automationConditionBlockId: automationConditionBlocksIdSchema,
 	rank: z.string(),
 	type: automationConditionTypeSchema,
 	expression: z.string(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	automationConditionBlockId: automationConditionBlocksIdSchema,
 })
 
 export const automationConditionsInitializerSchema = z.object({
 	id: automationConditionsIdSchema.optional(),
-	automationConditionBlockId: automationConditionBlocksIdSchema,
 	rank: z.string(),
 	type: automationConditionTypeSchema,
 	expression: z.string(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	automationConditionBlockId: automationConditionBlocksIdSchema,
 })
 
 export const automationConditionsMutatorSchema = z.object({
 	id: automationConditionsIdSchema.optional(),
-	automationConditionBlockId: automationConditionBlocksIdSchema.optional(),
 	rank: z.string().optional(),
 	type: automationConditionTypeSchema.optional(),
 	expression: z.string().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	automationConditionBlockId: automationConditionBlocksIdSchema.optional(),
 })

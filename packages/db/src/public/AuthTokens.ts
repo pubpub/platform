@@ -23,11 +23,11 @@ export interface AuthTokensTable {
 
 	isUsed: ColumnType<boolean, boolean | undefined, boolean>
 
-	userId: ColumnType<UsersId, UsersId, UsersId>
-
 	type: ColumnType<AuthTokenType, AuthTokenType | undefined, AuthTokenType>
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
+
+	userId: ColumnType<UsersId, UsersId, UsersId>
 }
 
 export type AuthTokens = Selectable<AuthTokensTable>
@@ -44,9 +44,9 @@ export const authTokensSchema = z.object({
 	createdAt: z.date(),
 	expiresAt: z.date(),
 	isUsed: z.boolean(),
-	userId: usersIdSchema,
 	type: authTokenTypeSchema,
 	updatedAt: z.date(),
+	userId: usersIdSchema,
 })
 
 export const authTokensInitializerSchema = z.object({
@@ -55,9 +55,9 @@ export const authTokensInitializerSchema = z.object({
 	createdAt: z.date().optional(),
 	expiresAt: z.date(),
 	isUsed: z.boolean().optional(),
-	userId: usersIdSchema,
 	type: authTokenTypeSchema.optional(),
 	updatedAt: z.date().optional(),
+	userId: usersIdSchema,
 })
 
 export const authTokensMutatorSchema = z.object({
@@ -66,7 +66,7 @@ export const authTokensMutatorSchema = z.object({
 	createdAt: z.date().optional(),
 	expiresAt: z.date().optional(),
 	isUsed: z.boolean().optional(),
-	userId: usersIdSchema.optional(),
 	type: authTokenTypeSchema.optional(),
 	updatedAt: z.date().optional(),
+	userId: usersIdSchema.optional(),
 })

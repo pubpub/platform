@@ -14,15 +14,15 @@ export type ApiAccessLogsId = string & { __brand: "ApiAccessLogsId" }
 export interface ApiAccessLogsTable {
 	id: ColumnType<ApiAccessLogsId, ApiAccessLogsId | undefined, ApiAccessLogsId>
 
+	timestamp: ColumnType<Date, Date | string | undefined, Date | string>
+
+	action: ColumnType<string, string, string>
+
 	accessTokenId: ColumnType<
 		ApiAccessTokensId | null,
 		ApiAccessTokensId | null,
 		ApiAccessTokensId | null
 	>
-
-	timestamp: ColumnType<Date, Date | string | undefined, Date | string>
-
-	action: ColumnType<string, string, string>
 }
 
 export type ApiAccessLogs = Selectable<ApiAccessLogsTable>
@@ -35,21 +35,21 @@ export const apiAccessLogsIdSchema = z.string().uuid() as unknown as z.Schema<Ap
 
 export const apiAccessLogsSchema = z.object({
 	id: apiAccessLogsIdSchema,
-	accessTokenId: apiAccessTokensIdSchema.nullable(),
 	timestamp: z.date(),
 	action: z.string(),
+	accessTokenId: apiAccessTokensIdSchema.nullable(),
 })
 
 export const apiAccessLogsInitializerSchema = z.object({
 	id: apiAccessLogsIdSchema.optional(),
-	accessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	timestamp: z.date().optional(),
 	action: z.string(),
+	accessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 })
 
 export const apiAccessLogsMutatorSchema = z.object({
 	id: apiAccessLogsIdSchema.optional(),
-	accessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	timestamp: z.date().optional(),
 	action: z.string().optional(),
+	accessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 })

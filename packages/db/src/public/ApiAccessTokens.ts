@@ -21,17 +21,17 @@ export interface ApiAccessTokensTable {
 
 	description: ColumnType<string | null, string | null, string | null>
 
-	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
-
 	expiration: ColumnType<Date, Date | string, Date | string>
-
-	issuedById: ColumnType<UsersId | null, UsersId | null, UsersId | null>
 
 	issuedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	isSiteBuilderToken: ColumnType<boolean, boolean | undefined, boolean>
+
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
+
+	issuedById: ColumnType<UsersId | null, UsersId | null, UsersId | null>
 }
 
 export type ApiAccessTokens = Selectable<ApiAccessTokensTable>
@@ -47,12 +47,12 @@ export const apiAccessTokensSchema = z.object({
 	token: z.string(),
 	name: z.string(),
 	description: z.string().nullable(),
-	communityId: communitiesIdSchema,
 	expiration: z.date(),
-	issuedById: usersIdSchema.nullable(),
 	issuedAt: z.date(),
 	updatedAt: z.date(),
 	isSiteBuilderToken: z.boolean(),
+	communityId: communitiesIdSchema,
+	issuedById: usersIdSchema.nullable(),
 })
 
 export const apiAccessTokensInitializerSchema = z.object({
@@ -60,12 +60,12 @@ export const apiAccessTokensInitializerSchema = z.object({
 	token: z.string(),
 	name: z.string(),
 	description: z.string().optional().nullable(),
-	communityId: communitiesIdSchema,
 	expiration: z.date(),
-	issuedById: usersIdSchema.optional().nullable(),
 	issuedAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	isSiteBuilderToken: z.boolean().optional(),
+	communityId: communitiesIdSchema,
+	issuedById: usersIdSchema.optional().nullable(),
 })
 
 export const apiAccessTokensMutatorSchema = z.object({
@@ -73,10 +73,10 @@ export const apiAccessTokensMutatorSchema = z.object({
 	token: z.string().optional(),
 	name: z.string().optional(),
 	description: z.string().optional().nullable(),
-	communityId: communitiesIdSchema.optional(),
 	expiration: z.date().optional(),
-	issuedById: usersIdSchema.optional().nullable(),
 	issuedAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	isSiteBuilderToken: z.boolean().optional(),
+	communityId: communitiesIdSchema.optional(),
+	issuedById: usersIdSchema.optional().nullable(),
 })

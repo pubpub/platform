@@ -1,5 +1,5 @@
 model InviteHistory {
-  id            String        @id @default(dbgenerated("gen_random_uuid()"))
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt     DateTime      @default(now())
   operationType OperationType
 
@@ -11,15 +11,15 @@ model InviteHistory {
   newRowData Json?
 
   // primary key of the row that was changed
-  inviteId String?
+  inviteId String? @db.Uuid
 
   // identifying information
   user             User?           @relation(fields: [userId], references: [id])
-  userId           String?
+  userId           String?         @db.Uuid
   apiAccessToken   ApiAccessToken? @relation(fields: [apiAccessTokenId], references: [id])
-  apiAccessTokenId String?
+  apiAccessTokenId String?         @db.Uuid
   actionRun        ActionRun?      @relation(fields: [actionRunId], references: [id])
-  actionRunId      String?
+  actionRunId      String?         @db.Uuid
   // set to `system` if the change was made by the system, eg during seeds
   other            String?
 

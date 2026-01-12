@@ -18,11 +18,11 @@ export interface PubTypesTable {
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
-	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
-
 	name: ColumnType<string, string, string>
 
 	description: ColumnType<string | null, string | null, string | null>
+
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
 }
 
 export type PubTypes = Selectable<PubTypesTable>
@@ -37,25 +37,25 @@ export const pubTypesSchema = z.object({
 	id: pubTypesIdSchema,
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	communityId: communitiesIdSchema,
 	name: z.string(),
 	description: z.string().nullable(),
+	communityId: communitiesIdSchema,
 })
 
 export const pubTypesInitializerSchema = z.object({
 	id: pubTypesIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	communityId: communitiesIdSchema,
 	name: z.string(),
 	description: z.string().optional().nullable(),
+	communityId: communitiesIdSchema,
 })
 
 export const pubTypesMutatorSchema = z.object({
 	id: pubTypesIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	communityId: communitiesIdSchema.optional(),
 	name: z.string().optional(),
 	description: z.string().optional().nullable(),
+	communityId: communitiesIdSchema.optional(),
 })

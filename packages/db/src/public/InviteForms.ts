@@ -14,11 +14,11 @@ export type InviteFormsType = MembershipType
 
 /** Represents the table public.invite_forms */
 export interface InviteFormsTable {
+	type: ColumnType<InviteFormsType, InviteFormsType, InviteFormsType>
+
 	inviteId: ColumnType<InvitesId, InvitesId, InvitesId>
 
 	formId: ColumnType<FormsId, FormsId, FormsId>
-
-	type: ColumnType<InviteFormsType, InviteFormsType, InviteFormsType>
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
 
@@ -34,25 +34,25 @@ export type InviteFormsUpdate = Updateable<InviteFormsTable>
 export const inviteFormsTypeSchema = membershipTypeSchema as unknown as z.Schema<InviteFormsType>
 
 export const inviteFormsSchema = z.object({
+	type: inviteFormsTypeSchema,
 	inviteId: invitesIdSchema,
 	formId: formsIdSchema,
-	type: inviteFormsTypeSchema,
 	createdAt: z.date(),
 	updatedAt: z.date(),
 })
 
 export const inviteFormsInitializerSchema = z.object({
+	type: inviteFormsTypeSchema,
 	inviteId: invitesIdSchema,
 	formId: formsIdSchema,
-	type: inviteFormsTypeSchema,
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 })
 
 export const inviteFormsMutatorSchema = z.object({
+	type: inviteFormsTypeSchema.optional(),
 	inviteId: invitesIdSchema.optional(),
 	formId: formsIdSchema.optional(),
-	type: inviteFormsTypeSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 })

@@ -15,17 +15,17 @@ export type AutomationTriggersId = string & { __brand: "AutomationTriggersId" }
 export interface AutomationTriggersTable {
 	id: ColumnType<AutomationTriggersId, AutomationTriggersId | undefined, AutomationTriggersId>
 
-	automationId: ColumnType<AutomationsId, AutomationsId, AutomationsId>
-
 	event: ColumnType<AutomationEvent, AutomationEvent, AutomationEvent>
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>
 
-	sourceAutomationId: ColumnType<AutomationsId | null, AutomationsId | null, AutomationsId | null>
-
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
+
+	automationId: ColumnType<AutomationsId, AutomationsId, AutomationsId>
+
+	sourceAutomationId: ColumnType<AutomationsId | null, AutomationsId | null, AutomationsId | null>
 }
 
 export type AutomationTriggers = Selectable<AutomationTriggersTable>
@@ -40,30 +40,30 @@ export const automationTriggersIdSchema = z
 
 export const automationTriggersSchema = z.object({
 	id: automationTriggersIdSchema,
-	automationId: automationsIdSchema,
 	event: automationEventSchema,
 	config: z.unknown().nullable(),
-	sourceAutomationId: automationsIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	automationId: automationsIdSchema,
+	sourceAutomationId: automationsIdSchema.nullable(),
 })
 
 export const automationTriggersInitializerSchema = z.object({
 	id: automationTriggersIdSchema.optional(),
-	automationId: automationsIdSchema,
 	event: automationEventSchema,
 	config: z.unknown().optional().nullable(),
-	sourceAutomationId: automationsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	automationId: automationsIdSchema,
+	sourceAutomationId: automationsIdSchema.optional().nullable(),
 })
 
 export const automationTriggersMutatorSchema = z.object({
 	id: automationTriggersIdSchema.optional(),
-	automationId: automationsIdSchema.optional(),
 	event: automationEventSchema.optional(),
 	config: z.unknown().optional().nullable(),
-	sourceAutomationId: automationsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	automationId: automationsIdSchema.optional(),
+	sourceAutomationId: automationsIdSchema.optional().nullable(),
 })

@@ -20,14 +20,6 @@ export type ActionRunsId = string & { __brand: "ActionRunsId" }
 export interface ActionRunsTable {
 	id: ColumnType<ActionRunsId, ActionRunsId | undefined, ActionRunsId>
 
-	actionInstanceId: ColumnType<
-		ActionInstancesId | null,
-		ActionInstancesId | null,
-		ActionInstancesId | null
-	>
-
-	pubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
-
 	config: ColumnType<unknown | null, unknown | null, unknown | null>
 
 	event: ColumnType<AutomationEvent | null, AutomationEvent | null, AutomationEvent | null>
@@ -35,8 +27,6 @@ export interface ActionRunsTable {
 	params: ColumnType<unknown | null, unknown | null, unknown | null>
 
 	status: ColumnType<ActionRunStatus, ActionRunStatus, ActionRunStatus>
-
-	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
 
@@ -46,13 +36,23 @@ export interface ActionRunsTable {
 
 	json: ColumnType<unknown | null, unknown | null, unknown | null>
 
+	action: ColumnType<Action | null, Action | null, Action | null>
+
+	actionInstanceId: ColumnType<
+		ActionInstancesId | null,
+		ActionInstancesId | null,
+		ActionInstancesId | null
+	>
+
 	automationRunId: ColumnType<
 		AutomationRunsId | null,
 		AutomationRunsId | null,
 		AutomationRunsId | null
 	>
 
-	action: ColumnType<Action | null, Action | null, Action | null>
+	pubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
+
+	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
 }
 
 export type ActionRuns = Selectable<ActionRunsTable>
@@ -65,51 +65,51 @@ export const actionRunsIdSchema = z.string().uuid() as unknown as z.Schema<Actio
 
 export const actionRunsSchema = z.object({
 	id: actionRunsIdSchema,
-	actionInstanceId: actionInstancesIdSchema.nullable(),
-	pubId: pubsIdSchema.nullable(),
 	config: z.unknown().nullable(),
 	event: automationEventSchema.nullable(),
 	params: z.unknown().nullable(),
 	status: actionRunStatusSchema,
-	userId: usersIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	result: z.unknown(),
 	json: z.unknown().nullable(),
-	automationRunId: automationRunsIdSchema.nullable(),
 	action: actionSchema.nullable(),
+	actionInstanceId: actionInstancesIdSchema.nullable(),
+	automationRunId: automationRunsIdSchema.nullable(),
+	pubId: pubsIdSchema.nullable(),
+	userId: usersIdSchema.nullable(),
 })
 
 export const actionRunsInitializerSchema = z.object({
 	id: actionRunsIdSchema.optional(),
-	actionInstanceId: actionInstancesIdSchema.optional().nullable(),
-	pubId: pubsIdSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
 	event: automationEventSchema.optional().nullable(),
 	params: z.unknown().optional().nullable(),
 	status: actionRunStatusSchema,
-	userId: usersIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	result: z.unknown(),
 	json: z.unknown().optional().nullable(),
-	automationRunId: automationRunsIdSchema.optional().nullable(),
 	action: actionSchema.optional().nullable(),
+	actionInstanceId: actionInstancesIdSchema.optional().nullable(),
+	automationRunId: automationRunsIdSchema.optional().nullable(),
+	pubId: pubsIdSchema.optional().nullable(),
+	userId: usersIdSchema.optional().nullable(),
 })
 
 export const actionRunsMutatorSchema = z.object({
 	id: actionRunsIdSchema.optional(),
-	actionInstanceId: actionInstancesIdSchema.optional().nullable(),
-	pubId: pubsIdSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
 	event: automationEventSchema.optional().nullable(),
 	params: z.unknown().optional().nullable(),
 	status: actionRunStatusSchema.optional(),
-	userId: usersIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	result: z.unknown().optional(),
 	json: z.unknown().optional().nullable(),
-	automationRunId: automationRunsIdSchema.optional().nullable(),
 	action: actionSchema.optional().nullable(),
+	actionInstanceId: actionInstancesIdSchema.optional().nullable(),
+	automationRunId: automationRunsIdSchema.optional().nullable(),
+	pubId: pubsIdSchema.optional().nullable(),
+	userId: usersIdSchema.optional().nullable(),
 })
