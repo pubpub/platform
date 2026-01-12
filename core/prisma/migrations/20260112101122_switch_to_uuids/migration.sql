@@ -2664,7 +2664,7 @@ BEGIN
     END IF;
   END IF;
     EXECUTE vc_insert_sql
-    USING 'update'::"OperationType", row_to_json(OLD), row_to_json(NEW), NEW."id"::uuid, v_userId, v_apiAccessTokenId, v_actionRunId, v_other;
+    USING 'update'::"OperationType", row_to_json(OLD), row_to_json(NEW), NEW."id"::uuid v_userId, v_apiAccessTokenId, v_actionRunId, v_other;
   END IF;
     RETURN NULL;
 END;
