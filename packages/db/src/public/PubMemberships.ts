@@ -20,15 +20,15 @@ export interface PubMembershipsTable {
 
 	role: ColumnType<MemberRole, MemberRole, MemberRole>
 
-	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
-
-	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
+	pubId: ColumnType<PubsId, PubsId, PubsId>
 
 	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
 
-	pubId: ColumnType<PubsId, PubsId, PubsId>
-
 	memberGroupId: ColumnType<MemberGroupsId | null, MemberGroupsId | null, MemberGroupsId | null>
+
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
+
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	formId: ColumnType<FormsId | null, FormsId | null, FormsId | null>
 }
@@ -44,32 +44,32 @@ export const pubMembershipsIdSchema = z.string().uuid() as unknown as z.Schema<P
 export const pubMembershipsSchema = z.object({
 	id: pubMembershipsIdSchema,
 	role: memberRoleSchema,
+	pubId: pubsIdSchema,
+	userId: usersIdSchema.nullable(),
+	memberGroupId: memberGroupsIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	userId: usersIdSchema.nullable(),
-	pubId: pubsIdSchema,
-	memberGroupId: memberGroupsIdSchema.nullable(),
 	formId: formsIdSchema.nullable(),
 })
 
 export const pubMembershipsInitializerSchema = z.object({
 	id: pubMembershipsIdSchema.optional(),
 	role: memberRoleSchema,
+	pubId: pubsIdSchema,
+	userId: usersIdSchema.optional().nullable(),
+	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	userId: usersIdSchema.optional().nullable(),
-	pubId: pubsIdSchema,
-	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	formId: formsIdSchema.optional().nullable(),
 })
 
 export const pubMembershipsMutatorSchema = z.object({
 	id: pubMembershipsIdSchema.optional(),
 	role: memberRoleSchema.optional(),
+	pubId: pubsIdSchema.optional(),
+	userId: usersIdSchema.optional().nullable(),
+	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	userId: usersIdSchema.optional().nullable(),
-	pubId: pubsIdSchema.optional(),
-	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	formId: formsIdSchema.optional().nullable(),
 })

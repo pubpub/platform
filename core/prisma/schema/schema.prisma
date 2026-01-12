@@ -17,7 +17,7 @@ generator comments {
 }
 
 model User {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String   @id @default(dbgenerated("gen_random_uuid()"))
   slug          String   @unique
   email         String   @unique
   firstName     String
@@ -51,7 +51,7 @@ model User {
 
 model Session {
   id        String        @id @default(dbgenerated("gen_random_uuid()"))
-  userId    String        @db.Uuid
+  userId    String
   user      User          @relation(fields: [userId], references: [id])
   expiresAt DateTime
   /// With what type of token is this session created? Used for determining on a page-by-page basis whether to allow a certain session to access it. For instance, a verify email token/session should not allow you to access the password reset page.
@@ -72,7 +72,7 @@ model AuthToken {
   expiresAt DateTime // Tokens expire within 1 week...
   isUsed    Boolean       @default(false) // ...or after one use
   user      User          @relation(fields: [userId], references: [id])
-  userId    String        @db.Uuid
+  userId    String
   type      AuthTokenType @default(generic)
 
   @@map(name: "auth_tokens")
@@ -90,7 +90,7 @@ enum AuthTokenType {
 }
 
 model Community {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   name      String
   slug      String   @unique
   avatar    String?
@@ -113,12 +113,12 @@ model Community {
 }
 
 model Pub {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   valuesBlob  Json?
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
-  pubTypeId   String    @db.Uuid
+  pubTypeId   String
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId String    @db.Uuid
+  communityId String
   createdAt   DateTime  @default(now())
   // updatedAt is also updated once a value is updated
   updatedAt   DateTime  @default(now()) @updatedAt
@@ -142,17 +142,17 @@ model Pub {
 }
 
 model PubField {
-  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
   name             String
   slug             String          @unique
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @default(now()) @updatedAt
   schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
   schemaName       CoreSchemaType?
-  pubFieldSchemaId String?         @db.Uuid
+  pubFieldSchemaId String?
   isArchived       Boolean         @default(false)
   community        Community       @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId      String          @db.Uuid
+  communityId      String
   isRelation       Boolean         @default(false)
 
   values    PubValue[]
@@ -180,7 +180,7 @@ enum CoreSchemaType {
 }
 
 model PubFieldSchema {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   namespace String
   name      String
   createdAt DateTime @default(now())
@@ -194,18 +194,18 @@ model PubFieldSchema {
 }
 
 model PubValue {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id             String   @id @default(dbgenerated("gen_random_uuid()"))
   /// @type(LastModifiedBy, '../types', true, false, true)
   lastModifiedBy String
   field          PubField @relation(fields: [fieldId], references: [id])
-  fieldId        String   @db.Uuid
+  fieldId        String
   value          Json?
   pub            Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade, name: "original_pub")
-  pubId          String   @db.Uuid
+  pubId          String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
   relatedPub     Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
-  relatedPubId   String?  @db.Uuid
+  relatedPubId   String?
 
   // Rank is only used for ordering multiple related pubs for a single field, not for ordering
   // values within a pub
@@ -221,11 +221,11 @@ enum OperationType {
 }
 
 model PubType {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   description String?
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId String    @db.Uuid
+  communityId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
@@ -239,8 +239,8 @@ model PubType {
 }
 
 model PubFieldToPubType {
-  A         String   @db.Uuid
-  B         String   @db.Uuid
+  A         String
+  B         String
   // when this changes, a trigger is run to update the title of all pubs in that pubType
   // see migrations/20241210172906_trigger_for_changing_is_title/migration.sql
   isTitle   Boolean  @default(false)
@@ -257,11 +257,11 @@ model PubFieldToPubType {
 }
 
 model Stage {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   order       String
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId String    @db.Uuid
+  communityId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
@@ -278,9 +278,9 @@ model Stage {
 
 model PubsInStages {
   pub       Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId     String   @db.Uuid
+  pubId     String
   stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId   String   @db.Uuid
+  stageId   String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
@@ -289,9 +289,9 @@ model PubsInStages {
 
 model MoveConstraint {
   stage         Stage    @relation("move_constraint", fields: [stageId], references: [id], onDelete: Cascade)
-  stageId       String   @db.Uuid
+  stageId       String
   destination   Stage    @relation("move_constraint_destination", fields: [destinationId], references: [id], onDelete: Cascade)
-  destinationId String   @db.Uuid
+  destinationId String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @default(now()) @updatedAt
 
@@ -300,13 +300,13 @@ model MoveConstraint {
 }
 
 model ActionInstance {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String     @id @default(dbgenerated("gen_random_uuid()"))
   action       Action
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @default(now()) @updatedAt
   /// @type(BaseActionInstanceConfig, '../types', true, false, true)
   config       Json?
-  automationId String     @db.Uuid
+  automationId String
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
 
   runs ActionRun[]
@@ -326,9 +326,9 @@ enum Action {
 }
 
 model ActionConfigDefault {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId String    @db.Uuid
+  communityId String
   action      Action
   config      Json?
   createdAt   DateTime  @default(now())
@@ -339,9 +339,9 @@ model ActionConfigDefault {
 }
 
 model AutomationRun {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String     @id @default(dbgenerated("gen_random_uuid()"))
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
-  automationId String     @db.Uuid
+  automationId String
 
   // status is automatically computed by database trigger compute_automation_run_status()
   // based on the aggregate status of all child action_runs
@@ -351,11 +351,11 @@ model AutomationRun {
 
   triggerEvent  AutomationEvent
   triggerConfig Json?
-  sourceUserId  String?         @db.Uuid
+  sourceUserId  String?
   sourceUser    User?           @relation(fields: [sourceUserId], references: [id], onDelete: Cascade)
 
   // db constraint: at least one of inputPubId or non-empty inputJson must be defined
-  inputPubId String? @db.Uuid
+  inputPubId String?
   inputPub   Pub?    @relation(fields: [inputPubId], references: [id], onDelete: Cascade)
   inputJson  Json?
 
@@ -364,7 +364,7 @@ model AutomationRun {
   actionRuns ActionRun[]
 
   // action run that triggered this action run
-  sourceAutomationRunId String?        @db.Uuid
+  sourceAutomationRunId String?
   sourceAutomationRun   AutomationRun? @relation("source_automation_run", fields: [sourceAutomationRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
@@ -376,15 +376,15 @@ model AutomationRun {
 // TODO: move more of the fields from ActionRun to AutomationRun
 // once we allow running multiple actions in a single automation run
 model ActionRun {
-  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
   actionInstance   ActionInstance? @relation(fields: [actionInstanceId], references: [id], onDelete: SetNull)
-  actionInstanceId String?         @db.Uuid
+  actionInstanceId String?
 
   automationRun   AutomationRun? @relation(fields: [automationRunId], references: [id])
-  automationRunId String?        @db.Uuid
+  automationRunId String?
 
   pub             Pub?              @relation(fields: [pubId], references: [id])
-  pubId           String?           @db.Uuid
+  pubId           String?
   json            Json?
   config          Json?
   action          Action?
@@ -393,7 +393,7 @@ model ActionRun {
   status          ActionRunStatus
   result          Json
   user            User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId          String?           @db.Uuid
+  userId          String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @default(now()) @updatedAt
   PubValueHistory PubValueHistory[]
@@ -412,7 +412,7 @@ enum ActionRunStatus {
 }
 
 model Automation {
-  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String  @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   description String?
   /// @type(IconConfig, '../types', true, false, true)
@@ -423,11 +423,11 @@ model Automation {
 
   // stage is nullable to allow one dummy automation per community for re-parenting deleted automation runs
   stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId String? @db.Uuid
+  stageId String?
 
   // community is required for all automations, allows dummy automations with null stageId to be community-scoped
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId String    @db.Uuid
+  communityId String
 
   conditionEvaluationTiming ConditionEvaluationTiming?
   createdAt                 DateTime                   @default(now())
@@ -451,14 +451,14 @@ enum AutomationEvent {
 }
 
 model AutomationTrigger {
-  id     String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id     String          @id @default(dbgenerated("gen_random_uuid()"))
   event  AutomationEvent
   config Json?
 
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
-  automationId String     @db.Uuid
+  automationId String
 
-  sourceAutomationId String?     @db.Uuid
+  sourceAutomationId String?
   sourceAutomation   Automation? @relation("source_automation", fields: [sourceAutomationId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
@@ -474,16 +474,16 @@ enum ConditionEvaluationTiming {
 }
 
 model AutomationConditionBlock {
-  id   String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id   String                       @id @default(dbgenerated("gen_random_uuid()"))
   type AutomationConditionBlockType
   rank String // Uses "C" collation
 
   // nested automation condition blocks
-  automationConditionBlockId String?                    @db.Uuid
+  automationConditionBlockId String?
   automationConditionBlock   AutomationConditionBlock?  @relation("automation_condition_block", fields: [automationConditionBlockId], references: [id], onDelete: Cascade)
   automationConditionBlocks  AutomationConditionBlock[] @relation("automation_condition_block")
 
-  automationId String     @db.Uuid
+  automationId String
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
 
   createdAt           DateTime              @default(now())
@@ -500,8 +500,8 @@ enum AutomationConditionBlockType {
 }
 
 model AutomationCondition {
-  id                         String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  automationConditionBlockId String                   @db.Uuid
+  id                         String                   @id @default(dbgenerated("gen_random_uuid()"))
+  automationConditionBlockId String
   automationConditionBlock   AutomationConditionBlock @relation(fields: [automationConditionBlockId], references: [id], onDelete: Cascade)
 
   type       AutomationConditionType
@@ -524,13 +524,13 @@ enum FormAccessType {
 }
 
 model Form {
-  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String         @id @default(dbgenerated("gen_random_uuid()"))
   name        String
   slug        String
-  communityId String         @db.Uuid
+  communityId String
   community   Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
   pubType     PubType        @relation(fields: [pubTypeId], references: [id])
-  pubTypeId   String         @db.Uuid
+  pubTypeId   String
   elements    FormElement[]
   isArchived  Boolean        @default(false)
   access      FormAccessType @default(private)
@@ -584,11 +584,11 @@ enum InputComponent {
 
 // Either a structural element like a header, hr etc. or a pubfield input
 model FormElement {
-  id              String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String                 @id @default(dbgenerated("gen_random_uuid()"))
   type            ElementType
-  fieldId         String?                @db.Uuid
+  fieldId         String?
   field           PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  formId          String                 @db.Uuid
+  formId          String
   rank            String // Uses "C" collation
   // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
   label           String?
@@ -599,7 +599,7 @@ model FormElement {
   required        Boolean?
   form            Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
   stage           Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
-  stageId         String?                @db.Uuid
+  stageId         String?
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @default(now()) @updatedAt
   relatedPubTypes PubType[]
@@ -610,15 +610,15 @@ model FormElement {
 }
 
 model ApiAccessToken {
-  id              String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String                @id @default(dbgenerated("gen_random_uuid()"))
   token           String                @unique
   name            String
   description     String?
-  communityId     String                @db.Uuid
+  communityId     String
   community       Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
   expiration      DateTime
   issuedBy        User?                 @relation(fields: [issuedById], references: [id], onDelete: SetNull)
-  issuedById      String?               @db.Uuid
+  issuedById      String?
   issuedAt        DateTime              @default(now())
   updatedAt       DateTime              @default(now()) @updatedAt
   accessRules     ApiAccessPermission[]
@@ -634,8 +634,8 @@ model ApiAccessToken {
 }
 
 model ApiAccessLog {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  accessTokenId String?         @db.Uuid
+  id            String          @id @default(dbgenerated("gen_random_uuid()"))
+  accessTokenId String?
   accessToken   ApiAccessToken? @relation(fields: [accessTokenId], references: [id], onDelete: SetNull)
   timestamp     DateTime        @default(now())
   action        String
@@ -652,8 +652,8 @@ enum ApiAccessType {
 // A permission existing for a scope means that the user has access to that scope
 // notwithstanding the contraints
 model ApiAccessPermission {
-  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  apiAccessTokenId String         @db.Uuid
+  id               String         @id @default(dbgenerated("gen_random_uuid()"))
+  apiAccessTokenId String
   apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id], onDelete: Cascade)
   scope            ApiAccessScope
   accessType       ApiAccessType
@@ -696,12 +696,12 @@ enum InviteStatus {
 // invites can bestow certain memberships on the user after the user joins the community
 // NOTE: this table has a history table.
 model Invite {
-  id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id             String @id @default(dbgenerated("gen_random_uuid()"))
   /// @type(LastModifiedBy, '../types', true, false, true)
   lastModifiedBy String
 
   InvitedUser User   @relation("invited_user", fields: [userId], references: [id], onDelete: Cascade)
-  userId      String @db.Uuid
+  userId      String
 
   token     String   @unique
   expiresAt DateTime
@@ -712,7 +712,7 @@ model Invite {
   // community level permissions
   // an invite must be for a community, and must have a community membership level set
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId String    @db.Uuid
+  communityId String
 
   // which role should be granted to the user after they join the community
   communityRole MemberRole @default(contributor)
@@ -720,11 +720,11 @@ model Invite {
   // you can also directly invite a user to a pub or stage, but not both
   // you can then also immediately allow them to use a certain form at that level
   Pub     Pub?        @relation(fields: [pubId], references: [id], onDelete: SetNull)
-  pubId   String?     @db.Uuid
+  pubId   String?
   pubRole MemberRole?
 
   Stage     Stage?      @relation(fields: [stageId], references: [id], onDelete: SetNull)
-  stageId   String?     @db.Uuid
+  stageId   String?
   stageRole MemberRole?
 
   // the message that is sent in the invite. useful for resending invites
@@ -736,9 +736,9 @@ model Invite {
 
   // useful to keep track of who invited the user. slightly different from `lastModifiedBy`
   InvitedByUser        User?      @relation("invited_by", fields: [invitedByUserId], references: [id], onDelete: SetNull)
-  invitedByUserId      String?    @db.Uuid
+  invitedByUserId      String?
   InvitedByActionRun   ActionRun? @relation("invited_by_action_run", fields: [invitedByActionRunId], references: [id], onDelete: SetNull)
-  invitedByActionRunId String?    @db.Uuid
+  invitedByActionRunId String?
 
   forms InviteForm[]
 
@@ -749,9 +749,9 @@ model Invite {
 
 model InviteForm {
   invite    Invite         @relation(fields: [inviteId], references: [id], onDelete: Cascade)
-  inviteId  String         @db.Uuid
+  inviteId  String
   form      Form           @relation(fields: [formId], references: [id], onDelete: Cascade)
-  formId    String         @db.Uuid
+  formId    String
   type      MembershipType
   createdAt DateTime       @default(now())
   updatedAt DateTime       @default(now()) @updatedAt

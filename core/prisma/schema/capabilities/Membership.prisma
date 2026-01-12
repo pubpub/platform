@@ -8,9 +8,9 @@ enum MemberRole {
 }
 
 model MemberGroup {
-    id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    id          String    @id @default(dbgenerated("gen_random_uuid()"))
     community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-    communityId String    @db.Uuid
+    communityId String
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @default(now()) @updatedAt
 
@@ -23,20 +23,20 @@ model MemberGroup {
 }
 
 model CommunityMembership {
-    id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    id            String       @id @default(dbgenerated("gen_random_uuid()"))
     role          MemberRole
     community     Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
-    communityId   String       @db.Uuid
+    communityId   String
     user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId        String?      @db.Uuid
+    userId        String?
     memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
-    memberGroupId String?      @db.Uuid
+    memberGroupId String?
     // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
     // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
     createdAt     DateTime     @default(now())
     updatedAt     DateTime     @default(now()) @updatedAt
     form          Form?        @relation(fields: [formId], references: [id], onDelete: Cascade)
-    formId        String?      @db.Uuid
+    formId        String?
 
     // Indices defined manually in migration to handle null formId case
     // @@unique([communityId, userId, formId])
@@ -45,16 +45,16 @@ model CommunityMembership {
 }
 
 model PubMembership {
-    id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    id            String       @id @default(dbgenerated("gen_random_uuid()"))
     role          MemberRole
     pub           Pub          @relation(fields: [pubId], references: [id], onDelete: Cascade)
-    pubId         String       @db.Uuid
+    pubId         String
     user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId        String?      @db.Uuid
+    userId        String?
     memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
-    memberGroupId String?      @db.Uuid
+    memberGroupId String?
     form          Form?        @relation(fields: [formId], references: [id], onDelete: Cascade)
-    formId        String?      @db.Uuid
+    formId        String?
 
     // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
     // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
@@ -68,16 +68,16 @@ model PubMembership {
 }
 
 model StageMembership {
-    id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    id            String       @id @default(dbgenerated("gen_random_uuid()"))
     role          MemberRole
     stage         Stage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
-    stageId       String       @db.Uuid
+    stageId       String
     user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId        String?      @db.Uuid
+    userId        String?
     memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
-    memberGroupId String?      @db.Uuid
+    memberGroupId String?
     form          Form?        @relation(fields: [formId], references: [id], onDelete: Cascade)
-    formId        String?      @db.Uuid
+    formId        String?
 
     // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
     // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details

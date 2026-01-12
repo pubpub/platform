@@ -30,15 +30,15 @@ export interface AutomationsTable {
 		ConditionEvaluationTiming | null
 	>
 
+	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>
+
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
+
 	name: ColumnType<string, string, string>
 
 	description: ColumnType<string | null, string | null, string | null>
 
 	icon: ColumnType<IconConfig | null, IconConfig | null, IconConfig | null>
-
-	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>
-
-	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
 }
 
 export type Automations = Selectable<AutomationsTable>
@@ -54,11 +54,11 @@ export const automationsSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	conditionEvaluationTiming: conditionEvaluationTimingSchema.nullable(),
+	stageId: stagesIdSchema.nullable(),
+	communityId: communitiesIdSchema,
 	name: z.string(),
 	description: z.string().nullable(),
 	icon: z.unknown().nullable(),
-	stageId: stagesIdSchema.nullable(),
-	communityId: communitiesIdSchema,
 })
 
 export const automationsInitializerSchema = z.object({
@@ -66,11 +66,11 @@ export const automationsInitializerSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	conditionEvaluationTiming: conditionEvaluationTimingSchema.optional().nullable(),
+	stageId: stagesIdSchema.optional().nullable(),
+	communityId: communitiesIdSchema,
 	name: z.string(),
 	description: z.string().optional().nullable(),
 	icon: z.unknown().optional().nullable(),
-	stageId: stagesIdSchema.optional().nullable(),
-	communityId: communitiesIdSchema,
 })
 
 export const automationsMutatorSchema = z.object({
@@ -78,9 +78,9 @@ export const automationsMutatorSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	conditionEvaluationTiming: conditionEvaluationTimingSchema.optional().nullable(),
+	stageId: stagesIdSchema.optional().nullable(),
+	communityId: communitiesIdSchema.optional(),
 	name: z.string().optional(),
 	description: z.string().optional().nullable(),
 	icon: z.unknown().optional().nullable(),
-	stageId: stagesIdSchema.optional().nullable(),
-	communityId: communitiesIdSchema.optional(),
 })

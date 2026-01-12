@@ -1,5 +1,5 @@
 model PubValueHistory {
-  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String        @id @default(dbgenerated("gen_random_uuid()"))
   createdAt     DateTime      @default(now())
   operationType OperationType
 
@@ -11,15 +11,15 @@ model PubValueHistory {
   newRowData Json?
 
   // primary key of the row that was changed
-  pubValueId String? @db.Uuid
+  pubValueId String?
 
   // identifying information
   user             User?           @relation(fields: [userId], references: [id])
-  userId           String?         @db.Uuid
+  userId           String?
   apiAccessToken   ApiAccessToken? @relation(fields: [apiAccessTokenId], references: [id])
-  apiAccessTokenId String?         @db.Uuid
+  apiAccessTokenId String?
   actionRun        ActionRun?      @relation(fields: [actionRunId], references: [id])
-  actionRunId      String?         @db.Uuid
+  actionRunId      String?
   // set to `system` if the change was made by the system, eg during seeds
   other            String?
 

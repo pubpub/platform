@@ -18,7 +18,11 @@ export interface FormsTable {
 
 	name: ColumnType<string, string, string>
 
+	pubTypeId: ColumnType<PubTypesId, PubTypesId, PubTypesId>
+
 	isArchived: ColumnType<boolean, boolean | undefined, boolean>
+
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
 
 	slug: ColumnType<string, string, string>
 
@@ -29,10 +33,6 @@ export interface FormsTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
-
-	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
-
-	pubTypeId: ColumnType<PubTypesId, PubTypesId, PubTypesId>
 }
 
 export type Forms = Selectable<FormsTable>
@@ -46,38 +46,38 @@ export const formsIdSchema = z.string().uuid() as unknown as z.Schema<FormsId>
 export const formsSchema = z.object({
 	id: formsIdSchema,
 	name: z.string(),
+	pubTypeId: pubTypesIdSchema,
 	isArchived: z.boolean(),
+	communityId: communitiesIdSchema,
 	slug: z.string(),
 	access: formAccessTypeSchema,
 	isDefault: z.boolean(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	communityId: communitiesIdSchema,
-	pubTypeId: pubTypesIdSchema,
 })
 
 export const formsInitializerSchema = z.object({
 	id: formsIdSchema.optional(),
 	name: z.string(),
+	pubTypeId: pubTypesIdSchema,
 	isArchived: z.boolean().optional(),
+	communityId: communitiesIdSchema,
 	slug: z.string(),
 	access: formAccessTypeSchema.optional(),
 	isDefault: z.boolean().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	communityId: communitiesIdSchema,
-	pubTypeId: pubTypesIdSchema,
 })
 
 export const formsMutatorSchema = z.object({
 	id: formsIdSchema.optional(),
 	name: z.string().optional(),
+	pubTypeId: pubTypesIdSchema.optional(),
 	isArchived: z.boolean().optional(),
+	communityId: communitiesIdSchema.optional(),
 	slug: z.string().optional(),
 	access: formAccessTypeSchema.optional(),
 	isDefault: z.boolean().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	communityId: communitiesIdSchema.optional(),
-	pubTypeId: pubTypesIdSchema.optional(),
 })

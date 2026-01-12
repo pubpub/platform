@@ -30,10 +30,6 @@ export interface AutomationConditionBlocksTable {
 
 	rank: ColumnType<string, string, string>
 
-	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
-
-	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
-
 	automationConditionBlockId: ColumnType<
 		AutomationConditionBlocksId | null,
 		AutomationConditionBlocksId | null,
@@ -41,6 +37,10 @@ export interface AutomationConditionBlocksTable {
 	>
 
 	automationId: ColumnType<AutomationsId, AutomationsId, AutomationsId>
+
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
+
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 }
 
 export type AutomationConditionBlocks = Selectable<AutomationConditionBlocksTable>
@@ -57,28 +57,28 @@ export const automationConditionBlocksSchema = z.object({
 	id: automationConditionBlocksIdSchema,
 	type: automationConditionBlockTypeSchema,
 	rank: z.string(),
-	createdAt: z.date(),
-	updatedAt: z.date(),
 	automationConditionBlockId: automationConditionBlocksIdSchema.nullable(),
 	automationId: automationsIdSchema,
+	createdAt: z.date(),
+	updatedAt: z.date(),
 })
 
 export const automationConditionBlocksInitializerSchema = z.object({
 	id: automationConditionBlocksIdSchema.optional(),
 	type: automationConditionBlockTypeSchema,
 	rank: z.string(),
-	createdAt: z.date().optional(),
-	updatedAt: z.date().optional(),
 	automationConditionBlockId: automationConditionBlocksIdSchema.optional().nullable(),
 	automationId: automationsIdSchema,
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 })
 
 export const automationConditionBlocksMutatorSchema = z.object({
 	id: automationConditionBlocksIdSchema.optional(),
 	type: automationConditionBlockTypeSchema.optional(),
 	rank: z.string().optional(),
-	createdAt: z.date().optional(),
-	updatedAt: z.date().optional(),
 	automationConditionBlockId: automationConditionBlocksIdSchema.optional().nullable(),
 	automationId: automationsIdSchema.optional(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 })

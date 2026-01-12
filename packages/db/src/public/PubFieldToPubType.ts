@@ -10,6 +10,10 @@ import { type PubTypesId, pubTypesIdSchema } from "./PubTypes"
 
 /** Represents the table public._PubFieldToPubType */
 export interface PubFieldToPubTypeTable {
+	A: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>
+
+	B: ColumnType<PubTypesId, PubTypesId, PubTypesId>
+
 	isTitle: ColumnType<boolean, boolean | undefined, boolean>
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
@@ -17,10 +21,6 @@ export interface PubFieldToPubTypeTable {
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	rank: ColumnType<string, string, string>
-
-	A: ColumnType<PubFieldsId, PubFieldsId, PubFieldsId>
-
-	B: ColumnType<PubTypesId, PubTypesId, PubTypesId>
 }
 
 export type PubFieldToPubType = Selectable<PubFieldToPubTypeTable>
@@ -30,28 +30,28 @@ export type NewPubFieldToPubType = Insertable<PubFieldToPubTypeTable>
 export type PubFieldToPubTypeUpdate = Updateable<PubFieldToPubTypeTable>
 
 export const pubFieldToPubTypeSchema = z.object({
+	A: pubFieldsIdSchema,
+	B: pubTypesIdSchema,
 	isTitle: z.boolean(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	rank: z.string(),
-	A: pubFieldsIdSchema,
-	B: pubTypesIdSchema,
 })
 
 export const pubFieldToPubTypeInitializerSchema = z.object({
+	A: pubFieldsIdSchema,
+	B: pubTypesIdSchema,
 	isTitle: z.boolean().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	rank: z.string(),
-	A: pubFieldsIdSchema,
-	B: pubTypesIdSchema,
 })
 
 export const pubFieldToPubTypeMutatorSchema = z.object({
+	A: pubFieldsIdSchema.optional(),
+	B: pubTypesIdSchema.optional(),
 	isTitle: z.boolean().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	rank: z.string().optional(),
-	A: pubFieldsIdSchema.optional(),
-	B: pubTypesIdSchema.optional(),
 })

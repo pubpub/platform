@@ -20,15 +20,15 @@ export interface StageMembershipsTable {
 
 	role: ColumnType<MemberRole, MemberRole, MemberRole>
 
-	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
-
-	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
+	stageId: ColumnType<StagesId, StagesId, StagesId>
 
 	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
 
-	stageId: ColumnType<StagesId, StagesId, StagesId>
-
 	memberGroupId: ColumnType<MemberGroupsId | null, MemberGroupsId | null, MemberGroupsId | null>
+
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
+
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	formId: ColumnType<FormsId | null, FormsId | null, FormsId | null>
 }
@@ -44,32 +44,32 @@ export const stageMembershipsIdSchema = z.string().uuid() as unknown as z.Schema
 export const stageMembershipsSchema = z.object({
 	id: stageMembershipsIdSchema,
 	role: memberRoleSchema,
+	stageId: stagesIdSchema,
+	userId: usersIdSchema.nullable(),
+	memberGroupId: memberGroupsIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	userId: usersIdSchema.nullable(),
-	stageId: stagesIdSchema,
-	memberGroupId: memberGroupsIdSchema.nullable(),
 	formId: formsIdSchema.nullable(),
 })
 
 export const stageMembershipsInitializerSchema = z.object({
 	id: stageMembershipsIdSchema.optional(),
 	role: memberRoleSchema,
+	stageId: stagesIdSchema,
+	userId: usersIdSchema.optional().nullable(),
+	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	userId: usersIdSchema.optional().nullable(),
-	stageId: stagesIdSchema,
-	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	formId: formsIdSchema.optional().nullable(),
 })
 
 export const stageMembershipsMutatorSchema = z.object({
 	id: stageMembershipsIdSchema.optional(),
 	role: memberRoleSchema.optional(),
+	stageId: stagesIdSchema.optional(),
+	userId: usersIdSchema.optional().nullable(),
+	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	userId: usersIdSchema.optional().nullable(),
-	stageId: stagesIdSchema.optional(),
-	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	formId: formsIdSchema.optional().nullable(),
 })

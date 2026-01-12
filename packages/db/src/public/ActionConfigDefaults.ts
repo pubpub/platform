@@ -19,6 +19,8 @@ export interface ActionConfigDefaultsTable {
 		ActionConfigDefaultsId
 	>
 
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
+
 	action: ColumnType<Action, Action, Action>
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>
@@ -26,8 +28,6 @@ export interface ActionConfigDefaultsTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
-
-	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
 }
 
 export type ActionConfigDefaults = Selectable<ActionConfigDefaultsTable>
@@ -42,27 +42,27 @@ export const actionConfigDefaultsIdSchema = z
 
 export const actionConfigDefaultsSchema = z.object({
 	id: actionConfigDefaultsIdSchema,
+	communityId: communitiesIdSchema,
 	action: actionSchema,
 	config: z.unknown().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	communityId: communitiesIdSchema,
 })
 
 export const actionConfigDefaultsInitializerSchema = z.object({
 	id: actionConfigDefaultsIdSchema.optional(),
+	communityId: communitiesIdSchema,
 	action: actionSchema,
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	communityId: communitiesIdSchema,
 })
 
 export const actionConfigDefaultsMutatorSchema = z.object({
 	id: actionConfigDefaultsIdSchema.optional(),
+	communityId: communitiesIdSchema.optional(),
 	action: actionSchema.optional(),
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	communityId: communitiesIdSchema.optional(),
 })

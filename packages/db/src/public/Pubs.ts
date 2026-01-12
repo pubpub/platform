@@ -19,15 +19,15 @@ export interface PubsTable {
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
+	pubTypeId: ColumnType<PubTypesId, PubTypesId, PubTypesId>
+
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
+
 	valuesBlob: ColumnType<unknown | null, unknown | null, unknown | null>
 
 	title: ColumnType<string | null, string | null, string | null>
 
 	searchVector: ColumnType<string | null, string | null, string | null>
-
-	pubTypeId: ColumnType<PubTypesId, PubTypesId, PubTypesId>
-
-	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
 }
 
 export type Pubs = Selectable<PubsTable>
@@ -42,31 +42,31 @@ export const pubsSchema = z.object({
 	id: pubsIdSchema,
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	pubTypeId: pubTypesIdSchema,
+	communityId: communitiesIdSchema,
 	valuesBlob: z.unknown().nullable(),
 	title: z.string().nullable(),
 	searchVector: z.string().nullable(),
-	pubTypeId: pubTypesIdSchema,
-	communityId: communitiesIdSchema,
 })
 
 export const pubsInitializerSchema = z.object({
 	id: pubsIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	pubTypeId: pubTypesIdSchema,
+	communityId: communitiesIdSchema,
 	valuesBlob: z.unknown().optional().nullable(),
 	title: z.string().optional().nullable(),
 	searchVector: z.string().optional().nullable(),
-	pubTypeId: pubTypesIdSchema,
-	communityId: communitiesIdSchema,
 })
 
 export const pubsMutatorSchema = z.object({
 	id: pubsIdSchema.optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	pubTypeId: pubTypesIdSchema.optional(),
+	communityId: communitiesIdSchema.optional(),
 	valuesBlob: z.unknown().optional().nullable(),
 	title: z.string().optional().nullable(),
 	searchVector: z.string().optional().nullable(),
-	pubTypeId: pubTypesIdSchema.optional(),
-	communityId: communitiesIdSchema.optional(),
 })

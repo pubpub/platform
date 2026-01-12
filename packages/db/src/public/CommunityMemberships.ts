@@ -24,15 +24,15 @@ export interface CommunityMembershipsTable {
 
 	role: ColumnType<MemberRole, MemberRole, MemberRole>
 
-	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
-
-	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
 
 	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
 
-	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
-
 	memberGroupId: ColumnType<MemberGroupsId | null, MemberGroupsId | null, MemberGroupsId | null>
+
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
+
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	formId: ColumnType<FormsId | null, FormsId | null, FormsId | null>
 }
@@ -50,32 +50,32 @@ export const communityMembershipsIdSchema = z
 export const communityMembershipsSchema = z.object({
 	id: communityMembershipsIdSchema,
 	role: memberRoleSchema,
+	communityId: communitiesIdSchema,
+	userId: usersIdSchema.nullable(),
+	memberGroupId: memberGroupsIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	userId: usersIdSchema.nullable(),
-	communityId: communitiesIdSchema,
-	memberGroupId: memberGroupsIdSchema.nullable(),
 	formId: formsIdSchema.nullable(),
 })
 
 export const communityMembershipsInitializerSchema = z.object({
 	id: communityMembershipsIdSchema.optional(),
 	role: memberRoleSchema,
+	communityId: communitiesIdSchema,
+	userId: usersIdSchema.optional().nullable(),
+	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	userId: usersIdSchema.optional().nullable(),
-	communityId: communitiesIdSchema,
-	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	formId: formsIdSchema.optional().nullable(),
 })
 
 export const communityMembershipsMutatorSchema = z.object({
 	id: communityMembershipsIdSchema.optional(),
 	role: memberRoleSchema.optional(),
+	communityId: communitiesIdSchema.optional(),
+	userId: usersIdSchema.optional().nullable(),
+	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	userId: usersIdSchema.optional().nullable(),
-	communityId: communitiesIdSchema.optional(),
-	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	formId: formsIdSchema.optional().nullable(),
 })

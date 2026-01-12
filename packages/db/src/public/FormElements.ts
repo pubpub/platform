@@ -21,6 +21,10 @@ export interface FormElementsTable {
 
 	type: ColumnType<ElementType, ElementType, ElementType>
 
+	fieldId: ColumnType<PubFieldsId | null, PubFieldsId | null, PubFieldsId | null>
+
+	formId: ColumnType<FormsId, FormsId, FormsId>
+
 	label: ColumnType<string | null, string | null, string | null>
 
 	element: ColumnType<
@@ -33,6 +37,8 @@ export interface FormElementsTable {
 
 	required: ColumnType<boolean | null, boolean | null, boolean | null>
 
+	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>
+
 	component: ColumnType<InputComponent | null, InputComponent | null, InputComponent | null>
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>
@@ -42,12 +48,6 @@ export interface FormElementsTable {
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
 	rank: ColumnType<string, string, string>
-
-	fieldId: ColumnType<PubFieldsId | null, PubFieldsId | null, PubFieldsId | null>
-
-	formId: ColumnType<FormsId, FormsId, FormsId>
-
-	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>
 }
 
 export type FormElements = Selectable<FormElementsTable>
@@ -61,50 +61,50 @@ export const formElementsIdSchema = z.string().uuid() as unknown as z.Schema<For
 export const formElementsSchema = z.object({
 	id: formElementsIdSchema,
 	type: elementTypeSchema,
+	fieldId: pubFieldsIdSchema.nullable(),
+	formId: formsIdSchema,
 	label: z.string().nullable(),
 	element: structuralFormElementSchema.nullable(),
 	content: z.string().nullable(),
 	required: z.boolean().nullable(),
+	stageId: stagesIdSchema.nullable(),
 	component: inputComponentSchema.nullable(),
 	config: z.unknown().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	rank: z.string(),
-	fieldId: pubFieldsIdSchema.nullable(),
-	formId: formsIdSchema,
-	stageId: stagesIdSchema.nullable(),
 })
 
 export const formElementsInitializerSchema = z.object({
 	id: formElementsIdSchema.optional(),
 	type: elementTypeSchema,
+	fieldId: pubFieldsIdSchema.optional().nullable(),
+	formId: formsIdSchema,
 	label: z.string().optional().nullable(),
 	element: structuralFormElementSchema.optional().nullable(),
 	content: z.string().optional().nullable(),
 	required: z.boolean().optional().nullable(),
+	stageId: stagesIdSchema.optional().nullable(),
 	component: inputComponentSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	rank: z.string(),
-	fieldId: pubFieldsIdSchema.optional().nullable(),
-	formId: formsIdSchema,
-	stageId: stagesIdSchema.optional().nullable(),
 })
 
 export const formElementsMutatorSchema = z.object({
 	id: formElementsIdSchema.optional(),
 	type: elementTypeSchema.optional(),
+	fieldId: pubFieldsIdSchema.optional().nullable(),
+	formId: formsIdSchema.optional(),
 	label: z.string().optional().nullable(),
 	element: structuralFormElementSchema.optional().nullable(),
 	content: z.string().optional().nullable(),
 	required: z.boolean().optional().nullable(),
+	stageId: stagesIdSchema.optional().nullable(),
 	component: inputComponentSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	rank: z.string().optional(),
-	fieldId: pubFieldsIdSchema.optional().nullable(),
-	formId: formsIdSchema.optional(),
-	stageId: stagesIdSchema.optional().nullable(),
 })

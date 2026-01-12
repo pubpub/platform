@@ -15,6 +15,8 @@ export type SessionsId = string & { __brand: "SessionsId" }
 export interface SessionsTable {
 	id: ColumnType<SessionsId, SessionsId | undefined, SessionsId>
 
+	userId: ColumnType<UsersId, UsersId, UsersId>
+
 	expiresAt: ColumnType<Date, Date | string, Date | string>
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>
@@ -23,8 +25,6 @@ export interface SessionsTable {
 
 	/** With what type of token is this session created? Used for determining on a page-by-page basis whether to allow a certain session to access it. For instance, a verify email token/session should not allow you to access the password reset page. */
 	type: ColumnType<AuthTokenType, AuthTokenType | undefined, AuthTokenType>
-
-	userId: ColumnType<UsersId, UsersId, UsersId>
 }
 
 export type Sessions = Selectable<SessionsTable>
@@ -37,27 +37,27 @@ export const sessionsIdSchema = z.string().uuid() as unknown as z.Schema<Session
 
 export const sessionsSchema = z.object({
 	id: sessionsIdSchema,
+	userId: usersIdSchema,
 	expiresAt: z.date(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	type: authTokenTypeSchema,
-	userId: usersIdSchema,
 })
 
 export const sessionsInitializerSchema = z.object({
 	id: sessionsIdSchema.optional(),
+	userId: usersIdSchema,
 	expiresAt: z.date(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	type: authTokenTypeSchema.optional(),
-	userId: usersIdSchema,
 })
 
 export const sessionsMutatorSchema = z.object({
 	id: sessionsIdSchema.optional(),
+	userId: usersIdSchema.optional(),
 	expiresAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	type: authTokenTypeSchema.optional(),
-	userId: usersIdSchema.optional(),
 })

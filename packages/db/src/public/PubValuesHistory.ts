@@ -26,8 +26,6 @@ export interface PubValuesHistoryTable {
 
 	newRowData: ColumnType<PubValues, string | null, string | null>
 
-	other: ColumnType<string | null, string | null, string | null>
-
 	pubValueId: ColumnType<string | null, string | null, string | null>
 
 	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
@@ -39,6 +37,8 @@ export interface PubValuesHistoryTable {
 	>
 
 	actionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>
+
+	other: ColumnType<string | null, string | null, string | null>
 }
 
 export type PubValuesHistory = Selectable<PubValuesHistoryTable>
@@ -55,11 +55,11 @@ export const pubValuesHistorySchema = z.object({
 	operationType: operationTypeSchema,
 	oldRowData: z.unknown().nullable(),
 	newRowData: z.unknown().nullable(),
-	other: z.string().nullable(),
 	pubValueId: z.string().nullable(),
 	userId: usersIdSchema.nullable(),
 	apiAccessTokenId: apiAccessTokensIdSchema.nullable(),
 	actionRunId: actionRunsIdSchema.nullable(),
+	other: z.string().nullable(),
 })
 
 export const pubValuesHistoryInitializerSchema = z.object({
@@ -68,11 +68,11 @@ export const pubValuesHistoryInitializerSchema = z.object({
 	operationType: operationTypeSchema,
 	oldRowData: z.unknown().optional().nullable(),
 	newRowData: z.unknown().optional().nullable(),
-	other: z.string().optional().nullable(),
 	pubValueId: z.string().optional().nullable(),
 	userId: usersIdSchema.optional().nullable(),
 	apiAccessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	actionRunId: actionRunsIdSchema.optional().nullable(),
+	other: z.string().optional().nullable(),
 })
 
 export const pubValuesHistoryMutatorSchema = z.object({
@@ -81,9 +81,9 @@ export const pubValuesHistoryMutatorSchema = z.object({
 	operationType: operationTypeSchema.optional(),
 	oldRowData: z.unknown().optional().nullable(),
 	newRowData: z.unknown().optional().nullable(),
-	other: z.string().optional().nullable(),
 	pubValueId: z.string().optional().nullable(),
 	userId: usersIdSchema.optional().nullable(),
 	apiAccessTokenId: apiAccessTokensIdSchema.optional().nullable(),
 	actionRunId: actionRunsIdSchema.optional().nullable(),
+	other: z.string().optional().nullable(),
 })

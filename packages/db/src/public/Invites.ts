@@ -22,6 +22,8 @@ export type InvitesId = string & { __brand: "InvitesId" }
 export interface InvitesTable {
 	id: ColumnType<InvitesId, InvitesId | undefined, InvitesId>
 
+	userId: ColumnType<UsersId, UsersId, UsersId>
+
 	token: ColumnType<string, string, string>
 
 	expiresAt: ColumnType<Date, Date | string, Date | string>
@@ -30,9 +32,15 @@ export interface InvitesTable {
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>
 
+	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
+
 	communityRole: ColumnType<MemberRole, MemberRole | undefined, MemberRole>
 
+	pubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
+
 	pubRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>
+
+	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>
 
 	stageRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>
 
@@ -42,19 +50,11 @@ export interface InvitesTable {
 
 	status: ColumnType<InviteStatus, InviteStatus | undefined, InviteStatus>
 
-	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>
-
-	userId: ColumnType<UsersId, UsersId, UsersId>
-
-	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>
-
-	pubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>
-
-	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>
-
 	invitedByUserId: ColumnType<UsersId | null, UsersId | null, UsersId | null>
 
 	invitedByActionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>
+
+	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>
 }
 
 export type Invites = Selectable<InvitesTable>
@@ -67,63 +67,63 @@ export const invitesIdSchema = z.string().uuid() as unknown as z.Schema<InvitesI
 
 export const invitesSchema = z.object({
 	id: invitesIdSchema,
+	userId: usersIdSchema,
 	token: z.string(),
 	expiresAt: z.date(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	communityId: communitiesIdSchema,
 	communityRole: memberRoleSchema,
+	pubId: pubsIdSchema.nullable(),
 	pubRole: memberRoleSchema.nullable(),
+	stageId: stagesIdSchema.nullable(),
 	stageRole: memberRoleSchema.nullable(),
 	message: z.string().nullable(),
 	lastSentAt: z.date().nullable(),
 	status: inviteStatusSchema,
-	lastModifiedBy: modifiedByTypeSchema,
-	userId: usersIdSchema,
-	communityId: communitiesIdSchema,
-	pubId: pubsIdSchema.nullable(),
-	stageId: stagesIdSchema.nullable(),
 	invitedByUserId: usersIdSchema.nullable(),
 	invitedByActionRunId: actionRunsIdSchema.nullable(),
+	lastModifiedBy: modifiedByTypeSchema,
 })
 
 export const invitesInitializerSchema = z.object({
 	id: invitesIdSchema.optional(),
+	userId: usersIdSchema,
 	token: z.string(),
 	expiresAt: z.date(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	communityId: communitiesIdSchema,
 	communityRole: memberRoleSchema.optional(),
+	pubId: pubsIdSchema.optional().nullable(),
 	pubRole: memberRoleSchema.optional().nullable(),
+	stageId: stagesIdSchema.optional().nullable(),
 	stageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
 	status: inviteStatusSchema.optional(),
-	lastModifiedBy: modifiedByTypeSchema,
-	userId: usersIdSchema,
-	communityId: communitiesIdSchema,
-	pubId: pubsIdSchema.optional().nullable(),
-	stageId: stagesIdSchema.optional().nullable(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
+	lastModifiedBy: modifiedByTypeSchema,
 })
 
 export const invitesMutatorSchema = z.object({
 	id: invitesIdSchema.optional(),
+	userId: usersIdSchema.optional(),
 	token: z.string().optional(),
 	expiresAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	communityId: communitiesIdSchema.optional(),
 	communityRole: memberRoleSchema.optional(),
+	pubId: pubsIdSchema.optional().nullable(),
 	pubRole: memberRoleSchema.optional().nullable(),
+	stageId: stagesIdSchema.optional().nullable(),
 	stageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
 	status: inviteStatusSchema.optional(),
-	lastModifiedBy: modifiedByTypeSchema.optional(),
-	userId: usersIdSchema.optional(),
-	communityId: communitiesIdSchema.optional(),
-	pubId: pubsIdSchema.optional().nullable(),
-	stageId: stagesIdSchema.optional().nullable(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
+	lastModifiedBy: modifiedByTypeSchema.optional(),
 })
