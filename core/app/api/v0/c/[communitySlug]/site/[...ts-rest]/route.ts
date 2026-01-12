@@ -772,9 +772,11 @@ const handler = createNextHandler(
 
 			const path = params.path as string
 
-			const automations = await getAutomationsByTriggerConfig("path", path, {
-				event: AutomationEvent.webhook,
-			})
+			const automations = (
+				await getAutomationsByTriggerConfig("path", path, {
+					event: AutomationEvent.webhook,
+				})
+			).filter((a) => a.communityId === community.id)
 
 			if (!automations || automations.length === 0) {
 				throw new NotFoundError(`No webhoook automations found for path ${path}`)

@@ -30,7 +30,7 @@ export class MockPreprintRepo {
 						try {
 							const payload = JSON.parse(body) as CoarNotifyPayload;
 							this.receivedNotifications.push(payload);
-							res.writeHead(201, { "Content-Type": "application/json" });
+							res.writeHead(200, { "Content-Type": "application/json" });
 							res.end(JSON.stringify({ status: "accepted" }));
 						} catch (error) {
 							res.writeHead(400, { "Content-Type": "application/json" });

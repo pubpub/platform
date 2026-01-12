@@ -1,6 +1,6 @@
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
 
-import { Action, AutomationEvent, CoreSchemaType } from "db/public"
+import { Action, AutomationEvent, CoreSchemaType, MemberRole } from "db/public"
 
 import { createSeed } from "~/prisma/seed/createSeed"
 import { seedCommunity } from "~/prisma/seed/seedCommunity"
@@ -14,7 +14,16 @@ const WEBHOOK_PATH = "coar-inbox"
 const seed = createSeed({
 	community: {
 		name: "COAR Test Community",
-		slug: "coar-test",
+		slug: `coar-test-${crypto.randomUUID().slice(0, 8)}`,
+	},
+	users: {
+		admin: {
+			firstName: "Admin",
+			lastName: "User",
+			email: `admin-${crypto.randomUUID().slice(0, 8)}@example.com`,
+			password: "password",
+			role: MemberRole.admin,
+		},
 	},
 	pubFields: {
 		Title: { schemaName: CoreSchemaType.String },
@@ -58,7 +67,7 @@ const seed = createSeed({
 						{
 							action: Action.http,
 							config: {
-								url: "http://localhost:9999/inbox", // Placeholder
+								url: "http://localhost:9999/inbox",
 								method: "POST",
 								body: {
 									"@context": [
@@ -92,6 +101,11 @@ const seed = createSeed({
 			values: { Title: "Pre-existing Pub" },
 		},
 	],
+	stageConnections: {
+		Inbox: {
+			to: ["Review"],
+		},
+	},
 })
 
 let community: CommunitySeedOutput<typeof seed>
@@ -118,7 +132,13 @@ test("COAR Notify: Incoming Offer Review", async ({ page, mockPreprintRepo }) =>
 
 	// Check activity log to see if automation ran
 	await page.goto(`/c/${community.community.slug}/activity/automations`)
-	await expect(page.getByText(`Received COAR Offer: ${payload.id}`)).toBeVisible()
+	const card = page.getByTestId(/automation-run-card-.*-Process COAR Offer/)
+	await expect(card).toBeVisible({ timeout: 10000 })
+
+	// Open details to see the log message
+	await card.getByText("Show details").click()
+	await card.getByText("Log").click()
+	await expect(card.getByText(`Received COAR Offer: ${payload.id}`)).toBeVisible()
 })
 
 test("COAR Notify: Outgoing Announce Review", async ({ page, mockPreprintRepo }) => {
@@ -133,15 +153,22 @@ test("COAR Notify: Outgoing Announce Review", async ({ page, mockPreprintRepo })
 	await stagesManagePage.openStagePanelTab("Review", "Automations")
 	await page.getByText("Announce Review").click()
 
+	// Expand the HTTP action config
+	await page.getByTestId("action-config-card-http-collapse-trigger").click()
+
 	// Update the URL in the HTTP action to use the dynamic mock repo URL
-	const urlInput = page.getByLabel("URL")
-	await urlInput.fill(`${mockPreprintRepo.url}/inbox`)
+	const urlInput = page.getByLabel("Request URL")
+	await urlInput.click()
+	await page.keyboard.press("Meta+a")
+	await page.keyboard.press("Backspace")
+	await page.keyboard.type(`${mockPreprintRepo.url}/inbox`)
 
-	// Also update the target ID in the body if it's visible or just leave it for now
-	// For simplicity, we just care that the URL is correct and it reaches the mock repo.
+	const saveButton = page.getByRole("button", { name: "Save automation", exact: true })
+	await expect(saveButton).toBeEnabled()
+	await saveButton.click()
 
-	await page.getByRole("button", { name: "Save automation" }).click()
-	await page.waitForTimeout(1000)
+	// Wait for the form to close (Success calls onSuccess which sets automationId to null)
+	await expect(saveButton).toHaveCount(0, { timeout: 10000 })
 
 	// Trigger the announcement by moving a pub to the Review stage
 	await stagesManagePage.goTo()
@@ -151,10 +178,12 @@ test("COAR Notify: Outgoing Announce Review", async ({ page, mockPreprintRepo })
 	await page.getByRole("button", { name: "Inbox" }).first().click()
 	await page.getByText("Move to Review").first().click()
 
+	// Wait for the move to disappear from Inbox list
+	await expect(page.getByText("Pre-existing Pub")).toHaveCount(0, { timeout: 15000 })
+
 	// Verify the mock repo received the announcement
-	// We use poll to wait for the async automation to complete and hit our mock server
 	await expect
-		.poll(() => mockPreprintRepo.getReceivedNotifications().length, { timeout: 10000 })
+		.poll(() => mockPreprintRepo.getReceivedNotifications().length, { timeout: 15000 })
 		.toBeGreaterThan(0)
 
 	const notifications = mockPreprintRepo.getReceivedNotifications()
@@ -162,6 +191,5 @@ test("COAR Notify: Outgoing Announce Review", async ({ page, mockPreprintRepo })
 		Array.isArray(n.type) ? n.type.includes("Announce") : n.type === "Announce"
 	)
 	expect(announcement).toBeDefined()
-	// Verification that the payload contains what we expected
 	expect(announcement?.target.id).toContain("http://localhost:")
 })
