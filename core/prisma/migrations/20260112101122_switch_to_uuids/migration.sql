@@ -2792,7 +2792,7 @@ BEGIN
     SELECT
       source_ar.id,
       source_ar."sourceAutomationRunId",
-      ARRAY[source_ar.id] AS "path",
+      ARRAY[source_ar.id::uuid]::uuid[] AS "path",
       0 AS "depth"
     FROM
       automation_runs ar
@@ -2803,7 +2803,7 @@ BEGIN
     SELECT
       ar.id,
       ar."sourceAutomationRunId",
-      ARRAY[ar.id] || "automation_run_stack"."path" AS "path",
+      ARRAY[ar.id]::uuid[] || "automation_run_stack"."path" AS "path",
       "automation_run_stack"."depth" + 1 AS "depth"
     FROM
       automation_runs ar
@@ -3016,7 +3016,7 @@ BEGIN
     WHERE
       a.id = source_automation_id;
     -- build stack recursively from sourceAutomationRunId chain
-    action_stack := build_automation_run_stack(NEW."automationRunId");
+    action_stack := build_automation_run_stack(NEW."automationRunId"::uuid);
     -- emit event for each watching automation
     FOR watched_automation IN SELECT DISTINCT
       a.id AS "automationId",
@@ -3028,7 +3028,7 @@ BEGIN
       at."sourceAutomationId" = source_automation_id
       AND at.event = target_event LOOP
         PERFORM
-          graphile_worker.add_job('emitEvent', json_build_object('type', 'RunAutomation', 'automationId', watched_automation."automationId", 'sourceAutomationRunId', source_automation_run_id, 'automationRunId', NEW."automationRunId", 'pubId', NEW."pubId", 'stageId', watched_automation."stageId", 'trigger', json_build_object('event', target_event, 'config', NULL), 'community', community, 'stack', action_stack || ARRAY[NEW."automationRunId"]));
+          graphile_worker.add_job('emitEvent', json_build_object('type', 'RunAutomation', 'automationId', watched_automation."automationId", 'sourceAutomationRunId', source_automation_run_id, 'automationRunId', NEW."automationRunId", 'pubId', NEW."pubId", 'stageId', watched_automation."stageId", 'trigger', json_build_object('event', target_event, 'config', NULL), 'community', community, 'stack', action_stack::uuid[] || ARRAY[NEW."automationRunId"::uuid]));
       END LOOP;
   END IF;
   RETURN NEW;
