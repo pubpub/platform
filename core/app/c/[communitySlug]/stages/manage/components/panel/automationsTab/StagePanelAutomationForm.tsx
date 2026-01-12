@@ -397,8 +397,8 @@ const ResolverFieldSection = memo(
 								Resolver (optional)
 								<InfoButton>
 									<p className="text-xs">
-										A JSONata expression to resolve a different Pub or
-										transform JSON input before actions run.
+										A JSONata expression to resolve a different Pub or transform
+										JSON input before actions run.
 										<br />
 										<br />
 										<strong>Comparison expressions</strong> like{" "}
@@ -429,7 +429,10 @@ const ResolverFieldSection = memo(
 							{...field}
 							value={field.value ?? ""}
 							placeholder="Enter JSONata expression (e.g., $.json.articleId = $.pub.values.externalId)"
-							className={cn("font-mono text-sm", fieldState.invalid && "border-red-300")}
+							className={cn(
+								"font-mono text-sm",
+								fieldState.invalid && "border-red-300"
+							)}
 						/>
 						<FieldDescription>
 							Use a JSONata expression to resolve a Pub by comparing values, e.g.,{" "}
