@@ -1,5 +1,7 @@
 import { BookOpen } from "lucide-react"
 
+import { Skeleton } from "ui/skeleton"
+
 import {
 	ContentLayoutActionsSkeleton,
 	ContentLayoutBody,
@@ -19,8 +21,14 @@ export default function Loading() {
 				</ContentLayoutTitle>
 				<ContentLayoutActionsSkeleton count={2} />
 			</ContentLayoutHeader>
-			<ContentLayoutBody className="overflow-hidden">
-				<PubListSkeleton amount={8} className="p-4" />
+			<ContentLayoutBody className="overflow-hidden p-4">
+				<div className="flex w-full items-center gap-2">
+					<Skeleton className="mb-8 h-9 flex-1" />
+					<Skeleton className="mb-8 h-9 w-20" />
+					<Skeleton className="mb-8 h-9 w-20" />
+					<Skeleton className="mb-8 h-9 w-25" />
+				</div>
+				<PubListSkeleton amount={10} />
 			</ContentLayoutBody>
 		</ContentLayoutRoot>
 	)

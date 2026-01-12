@@ -159,9 +159,18 @@ export const PubListSkeleton = ({
 }) => (
 	<div className={cn(["flex flex-col gap-3", className])}>
 		{Array.from({ length: amount }).map((_, index) => (
-			<Skeleton key={index} className="flex h-[90px] w-full flex-col gap-2 px-4 py-3">
-				<Skeleton className="mt-3 h-6 w-24 space-y-1.5" />
-				<Skeleton className="h-8 w-1/2 space-y-1.5" />
+			<Skeleton
+				key={index}
+				className="flex h-[94px] w-full flex-col gap-2 px-4 py-3 md:max-w-(--breakpoint-lg)"
+			>
+				<div className="flex items-start gap-1">
+					<Skeleton className="h-5 w-24" />
+					<Skeleton className="h-5 w-12" />
+				</div>
+				<Skeleton className="h-6 w-3/4 md:w-1/2 lg:w-1/3" />
+				<div className="flex items-start gap-1 opacity-50">
+					<Skeleton className="h-4 w-30" />
+				</div>
 			</Skeleton>
 		))}
 	</div>
