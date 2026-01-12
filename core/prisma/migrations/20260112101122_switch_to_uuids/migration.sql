@@ -2541,55 +2541,55 @@ WHERE
   "isDefault" IS TRUE;
 
 -- community_memberships unique indexes
-CREATE UNIQUE INDEX "community_memberships_communityId_userId_formId_key" ON "community_memberships"("communityId", "userId", "formId")
+CREATE UNIQUE INDEX "community_memberships_communityId_userId_formId_key" ON "community_memberships"("userId", "communityId", "formId")
 WHERE
-  "userId" IS NOT NULL AND "formId" IS NOT NULL;
+  "formId" IS NOT NULL;
 
-CREATE UNIQUE INDEX "community_memberships_communityId_userId_key" ON "community_memberships"("communityId", "userId")
+CREATE UNIQUE INDEX "community_memberships_communityId_userId_key" ON "community_memberships"("userId", "communityId", "formId")
 WHERE
-  "userId" IS NOT NULL AND "formId" IS NULL;
+  "formId" IS NULL;
 
-CREATE UNIQUE INDEX "community_memberships_communityId_memberGroupId_formId_key" ON "community_memberships"("communityId", "memberGroupId", "formId")
+CREATE UNIQUE INDEX "community_memberships_communityId_memberGroupId_formId_key" ON "community_memberships"("memberGroupId", "communityId", "formId")
 WHERE
-  "memberGroupId" IS NOT NULL AND "formId" IS NOT NULL;
+  "formId" IS NOT NULL;
 
-CREATE UNIQUE INDEX "community_memberships_communityId_memberGroupId_key" ON "community_memberships"("communityId", "memberGroupId")
+CREATE UNIQUE INDEX "community_memberships_communityId_memberGroupId_key" ON "community_memberships"("memberGroupId", "communityId", "formId")
 WHERE
-  "memberGroupId" IS NOT NULL AND "formId" IS NULL;
+  "formId" IS NULL;
 
 -- pub_memberships unique indexes
-CREATE UNIQUE INDEX "pub_memberships_pubId_userId_formId_key" ON "pub_memberships"("pubId", "userId", "formId")
+CREATE UNIQUE INDEX "pub_memberships_pubId_userId_formId_key" ON "pub_memberships"("userId", "pubId", "formId")
 WHERE
-  "userId" IS NOT NULL AND "formId" IS NOT NULL;
+  "formId" IS NOT NULL;
 
-CREATE UNIQUE INDEX "pub_memberships_pubId_userId_key" ON "pub_memberships"("pubId", "userId")
+CREATE UNIQUE INDEX "pub_memberships_pubId_userId_key" ON "pub_memberships"("userId", "pubId", "formId")
 WHERE
-  "userId" IS NOT NULL AND "formId" IS NULL;
+  "formId" IS NULL;
 
-CREATE UNIQUE INDEX "pub_memberships_pubId_memberGroupId_formId_key" ON "pub_memberships"("pubId", "memberGroupId", "formId")
+CREATE UNIQUE INDEX "pub_memberships_pubId_memberGroupId_formId_key" ON "pub_memberships"("memberGroupId", "pubId", "formId")
 WHERE
-  "memberGroupId" IS NOT NULL AND "formId" IS NOT NULL;
+  "formId" IS NOT NULL;
 
-CREATE UNIQUE INDEX "pub_memberships_pubId_memberGroupId_key" ON "pub_memberships"("pubId", "memberGroupId")
+CREATE UNIQUE INDEX "pub_memberships_pubId_memberGroupId_key" ON "pub_memberships"("memberGroupId", "pubId", "formId")
 WHERE
-  "memberGroupId" IS NOT NULL AND "formId" IS NULL;
+  "formId" IS NULL;
 
 -- stage_memberships unique indexes
-CREATE UNIQUE INDEX "stage_memberships_stageId_userId_formId_key" ON "stage_memberships"("stageId", "userId", "formId")
+CREATE UNIQUE INDEX "stage_memberships_stageId_userId_formId_key" ON "stage_memberships"("userId", "stageId", "formId")
 WHERE
-  "userId" IS NOT NULL AND "formId" IS NOT NULL;
+  "formId" IS NOT NULL;
 
-CREATE UNIQUE INDEX "stage_memberships_stageId_userId_key" ON "stage_memberships"("stageId", "userId")
+CREATE UNIQUE INDEX "stage_memberships_stageId_userId_key" ON "stage_memberships"("userId", "stageId", "formId")
 WHERE
-  "userId" IS NOT NULL AND "formId" IS NULL;
+  "formId" IS NULL;
 
-CREATE UNIQUE INDEX "stage_memberships_stageId_memberGroupId_formId_key" ON "stage_memberships"("stageId", "memberGroupId", "formId")
+CREATE UNIQUE INDEX "stage_memberships_stageId_memberGroupId_formId_key" ON "stage_memberships"("memberGroupId", "stageId", "formId")
 WHERE
-  "memberGroupId" IS NOT NULL AND "formId" IS NOT NULL;
+  "formId" IS NOT NULL;
 
-CREATE UNIQUE INDEX "stage_memberships_stageId_memberGroupId_key" ON "stage_memberships"("stageId", "memberGroupId")
+CREATE UNIQUE INDEX "stage_memberships_stageId_memberGroupId_key" ON "stage_memberships"("memberGroupId", "stageId", "formId")
 WHERE
-  "memberGroupId" IS NOT NULL AND "formId" IS NULL;
+  "formId" IS NULL;
 
 -- convert the chopped up ids to uuids
 CREATE OR REPLACE FUNCTION f_generic_history()
