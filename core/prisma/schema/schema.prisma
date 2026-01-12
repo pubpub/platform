@@ -60,6 +60,7 @@ model Session {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
+  @@index([userId])
   @@map(name: "sessions")
 }
 
@@ -75,6 +76,7 @@ model AuthToken {
   userId    String
   type      AuthTokenType @default(generic)
 
+  @@index([userId])
   @@map(name: "auth_tokens")
 }
 
@@ -138,6 +140,9 @@ model Pub {
   automationRuns AutomationRun[]
 
   @@index([searchVector], type: Gin)
+  @@index([communityId])
+  @@index([pubTypeId])
+  @@index([communityId, pubTypeId])
   @@map(name: "pubs")
 }
 
@@ -159,6 +164,8 @@ model PubField {
   pubTypes  PubFieldToPubType[]
   FormInput FormElement[]
 
+  @@index([communityId])
+  @@index([pubFieldSchemaId])
   @@map(name: "pub_fields")
 }
 
@@ -211,6 +218,9 @@ model PubValue {
   // values within a pub
   rank String? // Uses "C" collation
 
+  @@index([pubId])
+  @@index([fieldId])
+  @@index([relatedPubId])
   @@map(name: "pub_values")
 }
 
@@ -235,6 +245,7 @@ model PubType {
   formElements FormElement[]
 
   @@unique([name, communityId])
+  @@index([communityId])
   @@map(name: "pub_types")
 }
 
@@ -273,6 +284,7 @@ model Stage {
   Invite                Invite[]
   automations           Automation[]
 
+  @@index([communityId])
   @@map(name: "stages")
 }
 
@@ -285,6 +297,8 @@ model PubsInStages {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@id([pubId, stageId])
+  @@index([pubId])
+  @@index([stageId])
 }
 
 model MoveConstraint {
@@ -296,6 +310,8 @@ model MoveConstraint {
   updatedAt     DateTime @default(now()) @updatedAt
 
   @@id([stageId, destinationId], name: "moveConstraintId")
+  @@index([stageId])
+  @@index([destinationId])
   @@map(name: "move_constraint")
 }
 
@@ -311,6 +327,7 @@ model ActionInstance {
 
   runs ActionRun[]
 
+  @@index([automationId])
   @@map(name: "action_instances")
 }
 
@@ -370,6 +387,12 @@ model AutomationRun {
   // action runs that were triggered by this action run
   sequentialAutomationRuns AutomationRun[] @relation("source_automation_run")
 
+  @@index([automationId])
+  @@index([inputPubId])
+  @@index([sourceUserId])
+  @@index([sourceAutomationRunId])
+  @@index([status])
+  @@index([automationId, createdAt(sort: Desc)])
   @@map(name: "automation_runs")
 }
 
@@ -401,6 +424,11 @@ model ActionRun {
   InvitedByActionRun Invite[]        @relation("invited_by_action_run")
   InviteHistory      InviteHistory[]
 
+  @@index([automationRunId])
+  @@index([pubId])
+  @@index([userId])
+  @@index([actionInstanceId])
+  @@index([status])
   @@map(name: "action_runs")
 }
 
@@ -437,6 +465,8 @@ model Automation {
   automationRuns            AutomationRun[]
   automationTriggers        AutomationTrigger[]
 
+  @@index([communityId])
+  @@index([stageId])
   @@map(name: "automations")
 }
 
@@ -464,6 +494,9 @@ model AutomationTrigger {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
+  @@index([automationId])
+  @@index([event])
+  @@index([sourceAutomationId])
   @@map(name: "automation_triggers")
 }
 
@@ -490,6 +523,8 @@ model AutomationConditionBlock {
   updatedAt           DateTime              @default(now()) @updatedAt
   AutomationCondition AutomationCondition[]
 
+  @@index([automationId])
+  @@index([automationConditionBlockId])
   @@map(name: "automation_condition_blocks")
 }
 
@@ -511,6 +546,7 @@ model AutomationCondition {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
+  @@index([automationConditionBlockId])
   @@map(name: "automation_conditions")
 }
 
@@ -548,6 +584,8 @@ model Form {
   // FIXME: https://github.com/prisma/prisma/issues/6974
   // Unique index manually set in migration
   // @@unique([isDefault, pubTypeId], where: { isDefault: true })
+  @@index([communityId])
+  @@index([pubTypeId])
   @@map(name: "forms")
 }
 
@@ -606,6 +644,9 @@ model FormElement {
 
   @@unique([type, label, formId])
   @@unique([fieldId, formId])
+  @@index([formId])
+  @@index([fieldId])
+  @@index([stageId])
   @@map(name: "form_elements")
 }
 
@@ -630,6 +671,8 @@ model ApiAccessToken {
   isSiteBuilderToken Boolean @default(false)
 
   @@index([token], name: "token_idx")
+  @@index([communityId])
+  @@index([issuedById])
   @@map(name: "api_access_tokens")
 }
 
@@ -640,6 +683,7 @@ model ApiAccessLog {
   timestamp     DateTime        @default(now())
   action        String
 
+  @@index([accessTokenId])
   @@map(name: "api_access_logs")
 }
 
@@ -744,6 +788,11 @@ model Invite {
 
   // this table has some constraints that make it conform to the type in `db/types/Invite.ts`
   // see core/prisma/migrations/20250402130740_create_invite_table/migration.sql for details
+  @@index([communityId])
+  @@index([userId])
+  @@index([pubId])
+  @@index([stageId])
+  @@index([status])
   @@map(name: "invites")
 }
 
@@ -762,5 +811,7 @@ model InviteForm {
 
   @@id([inviteId, formId, type])
   @@unique([inviteId, formId, type])
+  @@index([inviteId])
+  @@index([formId])
   @@map(name: "invite_forms")
 }

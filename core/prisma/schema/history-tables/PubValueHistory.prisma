@@ -23,5 +23,7 @@ model PubValueHistory {
   // set to `system` if the change was made by the system, eg during seeds
   other            String?
 
+  @@index([userId])
+  @@index([actionRunId])
   @@map(name: "pub_values_history")
 }
