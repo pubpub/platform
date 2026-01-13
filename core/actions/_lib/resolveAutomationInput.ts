@@ -109,48 +109,31 @@ async function findPubByFieldValue(
 	value: unknown,
 	communitySlug: string
 ): Promise<ResolvedPub | null> {
-	const field = await db
-		.selectFrom("pub_fields")
-		.select(["id", "slug"])
-		.where("communityId", "=", communityId)
-		.where((eb) =>
-			eb.or([
-				eb("slug", "=", fieldSlug),
-				eb("slug", "=", `${communitySlug}:${fieldSlug}`),
-				eb("slug", "like", `%:${fieldSlug}`),
-			])
-		)
-		.executeTakeFirst()
+	const slugWithCommunitySlug = fieldSlug.startsWith(`${communitySlug}:`)
+		? fieldSlug
+		: `${communitySlug}:${fieldSlug}`
 
-	if (!field) {
-		logger.warn("Field not found for resolver", { fieldSlug, communityId })
-		return null
-	}
-
-	const pubWithValue = await db
-		.selectFrom("pub_values")
-		.select("pubId")
-		.where("fieldId", "=", field.id)
-		.where("value", "=", JSON.stringify(value))
-		.executeTakeFirst()
-
-	if (!pubWithValue) {
-		logger.debug("No pub found with matching field value", { fieldSlug, value })
-		return null
-	}
-
-	const pub = await getPubsWithRelatedValues(
-		{ pubId: pubWithValue.pubId, communityId },
+	const pubs = (await getPubsWithRelatedValues(
+		{ communityId },
 		{
 			withPubType: true,
 			withRelatedPubs: true,
 			withStage: false,
 			withValues: true,
 			depth: 3,
+			filters: {
+				[slugWithCommunitySlug]: { $eq: value },
+			},
+			limit: 1,
 		}
-	)
+	)) as ResolvedPub[]
 
-	return pub as ResolvedPub
+	if (pubs.length > 0) {
+		return pubs[0]
+	}
+
+	logger.debug("No pub found with matching field value", { fieldSlug, value })
+	return null
 }
 
 async function findPubById(communityId: CommunitiesId, pubId: PubsId): Promise<ResolvedPub | null> {
