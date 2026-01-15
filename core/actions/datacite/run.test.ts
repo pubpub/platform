@@ -149,6 +149,7 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 		communityId: "" as CommunitiesId,
 		description: null,
 		lastAutomationRun: null,
+		resolver: null,
 	},
 	user: null,
 	automationRunId: "" as AutomationRunsId,

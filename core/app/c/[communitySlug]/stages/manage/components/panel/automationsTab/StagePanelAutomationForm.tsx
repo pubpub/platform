@@ -169,6 +169,16 @@ export type CreateAutomationsSchema = {
 	description?: string
 	icon?: IconConfig
 	condition?: ConditionBlockFormValue
+	/**
+	 * A JSONata expression to resolve a Pub or transform JSON input.
+	 *
+	 * This expression is evaluated before actions run and can:
+	 * - Resolve a different Pub using comparisons like `$.json.some.id = $.pub.values.fieldname`
+	 * - Transform JSON input into a new structure for actions
+	 *
+	 * The resolved value overwrites the initial pub/json context for action execution.
+	 */
+	resolver?: string
 	triggers: {
 		triggerId: AutomationTriggersId
 		event: AutomationEvent
@@ -371,6 +381,76 @@ const ConditionFieldSection = memo(
 	}
 )
 
+const ResolverFieldSection = memo(
+	function ResolverFieldSection(props: {
+		form: UseFormReturn<CreateAutomationsSchema>
+		resolver: string | null | undefined
+	}) {
+		return (
+			<Controller
+				control={props.form.control}
+				name="resolver"
+				render={({ field, fieldState }) => (
+					<Field data-invalid={fieldState.invalid}>
+						<div className="flex items-center justify-between">
+							<FieldLabel>
+								Resolver (optional)
+								<InfoButton>
+									<p className="text-xs">
+										A JSONata expression to resolve a different Pub or transform
+										JSON input before actions run.
+										<br />
+										<br />
+										<strong>Comparison expressions</strong> like{" "}
+										<code>$.json.some.id = $.pub.values.fieldname</code> will
+										find a Pub where the field matches the left side value.
+										<br />
+										<br />
+										<strong>Transform expressions</strong> can restructure the
+										input data for the automation's actions.
+									</p>
+								</InfoButton>
+							</FieldLabel>
+							{props.resolver && (
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="h-7 text-neutral-500 text-xs"
+									onClick={() => {
+										field.onChange(undefined)
+									}}
+								>
+									Remove resolver
+								</Button>
+							)}
+						</div>
+						<Input
+							{...field}
+							value={field.value ?? ""}
+							placeholder="Enter JSONata expression (e.g., $.json.articleId = $.pub.values.externalId)"
+							className={cn(
+								"font-mono text-sm",
+								fieldState.invalid && "border-red-300"
+							)}
+						/>
+						<FieldDescription>
+							Use a JSONata expression to resolve a Pub by comparing values, e.g.,{" "}
+							<code>$.json.id = $.pub.values.externalId</code>
+						</FieldDescription>
+						{fieldState.error && (
+							<FieldError className="text-xs">{fieldState.error.message}</FieldError>
+						)}
+					</Field>
+				)}
+			/>
+		)
+	},
+	(prevProps, nextProps) => {
+		return prevProps.resolver === nextProps.resolver
+	}
+)
+
 export function StagePanelAutomationForm(props: Props) {
 	const schema = useMemo(
 		() =>
@@ -387,6 +467,7 @@ export function StagePanelAutomationForm(props: Props) {
 						.nullish(),
 					conditionEvaluationTiming: conditionEvaluationTimingSchema.nullish(),
 					condition: conditionBlockSchema.nullish(),
+					resolver: z.string().nullish(),
 					triggers: z
 						.array(
 							z.discriminatedUnion(
@@ -507,6 +588,7 @@ export function StagePanelAutomationForm(props: Props) {
 				triggers: [],
 				condition: undefined,
 				conditionEvaluationTiming: undefined,
+				resolver: undefined,
 			}
 		}
 
@@ -529,6 +611,7 @@ export function StagePanelAutomationForm(props: Props) {
 			})),
 			conditionEvaluationTiming: props.currentAutomation.conditionEvaluationTiming,
 			condition: props.currentAutomation.condition,
+			resolver: props.currentAutomation.resolver,
 		} as CreateAutomationsSchema
 	}, [props.currentAutomation])
 
@@ -582,6 +665,7 @@ export function StagePanelAutomationForm(props: Props) {
 	}, [selectedAction?.action, form])
 
 	const condition = form.watch("condition")
+	const resolver = form.watch("resolver")
 
 	const {
 		fields: selectedTriggers,
@@ -730,6 +814,7 @@ export function StagePanelAutomationForm(props: Props) {
 							)}
 						/>
 					)}
+					<ResolverFieldSection form={form} resolver={resolver} />
 				</>
 			)}
 

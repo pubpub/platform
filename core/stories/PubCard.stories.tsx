@@ -72,6 +72,7 @@ const meta: Meta<typeof PubCardServer> = {
 				conditionEvaluationTiming: null,
 				icon: null,
 				condition: null,
+				resolver: null,
 			},
 		],
 	},

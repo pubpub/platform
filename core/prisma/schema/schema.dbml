@@ -400,6 +400,7 @@ Table automations {
   actionInstances action_instances [not null]
   automationRuns automation_runs [not null]
   automationTriggers automation_triggers [not null]
+  resolver String
 }
 
 Table automation_triggers {

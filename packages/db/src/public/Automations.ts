@@ -39,6 +39,8 @@ export interface AutomationsTable {
 	description: ColumnType<string | null, string | null, string | null>
 
 	icon: ColumnType<IconConfig | null, IconConfig | null, IconConfig | null>
+
+	resolver: ColumnType<string | null, string | null, string | null>
 }
 
 export type Automations = Selectable<AutomationsTable>
@@ -59,6 +61,7 @@ export const automationsSchema = z.object({
 	name: z.string(),
 	description: z.string().nullable(),
 	icon: z.unknown().nullable(),
+	resolver: z.string().nullable(),
 })
 
 export const automationsInitializerSchema = z.object({
@@ -71,6 +74,7 @@ export const automationsInitializerSchema = z.object({
 	name: z.string(),
 	description: z.string().optional().nullable(),
 	icon: z.unknown().optional().nullable(),
+	resolver: z.string().optional().nullable(),
 })
 
 export const automationsMutatorSchema = z.object({
@@ -83,4 +87,5 @@ export const automationsMutatorSchema = z.object({
 	name: z.string().optional(),
 	description: z.string().optional().nullable(),
 	icon: z.unknown().optional().nullable(),
+	resolver: z.string().optional().nullable(),
 })
