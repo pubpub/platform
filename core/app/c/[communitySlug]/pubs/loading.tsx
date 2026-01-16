@@ -24,7 +24,7 @@ export default function Loading() {
 				</ContentLayoutTitle>
 				<ContentLayoutActionsSkeleton count={2} />
 			</ContentLayoutHeader>
-			<ContentLayoutBody className="flex flex-col gap-8 overflow-hidden p-4">
+			<ContentLayoutBody className="flex flex-col gap-4 overflow-hidden">
 				<SkeletonSearchRoot>
 					<SkeletonSearchBar />
 					<SkeletonSearchButton />

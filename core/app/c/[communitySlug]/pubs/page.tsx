@@ -56,7 +56,7 @@ export default async function Page(props: Props) {
 		<ContentLayoutRoot>
 			<ContentLayoutHeader>
 				<ContentLayoutTitle>
-					<BookOpen size={24} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
+					<BookOpen size={20} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
 					Pubs
 				</ContentLayoutTitle>
 				<ContentLayoutActions>

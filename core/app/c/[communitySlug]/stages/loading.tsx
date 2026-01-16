@@ -8,6 +8,7 @@ import {
 	ContentLayoutRoot,
 	ContentLayoutTitle,
 } from "../ContentLayout"
+import { PubListSkeleton } from "../pubs/PubList"
 
 export default function Loading() {
 	return (
@@ -24,15 +25,11 @@ export default function Loading() {
 				<ContentLayoutActionsSkeleton count={2} />
 			</ContentLayoutHeader>
 			<ContentLayoutBody>
-				<div className="m-4 max-w-(--breakpoint-lg) space-y-4">
+				<div className="flex max-w-(--breakpoint-lg) flex-col gap-8">
 					{Array.from({ length: 3 }).map((_, idx) => (
-						<div key={idx} className="rounded-lg p-4">
-							<Skeleton className="mb-2 h-6 w-32" />
-							<div className="space-y-2">
-								{Array.from({ length: 2 }).map((_, pubIdx) => (
-									<Skeleton key={pubIdx} className="h-16 w-full" />
-								))}
-							</div>
+						<div key={idx} className="flex flex-col gap-4">
+							<Skeleton className="h-6 w-24" />
+							<PubListSkeleton amount={3} />
 						</div>
 					))}
 				</div>

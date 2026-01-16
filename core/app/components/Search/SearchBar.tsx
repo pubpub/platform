@@ -48,7 +48,7 @@ export const SearchBar = ({
 	return (
 		<div
 			className={cn(
-				"sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 bg-background px-4 py-4",
+				"sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 bg-background",
 				className
 			)}
 		>
@@ -99,8 +99,7 @@ export const SearchContent = ({ children, stale }: { children?: ReactNode; stale
 	return (
 		<div
 			className={cn(
-				stale && "opacity-50 transition-opacity duration-200 **:data-pulse:animate-pulse",
-				"m-4 mt-0"
+				stale && "opacity-50 transition-opacity duration-200 **:data-pulse:animate-pulse"
 			)}
 		>
 			{children}

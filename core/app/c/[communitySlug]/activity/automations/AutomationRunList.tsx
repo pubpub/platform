@@ -1,9 +1,10 @@
 import type { AutoReturnType } from "~/lib/types"
 
 import { Suspense } from "react"
+import { notFound } from "next/navigation"
 import { Activity } from "lucide-react"
 
-import { Action, type CommunitiesId } from "db/public"
+import { Action, type Communities, type CommunitiesId } from "db/public"
 import {
 	Empty,
 	EmptyContent,
@@ -22,7 +23,7 @@ import {
 	getAutomationRunsCount,
 } from "~/lib/server/actions"
 import { autoCache } from "~/lib/server/cache/autoCache"
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { findCommunityBySlug } from "~/lib/server/community"
 import { getStages } from "~/lib/server/stages"
 import { AutomationRunCard } from "./AutomationRunCard"
 import { AutomationRunListSkeleton } from "./AutomationRunListSkeleton"
@@ -42,7 +43,7 @@ type PaginatedAutomationRunListProps = {
 
 const PaginatedAutomationRunListInner = async (
 	props: PaginatedAutomationRunListProps & {
-		communitySlug: string
+		community: Communities
 		automationRunsPromise: Promise<FullAutomationRun[]>
 		filterParams: {
 			statuses?: string[]
@@ -100,7 +101,7 @@ const PaginatedAutomationRunListInner = async (
 					<AutomationRunCard
 						key={automationRun.id}
 						automationRun={automationRun}
-						communitySlug={props.communitySlug}
+						community={props.community}
 					/>
 				)
 			})}
@@ -144,10 +145,6 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 	const search = automationRunSearchParamsCache.parse(props.searchParams)
 	const filterParams = getAutomationRunFilterParamsFromSearch(search)
 
-	const communitySlug = await getCommunitySlug()
-
-	const basePath = props.basePath ?? `/c/${communitySlug}/activity/automations`
-
 	const automationRunsPromise = getAutomationRuns(props.communityId, {
 		limit: filterParams.limit,
 		offset: filterParams.offset,
@@ -158,7 +155,8 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 		query: filterParams.query,
 	}).execute()
 
-	const [availableAutomations, stages] = await Promise.all([
+	const [community, availableAutomations, stages] = await Promise.all([
+		findCommunityBySlug(),
 		autoCache(
 			db
 				.selectFrom("automations")
@@ -168,7 +166,11 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 		).execute(),
 		getStages({ communityId: props.communityId, userId: null }).execute(),
 	])
+	if (!community) {
+		notFound()
+	}
 
+	const basePath = props.basePath ?? `/c/${community.slug}/activity/automations`
 	const availableActions = Object.values(Action).map((action) => ({
 		id: action,
 		name: action
@@ -191,7 +193,7 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 						<Suspense fallback={<AutomationRunListSkeleton />}>
 							<PaginatedAutomationRunListInner
 								{...props}
-								communitySlug={communitySlug}
+								community={community}
 								automationRunsPromise={automationRunsPromise}
 								filterParams={{
 									statuses: filterParams.statuses,

@@ -63,7 +63,7 @@ export default async function Page(props: Props) {
 				</ContentLayoutActions>
 			</ContentLayoutHeader>
 			<ContentLayoutBody>
-				<div className="m-4 max-w-(--breakpoint-lg)">
+				<div className="max-w-(--breakpoint-lg)">
 					<StageList
 						userId={user.id}
 						communityId={community.id}

@@ -212,7 +212,7 @@ function ContentLayoutBody({ className, children }: { className?: string; childr
 	return (
 		<div
 			data-slot="content-layout-body"
-			className={cn("h-full flex-1 overflow-auto rounded-tl-xl bg-background", className)}
+			className={cn("h-full flex-1 overflow-auto rounded-tl-xl bg-background p-4", className)}
 		>
 			{children}
 		</div>

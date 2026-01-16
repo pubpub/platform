@@ -48,7 +48,7 @@ export default async function MainLayout(props: Props) {
 	const cookieStore = await cookies()
 	// need to manually write the name of the cookie here
 	// bc we can't import SIDEBAR_COOKIE_NAME here because it's in a "use client" file
-	const defaultOpenCookie = cookieStore.get("sidebar:state")
+	const defaultOpenCookie = cookieStore.get("sidebar_state")
 	// open by default, only if cookie is explicitly set to false will it be closed
 	const defaultOpen = defaultOpenCookie?.value !== "false"
 
