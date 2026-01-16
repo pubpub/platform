@@ -342,6 +342,11 @@ export class ActionConfigBuilder<
 			const interpolatedConfig: Record<string, unknown> = {}
 
 			for (const [key, value] of Object.entries(configToInterpolate)) {
+				if (this.action.config.interpolation?.exclude?.includes(key)) {
+					interpolatedConfig[key] = value
+					continue
+				}
+
 				if (typeof value !== "string") {
 					interpolatedConfig[key] = value
 					continue
