@@ -163,6 +163,7 @@ export const getAutomationBase = cache((options?: GetEventAutomationOptions) => 
 			"automations.conditionEvaluationTiming",
 			"automations.description",
 			"automations.icon",
+			"automations.resolver",
 		])
 		.select((eb) => [
 			jsonArrayFrom(
