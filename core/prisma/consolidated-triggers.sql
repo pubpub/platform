@@ -2,6 +2,7 @@
 
 -- Table: PubsInStages
 
+
 CREATE OR REPLACE FUNCTION cancel_scheduled_automations_on_pub_leave()
     RETURNS TRIGGER
     AS $$
