@@ -17,6 +17,15 @@ import type {
 	NotCondition,
 	ParsedCondition,
 	PubFieldPath,
+	RelationComparisonCondition,
+	RelationCondition,
+	RelationContextPath,
+	RelationDirection,
+	RelationFilterCondition,
+	RelationFunctionCondition,
+	RelationLogicalCondition,
+	RelationNotCondition,
+	SearchCondition,
 	StringFunction,
 } from "./types"
 
@@ -29,6 +38,8 @@ export type { ParsedCondition }
 export interface ParsedQuery {
 	condition: ParsedCondition
 	originalExpression: string
+	// track max relation depth for validation
+	maxRelationDepth: number
 }
 
 const COMPARISON_OPS = new Set(["=", "!=", "<", "<=", ">", ">="]) as Set<ComparisonOperator>
@@ -42,7 +53,10 @@ const SUPPORTED_FUNCTIONS = new Set([
 	"uppercase",
 	"exists",
 	"not",
+	"search",
 ])
+
+const MAX_RELATION_DEPTH = 3
 
 function isComparisonOp(op: string): op is ComparisonOperator {
 	return COMPARISON_OPS.has(op as ComparisonOperator)
@@ -133,6 +147,133 @@ function extractPubFieldPath(steps: JsonataPathStep[]): PubFieldPath {
 	throw new InvalidPathError(`unsupported pub path: $.pub.${thirdStep.value}`, stepsToString(steps))
 }
 
+/**
+ * extracts a relation context path from steps inside a relation filter
+ *
+ * expects paths like:
+ * - $.value (the relation's own value)
+ * - $.relatedPub.values.fieldname
+ * - $.relatedPub.id
+ * - $.relatedPub.pubType.name
+ */
+function extractRelationContextPath(steps: JsonataPathStep[]): RelationContextPath {
+	if (steps.length < 2) {
+		throw new InvalidPathError(
+			"path too short, expected $.value or $.relatedPub.something",
+			stepsToString(steps)
+		)
+	}
+
+	// first step should be $ (empty variable)
+	if (steps[0].type !== "variable" || steps[0].value !== "") {
+		throw new InvalidPathError("path must start with $", stepsToString(steps))
+	}
+
+	const secondStep = steps[1]
+	if (secondStep.type !== "name") {
+		throw new InvalidPathError("expected name after $", stepsToString(steps))
+	}
+
+	// handle $.value - the relation's own value
+	if (secondStep.value === "value" && steps.length === 2) {
+		return { kind: "relationValue" }
+	}
+
+	// handle $.relatedPub...
+	if (secondStep.value === "relatedPub") {
+		if (steps.length < 3) {
+			throw new InvalidPathError("expected field after $.relatedPub", stepsToString(steps))
+		}
+
+		const thirdStep = steps[2]
+		if (thirdStep.type !== "name") {
+			throw new InvalidPathError("expected name after $.relatedPub", stepsToString(steps))
+		}
+
+		// handle builtin fields on related pub
+		if (["id", "createdAt", "updatedAt", "pubTypeId"].includes(thirdStep.value)) {
+			return {
+				kind: "relatedPubBuiltin",
+				field: thirdStep.value as "id" | "createdAt" | "updatedAt" | "pubTypeId",
+			}
+		}
+
+		// handle $.relatedPub.pubType.name or $.relatedPub.pubType.id
+		if (thirdStep.value === "pubType" && steps.length >= 4) {
+			const fourthStep = steps[3]
+			if (fourthStep.type === "name" && ["name", "id"].includes(fourthStep.value)) {
+				return { kind: "relatedPubType", field: fourthStep.value as "name" | "id" }
+			}
+			throw new InvalidPathError(
+				"expected pubType.name or pubType.id",
+				stepsToString(steps)
+			)
+		}
+
+		// handle $.relatedPub.values.fieldname
+		if (thirdStep.value === "values" && steps.length >= 4) {
+			const fourthStep = steps[3]
+			if (fourthStep.type === "name") {
+				return { kind: "relatedPubValue", fieldSlug: fourthStep.value }
+			}
+			throw new InvalidPathError(
+				"expected field name after $.relatedPub.values",
+				stepsToString(steps)
+			)
+		}
+
+		throw new InvalidPathError(
+			`unsupported relatedPub path: $.relatedPub.${thirdStep.value}`,
+			stepsToString(steps)
+		)
+	}
+
+	throw new InvalidPathError(
+		`unsupported relation context path: $.${secondStep.value}`,
+		stepsToString(steps)
+	)
+}
+
+/**
+ * checks if a path represents a relation query ($.pub.out.field or $.pub.in.field)
+ */
+function isRelationPath(
+	steps: JsonataPathStep[]
+): { direction: RelationDirection; fieldSlug: string; filterExpr?: JsonataNode } | null {
+	if (steps.length < 4) {
+		return null
+	}
+
+	// first step should be $ (empty variable)
+	if (steps[0].type !== "variable" || steps[0].value !== "") {
+		return null
+	}
+
+	// second step should be "pub"
+	if (steps[1].type !== "name" || steps[1].value !== "pub") {
+		return null
+	}
+
+	// third step should be "out" or "in"
+	const thirdStep = steps[2]
+	if (thirdStep.type !== "name" || !["out", "in"].includes(thirdStep.value)) {
+		return null
+	}
+
+	const direction = thirdStep.value as RelationDirection
+
+	// fourth step is the field name (with optional filter)
+	const fourthStep = steps[3]
+	if (fourthStep.type !== "name") {
+		return null
+	}
+
+	const fieldSlug = fourthStep.value
+	const filterExpr = fourthStep.stages?.[0]?.expr
+
+	return { direction, fieldSlug, filterExpr }
+}
+
 function stepsToString(steps: JsonataPathStep[]): string {
 	return steps.map((s) => (s.type === "variable" ? "$" : s.value)).join(".")
 }
@@ -221,6 +362,18 @@ function parseFunctionCall(node: JsonataFunctionNode): ParsedCondition {
 		throw new UnsupportedExpressionError(`unsupported function: ${funcName}`, funcName)
 	}
 
+	// handle $search() - full text search
+	if (funcName === "search") {
+		if (node.arguments.length !== 1) {
+			throw new UnsupportedExpressionError("search() expects exactly one argument")
+		}
+		const arg = node.arguments[0]
+		if (arg.type !== "string") {
+			throw new UnsupportedExpressionError("search() expects a string argument")
+		}
+		return { type: "search", query: arg.value } satisfies SearchCondition
+	}
+
 	// handle not() specially
 	if (funcName === "not") {
 		if (node.arguments.length !== 1) {
@@ -264,6 +417,216 @@ function parseFunctionCall(node: JsonataFunctionNode): ParsedCondition {
 	}
 
 	throw new UnsupportedExpressionError(`unhandled function: ${funcName}`, funcName)
+}
+
+// ============================================================================
+// relation filter parsing (inside [...] of relation queries)
+// ============================================================================
+
+/**
+ * parses a comparison inside a relation filter context
+ */
+function parseRelationComparison(
+	pathNode: JsonataPathNode | JsonataFunctionNode,
+	operator: ComparisonOperator,
+	valueNode: JsonataNode
+): RelationComparisonCondition {
+	let path: RelationContextPath
+	let pathTransform: StringFunction | undefined
+
+	if (isPathNode(pathNode)) {
+		path = extractRelationContextPath(pathNode.steps)
+	} else if (isFunctionNode(pathNode)) {
+		const funcName = getFunctionName(pathNode.procedure)
+		if (!["lowercase", "uppercase"].includes(funcName)) {
+			throw new UnsupportedExpressionError(
+				`function ${funcName} cannot be used as path transform in relation filter`,
+				funcName
+			)
+		}
+		pathTransform = funcName as StringFunction
+		const arg = pathNode.arguments[0]
+		if (!isPathNode(arg)) {
+			throw new UnsupportedExpressionError(
+				"expected path as first argument to transform function"
+			)
+		}
+		path = extractRelationContextPath(arg.steps)
+	} else {
+		throw new UnsupportedExpressionError(
+			"expected path or function on left side of comparison in relation filter"
+		)
+	}
+
+	const value = extractLiteral(valueNode)
+
+	return { type: "relationComparison", path, operator, value, pathTransform }
+}
+
+/**
+ * parses a function call inside a relation filter context
+ */
+function parseRelationFunctionCall(node: JsonataFunctionNode): RelationFilterCondition {
+	const funcName = getFunctionName(node.procedure)
+
+	// handle not() specially
+	if (funcName === "not") {
+		if (node.arguments.length !== 1) {
+			throw new UnsupportedExpressionError("not() expects exactly one argument")
+		}
+		const inner = parseRelationFilterNode(node.arguments[0])
+		return { type: "relationNot", condition: inner } satisfies RelationNotCondition
+	}
+
+	// handle exists()
+	if (funcName === "exists") {
+		if (node.arguments.length !== 1) {
+			throw new UnsupportedExpressionError("exists() expects exactly one argument")
+		}
+		const arg = node.arguments[0]
+		if (!isPathNode(arg)) {
+			throw new UnsupportedExpressionError("exists() expects a path argument")
+		}
+		const path = extractRelationContextPath(arg.steps)
+		return { type: "relationFunction", name: "exists", path, arguments: [] }
+	}
+
+	// string functions: contains, startsWith, endsWith
+	if (["contains", "startsWith", "endsWith"].includes(funcName)) {
+		if (node.arguments.length !== 2) {
+			throw new UnsupportedExpressionError(`${funcName}() expects exactly two arguments`)
+		}
+		const pathArg = node.arguments[0]
+		const valueArg = node.arguments[1]
+		if (!isPathNode(pathArg)) {
+			throw new UnsupportedExpressionError(`${funcName}() expects a path as first argument`)
+		}
+		const path = extractRelationContextPath(pathArg.steps)
+		const value = extractLiteral(valueArg)
+		return {
+			type: "relationFunction",
+			name: funcName as StringFunction,
+			path,
+			arguments: [value],
+		} satisfies RelationFunctionCondition
+	}
+
+	throw new UnsupportedExpressionError(
+		`unsupported function in relation filter: ${funcName}`,
+		funcName
+	)
+}
+
+/**
+ * parses a binary node inside a relation filter context
+ */
+function parseRelationBinary(node: JsonataBinaryNode): RelationFilterCondition {
+	const op = node.value
+
+	// handle logical operators
+	if (isLogicalOp(op)) {
+		const left = parseRelationFilterNode(node.lhs)
+		const right = parseRelationFilterNode(node.rhs)
+		return {
+			type: "relationLogical",
+			operator: op,
+			conditions: [left, right],
+		} satisfies RelationLogicalCondition
+	}
+
+	// handle "in" operator
+	if (op === "in") {
+		if (isPathNode(node.lhs)) {
+			const path = extractRelationContextPath(node.lhs.steps)
+			const value = extractLiteral(node.rhs)
+			return { type: "relationComparison", path, operator: "in", value }
+		}
+		if (isLiteralNode(node.lhs) && isPathNode(node.rhs)) {
+			const path = extractRelationContextPath(node.rhs.steps)
+			const value = extractLiteral(node.lhs)
+			return {
+				type: "relationFunction",
+				name: "contains",
+				path,
+				arguments: [value],
+			}
+		}
+		throw new UnsupportedExpressionError(
+			"unsupported 'in' expression structure in relation filter"
+		)
+	}
+
+	// handle comparison operators
+	if (isComparisonOp(op)) {
+		if (isPathNode(node.lhs) || isFunctionNode(node.lhs)) {
+			return parseRelationComparison(node.lhs, op, node.rhs)
+		}
+		if (isPathNode(node.rhs) || isFunctionNode(node.rhs)) {
+			const flippedOp = flipOperator(op)
+			return parseRelationComparison(node.rhs, flippedOp, node.lhs)
+		}
+		throw new UnsupportedExpressionError(
+			"comparison must have at least one path in relation filter"
+		)
+	}
+
+	throw new UnsupportedExpressionError(
+		`unsupported binary operator in relation filter: ${op}`,
+		"binary"
+	)
+}
+
+/**
+ * parses any node inside a relation filter context
+ */
+function parseRelationFilterNode(node: JsonataNode): RelationFilterCondition {
+	// unwrap block nodes (parentheses)
+	if (isBlockNode(node)) {
+		if (node.expressions.length !== 1) {
+			throw new UnsupportedExpressionError(
+				"block with multiple expressions not supported in relation filter",
+				"block"
+			)
+		}
+		return parseRelationFilterNode(node.expressions[0])
+	}
+
+	if (isBinaryNode(node)) {
+		return parseRelationBinary(node)
+	}
+
+	if (isFunctionNode(node)) {
+		return parseRelationFunctionCall(node)
+	}
+
+	throw new UnsupportedExpressionError(
+		`unsupported node type in relation filter: ${node.type}`,
+		node.type
+	)
+}
+
+/**
+ * parses a relation path into a RelationCondition
+ */
+function parseRelationPath(pathNode: JsonataPathNode): RelationCondition {
+	const relation = isRelationPath(pathNode.steps)
+	if (!relation) {
+		throw new UnsupportedExpressionError("expected relation path")
+	}
+
+	const { direction, fieldSlug, filterExpr } = relation
+
+	let filter: RelationFilterCondition | undefined
+	if (filterExpr) {
+		filter = parseRelationFilterNode(filterExpr)
+	}
+
+	return {
+		type: "relation",
+		direction,
+		fieldSlug,
+		filter,
+	}
 }
 
 /**
@@ -360,7 +723,31 @@ function parseNode(node: JsonataNode): ParsedCondition {
 		return parseFunctionCall(node)
 	}
 
+	// check if this is a relation path ($.pub.out.field or $.pub.in.field)
+	if (isPathNode(node)) {
+		const relation = isRelationPath(node.steps)
+		if (relation) {
+			return parseRelationPath(node)
+		}
+	}
+
 	throw new UnsupportedExpressionError(`unsupported node type: ${node.type}`, node.type)
+}
+
+/**
+ * calculates the max relation depth in a condition
+ */
+function calculateRelationDepth(condition: ParsedCondition, currentDepth = 0): number {
+	switch (condition.type) {
+		case "relation":
+			return currentDepth + 1
+		case "logical":
+			return Math.max(...condition.conditions.map((c) => calculateRelationDepth(c, currentDepth)))
+		case "not":
+			return calculateRelationDepth(condition.condition, currentDepth)
+		default:
+			return currentDepth
+	}
 }
 
 /**
@@ -376,9 +763,17 @@ export function parseJsonataQuery(expression: string): ParsedQuery {
 	const ast = jsonata(expression).ast() as JsonataNode
 
 	const condition = parseNode(ast)
+	const maxRelationDepth = calculateRelationDepth(condition)
+
+	if (maxRelationDepth > MAX_RELATION_DEPTH) {
+		throw new UnsupportedExpressionError(
+			`relation depth ${maxRelationDepth} exceeds maximum allowed depth of ${MAX_RELATION_DEPTH}`
+		)
+	}
 
 	return {
 		condition,
 		originalExpression: expression,
+		maxRelationDepth,
 	}
 }

@@ -92,6 +92,13 @@ export type PubFieldPath =
 	| { kind: "builtin"; field: "id" | "createdAt" | "updatedAt" | "pubTypeId" }
 	| { kind: "pubType"; field: "name" | "id" }
 
+// paths for use inside relation filters
+export type RelationContextPath =
+	| { kind: "relationValue" } // $.value - the value of the relation itself
+	| { kind: "relatedPubValue"; fieldSlug: string } // $.relatedPub.values.fieldname
+	| { kind: "relatedPubBuiltin"; field: "id" | "createdAt" | "updatedAt" | "pubTypeId" }
+	| { kind: "relatedPubType"; field: "name" | "id" }
+
 export type LiteralValue = string | number | boolean | null | LiteralValue[]
 
 export interface ComparisonCondition {
@@ -121,11 +128,62 @@ export interface NotCondition {
 	condition: ParsedCondition
 }
 
+// full-text search condition
+export interface SearchCondition {
+	type: "search"
+	query: string
+}
+
+// condition used inside relation filters (different context)
+export interface RelationComparisonCondition {
+	type: "relationComparison"
+	path: RelationContextPath
+	operator: ComparisonOperator
+	value: LiteralValue
+	pathTransform?: StringFunction
+}
+
+export interface RelationFunctionCondition {
+	type: "relationFunction"
+	name: StringFunction | BooleanFunction
+	path: RelationContextPath
+	arguments: LiteralValue[]
+}
+
+export interface RelationLogicalCondition {
+	type: "relationLogical"
+	operator: LogicalOperator
+	conditions: RelationFilterCondition[]
+}
+
+export interface RelationNotCondition {
+	type: "relationNot"
+	condition: RelationFilterCondition
+}
+
+export type RelationFilterCondition =
+	| RelationComparisonCondition
+	| RelationFunctionCondition
+	| RelationLogicalCondition
+	| RelationNotCondition
+
+// relation query condition: $.pub.out.fieldname[filter] or $.pub.in.fieldname[filter]
+export type RelationDirection = "out" | "in"
+
+export interface RelationCondition {
+	type: "relation"
+	direction: RelationDirection
+	fieldSlug: string
+	filter?: RelationFilterCondition
+}
+
 export type ParsedCondition =
 	| ComparisonCondition
 	| FunctionCondition
 	| LogicalCondition
 	| NotCondition
+	| SearchCondition
+	| RelationCondition
 
 // re-export for convenience (also exported from parser.ts)
 export type { ParsedCondition as Condition }

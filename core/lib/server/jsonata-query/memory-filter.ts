@@ -7,6 +7,10 @@ import type {
 	NotCondition,
 	ParsedCondition,
 	PubFieldPath,
+	RelationCondition,
+	RelationContextPath,
+	RelationFilterCondition,
+	SearchCondition,
 } from "./types"
 
 import { UnsupportedExpressionError } from "./errors"
@@ -179,6 +183,188 @@ function evaluateNot(pub: AnyProcessedPub, condition: NotCondition): boolean {
 }
 
 /**
+ * evaluates a search condition against a pub
+ * searches across all string values in the pub
+ */
+function evaluateSearch(pub: AnyProcessedPub, condition: SearchCondition): boolean {
+	const { query } = condition
+	const searchTerms = query.toLowerCase().split(/\s+/).filter(Boolean)
+	if (searchTerms.length === 0) {
+		return true
+	}
+
+	// collect all searchable text from the pub
+	const searchableTexts: string[] = []
+
+	for (const v of pub.values) {
+		if (typeof v.value === "string") {
+			searchableTexts.push(v.value.toLowerCase())
+		} else if (Array.isArray(v.value)) {
+			for (const item of v.value) {
+				if (typeof item === "string") {
+					searchableTexts.push(item.toLowerCase())
+				}
+			}
+		}
+	}
+
+	// all terms must match somewhere
+	return searchTerms.every((term) => searchableTexts.some((text) => text.includes(term)))
+}
+
+// ============================================================================
+// relation filter evaluation
+// ============================================================================
+
+interface RelationContext {
+	relationValue: unknown
+	relatedPub: AnyProcessedPub
+}
+
+/**
+ * extracts a value from relation context based on path
+ */
+function getRelationContextValue(ctx: RelationContext, path: RelationContextPath): unknown {
+	switch (path.kind) {
+		case "relationValue":
+			return ctx.relationValue
+		case "relatedPubValue": {
+			const value = ctx.relatedPub.values.find((v) => {
+				const fieldSlug = v.fieldSlug
+				return fieldSlug === path.fieldSlug || fieldSlug.endsWith(`:${path.fieldSlug}`)
+			})
+			return value?.value
+		}
+		case "relatedPubBuiltin":
+			switch (path.field) {
+				case "id":
+					return ctx.relatedPub.id
+				case "createdAt":
+					return ctx.relatedPub.createdAt
+				case "updatedAt":
+					return ctx.relatedPub.updatedAt
+				case "pubTypeId":
+					return ctx.relatedPub.pubTypeId
+			}
+			break
+		case "relatedPubType": {
+			const pubType = (ctx.relatedPub as any).pubType
+			return pubType?.[path.field]
+		}
+	}
+	return undefined
+}
+
+/**
+ * evaluates a relation filter condition against a relation context
+ */
+function evaluateRelationFilter(ctx: RelationContext, filter: RelationFilterCondition): boolean {
+	switch (filter.type) {
+		case "relationComparison": {
+			let value = getRelationContextValue(ctx, filter.path)
+			value = applyTransform(value, filter.pathTransform)
+			return compareValues(value, filter.operator, filter.value)
+		}
+		case "relationFunction": {
+			const value = getRelationContextValue(ctx, filter.path)
+			const args = filter.arguments
+			switch (filter.name) {
+				case "contains":
+					if (typeof value === "string") {
+						return value.includes(String(args[0]))
+					}
+					if (Array.isArray(value)) {
+						return value.includes(args[0])
+					}
+					return false
+				case "startsWith":
+					return typeof value === "string" && value.startsWith(String(args[0]))
+				case "endsWith":
+					return typeof value === "string" && value.endsWith(String(args[0]))
+				case "exists":
+					return value !== undefined && value !== null
+				default:
+					throw new UnsupportedExpressionError(
+						`unsupported function in relation filter: ${filter.name}`
+					)
+			}
+		}
+		case "relationLogical":
+			if (filter.operator === "and") {
+				return filter.conditions.every((c) => evaluateRelationFilter(ctx, c))
+			}
+			return filter.conditions.some((c) => evaluateRelationFilter(ctx, c))
+		case "relationNot":
+			return !evaluateRelationFilter(ctx, filter.condition)
+	}
+}
+
+/**
+ * evaluates a relation condition against a pub
+ *
+ * for "out" relations: check if pub has any values pointing to related pubs matching the filter
+ * for "in" relations: check if any related pubs point to this pub and match the filter
+ */
+function evaluateRelation(pub: AnyProcessedPub, condition: RelationCondition): boolean {
+	const { direction, fieldSlug, filter } = condition
+
+	if (direction === "out") {
+		// find relation values from this pub
+		const relationValues = pub.values.filter((v) => {
+			const matchesSlug = v.fieldSlug === fieldSlug || v.fieldSlug.endsWith(`:${fieldSlug}`)
+			return matchesSlug && v.relatedPub
+		})
+
+		if (relationValues.length === 0) {
+			return false
+		}
+
+		// check if any related pub matches the filter
+		return relationValues.some((rv) => {
+			if (!filter) {
+				return true
+			}
+			const ctx: RelationContext = {
+				relationValue: rv.value,
+				relatedPub: rv.relatedPub as AnyProcessedPub,
+			}
+			return evaluateRelationFilter(ctx, filter)
+		})
+	}
+
+	// for "in" relations, we need to check children
+	// this requires the pub to have children loaded
+	const children = (pub as any).children as AnyProcessedPub[] | undefined
+	if (!children || children.length === 0) {
+		return false
+	}
+
+	// find children that are connected via this field
+	return children.some((child) => {
+		const relationValues = child.values.filter((v) => {
+			const matchesSlug = v.fieldSlug === fieldSlug || v.fieldSlug.endsWith(`:${fieldSlug}`)
+			return matchesSlug && v.relatedPubId === pub.id
+		})
+
+		if (relationValues.length === 0) {
+			return false
+		}
+
+		if (!filter) {
+			return true
+		}
+
+		return relationValues.some((rv) => {
+			const ctx: RelationContext = {
+				relationValue: rv.value,
+				relatedPub: child,
+			}
+			return evaluateRelationFilter(ctx, filter)
+		})
+	})
+}
+
+/**
  * evaluates any condition against a pub
  */
 function evaluateCondition(pub: AnyProcessedPub, condition: ParsedCondition): boolean {
@@ -191,6 +377,10 @@ function evaluateCondition(pub: AnyProcessedPub, condition: ParsedCondition): bo
 			return evaluateLogical(pub, condition)
 		case "not":
 			return evaluateNot(pub, condition)
+		case "search":
+			return evaluateSearch(pub, condition)
+		case "relation":
+			return evaluateRelation(pub, condition)
 	}
 }
 
