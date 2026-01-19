@@ -45,7 +45,9 @@ import { Input } from "ui/input"
 import { Item, ItemContent, ItemHeader } from "ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 import { FormSubmitButton } from "ui/submit-button"
+import { Textarea } from "ui/textarea"
 import { type TokenContext, TokenProvider } from "ui/tokens"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { cn } from "utils"
 
 import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder"
@@ -386,70 +388,82 @@ const ResolverFieldSection = memo(
 		form: UseFormReturn<CreateAutomationsSchema>
 		resolver: string | null | undefined
 	}) {
+		const hasResolver = props.resolver !== undefined && props.resolver !== null
+
+		if (!hasResolver) {
+			return (
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="h-8 p-0 text-muted-foreground text-xs"
+					onClick={() => props.form.setValue("resolver", "")}
+				>
+					<Plus size={14} />
+					Add resolver
+				</Button>
+			)
+		}
+
 		return (
 			<Controller
 				control={props.form.control}
 				name="resolver"
 				render={({ field, fieldState }) => (
-					<Field data-invalid={fieldState.invalid}>
-						<div className="flex items-center justify-between">
-							<FieldLabel>
-								Resolver (optional)
-								<InfoButton>
-									<p className="text-xs">
-										A JSONata expression to resolve a different Pub or transform
-										JSON input before actions run.
-										<br />
-										<br />
-										<strong>Query expressions</strong> find a Pub matching
-										conditions. Use <code>{"{{ expr }}"}</code> to interpolate
-										values from incoming data:
-										<br />
-										<code className="mt-1 block">
-											{"$.pub.values.externalId = {{ $.json.body.articleId }}"}
-										</code>
-										<br />
-										<br />
-										<strong>Transform expressions</strong> restructure input
-										data for actions:
-										<br />
-										<code className="mt-1 block">
-											{'{ "title": $.json.body.name }'}
-										</code>
-									</p>
-								</InfoButton>
-							</FieldLabel>
-							{props.resolver && (
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									className="h-7 text-neutral-500 text-xs"
-									onClick={() => {
-										field.onChange(undefined)
-									}}
-								>
-									Remove resolver
-								</Button>
-							)}
+					<div>
+						<div className="mb-2 flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<Tooltip delayDuration={300}>
+									<TooltipTrigger asChild>
+										<span className="cursor-help rounded bg-amber-100 px-1.5 py-0.5 font-medium text-amber-800 text-xs">
+											Resolver
+										</span>
+									</TooltipTrigger>
+									<TooltipContent className="max-w-sm text-xs">
+										<p>
+											A JSONata expression to resolve a different Pub or
+											transform JSON input before actions run.
+										</p>
+										<p className="mt-2">
+											<strong>Query:</strong>{" "}
+											<code className="text-xs">
+												{"$.pub.values.externalId = {{ $.json.body.id }}"}
+											</code>
+										</p>
+										<p className="mt-1">
+											<strong>Transform:</strong>{" "}
+											<code className="text-xs">
+												{'{ "title": $.json.body.name }'}
+											</code>
+										</p>
+									</TooltipContent>
+								</Tooltip>
+							</div>
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								className="h-6 p-1 text-muted-foreground hover:text-destructive"
+								onClick={() => field.onChange(undefined)}
+							>
+								<X size={14} />
+							</Button>
 						</div>
-						<Input
+						<Textarea
 							{...field}
 							value={field.value ?? ""}
 							placeholder="$.pub.values.externalId = {{ $.json.body.articleId }}"
 							className={cn(
-								"font-mono text-sm",
+								"min-h-[60px] border-amber-300 bg-white font-mono text-sm focus:border-amber-400 focus-visible:ring-amber-400 dark:bg-input/30 dark:text-white",
 								fieldState.invalid && "border-red-300"
 							)}
 						/>
-						<FieldDescription>
-							Find a Pub by query, e.g.{" "}
-							<code>{"$.pub.values.externalId = {{ $.json.body.id }}"}</code>
-						</FieldDescription>
 						{fieldState.error && (
-							<FieldError className="text-xs">{fieldState.error.message}</FieldError>
+							<p className="mt-1 text-destructive text-xs">
+								{fieldState.error.message}
+							</p>
 						)}
-					</Field>
+					</div>
 				)}
 			/>
 		)

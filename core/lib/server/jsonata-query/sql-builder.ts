@@ -1,7 +1,7 @@
 import type { ExpressionBuilder, ExpressionWrapper, RawBuilder } from "kysely"
 import type { CompiledQuery } from "./compiler"
 import type {
-    BuiltinField,
+	BuiltinField,
 	ComparisonCondition,
 	FunctionCondition,
 	LogicalCondition,
@@ -32,9 +32,7 @@ export interface SqlBuilderOptions {
 /**
  * converts a pub field path to the appropriate sql column reference
  */
-function pathToColumn(
-	path: PubFieldPath
-): "value" | `pubs.${BuiltinField}` {
+function pathToColumn(path: PubFieldPath): "value" | `pubs.${BuiltinField}` {
 	if (path.kind === "builtin") {
 		return `pubs.${path.field}` as const
 	}
@@ -193,28 +191,44 @@ function buildFunctionCondition(
 	condition: FunctionCondition,
 	options?: SqlBuilderOptions
 ): AnyExpressionWrapper {
-	const { name, path, arguments: args } = condition
+	const { name, path, arguments: args, pathTransform } = condition
 
 	// for value fields, strings are stored as JSON, so we need to account for quotes
 	const isValueField = path.kind === "value"
 
 	const buildInner = (col: string) => {
 		const strArg = String(args[0])
+		// apply transform to column if present
+		let colExpr = `${col}::text`
+		if (pathTransform === "lowercase") {
+			colExpr = `lower(${col}::text)`
+		} else if (pathTransform === "uppercase") {
+			colExpr = `upper(${col}::text)`
+		}
+
+		// when using transform, we need to also lowercase/uppercase the search arg
+		let searchArg = strArg
+		if (pathTransform === "lowercase") {
+			searchArg = strArg.toLowerCase()
+		} else if (pathTransform === "uppercase") {
+			searchArg = strArg.toUpperCase()
+		}
+
 		switch (name) {
 			case "contains":
-				return eb(sql.raw(`${col}::text`), "like", `%${strArg}%`)
+				return eb(sql.raw(colExpr), "like", `%${searchArg}%`)
 			case "startsWith":
 				// for json values, the string starts with a quote
-				if (isValueField) {
-					return eb(sql.raw(`${col}::text`), "like", `"${strArg}%`)
+				if (isValueField && !pathTransform) {
+					return eb(sql.raw(colExpr), "like", `"${searchArg}%`)
 				}
-				return eb(sql.raw(`${col}::text`), "like", `${strArg}%`)
+				return eb(sql.raw(colExpr), "like", `${searchArg}%`)
 			case "endsWith":
 				// for json values, the string ends with a quote
-				if (isValueField) {
-					return eb(sql.raw(`${col}::text`), "like", `%${strArg}"`)
+				if (isValueField && !pathTransform) {
+					return eb(sql.raw(colExpr), "like", `%${searchArg}"`)
 				}
-				return eb(sql.raw(`${col}::text`), "like", `%${strArg}`)
+				return eb(sql.raw(colExpr), "like", `%${searchArg}`)
 			case "exists":
 				return eb.lit(true)
 			default:
@@ -441,23 +455,40 @@ function buildRelationFunctionCondition(
 	relatedPubAlias: string,
 	options?: SqlBuilderOptions
 ): AnyExpressionWrapper {
-	const { name, path, arguments: args } = condition
+	const { name, path, arguments: args, pathTransform } = condition
 
 	const buildFunctionInner = (col: string, isJson: boolean) => {
 		const strArg = String(args[0])
+
+		// apply transform to column if present
+		let colExpr = `${col}::text`
+		if (pathTransform === "lowercase") {
+			colExpr = `lower(${col}::text)`
+		} else if (pathTransform === "uppercase") {
+			colExpr = `upper(${col}::text)`
+		}
+
+		// also transform the search argument
+		let searchArg = strArg
+		if (pathTransform === "lowercase") {
+			searchArg = strArg.toLowerCase()
+		} else if (pathTransform === "uppercase") {
+			searchArg = strArg.toUpperCase()
+		}
+
 		switch (name) {
 			case "contains":
-				return eb(sql.raw(`${col}::text`), "like", `%${strArg}%`)
+				return eb(sql.raw(colExpr), "like", `%${searchArg}%`)
 			case "startsWith":
-				if (isJson) {
-					return eb(sql.raw(`${col}::text`), "like", `"${strArg}%`)
+				if (isJson && !pathTransform) {
+					return eb(sql.raw(colExpr), "like", `"${searchArg}%`)
 				}
-				return eb(sql.raw(`${col}::text`), "like", `${strArg}%`)
+				return eb(sql.raw(colExpr), "like", `${searchArg}%`)
 			case "endsWith":
-				if (isJson) {
-					return eb(sql.raw(`${col}::text`), "like", `%${strArg}"`)
+				if (isJson && !pathTransform) {
+					return eb(sql.raw(colExpr), "like", `%${searchArg}"`)
 				}
-				return eb(sql.raw(`${col}::text`), "like", `%${strArg}`)
+				return eb(sql.raw(colExpr), "like", `%${searchArg}`)
 			case "exists":
 				return eb.lit(true)
 			default:

@@ -1,4 +1,4 @@
-import type { ParsedCondition, ParsedQuery } from "./parser"
+import type { ParsedCondition } from "./parser"
 
 import { parseJsonataQuery } from "./parser"
 
