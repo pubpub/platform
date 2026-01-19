@@ -82,21 +82,33 @@ export type JsonataNode =
 	| JsonataBlockNode
 
 // our internal representation
-export type ComparisonOperator = "=" | "!=" | "<" | "<=" | ">" | ">=" | "in"
-export type LogicalOperator = "and" | "or"
-export type StringFunction = "contains" | "startsWith" | "endsWith" | "lowercase" | "uppercase"
-export type BooleanFunction = "exists" | "not"
+export const COMPARISON_OPS = ["=", "!=", "<", "<=", ">", ">=", "in"] as const
+export type ComparisonOperator = (typeof COMPARISON_OPS)[number]
+
+
+export const LOGICAL_OPS = ["and", "or"] as const
+export type LogicalOperator = (typeof LOGICAL_OPS)[number]
+
+export const STRING_FUNCTIONS = ["contains", "startsWith", "endsWith", "lowercase", "uppercase"] as const
+export type StringFunction = (typeof STRING_FUNCTIONS)[number]
+
+export const BOOLEAN_FUNCTIONS = ["exists", "not"] as const
+export type BooleanFunction = (typeof BOOLEAN_FUNCTIONS)[number]
+
+
+export const BUILTIN_FIELDS = ["id", "createdAt", "updatedAt", "pubTypeId", "title", "stageId"] as const
+export type BuiltinField = (typeof BUILTIN_FIELDS)[number]
 
 export type PubFieldPath =
 	| { kind: "value"; fieldSlug: string }
-	| { kind: "builtin"; field: "id" | "createdAt" | "updatedAt" | "pubTypeId" }
+	| { kind: "builtin"; field: BuiltinField }
 	| { kind: "pubType"; field: "name" | "id" }
 
 // paths for use inside relation filters
 export type RelationContextPath =
 	| { kind: "relationValue" } // $.value - the value of the relation itself
 	| { kind: "relatedPubValue"; fieldSlug: string } // $.relatedPub.values.fieldname
-	| { kind: "relatedPubBuiltin"; field: "id" | "createdAt" | "updatedAt" | "pubTypeId" }
+	| { kind: "relatedPubBuiltin"; field: BuiltinField }
 	| { kind: "relatedPubType"; field: "name" | "id" }
 
 export type LiteralValue = string | number | boolean | null | LiteralValue[]
