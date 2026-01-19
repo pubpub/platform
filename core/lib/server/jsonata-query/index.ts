@@ -9,4 +9,13 @@ export type {
 	FunctionCondition,
 	LogicalCondition,
 	NotCondition,
+	SearchCondition,
+	RelationCondition,
+	RelationDirection,
+	RelationContextPath,
+	RelationFilterCondition,
+	RelationComparisonCondition,
+	RelationFunctionCondition,
+	RelationLogicalCondition,
+	RelationNotCondition,
 } from "./types"
