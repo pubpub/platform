@@ -281,6 +281,17 @@ export interface PubEditorClientProps {
 		relatedPubId: PubsId
 		relatedFieldSlug: string
 	}
+
+	/* override the default handleSubmit function */
+	handleSubmit?: (args: {
+		formValues: FieldValues & StaticSchema
+		evt: React.BaseSyntheticEvent | undefined
+		autoSave: boolean
+		pubValues: Record<string, HydratedRelatedFieldValue[] | JsonValue | Date>
+		newStageId: StagesId | undefined
+		submitButtonId: string | undefined
+		deleted: Static<typeof deletedValuesSchema>
+	}) => Promise<void>
 }
 
 export const PubEditorClient = ({
@@ -296,6 +307,7 @@ export const PubEditorClient = ({
 	withButtonElements,
 	relatedPub,
 	onSuccess,
+	handleSubmit: handleSubmitOverride,
 }: PubEditorClientProps) => {
 	const community = useCommunity()
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>()
@@ -358,6 +370,18 @@ export const PubEditorClient = ({
 			})
 
 			const newStageId = stageIdFromButtonConfig ?? stageIdFromForm ?? undefined
+
+			if (handleSubmitOverride) {
+				return handleSubmitOverride({
+					formValues,
+					evt,
+					autoSave,
+					pubValues,
+					newStageId,
+					submitButtonId,
+					deleted,
+				})
+			}
 			const stageIdChanged = newStageId !== stageId
 
 			let result:
@@ -424,6 +448,7 @@ export const PubEditorClient = ({
 			mode,
 			onSuccess,
 			runCreatePub,
+			handleSubmitOverride,
 		]
 	)
 

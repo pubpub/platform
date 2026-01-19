@@ -1,11 +1,13 @@
 import type { ProcessedPub } from "contracts"
-import type { PubsId } from "db/public"
+import type { CoreSchemaType, PubsId } from "db/public"
 import type { Form } from "~/lib/server/form"
+import type { InputTypeForCoreSchemaType } from "../../../../packages/schemas/src"
 import type { HydrateMarkdownResult } from "./actions"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 
-import { StructuralFormElement } from "db/public"
+import { InputComponent, StructuralFormElement } from "db/public"
+import { FormDescription, FormItem, FormLabel } from "ui/form"
 import { usePubTypeContext } from "ui/pubTypes"
 import { toast } from "ui/use-toast"
 
@@ -13,6 +15,7 @@ import { useCommunity } from "~/app/components/providers/CommunityProvider"
 import { transformRichTextValuesToProsemirrorClient } from "~/lib/editor/serialize-client"
 import { didSucceed, useServerAction } from "~/lib/serverActions"
 import { ContextEditorContextProvider } from "../ContextEditor/ContextEditorContext"
+import { FileUploadPreview } from "../forms/FileUpload"
 import { FormElement } from "../forms/FormElement"
 import { PubFormProvider } from "../providers/PubFormProvider"
 import { PubEditorClient } from "../pubs/PubEditor/PubEditorClient"
@@ -29,6 +32,8 @@ export type FormPreviewProps = {
 	children?: React.ReactNode
 }
 
+type FileUploadValue = InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>
+
 export const FormPreview = (props: FormPreviewProps) => {
 	const onSuccess = () => {
 		toast.success("Form saved! (if it was not a preview)")
@@ -44,7 +49,6 @@ export const FormPreview = (props: FormPreviewProps) => {
 		if (!props.selectedPub) {
 			return undefined
 		}
-		return props.selectedPub
 		return transformRichTextValuesToProsemirrorClient(
 			props.selectedPub as ProcessedPub<{ withPubType: true; withStage: true }>
 		)
@@ -102,7 +106,17 @@ export const FormPreview = (props: FormPreviewProps) => {
 	}, [props.form.elements, hydratedElements])
 
 	return (
-		<div className="m-4">
+		// biome-ignore lint/a11y/noNoninteractiveElementInteractions: i want to prevent enter to submit the form
+		// biome-ignore lint/a11y/noStaticElementInteractions: it's not interactive
+		<div
+			onKeyDown={(evt) => {
+				// don't allow enter to submit the form
+				if (evt.key === "Enter") {
+					evt.preventDefault()
+					evt.stopPropagation()
+				}
+			}}
+		>
 			<ContextEditorContextProvider
 				pubId={previewPubId}
 				pubTypeId={props.form.pubTypeId}
@@ -128,19 +142,94 @@ export const FormPreview = (props: FormPreviewProps) => {
 						}}
 						onSuccess={onSuccess}
 						withButtonElements={false}
+						handleSubmit={async ({ evt }) => {
+							evt?.preventDefault()
+							evt?.stopPropagation()
+						}}
 					>
-						{elementsWithHydratedContent.map((e) => (
-							<FormElement
-								key={e.id}
-								pubId={previewPubId}
-								element={e}
-								values={pubValues}
-							/>
-						))}
+						{elementsWithHydratedContent.map((e) =>
+							e.component === InputComponent.fileUpload ? (
+								<DummyFileUpload
+									key={e.id}
+									files={
+										pubValues.find((v) => v.fieldSlug === e.slug)
+											?.value as FileUploadValue
+									}
+									label={e.config.label ?? ""}
+									help={e.config.help ?? ""}
+								/>
+							) : (
+								<FormElement
+									key={e.id}
+									pubId={previewPubId}
+									element={e}
+									values={pubValues}
+								/>
+							)
+						)}
 						{props.children}
 					</PubEditorClient>
 				</PubFormProvider>
 			</ContextEditorContextProvider>
 		</div>
+	)
+}
+
+/**
+ * This is a dummy file upload component that is used to preview the file upload field in the form preview.
+ * If we were to use the actual FileUpload component, it would be actually uploading the files to the server.
+ * It doesn't look the exact same, but it's pretty close
+ */
+const DummyFileUpload = ({
+	files,
+	label,
+	help,
+}: {
+	files: FileUploadValue
+	label: string
+	help: string
+}) => {
+	const [localFiles, setLocalFiles] = useState<FileUploadValue>(files)
+	return (
+		<FormItem>
+			<FormLabel>{label}</FormLabel>
+
+			<div className="relative h-[250px] w-full rounded-md border bg-accent/70 p-2 dark:border-white!">
+				<div className="flex h-full w-full flex-col items-center justify-start border border-dashed bg-accent/70 dark:border-white!">
+					<p className="mt-4">
+						Drop files here or <span className="text-sky-500">browse files</span>
+					</p>
+					<input
+						type="file"
+						multiple
+						className="absolute inset-0 opacity-0"
+						onChange={(e) => {
+							const files = e.target.files
+							if (files) {
+								setLocalFiles(
+									Array.from(files).map((file) => ({
+										id: crypto.randomUUID(),
+										fileName: file.name,
+										fileSource: file.name,
+										fileType: file.type,
+										fileSize: file.size,
+										fileMeta: {
+											name: file.name,
+											type: file.type,
+											relativePath: "<not a real path>",
+											absolutePath: "<not a real path>",
+										},
+										fileUploadUrl: file.name,
+										filePreview: file.name,
+									}))
+								)
+							}
+						}}
+					/>
+				</div>
+			</div>
+			<FormDescription>{help}</FormDescription>
+			<FileUploadPreview files={localFiles} />
+		</FormItem>
 	)
 }

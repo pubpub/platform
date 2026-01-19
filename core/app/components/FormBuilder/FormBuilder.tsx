@@ -463,14 +463,12 @@ export function FormBuilder({ pubForm, id, stages, pubTypeId, currentDefaultForm
 							content.
 						</p>
 					</div>
-					<div className="rounded-md border bg-background p-2">
-						<FormPreview
-							form={previewForm}
-							selectedPub={selectedPub}
-							// IMPORTANT: key is used to force a re-render when the selected pub changes, otherwise the values will not be updated
-							key={selectedPub?.id}
-						/>
-					</div>
+					<FormPreview
+						form={previewForm}
+						selectedPub={selectedPub}
+						// IMPORTANT: key is used to force a re-render when the selected pub changes, otherwise the values will not be updated
+						key={selectedPub?.id}
+					/>
 				</div>
 			</TabsContent>
 
