@@ -76,6 +76,7 @@ export const run = defineRun<typeof action>(
 						id: pub.id,
 						title: pub.title,
 						content: config.pages,
+						slug: "/hello",
 					})),
 					mapping: config,
 					siteUrl,
