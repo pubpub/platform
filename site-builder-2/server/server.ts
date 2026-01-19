@@ -1,7 +1,7 @@
 import type { ReadStream } from "node:fs"
 
-import fs from "node:fs/promises"
-import path from "node:path"
+import fs, { mkdir } from "node:fs/promises"
+import path, { dirname } from "node:path"
 import { PassThrough } from "node:stream"
 import { S3Client } from "@aws-sdk/client-s3"
 import { Upload } from "@aws-sdk/lib-storage"
@@ -313,7 +313,11 @@ const router = tsr.router(siteBuilderApi, {
 
 			const distDir = `./dist/${communitySlug}`
 
+			const buildPath = getBuildPath(communitySlug, body.automationRunId)
+
 			const pages = body.pages
+			await mkdir(dirname(buildPath), { recursive: true })
+
 			await fs.writeFile(
 				getBuildPath(communitySlug, body.automationRunId),
 				JSON.stringify(pages, null, 2)
@@ -330,6 +334,8 @@ const router = tsr.router(siteBuilderApi, {
 					},
 				},
 			})
+
+			console.log("buildSuccess", buildSuccess)
 
 			if (!buildSuccess) {
 				return {

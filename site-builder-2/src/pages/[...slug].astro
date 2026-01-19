@@ -1,0 +1,54 @@
+---
+// import type { FileUpload } from "../layouts/Layout.astro"
+// import Layout from "../layouts/Layout.astro"
+
+// import { getHeader, getJournal, getPages } from "../lib/site/client/queries"
+import type { GetStaticPaths, InferGetStaticParamsType, InferGetStaticPropsType } from "astro"
+import { getFieldValue } from "../lib/getValue"
+import { getPubsToBuild } from "../lib/site/storage"
+
+
+console.log("YEAH OI")
+export const getStaticPaths = (async () => {
+	const pages = await getPubsToBuild() as { slug: string,
+		title: string,
+		id: string,
+		 content: string }[]
+
+
+	console.log("pages", pages)
+
+	const paths = pages
+		.map((page) => {
+			const slug = page.slug 
+
+
+			return {
+				params: {
+					slug,
+				},
+				props: { page },
+			}
+		})
+
+
+	return paths
+}) satisfies GetStaticPaths
+
+type Params = InferGetStaticParamsType<typeof getStaticPaths>
+type Props = InferGetStaticPropsType<typeof getStaticPaths>
+
+const { slug } = Astro.params as Params
+
+const { page } = Astro.props as Props
+
+// const title = getFieldValue<string>(page, "Title")
+// const description = getFieldValue<string>(page, "Description")
+// const layout = getFieldValue<string>(page, "content")
+// const avatar = getFieldValue<FileUpload | undefined>(page, "Avatar")
+
+---
+
+	<div class="container mx-auto prose">
+		<h1>{page.title}</h1>
+	</div>
