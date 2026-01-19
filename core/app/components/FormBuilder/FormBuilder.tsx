@@ -1,12 +1,22 @@
 "use client"
 
 import type { DragEndEvent } from "@dnd-kit/core"
-import type { FormElementsId, NewFormElements, NewFormElementToPubType, Stages } from "db/public"
-import type { Form as PubForm } from "~/lib/server/form"
+import type { ProcessedPub } from "contracts"
+import type {
+	FormElementsId,
+	NewFormElements,
+	NewFormElementToPubType,
+	PubFieldsId,
+	PubTypesId,
+	Stages,
+} from "db/public"
+import type { Form as PubForm, SimpleForm } from "~/lib/server/form"
+import type { BasicFormElements } from "../forms/types"
 import type { FormBuilderSchema, FormElementData, PanelEvent, PanelState } from "./types"
 
 import * as React from "react"
-import { useCallback, useMemo, useReducer, useRef } from "react"
+import { useCallback, useMemo, useReducer, useRef, useState } from "react"
+import dynamic from "next/dynamic"
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
@@ -15,23 +25,32 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useFieldArray, useForm } from "react-hook-form"
+import { type UseFormReturn, useFieldArray, useForm } from "react-hook-form"
 
 import { formElementsInitializerSchema } from "db/public"
 import { logger } from "logger"
-import { Form, FormControl, FormField, FormItem } from "ui/form"
+import { Button } from "ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 import { useUnsavedChangesWarning } from "ui/hooks"
+import { BookOpen, Menu, Settings, TriangleAlert } from "ui/icon"
+import { Input } from "ui/input"
+import { usePubFieldContext } from "ui/pubFields"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "ui/sheet"
+import { Skeleton } from "ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs"
 import { TokenProvider } from "ui/tokens"
 import { toast } from "ui/use-toast"
 
+import { PubSearchSelect } from "~/app/components/pubs/PubSearchSelect"
 import { getRankAndIndexChanges } from "~/lib/rank"
 import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens"
 import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { isPubFieldElement } from "../forms/types"
 import { PanelHeader, PanelWrapper, SidePanel } from "../SidePanel"
 import { saveForm } from "./actions"
 import { BuilderProvider } from "./BuilderContext"
 import { ElementPanel } from "./ElementPanel"
+import { SelectAccess } from "./ElementPanel/SelectAccess"
 import { FormElement } from "./FormElement"
 import { formBuilderSchema, isButtonElement } from "./types"
 import { useIsChanged } from "./useIsChanged"
@@ -108,7 +127,16 @@ type Props = {
 	pubForm: PubForm
 	id: string
 	stages: Stages[]
+	pubTypeId: PubTypesId
+	currentDefaultForm?: SimpleForm
 }
+
+const FormPreview = dynamic(() => import("./FormPreview").then((mod) => mod.FormPreview), {
+	ssr: false,
+	loading: () => <Skeleton className="h-96 w-full" />,
+})
+
+type SidebarTab = "elements" | "preview" | "settings"
 
 /**
  * Only sends the dirty fields to the server
@@ -150,8 +178,11 @@ const preparePayload = ({
 				} else if (element.updated) {
 					// check whether the element is reeeaally updated minus the updated field
 					const { updated: _, id: _id, ...elementWithoutUpdated } = element
-					const { updated, id, ...rest } =
-						defaultValues.elements.find((e) => e.elementId === element.elementId) ?? {}
+					const {
+						updated: _updated,
+						id: _elemId,
+						...rest
+					} = defaultValues.elements.find((e) => e.elementId === element.elementId) ?? {}
 
 					const defaultElement = rest as Omit<FormElementData, "updated" | "id">
 
@@ -189,6 +220,9 @@ const preparePayload = ({
 
 	return {
 		formId: formValues.formId,
+		name: formValues.name !== defaultValues.name ? formValues.name : undefined,
+		isDefault:
+			formValues.isDefault !== defaultValues.isDefault ? formValues.isDefault : undefined,
 		upserts,
 		deletes,
 		access,
@@ -197,24 +231,38 @@ const preparePayload = ({
 	}
 }
 
-export function FormBuilder({ pubForm, id, stages }: Props) {
+export function FormBuilder({ pubForm, id, stages, pubTypeId, currentDefaultForm }: Props) {
 	const [isChanged, setIsChanged] = useIsChanged()
+	const [sidebarTab, setSidebarTab] = useState<SidebarTab>("elements")
+	const [selectedPub, setSelectedPub] = useState<
+		| ProcessedPub<{
+				withPubType: true
+				withStage: true
+				withValues: true
+				withRelatedPubs: true
+		  }>
+		| undefined
+	>()
+	const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
 
 	const defaultValues = useMemo(() => {
 		return {
 			elements: pubForm.elements.map((e) => {
-				// Do not include extra fields here
-				const { slug, id, fieldName, ...rest } = e
-				// Rename id to avoid conflict with rhf generated id
+				// do not include extra fields here
+				const { slug: _slug, id, fieldName: _fieldName, ...rest } = e
+				// rename id to avoid conflict with rhf generated id
 				return { ...rest, elementId: id }
 			}),
 			access: pubForm.access,
+			name: pubForm.name,
 			formId: pubForm.id,
+			isDefault: pubForm.isDefault,
 		}
 	}, [pubForm])
 
 	const form = useForm<FormBuilderSchema>({
 		resolver: zodResolver(formBuilderSchema),
+
 		values: defaultValues,
 	})
 
@@ -238,7 +286,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		control: form.control,
 	})
 
-	const formValues = form.getValues()
+	const formValues = form.watch()
 
 	useUnsavedChangesWarning(isChanged)
 
@@ -249,7 +297,11 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 
 	React.useEffect(() => {
 		setIsChanged(
-			payload.upserts.length > 0 || payload.deletes.length > 0 || payload.access != null
+			payload.upserts.length > 0 ||
+				payload.deletes.length > 0 ||
+				payload.access != null ||
+				payload.name != null ||
+				payload.isDefault != null
 		)
 	}, [payload, setIsChanged])
 
@@ -324,6 +376,114 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 
 	const dndContextId = React.useId()
 
+	const pubFields = usePubFieldContext()
+	const elementsWithPubFields = useMemo(() => {
+		return elements.map((e) => {
+			const el = e as unknown as BasicFormElements
+			if (!isPubFieldElement(el)) {
+				return e
+			}
+
+			const field = pubFields[el.fieldId as PubFieldsId]
+			if (!field) {
+				return e
+			}
+
+			return {
+				...e,
+				slug: field.slug,
+				fieldName: field.name,
+			}
+		}) as FormElementData[]
+	}, [elements, pubFields])
+
+	const previewForm = useMemo(() => {
+		return {
+			...pubForm,
+			elements: elementsWithPubFields.filter((e) => !isButtonElement(e)),
+		} as PubForm
+	}, [pubForm, elementsWithPubFields])
+
+	const sidebarContent = (
+		<Tabs
+			value={sidebarTab}
+			onValueChange={(v) => setSidebarTab(v as SidebarTab)}
+			className="flex h-full flex-col"
+		>
+			<TabsList className="mx-4 grid grid-cols-3 md:mx-2">
+				<TabsTrigger value="elements" className="text-xs">
+					<Settings className="mr-1 h-3 w-3" />
+					Elements
+				</TabsTrigger>
+				<TabsTrigger value="preview" className="text-xs">
+					<BookOpen className="mr-1 h-3 w-3" />
+					Preview
+				</TabsTrigger>
+				<TabsTrigger value="settings" className="text-xs">
+					<Menu className="mr-1 h-3 w-3" />
+					Settings
+				</TabsTrigger>
+			</TabsList>
+
+			<TabsContent value="elements" className="mt-4 flex-1 overflow-auto p-4 md:p-2">
+				<FormItem className="relative flex h-full flex-col">
+					<PanelHeader
+						title={elementPanelTitles[panelState.state]}
+						showCancel={!(panelState.state === "initial")}
+						onCancel={() => dispatch({ eventName: "cancel" })}
+					/>
+					<FormControl>
+						<ElementPanel panelState={panelState} />
+					</FormControl>
+				</FormItem>
+			</TabsContent>
+
+			<TabsContent value="preview" className="mt-4 flex-1 overflow-auto">
+				<div className="flex flex-col gap-4 p-4 md:p-2">
+					<div>
+						<FormLabel className="text-muted-foreground text-xs uppercase">
+							Test with Pub
+						</FormLabel>
+						<hr className="my-2" />
+						<PubSearchSelect
+							withValues
+							withRelatedPubs
+							onSelectedPubsChange={(pubs) => {
+								if (!pubs.length) {
+									setSelectedPub(undefined)
+									return
+								}
+								setSelectedPub(pubs[0])
+							}}
+							placeholder="Select a Pub to preview with..."
+							pubTypeIds={[pubTypeId]}
+						/>
+						<p className="mt-2 text-muted-foreground text-xs">
+							Select a Pub to preview the form with real values and interpolated
+							content.
+						</p>
+					</div>
+					<div className="rounded-md border bg-background p-2">
+						<FormPreview
+							form={previewForm}
+							selectedPub={selectedPub}
+							// IMPORTANT: key is used to force a re-render when the selected pub changes, otherwise the values will not be updated
+							key={selectedPub?.id}
+						/>
+					</div>
+				</div>
+			</TabsContent>
+
+			<TabsContent value="settings" className="mt-4 flex-1 overflow-auto p-4 md:p-2">
+				<FormSettingsPanel
+					form={form}
+					currentDefaultForm={currentDefaultForm}
+					slug={pubForm.slug}
+				/>
+			</TabsContent>
+		</Tabs>
+	)
+
 	return (
 		<TokenProvider tokens={tokens}>
 			<BuilderProvider
@@ -347,97 +507,186 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 				stages={stages}
 				isDirty={isChanged}
 			>
-				<Tabs defaultValue="builder" className="pr-[380px]">
+				<div className="md:pr-[420px]">
 					<div className="px-6">
-						<TabsList className="mt-4 mb-2">
-							<TabsTrigger value="builder">Builder</TabsTrigger>
-							<TabsTrigger value="preview">Preview</TabsTrigger>
-						</TabsList>
-						<TabsContent value="builder" tabIndex={-1}>
-							<Form {...form}>
-								<form
-									id={id}
-									aria-label="Form builder"
-									onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
-										logger.error({
-											msg: "unable to submit form",
-											errors,
-											event,
-											elements,
-										})
-									)}
-								>
-									<FormField
-										control={form.control}
-										name="elements"
-										render={() => (
-											<>
-												<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
-													<DndContext
-														modifiers={[
-															restrictToVerticalAxis,
-															restrictToParentElement,
-														]}
-														onDragEnd={handleDragEnd}
-														sensors={sensors}
-														id={dndContextId}
+						<Form {...form}>
+							<form
+								id={id}
+								aria-label="Form builder"
+								onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
+									logger.error({
+										msg: "unable to submit form",
+										errors,
+										event,
+										elements,
+									})
+								)}
+							>
+								<FormField
+									control={form.control}
+									name="elements"
+									render={() => (
+										<>
+											{/* mobile header/sidebar toggle */}
+											<div className="mt-4 mb-2 flex items-center justify-between md:hidden">
+												<h2 className="font-medium text-lg">
+													Form Builder
+												</h2>
+												<Sheet
+													open={mobileSheetOpen}
+													onOpenChange={setMobileSheetOpen}
+												>
+													<SheetTrigger asChild>
+														<Button variant="outline" size="sm">
+															<Menu className="mr-2 h-4 w-4" />
+															Settings
+														</Button>
+													</SheetTrigger>
+													<SheetContent
+														side="right"
+														className="w-full overflow-auto sm:max-w-md"
 													>
-														<SortableContext
-															items={elements}
-															strategy={verticalListSortingStrategy}
-														>
-															{elements.map(
-																(element, index) =>
-																	!isButtonElement(element) && (
-																		<FormElement
-																			key={element.id}
-																			element={element}
-																			index={index}
-																			isEditing={
-																				panelState.selectedElementIndex ===
+														<SheetHeader>
+															<SheetTitle>Form Settings</SheetTitle>
+														</SheetHeader>
+														{sidebarContent}
+													</SheetContent>
+												</Sheet>
+											</div>
+											<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto py-4">
+												<DndContext
+													modifiers={[
+														restrictToVerticalAxis,
+														restrictToParentElement,
+													]}
+													onDragEnd={handleDragEnd}
+													sensors={sensors}
+													id={dndContextId}
+												>
+													<SortableContext
+														items={elements}
+														strategy={verticalListSortingStrategy}
+													>
+														{elements.map(
+															(element, index) =>
+																!isButtonElement(element) && (
+																	<FormElement
+																		key={element.id}
+																		element={element}
+																		index={index}
+																		isEditing={
+																			panelState.selectedElementIndex ===
+																			index
+																		}
+																		isDisabled={
+																			panelState.selectedElementIndex !==
+																				null &&
+																			panelState.selectedElementIndex !==
 																				index
-																			}
-																			isDisabled={
-																				panelState.selectedElementIndex !==
-																					null &&
-																				panelState.selectedElementIndex !==
-																					index
-																			}
-																		/>
-																	)
-															)}
-														</SortableContext>
-													</DndContext>
-												</ol>
-												<PanelWrapper sidebar={sidebarRef.current}>
-													<FormItem className="relative flex h-screen flex-col">
-														<PanelHeader
-															title={
-																elementPanelTitles[panelState.state]
-															}
-															showCancel={
-																!(panelState.state === "initial")
-															}
-															onCancel={() =>
-																dispatch({ eventName: "cancel" })
-															}
-														/>
-														<FormControl>
-															<ElementPanel panelState={panelState} />
-														</FormControl>
-													</FormItem>
-												</PanelWrapper>
-											</>
-										)}
-									/>
-								</form>
-							</Form>
-						</TabsContent>
-						<TabsContent value="preview">Preview your form here</TabsContent>
+																		}
+																	/>
+																)
+														)}
+													</SortableContext>
+												</DndContext>
+											</ol>
+											<PanelWrapper sidebar={sidebarRef.current}>
+												{sidebarContent}
+											</PanelWrapper>
+										</>
+									)}
+								/>
+							</form>
+						</Form>
 					</div>
-				</Tabs>
-				<SidePanel ref={sidebarRef} />
+				</div>
+				<SidePanel ref={sidebarRef} className="hidden md:flex md:w-[420px]" />
 			</BuilderProvider>
 		</TokenProvider>
+	)
+}
+
+type FormSettingsPanelProps = {
+	form: UseFormReturn<FormBuilderSchema>
+	currentDefaultForm?: SimpleForm
+	slug: string
+}
+
+const FormSettingsPanel = ({ form, currentDefaultForm, slug }: FormSettingsPanelProps) => {
+	return (
+		<div className="flex flex-col gap-6">
+			<FormField
+				control={form.control}
+				name="name"
+				render={({ field }) => (
+					<FormItem>
+						<FormLabel className="text-muted-foreground text-xs uppercase">
+							Form Name
+						</FormLabel>
+						<hr className="my-2" />
+						<Input {...field} placeholder="Form name" />
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
+
+			<div>
+				<FormLabel className="text-muted-foreground text-xs uppercase">Slug</FormLabel>
+				<hr className="my-2" />
+				<Input disabled value={slug} />
+			</div>
+
+			<SelectAccess />
+
+			<FormField
+				control={form.control}
+				name="isDefault"
+				render={({ field }) => (
+					<FormItem>
+						<FormLabel className="text-muted-foreground text-xs uppercase">
+							Default Form
+						</FormLabel>
+						<hr className="my-2" />
+						{field.value ? (
+							<div className="rounded-md border border-green-200 bg-green-50 p-3">
+								<p className="font-medium text-green-800 text-sm">
+									This is the default form for this Pub Type
+								</p>
+								<p className="mt-1 text-green-700 text-xs">
+									This form is used as the default internal editor for all Pubs of
+									this type.
+								</p>
+							</div>
+						) : (
+							<div className="flex flex-col gap-3">
+								{currentDefaultForm && (
+									<div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+										<TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+										<div>
+											<p className="font-medium text-amber-800 text-sm">
+												Current default: {currentDefaultForm.name}
+											</p>
+											<p className="mt-1 text-amber-700 text-xs">
+												Setting this form as default will replace the
+												current default form.
+											</p>
+										</div>
+									</div>
+								)}
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => field.onChange(!field.value)}
+									className="w-full"
+								>
+									{field.value ? "Set as Default Form" : "Remove as Default Form"}
+								</Button>
+							</div>
+						)}
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
+		</div>
 	)
 }

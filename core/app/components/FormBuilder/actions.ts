@@ -1,20 +1,34 @@
 "use server"
 
-import type { FormElementsId, FormsId, NewFormElements, NewFormElementToPubType } from "db/public"
+import type {
+	CommunitiesId,
+	FormElementsId,
+	FormsId,
+	NewFormElements,
+	NewFormElementToPubType,
+	PubsId,
+} from "db/public"
 import type { QB } from "~/lib/server/cache/types"
+import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils"
 import type { FormBuilderSchema } from "./types"
 
-import { Capabilities, MembershipType } from "db/public"
+import { Capabilities, MembershipType, StructuralFormElement } from "db/public"
 import { logger } from "logger"
 
 import { db } from "~/kysely/database"
 import { isUniqueConstraintError } from "~/kysely/errors"
 import { getLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
+import { transformRichTextValuesToProsemirrorServer } from "~/lib/editor/serialize-server"
 import { ApiError } from "~/lib/server"
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { defineServerAction } from "~/lib/server/defineServerAction"
+import { getPubsWithRelatedValues } from "~/lib/server/pub"
+import {
+	renderMarkdownAsHtml,
+	renderMarkdownWithPub,
+} from "~/lib/server/render/pub/renderMarkdownWithPub"
 
 const upsertRelatedPubTypes = async (
 	values: NewFormElementToPubType[],
@@ -43,6 +57,8 @@ export const saveForm = defineServerAction(async function saveForm(form: {
 	relatedPubTypes: NewFormElementToPubType[]
 	deletedRelatedPubTypes: FormElementsId[]
 	access?: FormBuilderSchema["access"]
+	name?: FormBuilderSchema["name"]
+	isDefault?: FormBuilderSchema["isDefault"]
 }) {
 	const loginData = await getLoginData()
 
@@ -66,10 +82,19 @@ export const saveForm = defineServerAction(async function saveForm(form: {
 		return ApiError.UNAUTHORIZED
 	}
 
-	const { formId, upserts, deletes, access, relatedPubTypes, deletedRelatedPubTypes } = form
+	const {
+		formId,
+		upserts,
+		deletes,
+		access,
+		name,
+		isDefault,
+		relatedPubTypes,
+		deletedRelatedPubTypes,
+	} = form
 
 	logger.info({ msg: "saving form", form, upserts, deletes })
-	if (!upserts.length && !deletes.length && !access) {
+	if (!upserts.length && !deletes.length && !access && !name && !isDefault) {
 		return
 	}
 	try {
@@ -97,11 +122,17 @@ export const saveForm = defineServerAction(async function saveForm(form: {
 					db.deleteFrom("form_elements").where("form_elements.id", "in", deletes)
 				)
 			}
+			console.log(form)
 
-			if (access) {
+			console.log({ access, name, isDefault })
+			if (access || name || isDefault) {
 				query = (query as typeof trx)
 					.updateTable("forms")
-					.set({ access })
+					.set({
+						...(access && { access }),
+						...(name && { name }),
+						...(isDefault && { isDefault }),
+					})
 					.where("forms.id", "=", formId)
 			} else {
 				query = (query as typeof trx)
@@ -192,3 +223,91 @@ export const restoreForm = defineServerAction(async function unarchiveForm(id: F
 		return { error: "Unable to unarchive form", cause: error }
 	}
 })
+
+export type HydrateMarkdownInput = {
+	content: string
+	element: typeof StructuralFormElement.p | null
+}
+
+export type HydrateMarkdownResult = {
+	content: string
+	hydrated: string
+}
+
+export const hydrateMarkdownForPreview = defineServerAction(
+	async function hydrateMarkdownForPreview(elements: HydrateMarkdownInput[], pubId?: PubsId) {
+		const loginData = await getLoginData()
+
+		if (!loginData || !loginData.user) {
+			return ApiError.NOT_LOGGED_IN
+		}
+
+		const community = await findCommunityBySlug()
+
+		if (!community) {
+			return ApiError.COMMUNITY_NOT_FOUND
+		}
+
+		const authorized = await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			loginData.user.id
+		)
+
+		if (!authorized) {
+			return ApiError.UNAUTHORIZED
+		}
+
+		let renderWithPubContext: RenderWithPubContext | undefined
+
+		if (pubId) {
+			const pub = await getPubsWithRelatedValues(
+				{ pubId, communityId: community.id as CommunitiesId },
+				{ withPubType: true, withStage: true }
+			)
+
+			if (pub) {
+				const pubWithProsemirrorRichText = transformRichTextValuesToProsemirrorServer(pub, {
+					toJson: true,
+				})
+
+				const member = loginData.user.memberships.find(
+					(m) => m.communityId === community.id
+				)
+
+				if (member) {
+					renderWithPubContext = {
+						communityId: community.id as CommunitiesId,
+						recipient: {
+							...member,
+							id: member.id,
+							user: loginData.user,
+						} as RenderWithPubContext["recipient"],
+						communitySlug: community.slug,
+						pub: pubWithProsemirrorRichText as RenderWithPubContext["pub"],
+						trx: db,
+					}
+				}
+			}
+		}
+
+		const results: HydrateMarkdownResult[] = await Promise.all(
+			elements.map(async (el) => {
+				if (el.element !== StructuralFormElement.p || !el.content) {
+					return { content: el.content, hydrated: el.content }
+				}
+
+				try {
+					const hydrated = renderWithPubContext
+						? await renderMarkdownWithPub(el.content, renderWithPubContext)
+						: await renderMarkdownAsHtml(el.content)
+					return { content: el.content, hydrated }
+				} catch {
+					return { content: el.content, hydrated: el.content }
+				}
+			})
+		)
+
+		return results
+	}
+)

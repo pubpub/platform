@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import type { TableForm } from "./getFormTableColumns"
 
 import { notFound, redirect } from "next/navigation"
 import partition from "lodash.partition"
@@ -57,7 +58,8 @@ export default async function Page(props: {
 				"forms.slug",
 				"forms.name as formName",
 				"pub_types.name as pubType",
-				"pub_types.updatedAt", // TODO: this should be the form's updatedAt
+				"forms.updatedAt",
+				"pub_types.id as pubTypeId",
 				"forms.isArchived",
 				"forms.slug",
 				"forms.isDefault",
@@ -69,7 +71,8 @@ export default async function Page(props: {
 
 	const tableForms = (formList: typeof forms) =>
 		formList.map((form) => {
-			const { id, formName, pubType, updatedAt, isArchived, slug, isDefault } = form
+			const { id, formName, pubType, updatedAt, isArchived, slug, isDefault, pubTypeId } =
+				form
 			return {
 				id,
 				slug,
@@ -78,7 +81,8 @@ export default async function Page(props: {
 				updated: new Date(updatedAt),
 				isArchived,
 				isDefault,
-			}
+				pubTypeId,
+			} satisfies TableForm
 		})
 
 	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute()
