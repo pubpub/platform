@@ -4,6 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/ca
 import { getLoginData } from "~/lib/authentication/loginData"
 import ResetForm from "./ResetForm"
 
+export const metadata = {
+	title: "Reset password",
+}
+
 export default async function Page() {
 	// TODO: add reset token validation
 	const { user, session } = await getLoginData({

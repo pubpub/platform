@@ -17,6 +17,10 @@ type SearchParams =
 			reason: string
 	  }
 
+export const metadata = {
+	title: "Verify your email",
+}
+
 export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
 	const { user, session } = await getLoginData({
 		allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],

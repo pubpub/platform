@@ -10,6 +10,10 @@ import { constructRedirectToBaseCommunityPage } from "~/lib/server/navigation/re
 import { ResetPasswordButton } from "./ResetPasswordButton"
 import { UserInfoForm } from "./UserInfoForm"
 
+export const metadata = {
+	title: "Settings",
+}
+
 export default async function Page() {
 	const { user } = await getPageLoginData()
 

@@ -15,8 +15,12 @@ import { UserProvider } from "./components/providers/UserProvider"
 import { ThemeProvider } from "./components/theme/ThemeProvider"
 
 export const metadata = {
-	title: "PubPub Platform",
+	title: {
+		template: `%s | PubPub Platform`,
+		default: "PubPub Platform",
+	},
 	description: "A more flexible PubPub",
+	icons: [{ url: "/icons/default_favicon.ico" }],
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

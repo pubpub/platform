@@ -23,7 +23,14 @@ export async function generateMetadata(props: {
 	const params = await props.params
 	const community = await findCommunityBySlug(params.communitySlug)
 
+	if (!community) {
+		return {
+			title: "Community Not Found",
+		}
+	}
+
 	return {
+		...(community.avatar && { icons: [{ url: community.avatar }] }),
 		title: {
 			template: `%s | ${community?.name ?? "PubPub"}`,
 			default: community?.name ? `${community?.name} on PubPub` : "PubPub",
