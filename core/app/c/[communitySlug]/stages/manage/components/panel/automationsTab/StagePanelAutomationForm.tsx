@@ -401,13 +401,21 @@ const ResolverFieldSection = memo(
 										JSON input before actions run.
 										<br />
 										<br />
-										<strong>Comparison expressions</strong> like{" "}
-										<code>$.json.some.id = $.pub.values.fieldname</code> will
-										find a Pub where the field matches the left side value.
+										<strong>Query expressions</strong> find a Pub matching
+										conditions. Use <code>{"{{ expr }}"}</code> to interpolate
+										values from incoming data:
+										<br />
+										<code className="mt-1 block">
+											{"$.pub.values.externalId = {{ $.json.body.articleId }}"}
+										</code>
 										<br />
 										<br />
-										<strong>Transform expressions</strong> can restructure the
-										input data for the automation's actions.
+										<strong>Transform expressions</strong> restructure input
+										data for actions:
+										<br />
+										<code className="mt-1 block">
+											{'{ "title": $.json.body.name }'}
+										</code>
 									</p>
 								</InfoButton>
 							</FieldLabel>
@@ -428,15 +436,15 @@ const ResolverFieldSection = memo(
 						<Input
 							{...field}
 							value={field.value ?? ""}
-							placeholder="Enter JSONata expression (e.g., $.json.articleId = $.pub.values.externalId)"
+							placeholder="$.pub.values.externalId = {{ $.json.body.articleId }}"
 							className={cn(
 								"font-mono text-sm",
 								fieldState.invalid && "border-red-300"
 							)}
 						/>
 						<FieldDescription>
-							Use a JSONata expression to resolve a Pub by comparing values, e.g.,{" "}
-							<code>$.json.id = $.pub.values.externalId</code>
+							Find a Pub by query, e.g.{" "}
+							<code>{"$.pub.values.externalId = {{ $.json.body.id }}"}</code>
 						</FieldDescription>
 						{fieldState.error && (
 							<FieldError className="text-xs">{fieldState.error.message}</FieldError>

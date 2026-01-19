@@ -1,32 +1,34 @@
-import type {
-	ComparisonCondition,
-	ComparisonOperator,
-	JsonataBinaryNode,
-	JsonataBlockNode,
-	JsonataFunctionNode,
-	JsonataNode,
-	JsonataNumberNode,
-	JsonataPathNode,
-	JsonataPathStep,
-	JsonataStringNode,
-	JsonataUnaryNode,
-	JsonataValueNode,
-	LiteralValue,
-	LogicalCondition,
-	LogicalOperator,
-	NotCondition,
-	ParsedCondition,
-	PubFieldPath,
-	RelationComparisonCondition,
-	RelationCondition,
-	RelationContextPath,
-	RelationDirection,
-	RelationFilterCondition,
-	RelationFunctionCondition,
-	RelationLogicalCondition,
-	RelationNotCondition,
-	SearchCondition,
-	StringFunction,
+import {
+	BUILTIN_FIELDS,
+	type BuiltinField,
+	type ComparisonCondition,
+	type ComparisonOperator,
+	type JsonataBinaryNode,
+	type JsonataBlockNode,
+	type JsonataFunctionNode,
+	type JsonataNode,
+	type JsonataNumberNode,
+	type JsonataPathNode,
+	type JsonataPathStep,
+	type JsonataStringNode,
+	type JsonataUnaryNode,
+	type JsonataValueNode,
+	type LiteralValue,
+	type LogicalCondition,
+	type LogicalOperator,
+	type NotCondition,
+	type ParsedCondition,
+	type PubFieldPath,
+	type RelationComparisonCondition,
+	type RelationCondition,
+	type RelationContextPath,
+	type RelationDirection,
+	type RelationFilterCondition,
+	type RelationFunctionCondition,
+	type RelationLogicalCondition,
+	type RelationNotCondition,
+	type SearchCondition,
+	type StringFunction,
 } from "./types"
 
 import jsonata from "jsonata"
@@ -92,6 +94,8 @@ function isLiteralNode(
 	return node.type === "string" || node.type === "number" || node.type === "value"
 }
 
+
+
 /**
  * extracts the pub field path from a jsonata path node
  *
@@ -122,8 +126,8 @@ function extractPubFieldPath(steps: JsonataPathStep[]): PubFieldPath {
 	}
 
 	// handle builtin fields
-	if (["id", "createdAt", "updatedAt", "pubTypeId"].includes(thirdStep.value)) {
-		return { kind: "builtin", field: thirdStep.value as "id" | "createdAt" | "updatedAt" }
+	if (BUILTIN_FIELDS.includes(thirdStep.value as BuiltinField)) {
+		return { kind: "builtin", field: thirdStep.value as BuiltinField }
 	}
 
 	// handle pubType.name or pubType.id

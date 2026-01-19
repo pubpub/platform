@@ -31,6 +31,7 @@ import type { DefinitelyHas, MaybeHas, XOR } from "utils/types"
 import {
 	type AliasedSelectQueryBuilder,
 	type ExpressionBuilder,
+	type ExpressionWrapper,
 	type Kysely,
 	type ReferenceExpression,
 	type SelectExpression,
@@ -1238,6 +1239,11 @@ export interface GetPubsWithRelatedValuesOptions
 	trx?: typeof db
 	filters?: Filter
 	/**
+	 * A custom filter function that receives the expression builder and returns a filter condition.
+	 * Useful for applying JSONata-based filters or other complex conditions.
+	 */
+	customFilter?: (eb: ExpressionBuilder<Database, "pubs">) => ExpressionWrapper<any, any, any>
+	/**
 	 * Constraints on which pub types the user/token has access to. Will also filter related pubs.
 	 */
 	allowedPubTypes?: PubTypesId[]
@@ -1731,6 +1737,10 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					// pub value filter
 					.$if(Boolean(options?.filters), (qb) =>
 						qb.where((eb) => applyFilters(eb, options!.filters!))
+					)
+					// custom filter (e.g. jsonata-based)
+					.$if(Boolean(options?.customFilter), (qb) =>
+						qb.where((eb) => options!.customFilter!(eb))
 					)
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))

@@ -1,6 +1,7 @@
 import type { ExpressionBuilder, ExpressionWrapper, RawBuilder } from "kysely"
 import type { CompiledQuery } from "./compiler"
 import type {
+    BuiltinField,
 	ComparisonCondition,
 	FunctionCondition,
 	LogicalCondition,
@@ -33,7 +34,7 @@ export interface SqlBuilderOptions {
  */
 function pathToColumn(
 	path: PubFieldPath
-): "value" | "pubs.createdAt" | "pubs.updatedAt" | "pubs.id" | "pubs.pubTypeId" {
+): "value" | `pubs.${BuiltinField}` {
 	if (path.kind === "builtin") {
 		return `pubs.${path.field}` as const
 	}
