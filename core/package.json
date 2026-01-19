@@ -50,7 +50,10 @@
 		"storybook": "SKIP_VALIDATION=true PUBPUB_URL=http://localhost:6006 storybook dev -p 6006 --no-open",
 		"build-storybook": "SKIP_VALIDATION=true storybook build"
 	},
-	"files": [".next", "public"],
+	"files": [
+		".next",
+		"public"
+	],
 	"prisma": {
 		"__comment": "The #register-loader goes to the correct file based on the .imports setting below",
 		"seed": "tsx --import #register-loader prisma/seed.ts"
@@ -106,6 +109,7 @@
 		"hastscript": "^9.0.1",
 		"import-in-the-middle": "1.14.2",
 		"ioredis": "^5.7.0",
+		"jsonata": "^2.1.0",
 		"jsonpath-plus": "^10.3.0",
 		"jsonwebtoken": "^9.0.2",
 		"katex": "catalog:",
