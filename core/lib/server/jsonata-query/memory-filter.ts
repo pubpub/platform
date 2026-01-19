@@ -132,16 +132,25 @@ function evaluateComparison(pub: AnyProcessedPub, condition: ComparisonCondition
  * evaluates a function condition against a pub
  */
 function evaluateFunction(pub: AnyProcessedPub, condition: FunctionCondition): boolean {
-	const value = getValueFromPath(pub, condition.path)
+	let value = getValueFromPath(pub, condition.path)
 	const args = condition.arguments
+
+	// apply transform if present
+	value = applyTransform(value, condition.pathTransform)
+
+	// also transform the search argument for consistency
+	let searchArg = args[0]
+	if (typeof searchArg === "string" && condition.pathTransform) {
+		searchArg = applyTransform(searchArg, condition.pathTransform) as string
+	}
 
 	switch (condition.name) {
 		case "contains": {
 			if (typeof value === "string") {
-				return value.includes(String(args[0]))
+				return value.includes(String(searchArg))
 			}
 			if (Array.isArray(value)) {
-				return value.includes(args[0])
+				return value.includes(searchArg)
 			}
 			return false
 		}
@@ -149,13 +158,13 @@ function evaluateFunction(pub: AnyProcessedPub, condition: FunctionCondition): b
 			if (typeof value !== "string") {
 				return false
 			}
-			return value.startsWith(String(args[0]))
+			return value.startsWith(String(searchArg))
 		}
 		case "endsWith": {
 			if (typeof value !== "string") {
 				return false
 			}
-			return value.endsWith(String(args[0]))
+			return value.endsWith(String(searchArg))
 		}
 		case "exists": {
 			return value !== undefined && value !== null
@@ -266,21 +275,31 @@ function evaluateRelationFilter(ctx: RelationContext, filter: RelationFilterCond
 			return compareValues(value, filter.operator, filter.value)
 		}
 		case "relationFunction": {
-			const value = getRelationContextValue(ctx, filter.path)
+			let value = getRelationContextValue(ctx, filter.path)
 			const args = filter.arguments
+
+			// apply transform if present
+			value = applyTransform(value, filter.pathTransform)
+
+			// also transform the search argument
+			let searchArg = args[0]
+			if (typeof searchArg === "string" && filter.pathTransform) {
+				searchArg = applyTransform(searchArg, filter.pathTransform) as string
+			}
+
 			switch (filter.name) {
 				case "contains":
 					if (typeof value === "string") {
-						return value.includes(String(args[0]))
+						return value.includes(String(searchArg))
 					}
 					if (Array.isArray(value)) {
-						return value.includes(args[0])
+						return value.includes(searchArg)
 					}
 					return false
 				case "startsWith":
-					return typeof value === "string" && value.startsWith(String(args[0]))
+					return typeof value === "string" && value.startsWith(String(searchArg))
 				case "endsWith":
-					return typeof value === "string" && value.endsWith(String(args[0]))
+					return typeof value === "string" && value.endsWith(String(searchArg))
 				case "exists":
 					return value !== undefined && value !== null
 				default:

@@ -1,3 +1,6 @@
+import jsonata from "jsonata"
+
+import { InvalidPathError, UnsupportedExpressionError } from "./errors"
 import {
 	BUILTIN_FIELDS,
 	type BuiltinField,
@@ -30,10 +33,6 @@ import {
 	type SearchCondition,
 	type StringFunction,
 } from "./types"
-
-import jsonata from "jsonata"
-
-import { InvalidPathError, UnsupportedExpressionError } from "./errors"
 
 export type { ParsedCondition }
 
@@ -94,8 +93,6 @@ function isLiteralNode(
 	return node.type === "string" || node.type === "number" || node.type === "value"
 }
 
-
-
 /**
  * extracts the pub field path from a jsonata path node
  *
@@ -148,7 +145,10 @@ function extractPubFieldPath(steps: JsonataPathStep[]): PubFieldPath {
 		throw new InvalidPathError("expected field name after $.pub.values", stepsToString(steps))
 	}
 
-	throw new InvalidPathError(`unsupported pub path: $.pub.${thirdStep.value}`, stepsToString(steps))
+	throw new InvalidPathError(
+		`unsupported pub path: $.pub.${thirdStep.value}`,
+		stepsToString(steps)
+	)
 }
 
 /**
@@ -208,10 +208,7 @@ function extractRelationContextPath(steps: JsonataPathStep[]): RelationContextPa
 			if (fourthStep.type === "name" && ["name", "id"].includes(fourthStep.value)) {
 				return { kind: "relatedPubType", field: fourthStep.value as "name" | "id" }
 			}
-			throw new InvalidPathError(
-				"expected pubType.name or pubType.id",
-				stepsToString(steps)
-			)
+			throw new InvalidPathError("expected pubType.name or pubType.id", stepsToString(steps))
 		}
 
 		// handle $.relatedPub.values.fieldname
@@ -344,7 +341,9 @@ function parseComparison(
 		pathTransform = funcName as StringFunction
 		const arg = pathNode.arguments[0]
 		if (!isPathNode(arg)) {
-			throw new UnsupportedExpressionError("expected path as first argument to transform function")
+			throw new UnsupportedExpressionError(
+				"expected path as first argument to transform function"
+			)
 		}
 		path = extractPubFieldPath(arg.steps)
 	} else {
@@ -401,22 +400,49 @@ function parseFunctionCall(node: JsonataFunctionNode): ParsedCondition {
 	}
 
 	// string functions: contains, startsWith, endsWith
+	// supports transforms like $contains($lowercase($.pub.values.title), "snap")
 	if (["contains", "startsWith", "endsWith"].includes(funcName)) {
 		if (node.arguments.length !== 2) {
 			throw new UnsupportedExpressionError(`${funcName}() expects exactly two arguments`)
 		}
 		const pathArg = node.arguments[0]
 		const valueArg = node.arguments[1]
-		if (!isPathNode(pathArg)) {
-			throw new UnsupportedExpressionError(`${funcName}() expects a path as first argument`)
+
+		let path: PubFieldPath
+		let pathTransform: StringFunction | undefined
+
+		if (isPathNode(pathArg)) {
+			path = extractPubFieldPath(pathArg.steps)
+		} else if (isFunctionNode(pathArg)) {
+			// handle transform wrapper like $lowercase($.pub.values.title)
+			const transformName = getFunctionName(pathArg.procedure)
+			if (!["lowercase", "uppercase"].includes(transformName)) {
+				throw new UnsupportedExpressionError(
+					`function ${transformName} cannot be used as path transform`,
+					transformName
+				)
+			}
+			pathTransform = transformName as StringFunction
+			const innerArg = pathArg.arguments[0]
+			if (!isPathNode(innerArg)) {
+				throw new UnsupportedExpressionError(
+					"expected path as argument to transform function"
+				)
+			}
+			path = extractPubFieldPath(innerArg.steps)
+		} else {
+			throw new UnsupportedExpressionError(
+				`${funcName}() expects a path or transform function as first argument`
+			)
 		}
-		const path = extractPubFieldPath(pathArg.steps)
+
 		const value = extractLiteral(valueArg)
 		return {
 			type: "function",
 			name: funcName as StringFunction,
 			path,
 			arguments: [value],
+			pathTransform,
 		}
 	}
 
@@ -496,22 +522,48 @@ function parseRelationFunctionCall(node: JsonataFunctionNode): RelationFilterCon
 	}
 
 	// string functions: contains, startsWith, endsWith
+	// supports transforms like $contains($lowercase($.relatedPub.values.title), "snap")
 	if (["contains", "startsWith", "endsWith"].includes(funcName)) {
 		if (node.arguments.length !== 2) {
 			throw new UnsupportedExpressionError(`${funcName}() expects exactly two arguments`)
 		}
 		const pathArg = node.arguments[0]
 		const valueArg = node.arguments[1]
-		if (!isPathNode(pathArg)) {
-			throw new UnsupportedExpressionError(`${funcName}() expects a path as first argument`)
+
+		let path: RelationContextPath
+		let pathTransform: StringFunction | undefined
+
+		if (isPathNode(pathArg)) {
+			path = extractRelationContextPath(pathArg.steps)
+		} else if (isFunctionNode(pathArg)) {
+			const transformName = getFunctionName(pathArg.procedure)
+			if (!["lowercase", "uppercase"].includes(transformName)) {
+				throw new UnsupportedExpressionError(
+					`function ${transformName} cannot be used as path transform in relation filter`,
+					transformName
+				)
+			}
+			pathTransform = transformName as StringFunction
+			const innerArg = pathArg.arguments[0]
+			if (!isPathNode(innerArg)) {
+				throw new UnsupportedExpressionError(
+					"expected path as argument to transform function"
+				)
+			}
+			path = extractRelationContextPath(innerArg.steps)
+		} else {
+			throw new UnsupportedExpressionError(
+				`${funcName}() expects a path or transform function as first argument`
+			)
 		}
-		const path = extractRelationContextPath(pathArg.steps)
+
 		const value = extractLiteral(valueArg)
 		return {
 			type: "relationFunction",
 			name: funcName as StringFunction,
 			path,
 			arguments: [value],
+			pathTransform,
 		} satisfies RelationFunctionCondition
 	}
 
@@ -746,7 +798,9 @@ function calculateRelationDepth(condition: ParsedCondition, currentDepth = 0): n
 		case "relation":
 			return currentDepth + 1
 		case "logical":
-			return Math.max(...condition.conditions.map((c) => calculateRelationDepth(c, currentDepth)))
+			return Math.max(
+				...condition.conditions.map((c) => calculateRelationDepth(c, currentDepth))
+			)
 		case "not":
 			return calculateRelationDepth(condition.condition, currentDepth)
 		default:

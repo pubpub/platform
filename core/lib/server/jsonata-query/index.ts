@@ -1,21 +1,22 @@
-export { compileJsonataQuery, type CompiledQuery } from "./compiler"
-export { applyJsonataFilter, type SqlBuilderOptions } from "./sql-builder"
-export { filterPubsWithJsonata, pubMatchesJsonataQuery } from "./memory-filter"
-export { parseJsonataQuery, type ParsedQuery, type ParsedCondition } from "./parser"
-export { JsonataQueryError, UnsupportedExpressionError, InvalidPathError } from "./errors"
 export type {
-	PubFieldPath,
 	ComparisonCondition,
 	FunctionCondition,
 	LogicalCondition,
 	NotCondition,
-	SearchCondition,
-	RelationCondition,
-	RelationDirection,
-	RelationContextPath,
-	RelationFilterCondition,
+	PubFieldPath,
 	RelationComparisonCondition,
+	RelationCondition,
+	RelationContextPath,
+	RelationDirection,
+	RelationFilterCondition,
 	RelationFunctionCondition,
 	RelationLogicalCondition,
 	RelationNotCondition,
+	SearchCondition,
 } from "./types"
+
+export { type CompiledQuery, compileJsonataQuery } from "./compiler"
+export { InvalidPathError, JsonataQueryError, UnsupportedExpressionError } from "./errors"
+export { filterPubsWithJsonata, pubMatchesJsonataQuery } from "./memory-filter"
+export { type ParsedCondition, type ParsedQuery, parseJsonataQuery } from "./parser"
+export { applyJsonataFilter, type SqlBuilderOptions } from "./sql-builder"

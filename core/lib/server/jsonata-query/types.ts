@@ -85,18 +85,29 @@ export type JsonataNode =
 export const COMPARISON_OPS = ["=", "!=", "<", "<=", ">", ">=", "in"] as const
 export type ComparisonOperator = (typeof COMPARISON_OPS)[number]
 
-
 export const LOGICAL_OPS = ["and", "or"] as const
 export type LogicalOperator = (typeof LOGICAL_OPS)[number]
 
-export const STRING_FUNCTIONS = ["contains", "startsWith", "endsWith", "lowercase", "uppercase"] as const
+export const STRING_FUNCTIONS = [
+	"contains",
+	"startsWith",
+	"endsWith",
+	"lowercase",
+	"uppercase",
+] as const
 export type StringFunction = (typeof STRING_FUNCTIONS)[number]
 
 export const BOOLEAN_FUNCTIONS = ["exists", "not"] as const
 export type BooleanFunction = (typeof BOOLEAN_FUNCTIONS)[number]
 
-
-export const BUILTIN_FIELDS = ["id", "createdAt", "updatedAt", "pubTypeId", "title", "stageId"] as const
+export const BUILTIN_FIELDS = [
+	"id",
+	"createdAt",
+	"updatedAt",
+	"pubTypeId",
+	"title",
+	"stageId",
+] as const
 export type BuiltinField = (typeof BUILTIN_FIELDS)[number]
 
 export type PubFieldPath =
@@ -127,6 +138,8 @@ export interface FunctionCondition {
 	name: StringFunction | BooleanFunction
 	path: PubFieldPath
 	arguments: LiteralValue[]
+	// optional transform on the path, e.g. $contains($lowercase($.pub.values.title), "snap")
+	pathTransform?: StringFunction
 }
 
 export interface LogicalCondition {
@@ -160,6 +173,7 @@ export interface RelationFunctionCondition {
 	name: StringFunction | BooleanFunction
 	path: RelationContextPath
 	arguments: LiteralValue[]
+	pathTransform?: StringFunction
 }
 
 export interface RelationLogicalCondition {

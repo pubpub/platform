@@ -1,10 +1,11 @@
 import type { ProcessedPub } from "contracts"
-import type { CommunitiesId, PubsId } from "db/public"
+import type { CommunitiesId } from "db/public"
 import type { FullAutomation, Json } from "db/types"
 import type { InterpolationContext } from "./interpolationContext"
 
-import { interpolate } from "@pubpub/json-interpolate"
 import jsonata from "jsonata"
+
+import { interpolate } from "@pubpub/json-interpolate"
 import { logger } from "logger"
 import { tryCatch } from "utils/try-catch"
 
@@ -134,9 +135,7 @@ async function interpolateResolverExpression(
 		const value = await jsonataExpr.evaluate(context)
 
 		if (value === undefined) {
-			throw new Error(
-				`resolver interpolation '${block.expression}' returned undefined`
-			)
+			throw new Error(`resolver interpolation '${block.expression}' returned undefined`)
 		}
 
 		const literal = valueToJsonataLiteral(value)
@@ -155,7 +154,8 @@ function isQueryExpression(expression: string): boolean {
 		return false
 	}
 	// check for comparison operators or relation syntax
-	return /\s*(=|!=|<|>|<=|>=|in)\s*/.test(expression) ||
+	return (
+		/\s*(=|!=|<|>|<=|>=|in)\s*/.test(expression) ||
 		expression.includes("$.pub.out.") ||
 		expression.includes("$.pub.in.") ||
 		expression.includes("$search(") ||
@@ -163,6 +163,7 @@ function isQueryExpression(expression: string): boolean {
 		expression.includes("$startsWith(") ||
 		expression.includes("$endsWith(") ||
 		expression.includes("$exists(")
+	)
 }
 
 /**
@@ -202,7 +203,7 @@ export async function resolveAutomationInput(
 	// determine if this is a query (to find a pub) or a transform
 	if (isQueryExpression(interpolatedExpression)) {
 		// parse and compile the query
-		const [parseError, parsedQuery] = await tryCatch(
+		const [parseError, _parsedQuery] = await tryCatch(
 			Promise.resolve(parseJsonataQuery(interpolatedExpression))
 		)
 
@@ -226,12 +227,10 @@ export async function resolveAutomationInput(
 						withValues: true,
 						depth: 3,
 						limit: 1,
-						customFilter: (eb) =>
-							applyJsonataFilter(eb, compiled, { communitySlug }),
+						customFilter: (eb) => applyJsonataFilter(eb, compiled, { communitySlug }),
 					}
 				)
 			)
-			console.log("pubs", pubs)
 
 			if (queryError) {
 				logger.warn("failed to execute resolver query", {
@@ -252,7 +251,6 @@ export async function resolveAutomationInput(
 		}
 	}
 
-	
 	// treat as a transform expression
 	const [transformError, result] = await tryCatch(interpolate(resolver, context))
 
