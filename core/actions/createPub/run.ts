@@ -85,22 +85,31 @@ export const run = defineRun<typeof action>(async (props) => {
 
 		// Build a map from element ID to field slug for pubfield elements
 		const elementIdToFieldSlug = new Map<string, string>()
+		const fieldNameToFieldSlug = new Map<string, string>()
 		for (const element of form.elements) {
 			if (element.type === "pubfield" && element.slug) {
 				elementIdToFieldSlug.set(element.id, element.slug)
+				if (element.fieldName) {
+					fieldNameToFieldSlug.set(element.fieldName, element.slug)
+				}
 			}
 		}
 
 		// Transform pubValues from element IDs to field slugs
 		const values: Record<string, PubValueEntry> = {}
-		for (const [elementId, value] of Object.entries(interpolatedPubValues)) {
-			const fieldSlug = elementIdToFieldSlug.get(elementId)
+		for (const [key, value] of Object.entries(interpolatedPubValues)) {
+			// Try element ID first, then field name, then field slug directly
+			const fieldSlug =
+				elementIdToFieldSlug.get(key) ||
+				fieldNameToFieldSlug.get(key) ||
+				(key.includes(":") ? key : undefined)
+
 			if (fieldSlug) {
 				values[fieldSlug] = value as PubValueEntry
 			} else {
 				logger.warn({
-					msg: "createPub: Unknown element ID in pubValues",
-					elementId,
+					msg: "createPub: Unknown element ID or field name in pubValues",
+					key,
 					formSlug,
 				})
 			}

@@ -118,3 +118,147 @@ export function createAnnounceReviewPayload({
 		},
 	}
 }
+
+export function createRejectPayload({
+	inReplyTo,
+	repositoryUrl,
+	serviceUrl,
+}: {
+	inReplyTo: string
+	repositoryUrl: string
+	serviceUrl: string
+}): CoarNotifyPayload {
+	return {
+		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
+		id: `urn:uuid:${randomUUID()}`,
+		type: ["Reject"],
+		inReplyTo,
+		actor: {
+			id: serviceUrl,
+			type: "Service",
+			name: "Service Name",
+		},
+		object: {
+			id: inReplyTo,
+			type: "Offer",
+		},
+		target: {
+			id: repositoryUrl,
+			inbox: `${repositoryUrl}/inbox/`,
+			type: "Service",
+		},
+		origin: {
+			id: serviceUrl,
+			inbox: `${serviceUrl}/inbox/`,
+			type: "Service",
+		},
+	}
+}
+
+export function createAcceptPayload({
+	inReplyTo,
+	repositoryUrl,
+	serviceUrl,
+}: {
+	inReplyTo: string
+	repositoryUrl: string
+	serviceUrl: string
+}): CoarNotifyPayload {
+	return {
+		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
+		id: `urn:uuid:${randomUUID()}`,
+		type: ["Accept"],
+		inReplyTo,
+		actor: {
+			id: serviceUrl,
+			type: "Service",
+			name: "Service Name",
+		},
+		object: {
+			id: inReplyTo,
+			type: "Offer",
+		},
+		target: {
+			id: repositoryUrl,
+			inbox: `${repositoryUrl}/inbox/`,
+			type: "Service",
+		},
+		origin: {
+			id: serviceUrl,
+			inbox: `${serviceUrl}/inbox/`,
+			type: "Service",
+		},
+	}
+}
+
+export function createOfferIngestPayload({
+	reviewId,
+	serviceUrl,
+	aggregatorUrl,
+}: {
+	reviewId: string
+	serviceUrl: string
+	aggregatorUrl: string
+}): CoarNotifyPayload {
+	const reviewUrl = `${serviceUrl}/review/${reviewId}`
+	return {
+		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
+		id: `urn:uuid:${randomUUID()}`,
+		type: ["Offer", "coar-notify:IngestAction"],
+		actor: {
+			id: serviceUrl,
+			type: "Service",
+			name: "Review Group",
+		},
+		object: {
+			id: reviewUrl,
+			type: ["Page", "sorg:Review"],
+		},
+		target: {
+			id: aggregatorUrl,
+			inbox: `${aggregatorUrl}/inbox/`,
+			type: "Service",
+		},
+		origin: {
+			id: serviceUrl,
+			inbox: `${serviceUrl}/inbox/`,
+			type: "Service",
+		},
+	}
+}
+
+export function createAnnounceIngestPayload({
+	reviewId,
+	serviceUrl,
+	aggregatorUrl,
+}: {
+	reviewId: string
+	serviceUrl: string
+	aggregatorUrl: string
+}): CoarNotifyPayload {
+	const reviewUrl = `${serviceUrl}/review/${reviewId}`
+	return {
+		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
+		id: `urn:uuid:${randomUUID()}`,
+		type: ["Announce", "coar-notify:IngestAction"],
+		actor: {
+			id: aggregatorUrl,
+			type: "Service",
+			name: "Aggregator",
+		},
+		object: {
+			id: reviewUrl,
+			type: ["Page", "sorg:Review"],
+		},
+		target: {
+			id: serviceUrl,
+			inbox: `${serviceUrl}/inbox/`,
+			type: "Service",
+		},
+		origin: {
+			id: aggregatorUrl,
+			inbox: `${aggregatorUrl}/inbox/`,
+			type: "Service",
+		},
+	}
+}
