@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Activity } from "lucide-react"
@@ -15,6 +17,10 @@ import { ContentLayout } from "../../ContentLayout"
 
 type Props = {
 	params: Promise<{ communitySlug: string }>
+}
+
+export const metadata: Metadata = {
+	title: "Action Settings",
 }
 
 export default async function Page(_props: Props) {
@@ -79,7 +85,7 @@ export default async function Page(_props: Props) {
 								</ItemMedia>
 								<ItemContent>
 									<ItemTitle>
-										<h2 className="font-medium text-lg">{action.name}</h2>
+										<h2 className="font-medium text-lg">{action.niceName}</h2>
 									</ItemTitle>
 									<ItemDescription>{action.description}</ItemDescription>
 								</ItemContent>
