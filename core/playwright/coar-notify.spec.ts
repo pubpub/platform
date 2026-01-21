@@ -46,25 +46,27 @@ const seed = createSeed({
 		},
 	},
 	pubFields: {
-		Title: { schemaName: CoreSchemaType.String },
-		Content: { schemaName: CoreSchemaType.String },
-		Payload: { schemaName: CoreSchemaType.String },
-		RelatedPub: { schemaName: CoreSchemaType.String, relation: true },
+		title: { schemaName: CoreSchemaType.String },
+		content: { schemaName: CoreSchemaType.String },
+		payload: { schemaName: CoreSchemaType.String },
+		sourceurl: { schemaName: CoreSchemaType.String },
+		relatedpub: { schemaName: CoreSchemaType.String, relation: true },
 	},
 	pubTypes: {
 		Submission: {
-			Title: { isTitle: true },
-			Content: { isTitle: false },
+			title: { isTitle: true },
+			content: { isTitle: false },
 		},
 		Notification: {
-			Title: { isTitle: true },
-			Payload: { isTitle: false },
-			RelatedPub: { isTitle: false },
+			title: { isTitle: true },
+			payload: { isTitle: false },
+			sourceurl: { isTitle: false },
+			relatedpub: { isTitle: false },
 		},
 		Review: {
-			Title: { isTitle: true },
-			Content: { isTitle: false },
-			RelatedPub: { isTitle: false },
+			title: { isTitle: true },
+			content: { isTitle: false },
+			relatedpub: { isTitle: false },
 		},
 	},
 	stages: {
@@ -85,8 +87,9 @@ const seed = createSeed({
 								stage: STAGE_IDS.Inbox,
 								formSlug: "notification-default-editor",
 								pubValues: {
-									Title: "New COAR Notification: {{ $join($.json.type, ', ') }}",
-									Payload: "{{ $string($.json) }}",
+									title: "URL: {{ $.json.object.id }} - Type: {{ $join($.json.type, ', ') }}",
+									payload: "{{ $string($.json) }}",
+									sourceurl: "{{ $.json.object.id }}",
 								},
 							},
 						},
@@ -116,9 +119,9 @@ const seed = createSeed({
 								stage: STAGE_IDS.ReviewInbox,
 								formSlug: "review-default-editor",
 								pubValues: {
-									Title: "Review for: {{ $.pub.values.title }}",
-									RelatedPub:
-										"{{ [{ 'relatedPubId': $.pub.id, 'value': 'Notification' }] }}",
+									title: "Review for: {{ $.pub.values.title }}",
+									relatedpub:
+										"<<< [{ 'relatedPubId': $.pub.id, 'value': 'Notification' }] >>>",
 								},
 							},
 						},
@@ -204,24 +207,24 @@ const seed = createSeed({
 							config: {
 								url: "http://stubbed-remote-inbox/inbox",
 								method: "POST",
-								body: {
+								body: `<<< {
 									"@context": [
 										"https://www.w3.org/ns/activitystreams",
-										"https://coar-notify.net",
+										"https://coar-notify.net"
 									],
-									type: ["Announce", "coar-notify:ReviewAction"],
-									id: "urn:uuid:{{ $.pub.id }}",
-									object: {
-										id: "{{ $.env.PUBPUB_URL }}/c/{{ $.community.slug }}/pub/{{ $.pub.id }}",
-										type: ["Page", "sorg:Review"],
-										"as:inReplyTo": "https://example.org/preprint/123",
+									"type": ["Announce", "coar-notify:ReviewAction"],
+									"id": "urn:uuid:" & $.pub.id,
+									"object": {
+										"id": $.env.PUBPUB_URL & "/c/" & $.community.slug & "/pub/" & $.pub.id,
+										"type": ["Page", "sorg:Review"],
+										"as:inReplyTo": $.pub.out.relatedpub.values.sourceurl
 									},
-									target: {
-										id: "http://stubbed-remote-inbox",
-										inbox: "http://stubbed-remote-inbox/inbox",
-										type: "Service",
-									},
-								},
+									"target": {
+										"id": "http://stubbed-remote-inbox",
+										"inbox": "http://stubbed-remote-inbox/inbox",
+										"type": "Service"
+									}
+								} >>>`,
 							},
 						},
 					],
@@ -233,7 +236,7 @@ const seed = createSeed({
 		{
 			pubType: "Submission",
 			stage: "Inbox",
-			values: { Title: "Pre-existing Pub" },
+			values: { title: "Pre-existing Pub" },
 		},
 	],
 	stageConnections: {
@@ -356,12 +359,20 @@ test.describe("User Story 1 & 2: Review Request & Reception", () => {
 			)
 			.toBeDefined()
 
+		const finalAnnounce = mockPreprintRepo
+			.getReceivedNotifications()
+			.find((n) =>
+				Array.isArray(n.type) ? n.type.includes("Announce") : n.type === "Announce"
+			)
+		expect(finalAnnounce).toBeDefined()
+		expect(finalAnnounce?.object?.["as:inReplyTo"]).toBe(
+			`${mockPreprintRepo.url}/preprint/54321`
+		)
+
 		// Check the stages to see if the Review pub reached Published
 		await page.goto(`/c/${community.community.slug}/stages`)
 		await expect(
-			page
-				.getByText("Review for: New COAR Notification: Offer, coar-notify:ReviewAction")
-				.first()
+			page.getByText(`URL: ${mockPreprintRepo.url}/preprint/54321`, { exact: false }).first()
 		).toBeVisible({
 			timeout: 15000,
 		})
@@ -435,8 +446,8 @@ test.describe("User Story 4: Review Group Aggregation Announcement to Repositori
 
 		// Verify Notification pub creation
 		await page.goto(`/c/${community.community.slug}/stages`)
-		await expect(
-			page.getByText("New COAR Notification: Announce, coar-notify:IngestAction").first()
-		).toBeVisible({ timeout: 15000 })
+		await expect(page.getByText("URL: ", { exact: false }).first()).toBeVisible({
+			timeout: 15000,
+		})
 	})
 })

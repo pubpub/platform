@@ -318,9 +318,6 @@ export class ActionConfigBuilder<
 				? this.result.config
 				: this.getMergedConfig()
 
-		// to prevent this from being bundled into the main bundle, we import it here
-		const { interpolate } = await import("@pubpub/json-interpolate")
-
 		const fieldReferences = collectActionFieldReferences(configToInterpolate)
 		const cycle = detectCycles(fieldReferences)
 
@@ -338,22 +335,37 @@ export class ActionConfigBuilder<
 		}
 
 		try {
-			// interpolate each field individually
-			const interpolatedConfig: Record<string, unknown> = {}
+			// to prevent this from being bundled into the main bundle, we import it here
+			const { interpolate } = await import("@pubpub/json-interpolate")
 
-			for (const [key, value] of Object.entries(configToInterpolate)) {
+			const interpolateValue = async (value: unknown, data: any): Promise<any> => {
 				if (typeof value !== "string") {
-					interpolatedConfig[key] = value
-					continue
+					if (Array.isArray(value)) {
+						return await Promise.all(value.map((item) => interpolateValue(item, data)))
+					}
+					if (typeof value === "object" && value !== null) {
+						const result: Record<string, any> = {}
+						for (const [key, val] of Object.entries(value)) {
+							result[key] = await interpolateValue(val, data)
+						}
+						return result
+					}
+					return value
 				}
 
 				if (!needsInterpolation(value)) {
-					interpolatedConfig[key] = value
-					continue
+					return value
 				}
 
 				const valueJsonata = extractJsonata(value)
-				interpolatedConfig[key] = await interpolate(valueJsonata, data)
+				return await interpolate(valueJsonata, data)
+			}
+
+			// interpolate each field individually (supporting nested objects/arrays)
+			const interpolatedConfig: Record<string, unknown> = {}
+
+			for (const [key, value] of Object.entries(configToInterpolate)) {
+				interpolatedConfig[key] = await interpolateValue(value, data)
 			}
 
 			return new ActionConfigBuilder(this.actionName, {
