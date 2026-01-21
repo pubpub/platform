@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 
 import { Capabilities, MembershipType } from "db/public"
 import { PubFieldProvider } from "ui/pubFields"
+import { StagesProvider, stagesDAO } from "ui/stages"
 import { TokenProvider } from "ui/tokens"
 
 import { getActionByName } from "~/actions/api"
@@ -13,13 +14,23 @@ import { getActionConfigDefaults } from "~/lib/server/actions"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
 import { getPubFields } from "~/lib/server/pubFields"
+import { getStages } from "~/lib/server/stages"
 import { ContentLayout } from "../../../ContentLayout"
 import { ActionConfigDefaultForm } from "./ActionConfigDefaultForm"
 
 type Props = {
-	params: {
+	params: Promise<{
 		action: Action
 		communitySlug: string
+	}>
+}
+
+export async function generateMetadata({ params }: { params: Promise<Props["params"]> }) {
+	const action = (await params).action
+	const actionNiceName = getActionByName(action).niceName
+
+	return {
+		title: `${actionNiceName} Action Defaults`,
 	}
 }
 
@@ -36,7 +47,7 @@ export default async function Page(props: Props) {
 		redirectToLogin()
 	}
 
-	const [userCanEditCommunity, pubFields, actionConfigDefaults] = await Promise.all([
+	const [userCanEditCommunity, pubFields, actionConfigDefaults, stages] = await Promise.all([
 		userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
@@ -45,19 +56,19 @@ export default async function Page(props: Props) {
 		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
 
 		getActionConfigDefaults(community.id, params.action).executeTakeFirst(),
+		getStages({ communityId: community.id, userId: loginData.user.id }).execute(),
 	])
 
 	if (!userCanEditCommunity) {
 		return await redirectToUnauthorized()
 	}
 
-	const actionTitle = params.action[0].toUpperCase() + params.action.slice(1)
-
 	const action = getActionByName(params.action)
 
 	if (!action) {
 		notFound()
 	}
+	const actionTitle = action.niceName
 
 	return (
 		<ContentLayout
@@ -75,17 +86,21 @@ export default async function Page(props: Props) {
 						defaults will be applied to new instances of this action in your community.
 					</p>
 				</div>
-				<PubFieldProvider pubFields={pubFields}>
-					<TokenProvider tokens={action.tokens ?? {}}>
-						<ActionConfigDefaultForm
-							communityId={community.id}
-							action={params.action}
-							values={
-								actionConfigDefaults?.config as Record<string, unknown> | undefined
-							}
-						/>
-					</TokenProvider>
-				</PubFieldProvider>
+				<StagesProvider stages={stagesDAO(stages)}>
+					<PubFieldProvider pubFields={pubFields}>
+						<TokenProvider tokens={action.tokens ?? {}}>
+							<ActionConfigDefaultForm
+								communityId={community.id}
+								action={params.action}
+								values={
+									actionConfigDefaults?.config as
+										| Record<string, unknown>
+										| undefined
+								}
+							/>
+						</TokenProvider>
+					</PubFieldProvider>
+				</StagesProvider>
 			</div>
 		</ContentLayout>
 	)
