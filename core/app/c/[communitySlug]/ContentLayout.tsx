@@ -351,7 +351,7 @@ export function ContentLayoutStickySecondaryHeader({
 	return (
 		<div
 			className={cn(
-				"-mt-4 -mx-4 -top-4 sticky z-50 flex items-center border-b bg-background px-4",
+				"-mt-4 -mx-4 -top-4 sticky z-50 flex items-center justify-center border-b bg-background px-8",
 				className
 			)}
 		>

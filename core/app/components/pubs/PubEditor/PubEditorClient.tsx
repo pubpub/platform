@@ -493,7 +493,7 @@ export const PubEditorClient = ({
 				}
 				onSubmit={formInstance.handleSubmit(handleSubmit)}
 				className={cn(
-					"relative isolate flex flex-col gap-6 overflow-hidden px-2",
+					"relative isolate flex flex-col gap-6 overflow-hidden px-4",
 					className
 				)}
 				id={htmlFormId}

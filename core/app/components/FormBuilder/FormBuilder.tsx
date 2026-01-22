@@ -411,15 +411,27 @@ export function FormBuilder({ pubForm, id, stages, pubTypeId, currentDefaultForm
 			className="flex h-full flex-col"
 		>
 			<TabsList className="mx-4 grid grid-cols-3 md:mx-2">
-				<TabsTrigger value="elements" className="text-xs">
+				<TabsTrigger
+					value="elements"
+					className="text-xs"
+					data-testid="form-builder-tab-elements"
+				>
 					<Settings className="mr-1 h-3 w-3" />
 					Elements
 				</TabsTrigger>
-				<TabsTrigger value="preview" className="text-xs">
+				<TabsTrigger
+					value="preview"
+					className="text-xs"
+					data-testid="form-builder-tab-preview"
+				>
 					<BookOpen className="mr-1 h-3 w-3" />
 					Preview
 				</TabsTrigger>
-				<TabsTrigger value="settings" className="text-xs">
+				<TabsTrigger
+					value="settings"
+					className="text-xs"
+					data-testid="form-builder-tab-settings"
+				>
 					<Menu className="mr-1 h-3 w-3" />
 					Settings
 				</TabsTrigger>
