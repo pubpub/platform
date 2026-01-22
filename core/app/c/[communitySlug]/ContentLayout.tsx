@@ -252,7 +252,7 @@ function ContentLayoutActionsSkeleton({
 	count?: number
 }) {
 	return (
-		<div className={cn("flex items-center gap-2", className)}>
+		<div className={cn("hidden items-center gap-2 md:flex", className)}>
 			{Array.from({ length: count }).map((_, idx) => (
 				<Skeleton key={idx} className="h-8 w-20" />
 			))}

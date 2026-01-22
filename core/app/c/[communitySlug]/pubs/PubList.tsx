@@ -161,15 +161,16 @@ export const PubListSkeleton = ({
 		{Array.from({ length: amount }).map((_, index) => (
 			<div
 				key={index}
-				className="flex h-[94px] w-full flex-col gap-2 rounded-lg border border-card bg-card px-4 py-3 md:max-w-(--breakpoint-lg)"
+				className="flex h-[94px] w-full flex-col gap-2 rounded-lg border border-card bg-card px-4 py-2 md:max-w-(--breakpoint-lg)"
 			>
-				<div className="flex items-start gap-1">
+				<div className="flex items-start gap-2">
 					<Skeleton className="h-5 w-24" />
 					<Skeleton className="h-5 w-12" />
 				</div>
-				<Skeleton className="h-6 w-3/4 md:w-1/2 lg:w-1/3" />
-				<div className="flex items-start gap-1 opacity-50">
-					<Skeleton className="h-4 w-30" />
+				<Skeleton className="h-7 w-3/4 md:w-1/2 lg:w-1/3" />
+				<div className="flex items-start gap-2 opacity-50">
+					<Skeleton className="h-4 w-24" />
+					<Skeleton className="h-4 w-16" />
 				</div>
 			</div>
 		))}

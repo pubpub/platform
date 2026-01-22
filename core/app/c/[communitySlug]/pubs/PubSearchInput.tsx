@@ -142,7 +142,7 @@ export const PubTypesFilter = memo(
 				value={selectedPubTypes}
 				asChild
 			>
-				<Button variant="outline" className="h-9" size="sm">
+				<Button variant="outline" className="h-9 w-20" size="sm">
 					<PlusCircle size={16} />
 					Type
 					{selectedPubTypes?.length ? (
@@ -182,7 +182,7 @@ export const StagesFilter = memo(
 				showClearAll
 				asChild
 			>
-				<Button variant="outline" className="h-9" size="sm">
+				<Button variant="outline" className="h-9 w-20" size="sm">
 					<PlusCircle size={16} />
 					Stage
 					{currentStages?.length ? (
