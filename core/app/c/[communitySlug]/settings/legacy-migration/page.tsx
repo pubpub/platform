@@ -2,10 +2,17 @@ import type { PubFieldsId, PubsId, PubTypesId } from "db/public"
 import type { Metadata } from "next"
 
 import { notFound, redirect } from "next/navigation"
+import { ArrowLeftRight } from "lucide-react"
 
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getToBeDeletedStructure } from "~/lib/server/legacy-migration/legacy-cleanup"
+import {
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../../ContentLayout"
 import { MigrationForm, UndoMigrationForm } from "./MigrationForm"
 
 export const metadata: Metadata = {
@@ -43,13 +50,41 @@ export default async function Page(props: {
 	}
 
 	return (
-		<div>
-			<h1 className="mb-12 font-bold text-2xl">Legacy Migration</h1>
+		<ContentLayoutRoot>
+			<ContentLayoutHeader>
+				<ContentLayoutTitle>
+					<ArrowLeftRight
+						size={20}
+						strokeWidth={1}
+						className="mr-2 text-muted-foreground"
+					/>
+					Legacy Migration
+				</ContentLayoutTitle>
+			</ContentLayoutHeader>
+			<ContentLayoutBody>
+				<p className="text-muted-foreground text-sm">
+					Import a Community from{" "}
+					<a
+						href="https://pubpub.org"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-primary underline"
+					>
+						PubPub
+					</a>{" "}
+					into Platform
+				</p>
 
-			<MigrationForm />
+				<div className="mt-4" />
+				<MigrationForm />
 
-			<div className="mt-4" />
-			<UndoMigrationForm community={community} toBeDeletedStructure={tobeDeletedStructure} />
-		</div>
+				<div className="mt-4" />
+
+				<UndoMigrationForm
+					community={community}
+					toBeDeletedStructure={tobeDeletedStructure}
+				/>
+			</ContentLayoutBody>
+		</ContentLayoutRoot>
 	)
 }

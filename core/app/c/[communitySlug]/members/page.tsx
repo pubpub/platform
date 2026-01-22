@@ -12,7 +12,13 @@ import { userCan } from "~/lib/authorization/capabilities"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getSimpleForms } from "~/lib/server/form"
 import { selectAllCommunityMemberships } from "~/lib/server/member"
-import { ContentLayout } from "../ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../ContentLayout"
 import { addMember, createUserWithCommunityMembership, removeCommunityMember } from "./actions"
 
 export const metadata: Metadata = {
@@ -68,26 +74,26 @@ export default async function Page(props: {
 	}))
 
 	return (
-		<ContentLayout
-			title={
-				<>
-					<Users size={24} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
+		<ContentLayoutRoot>
+			<ContentLayoutHeader>
+				<ContentLayoutTitle>
+					<Users size={20} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
 					Members
-				</>
-			}
-			right={
-				<AddMemberDialog
-					addMember={addMember}
-					addUserMember={createUserWithCommunityMembership}
-					existingMembers={flatMembers.map((member) => member.id)}
-					isSuperAdmin={user.isSuperAdmin}
-					membershipType={MembershipType.community}
-					availableForms={availableForms}
-					className="bg-emerald-500 text-white"
-				/>
-			}
-		>
-			<div className="m-4 mt-1">
+				</ContentLayoutTitle>
+
+				<ContentLayoutActions>
+					<AddMemberDialog
+						addMember={addMember}
+						addUserMember={createUserWithCommunityMembership}
+						existingMembers={flatMembers.map((member) => member.id)}
+						isSuperAdmin={user.isSuperAdmin}
+						membershipType={MembershipType.community}
+						availableForms={availableForms}
+						className="bg-emerald-500 text-white"
+					/>
+				</ContentLayoutActions>
+			</ContentLayoutHeader>
+			<ContentLayoutBody>
 				<MembersCardList
 					members={flatMembers}
 					membershipType={MembershipType.community}
@@ -96,7 +102,7 @@ export default async function Page(props: {
 					readOnly={!canEditCommunity}
 					availableForms={availableForms}
 				/>
-			</div>
-		</ContentLayout>
+			</ContentLayoutBody>
+		</ContentLayoutRoot>
 	)
 }
