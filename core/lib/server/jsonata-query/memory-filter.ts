@@ -46,7 +46,7 @@ function getValueFromPath(pub: AnyProcessedPub, path: PubFieldPath): unknown {
 	const value = pub.values.find((v) => {
 		// handle both full slug and short slug
 		const fieldSlug = v.fieldSlug
-		return fieldSlug === path.fieldSlug || fieldSlug.endsWith(`:${path.fieldSlug}`)
+		return path.kind === "value" && (fieldSlug === path.fieldSlug || fieldSlug.endsWith(`:${path.fieldSlug}`))
 	})
 
 	return value?.value
