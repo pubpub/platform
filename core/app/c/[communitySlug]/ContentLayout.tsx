@@ -49,6 +49,7 @@ function ContentLayoutTitle({ className, children }: { className?: string; child
 				"flex flex-row items-center font-medium",
 				// when there's no left element, left-justify on mobile
 				"data-[no-left=true]:flex-1 data-[no-left=true]:md:flex-initial",
+				"[&>svg]:mr-2 [&>svg]:size-5 [&>svg]:stroke-1 [&>svg]:text-muted-foreground",
 				className
 			)}
 		>
@@ -337,6 +338,25 @@ const LegacyHeading = ({
 				{right && <ContentLayoutActions>{right}</ContentLayoutActions>}
 			</header>
 		</ContentLayoutContext.Provider>
+	)
+}
+
+export function ContentLayoutStickySecondaryHeader({
+	className,
+	children,
+}: {
+	className?: string
+	children: ReactNode
+}) {
+	return (
+		<div
+			className={cn(
+				"-mt-4 -mx-4 -top-4 sticky z-50 flex items-center border-b bg-background px-4",
+				className
+			)}
+		>
+			{children}
+		</div>
 	)
 }
 

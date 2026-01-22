@@ -10,9 +10,9 @@ import {
 	BookOpen,
 	BookOpenText,
 	Bot,
-	CurlyBraces,
 	FlagTriangleRightIcon,
 	Form,
+	FormInput,
 	Layers3,
 	Settings2,
 	ToyBrick,
@@ -138,7 +138,7 @@ const manageLinks: LinkGroupDefinition = {
 		{
 			href: "/fields",
 			text: "Fields",
-			icon: <CurlyBraces size={16} />,
+			icon: <FormInput size={16} />,
 			authorization: userCanEditCommunityCached,
 		},
 		{

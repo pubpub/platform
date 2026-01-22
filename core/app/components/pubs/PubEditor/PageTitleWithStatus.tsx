@@ -16,8 +16,11 @@ export const PubPageStatus = ({
 }) => {
 	const status = useSaveStatus({ defaultMessage: "Save form to keep changes" })
 	return (
-		<div className="flex items-center gap-2 font-normal text-muted-foreground text-sm">
-			<span data-testid="save-status-text" className="whitespace-nowrap text-xs md:text-sm">
+		<div className="flex max-w-full items-center gap-2 font-normal text-muted-foreground text-sm">
+			<span
+				data-testid="save-status-text"
+				className="inline-block max-w-full truncate whitespace-nowrap text-xs md:text-sm"
+			>
 				{status}
 			</span>
 
@@ -25,7 +28,9 @@ export const PubPageStatus = ({
 			<FormSwitcher
 				forms={forms}
 				defaultFormSlug={defaultFormSlug}
-				className="m-0 h-6 bg-none p-0 text-xs shadow-none focus-visible:ring-2 focus-visible:ring-offset-1 md:text-sm"
+				// i hate figuring out how to do truncation!
+				// modify with care!
+				className="m-0 line-clamp-1 flex h-6 max-w-full items-center bg-none p-0 text-xs shadow-none focus-visible:ring-2 focus-visible:ring-offset-1 md:text-sm"
 			>
 				<Pencil size={14} className="size-3 md:size-4" />
 			</FormSwitcher>

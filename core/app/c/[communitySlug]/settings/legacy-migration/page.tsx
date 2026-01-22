@@ -53,11 +53,7 @@ export default async function Page(props: {
 		<ContentLayoutRoot>
 			<ContentLayoutHeader>
 				<ContentLayoutTitle>
-					<ArrowLeftRight
-						size={20}
-						strokeWidth={1}
-						className="mr-2 text-muted-foreground"
-					/>
+					<ArrowLeftRight />
 					Legacy Migration
 				</ContentLayoutTitle>
 			</ContentLayoutHeader>

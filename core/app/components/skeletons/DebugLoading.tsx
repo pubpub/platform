@@ -23,7 +23,7 @@ export default function DebugLoading(props: {
 
 	return (
 		<>
-			<div className="absolute inset-0 z-[5000] opacity-50 **:ring-1 **:ring-red-500 [&_.animate-pulse]:bg-red-200">
+			<div className="pointer-events-none absolute inset-0 z-[5000] opacity-50 **:ring-1 **:ring-red-500 [&_.animate-pulse]:bg-red-200">
 				{props.loading}
 			</div>
 			{props.children}

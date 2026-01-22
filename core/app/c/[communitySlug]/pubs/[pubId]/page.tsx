@@ -48,6 +48,7 @@ import {
 	ContentLayoutBody,
 	ContentLayoutHeader,
 	ContentLayoutRoot,
+	ContentLayoutStickySecondaryHeader,
 	ContentLayoutTitle,
 } from "../../ContentLayout"
 import Move from "../../stages/components/Move"
@@ -284,7 +285,7 @@ export default async function Page(props: {
 											<TooltipContent
 												side="bottom"
 												align="start"
-												className="max-w-sm text-xs"
+												className="z-[200] max-w-sm text-xs"
 											>
 												{getPubTitle(pub)}
 											</TooltipContent>
@@ -333,7 +334,7 @@ export default async function Page(props: {
 								</ContentLayoutActions>
 							</ContentLayoutHeader>
 							<ContentLayoutBody>
-								<div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b bg-background px-4 py-1 text-muted-foreground text-sm">
+								<ContentLayoutStickySecondaryHeader className="flex flex-row flex-wrap items-center gap-2 py-2">
 									<PubTypeLabel pubType={pub.pubType} canFilter={false} />
 									{pub.stage && (
 										<Move
@@ -373,8 +374,8 @@ export default async function Page(props: {
 										addUserMember={addUserWithPubMembership.bind(null, pub.id)}
 										removeMember={removePubMember}
 									/>
-								</div>
-								<div className="m-4 flex flex-col space-y-4">
+								</ContentLayoutStickySecondaryHeader>
+								<div className="mt-4 flex flex-col space-y-4">
 									<div className="flex-1">
 										<PubValues formSlug={form.slug} pub={pubByForm} />
 									</div>

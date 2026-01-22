@@ -18,8 +18,7 @@ export default function Loading() {
 		<ContentLayoutRoot>
 			<ContentLayoutHeader>
 				<ContentLayoutTitle>
-					<Activity size={20} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
-					Automation Logs
+					<Activity /> Automation Logs
 				</ContentLayoutTitle>
 			</ContentLayoutHeader>
 			<ContentLayoutBody className="flex flex-col gap-4">

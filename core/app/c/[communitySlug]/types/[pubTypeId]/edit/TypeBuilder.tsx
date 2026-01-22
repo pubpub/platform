@@ -329,23 +329,6 @@ export const TypeBuilder = ({
 					stages={[]}
 					isDirty={isChanged}
 				>
-					<div className="flex items-center justify-between p-4 md:hidden">
-						<h2 className="font-medium text-lg">Type Builder</h2>
-						<Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
-							<SheetTrigger asChild>
-								<Button variant="outline" size="sm">
-									<Menu className="mr-2 h-4 w-4" />
-									Fields
-								</Button>
-							</SheetTrigger>
-							<SheetContent side="right" className="w-full overflow-auto sm:max-w-md">
-								<SheetHeader>
-									<SheetTitle>Type Fields</SheetTitle>
-								</SheetHeader>
-								<div className="mt-4">{sidebarContent}</div>
-							</SheetContent>
-						</Sheet>
-					</div>
 					<Form {...form}>
 						<form
 							id={formId}
@@ -359,12 +342,32 @@ export const TypeBuilder = ({
 								})
 							)}
 						>
+							<div className="flex items-center justify-between pb-4 md:hidden">
+								<h2 className="font-medium text-lg">Type Builder</h2>
+								<Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+									<SheetTrigger asChild>
+										<Button variant="outline" size="sm">
+											<Menu className="mr-2 h-4 w-4" />
+											Fields
+										</Button>
+									</SheetTrigger>
+									<SheetContent
+										side="right"
+										className="w-full overflow-auto sm:max-w-md"
+									>
+										<SheetHeader>
+											<SheetTitle>Type Fields</SheetTitle>
+										</SheetHeader>
+										<div className="p-4">{sidebarContent}</div>
+									</SheetContent>
+								</Sheet>
+							</div>
 							<FormField
 								control={form.control}
 								name="fields"
 								render={() => (
 									<>
-										<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto p-4 md:p-10">
+										<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
 											<DndContext
 												id={dndContextId}
 												modifiers={[

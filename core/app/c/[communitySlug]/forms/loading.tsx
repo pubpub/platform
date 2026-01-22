@@ -14,19 +14,12 @@ export default function Loading() {
 		<ContentLayoutRoot>
 			<ContentLayoutHeader>
 				<ContentLayoutTitle>
-					<ClipboardPenLine
-						size={24}
-						strokeWidth={1}
-						className="mr-2 text-muted-foreground"
-					/>{" "}
-					Forms
+					<ClipboardPenLine /> Forms
 				</ContentLayoutTitle>
 				<ContentLayoutActionsSkeleton />
 			</ContentLayoutHeader>
 			<ContentLayoutBody>
-				<div className="m-4">
-					<SkeletonTable />
-				</div>
+				<SkeletonTable />
 			</ContentLayoutBody>
 		</ContentLayoutRoot>
 	)

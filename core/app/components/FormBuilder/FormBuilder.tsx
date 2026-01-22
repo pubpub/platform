@@ -506,97 +506,93 @@ export function FormBuilder({ pubForm, id, stages, pubTypeId, currentDefaultForm
 				isDirty={isChanged}
 			>
 				<div className="md:pr-[420px]">
-					<div className="px-6">
-						<Form {...form}>
-							<form
-								id={id}
-								aria-label="Form builder"
-								onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
-									logger.error({
-										msg: "unable to submit form",
-										errors,
-										event,
-										elements,
-									})
-								)}
-							>
-								<FormField
-									control={form.control}
-									name="elements"
-									render={() => (
-										<>
-											{/* mobile header/sidebar toggle */}
-											<div className="mt-4 mb-2 flex items-center justify-between md:hidden">
-												<h2 className="font-medium text-lg">
-													Form Builder
-												</h2>
-												<Sheet
-													open={mobileSheetOpen}
-													onOpenChange={setMobileSheetOpen}
+					<Form {...form}>
+						<form
+							id={id}
+							aria-label="Form builder"
+							onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
+								logger.error({
+									msg: "unable to submit form",
+									errors,
+									event,
+									elements,
+								})
+							)}
+						>
+							<FormField
+								control={form.control}
+								name="elements"
+								render={() => (
+									<>
+										{/* mobile header/sidebar toggle */}
+										<div className="mt-4 mb-2 flex items-center justify-between md:hidden">
+											<h2 className="font-medium text-lg">Form Builder</h2>
+											<Sheet
+												open={mobileSheetOpen}
+												onOpenChange={setMobileSheetOpen}
+											>
+												<SheetTrigger asChild>
+													<Button variant="outline" size="sm">
+														<Menu className="mr-2 h-4 w-4" />
+														Settings
+													</Button>
+												</SheetTrigger>
+												<SheetContent
+													side="right"
+													className="w-full overflow-auto sm:max-w-md"
 												>
-													<SheetTrigger asChild>
-														<Button variant="outline" size="sm">
-															<Menu className="mr-2 h-4 w-4" />
-															Settings
-														</Button>
-													</SheetTrigger>
-													<SheetContent
-														side="right"
-														className="w-full overflow-auto sm:max-w-md"
-													>
-														<SheetHeader>
-															<SheetTitle>Form Settings</SheetTitle>
-														</SheetHeader>
-														{sidebarContent}
-													</SheetContent>
-												</Sheet>
-											</div>
-											<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto py-4">
-												<DndContext
-													modifiers={[
-														restrictToVerticalAxis,
-														restrictToParentElement,
-													]}
-													onDragEnd={handleDragEnd}
-													sensors={sensors}
-													id={dndContextId}
+													<SheetHeader>
+														<SheetTitle>Form Settings</SheetTitle>
+													</SheetHeader>
+													{sidebarContent}
+												</SheetContent>
+											</Sheet>
+										</div>
+										<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
+											<DndContext
+												modifiers={[
+													restrictToVerticalAxis,
+													restrictToParentElement,
+												]}
+												onDragEnd={handleDragEnd}
+												sensors={sensors}
+												id={dndContextId}
+											>
+												<SortableContext
+													items={elements}
+													strategy={verticalListSortingStrategy}
 												>
-													<SortableContext
-														items={elements}
-														strategy={verticalListSortingStrategy}
-													>
-														{elements.map(
-															(element, index) =>
-																!isButtonElement(element) && (
-																	<FormElement
-																		key={element.id}
-																		element={element}
-																		index={index}
-																		isEditing={
-																			panelState.selectedElementIndex ===
+													{elements.map(
+														(element, index) =>
+															!isButtonElement(element) && (
+																<FormElement
+																	key={element.id}
+																	element={element}
+																	index={index}
+																	isEditing={
+																		panelState.selectedElementIndex ===
+																		index
+																	}
+																	isDisabled={
+																		panelState.selectedElementIndex !==
+																			null &&
+																		panelState.selectedElementIndex !==
 																			index
-																		}
-																		isDisabled={
-																			panelState.selectedElementIndex !==
-																				null &&
-																			panelState.selectedElementIndex !==
-																				index
-																		}
-																	/>
-																)
-														)}
-													</SortableContext>
-												</DndContext>
-											</ol>
-											<PanelWrapper sidebar={sidebarRef.current}>
-												{sidebarContent}
-											</PanelWrapper>
-										</>
-									)}
-								/>
-							</form>
-						</Form>
-					</div>
+																	}
+																/>
+															)
+													)}
+												</SortableContext>
+											</DndContext>
+										</ol>
+										<PanelWrapper sidebar={sidebarRef.current}>
+											{sidebarContent}
+										</PanelWrapper>
+									</>
+								)}
+							/>
+						</form>
+					</Form>
 				</div>
 				<SidePanel ref={sidebarRef} className="hidden md:flex md:w-[420px]" />
 			</BuilderProvider>

@@ -5,7 +5,14 @@ import { notFound } from "next/navigation"
 
 import { Button } from "ui/button"
 
-import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutStickySecondaryHeader,
+	ContentLayoutTitle,
+} from "~/app/c/[communitySlug]/ContentLayout"
 import { PubPageStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus"
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor"
 import { getPageLoginData } from "~/lib/authentication/loginData"
@@ -105,30 +112,33 @@ export default async function Page(props: {
 	const htmlFormId = `create-pub`
 
 	return (
-		<ContentLayout
-			left={
-				<Button form={htmlFormId} type="submit">
-					Save
-				</Button>
-			}
-			title={`Create ${pubType.name}`}
-			right={<div />}
-		>
-			<div className="sticky top-0 flex w-full flex-col items-center border-b bg-background">
-				<PubPageStatus forms={availableForms} defaultFormSlug={searchParams.form} />
-			</div>
-			<div className="flex justify-center py-10">
-				<div className="max-w-prose flex-1">
-					<PubEditor
-						mode="create"
-						htmlFormId={htmlFormId}
-						pubTypeId={searchParams.pubTypeId}
-						form={canonicalForm}
-						stageId={searchParams.stageId}
-						{...relatedPubData}
-					/>
+		<ContentLayoutRoot>
+			<ContentLayoutHeader>
+				<ContentLayoutTitle>Create {pubType.name}</ContentLayoutTitle>
+				<ContentLayoutActions>
+					<Button form={htmlFormId} type="submit">
+						Save
+					</Button>
+				</ContentLayoutActions>
+			</ContentLayoutHeader>
+			<ContentLayoutBody className="relative px-2">
+				{/* negative margin is a bit cringe, but the only way to achieve this */}
+				<ContentLayoutStickySecondaryHeader>
+					<PubPageStatus forms={availableForms} defaultFormSlug={searchParams.form} />
+				</ContentLayoutStickySecondaryHeader>
+				<div className="flex justify-center py-10">
+					<div className="max-w-full flex-1 md:max-w-prose">
+						<PubEditor
+							mode="create"
+							htmlFormId={htmlFormId}
+							pubTypeId={searchParams.pubTypeId}
+							form={canonicalForm}
+							stageId={searchParams.stageId}
+							{...relatedPubData}
+						/>
+					</div>
 				</div>
-			</div>
-		</ContentLayout>
+			</ContentLayoutBody>
+		</ContentLayoutRoot>
 	)
 }

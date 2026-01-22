@@ -14,15 +14,12 @@ export default function Loading() {
 		<ContentLayoutRoot>
 			<ContentLayoutHeader>
 				<ContentLayoutTitle>
-					<FormInput size={24} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
-					Fields
+					<FormInput /> Fields Fields
 				</ContentLayoutTitle>
 				<ContentLayoutActionsSkeleton />
 			</ContentLayoutHeader>
 			<ContentLayoutBody>
-				<div className="m-4">
-					<SkeletonTable />
-				</div>
+				<SkeletonTable />
 			</ContentLayoutBody>
 		</ContentLayoutRoot>
 	)

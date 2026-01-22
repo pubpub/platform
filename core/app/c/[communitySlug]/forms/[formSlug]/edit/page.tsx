@@ -17,7 +17,13 @@ import { getPubTypesForCommunity } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getForm, getSimpleForms } from "~/lib/server/form"
 import { getPubFields } from "~/lib/server/pubFields"
-import { ContentLayout } from "../../../ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../../../ContentLayout"
 import { FormCopyButton } from "./FormCopyButton"
 
 const getCommunityStages = (communityId: CommunitiesId) =>
@@ -67,14 +73,10 @@ export default async function Page(props: {
 	const formBuilderId = "formbuilderform"
 
 	return (
-		<ContentLayout
-			title={
-				<>
-					<ClipboardPenLine
-						size={24}
-						strokeWidth={1}
-						className="mr-2 text-muted-foreground"
-					/>{" "}
+		<ContentLayoutRoot>
+			<ContentLayoutHeader>
+				<ContentLayoutTitle>
+					<ClipboardPenLine />
 					<div className="flex flex-col">
 						<h1>{form.name}</h1>
 						{form.isDefault && (
@@ -92,27 +94,25 @@ export default async function Page(props: {
 							</div>
 						)}
 					</div>
-				</>
-			}
-			right={
-				<div className="flex items-center gap-2">
+				</ContentLayoutTitle>
+				<ContentLayoutActions>
 					<FormCopyButton formSlug={formSlug} />
-					{/* <ArchiveFormButton id={form.id} className="border border-gray-950 px-4" />{" "} */}
 					<SaveFormButton form={formBuilderId} />
-				</div>
-			}
-		>
-			<PubFieldProvider pubFields={fields}>
-				<PubTypeProvider pubTypes={pubTypes}>
-					<FormBuilder
-						pubForm={form}
-						id={formBuilderId}
-						stages={communityStages}
-						pubTypeId={form.pubTypeId as PubTypesId}
-						currentDefaultForm={currentDefaultForm}
-					/>
-				</PubTypeProvider>
-			</PubFieldProvider>
-		</ContentLayout>
+				</ContentLayoutActions>
+			</ContentLayoutHeader>
+			<ContentLayoutBody>
+				<PubFieldProvider pubFields={fields}>
+					<PubTypeProvider pubTypes={pubTypes}>
+						<FormBuilder
+							pubForm={form}
+							id={formBuilderId}
+							stages={communityStages}
+							pubTypeId={form.pubTypeId as PubTypesId}
+							currentDefaultForm={currentDefaultForm}
+						/>
+					</PubTypeProvider>
+				</PubFieldProvider>
+			</ContentLayoutBody>
+		</ContentLayoutRoot>
 	)
 }

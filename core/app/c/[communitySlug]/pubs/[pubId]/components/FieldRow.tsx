@@ -4,8 +4,10 @@ import type { ProcessedPubWithForm } from "contracts"
 import type { CoreSchemaType, PubsId } from "db/public"
 
 import { useState } from "react"
+import { Pencil } from "lucide-react"
 import { SCHEMA_TYPES_WITH_ICONS } from "schemas"
 
+import { Button } from "ui/button"
 import { cn } from "utils"
 
 import { InlineEditForm } from "./InlineEditForm"
@@ -54,17 +56,17 @@ export const FieldRow = ({
 	}
 
 	return (
-		<div className="group relative col-span-14 grid grid-cols-subgrid gap-x-1 align-top">
+		<div className="group relative col-span-14 grid grid-cols-subgrid gap-x-1 gap-y-2 align-top md:gap-y-0">
 			<FieldHeader
 				name={name}
 				slug={slugWithoutCommunity}
 				depth={depth}
 				SchemaTypeIcon={SchemaTypeIcon}
 				isRelationEdgeValue={isRelationEdgeValue}
-				className="col-span-3 md:col-span-2 md:col-start-2"
+				className="col-span-14 md:col-span-3 md:col-start-2"
 			/>
 			<div
-				className="col-span-10 col-start-5 md:col-span-8 md:col-start-4"
+				className="col-span-14 col-start-1 md:col-span-9 md:col-start-5"
 				data-testid={`${name}-value`}
 			>
 				{isEditing && canEdit ? (
@@ -78,12 +80,12 @@ export const FieldRow = ({
 					<ValueDisplay values={values} isRelationEdgeValue={isRelationEdgeValue} />
 				)}
 			</div>
-			{/* {canEdit && !isEditing && (
+			{canEdit && !isEditing && (
 				<Button
 					variant="ghost"
 					size="icon"
 					className={cn(
-						"absolute col-span-1 col-start-12 translate-x-full text-muted-foreground/50",
+						"absolute col-span-1 col-start-13 translate-x-full text-muted-foreground/50",
 						"transition-opacity duration-200 group-hover:opacity-100 md:flex md:opacity-0"
 					)}
 					onClick={() => setIsEditing(true)}
@@ -91,7 +93,7 @@ export const FieldRow = ({
 				>
 					<Pencil size={14} className="text-muted-foreground/50" />
 				</Button>
-			)} */}
+			)}
 		</div>
 	)
 }
@@ -116,13 +118,18 @@ const FieldHeader = ({
 	}
 
 	return (
-		<div className={cn("flex flex-col gap-x-8 md:gap-0", className)}>
+		<div
+			className={cn(
+				"flex items-center justify-between gap-x-2 md:flex-col md:items-start md:justify-start md:gap-0",
+				className
+			)}
+		>
 			<FieldHeading depth={depth} className="font-medium text-sm">
 				{name}
 			</FieldHeading>
-			<div className="flex items-center gap-1">
+			<div className="items- flex gap-1 truncate">
 				{SchemaTypeIcon && (
-					<SchemaTypeIcon className="size-3 text-muted-foreground md:size-3.5" />
+					<SchemaTypeIcon className="mt-[3px] size-3 text-muted-foreground md:mt-0 md:size-3.5" />
 				)}
 				<code className="truncate text-muted-foreground text-xs">{slug}</code>
 			</div>

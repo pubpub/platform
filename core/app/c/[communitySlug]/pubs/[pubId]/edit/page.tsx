@@ -15,6 +15,7 @@ import {
 	ContentLayoutBody,
 	ContentLayoutHeader,
 	ContentLayoutRoot,
+	ContentLayoutStickySecondaryHeader,
 	ContentLayoutTitle,
 } from "~/app/c/[communitySlug]/ContentLayout"
 import { PubPageStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus"
@@ -192,7 +193,7 @@ export default async function Page(props: {
 							<TooltipContent
 								side="bottom"
 								align="start"
-								className="max-w-sm text-xs"
+								className="z-[200] max-w-sm text-xs"
 							>
 								{getPubTitle(pub)}
 							</TooltipContent>
@@ -207,14 +208,14 @@ export default async function Page(props: {
 			</ContentLayoutHeader>
 
 			<ContentLayoutBody>
-				<div className="sticky top-0 z-50 flex w-full flex-col items-center border-b bg-background">
+				<ContentLayoutStickySecondaryHeader>
 					<PubPageStatus
-						defaultFormSlug={searchParams.form}
+						defaultFormSlug={updateFormToRedirectTo.slug}
 						forms={availableUpdateForms}
 					/>
-				</div>
+				</ContentLayoutStickySecondaryHeader>
 				<div className="flex justify-center py-10">
-					<div className="max-w-full flex-1 px-4 md:max-w-prose">
+					<div className="max-w-full flex-1 md:max-w-prose">
 						{/** TODO: Add suspense */}
 						<PubEditor
 							mode="edit"

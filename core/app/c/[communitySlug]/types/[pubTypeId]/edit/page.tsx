@@ -23,7 +23,13 @@ import { getPubType, getPubTypesForCommunity } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { redirectToLogin } from "~/lib/server/navigation/redirects"
 import { getPubFields } from "~/lib/server/pubFields"
-import { ContentLayout } from "../../../ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../../../ContentLayout"
 import { UpdatePubTypeButton } from "../../UpdatePubTypeDialog"
 import { TypeBuilder } from "./TypeBuilder"
 
@@ -90,56 +96,49 @@ export default async function Page(props: {
 
 	return (
 		<PubFieldProvider pubFields={fields}>
-			<ContentLayout
-				title={
-					<div className="flex flex-col">
-						<div className="flex flex-row items-center gap-3">
-							<ToyBrick size={24} strokeWidth={1} className="text-muted-foreground" />
-							<BreadcrumbList className="text-lg">
-								<BreadcrumbItem>
-									<BreadcrumbLink
-										className="font-normal text-muted-foreground"
-										asChild
-									>
-										<Link href={`/c/${communitySlug}/types`}>Types</Link>
-									</BreadcrumbLink>
-								</BreadcrumbItem>
-								<BreadcrumbSeparator className="mt-1" />
-								<BreadcrumbPage className="font-bold">
-									{pubType.name}
-								</BreadcrumbPage>
-							</BreadcrumbList>
-							{pubType.description && (
-								<div className="font-normal text-muted-foreground text-sm">
-									{pubType.description}
-								</div>
-							)}
-							<UpdatePubTypeButton
-								pubTypeId={pubTypeId}
-								name={pubType.name}
-								description={pubType.description}
-							>
-								<Button
-									variant="link"
-									size="sm"
-									className="h-auto p-0 text-blue-500 underline hover:text-blue-600"
+			<ContentLayoutRoot>
+				<ContentLayoutHeader>
+					<ContentLayoutTitle>
+						<ToyBrick />
+						<BreadcrumbList className="text-lg">
+							<BreadcrumbItem>
+								<BreadcrumbLink
+									className="font-normal text-muted-foreground"
+									asChild
 								>
-									Edit
-								</Button>
-							</UpdatePubTypeButton>
-						</div>
-					</div>
-				}
-				right={
-					<div className="flex items-center gap-2">
-						{/* <FormCopyButton formSlug={formSlug} /> */}
-						{/* <ArchiveFormButton id={form.id} className="border border-gray-950 px-4" />{" "} */}
+									<Link href={`/c/${communitySlug}/types`}>Types</Link>
+								</BreadcrumbLink>
+							</BreadcrumbItem>
+							<BreadcrumbSeparator className="mt-1" />
+							<BreadcrumbPage className="font-bold">{pubType.name}</BreadcrumbPage>
+						</BreadcrumbList>
+						{pubType.description && (
+							<div className="font-normal text-muted-foreground text-sm">
+								{pubType.description}
+							</div>
+						)}
+						<UpdatePubTypeButton
+							pubTypeId={pubTypeId}
+							name={pubType.name}
+							description={pubType.description}
+						>
+							<Button
+								variant="link"
+								size="sm"
+								className="ml-2 h-auto p-0 text-blue-500 underline hover:text-blue-600"
+							>
+								Edit
+							</Button>
+						</UpdatePubTypeButton>
+					</ContentLayoutTitle>
+					<ContentLayoutActions>
 						<SaveFormButton form={pubtypebuilderId} />
-					</div>
-				}
-			>
-				<TypeBuilder pubType={pubType} formId={pubtypebuilderId} />
-			</ContentLayout>
+					</ContentLayoutActions>
+				</ContentLayoutHeader>
+				<ContentLayoutBody>
+					<TypeBuilder pubType={pubType} formId={pubtypebuilderId} />
+				</ContentLayoutBody>
+			</ContentLayoutRoot>
 		</PubFieldProvider>
 	)
 }
