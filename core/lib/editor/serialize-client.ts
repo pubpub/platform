@@ -9,9 +9,13 @@ export const transformRichTextValuesToProsemirrorClient = <T extends PubLike>(pu
 		...pub,
 		values: pub.values.map((value) => {
 			if (value.schemaName === CoreSchemaType.RichText && typeof value.value === "string") {
+				const pmNode = htmlToProsemirror(value.value)
+				// convert to plain json to avoid circular references in prosemirror node objects
+				// which cause react-hook-form's deepEqual to infinite loop
+				const pmJson = pmNode.toJSON()
 				return {
 					...value,
-					value: htmlToProsemirror(value.value),
+					value: pmJson,
 				}
 			}
 			return value

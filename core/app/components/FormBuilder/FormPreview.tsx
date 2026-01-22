@@ -47,17 +47,15 @@ export const FormPreview = (props: FormPreviewProps) => {
 		if (!props.selectedPub) {
 			return undefined
 		}
-		console.log("transforming selectedPub", props.selectedPub)
 		return transformRichTextValuesToProsemirrorClient(
 			props.selectedPub as ProcessedPub<{ withPubType: true; withStage: true }>
 		)
-	}, [props.selectedPub])
+	}, [props.selectedPub?.id])
 
 	const pubValues = useMemo(() => {
 		if (!selectedPub) {
 			return []
 		}
-		console.log("selectedPub", selectedPub)
 		return selectedPub.values
 	}, [selectedPub])
 
@@ -82,10 +80,10 @@ export const FormPreview = (props: FormPreviewProps) => {
 			}
 			setHydratedElements(newMap)
 		}
-	}, [props.form.elements, props.selectedPub, runHydrate])
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.form.elements, props.selectedPub?.id])
 
 	useEffect(() => {
-		console.log("hydrating elements")
 		void hydrateElements()
 	}, [hydrateElements])
 
