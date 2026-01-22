@@ -77,7 +77,7 @@ export const SearchBar = ({
 					)}
 					<span
 						className={cn(
-							"flex w-10 items-center justify-center gap-x-1 transition-opacity duration-200",
+							"hidden w-10 items-center justify-center gap-x-1 transition-opacity duration-200 md:flex",
 							{
 								"opacity-0": platform === "unknown",
 							}

@@ -209,7 +209,7 @@ const PubListFooterPagination = async (props: {
 	}
 
 	return (
-		<PubSearchFooter {...props} {...paginationProps} className="z-20">
+		<PubSearchFooter {...props} {...paginationProps} className="fixed z-20">
 			{props.children}
 			<PubsSelectedCounter pageSize={Math.min(search.perPage, count)} />
 		</PubSearchFooter>
@@ -261,28 +261,22 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 	])
 
 	return (
-		<div className="relative flex h-full flex-col">
+		<div className="relative mb-4 flex h-full w-full flex-col gap-3 overflow-x-hidden overflow-y-scroll p-4 pb-16">
 			{/* field and stage provider are necessary for the ActionDropDown used in the pubcard to work */}
 			<PubFieldProvider pubFields={pubFields.fields}>
 				<StagesProvider stages={stagesDAO(stages)}>
 					<PubSearchProvider availablePubTypes={pubTypes} availableStages={stages}>
 						<PubsSelectedProvider pubIds={[]}>
-							<div
-								className={cn(
-									"mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16"
-								)}
-							>
-								<PubSearch>
-									<Suspense fallback={<PubListSkeleton />}>
-										<PaginatedPubListInner
-											{...props}
-											communitySlug={communitySlug}
-											pubsPromise={pubsPromise}
-											stagesPromise={Promise.resolve(stages)}
-										/>
-									</Suspense>
-								</PubSearch>
-							</div>
+							<PubSearch>
+								<Suspense fallback={<PubListSkeleton />}>
+									<PaginatedPubListInner
+										{...props}
+										communitySlug={communitySlug}
+										pubsPromise={pubsPromise}
+										stagesPromise={Promise.resolve(stages)}
+									/>
+								</Suspense>
+							</PubSearch>
 							<Suspense fallback={null}>
 								<PubListFooterPagination
 									basePath={basePath}

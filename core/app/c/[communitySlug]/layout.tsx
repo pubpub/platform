@@ -13,7 +13,7 @@ import { SearchDialogProvider } from "~/app/components/Search/SearchDialogProvid
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { getCommunityRole } from "~/lib/authentication/roles"
 import { findCommunityBySlug } from "~/lib/server/community"
-import SideNav from "./SideNav"
+import SideNav, { COLLAPSIBLE_TYPE } from "./SideNav"
 
 type Props = { children: React.ReactNode; params: Promise<{ communitySlug: string }> }
 
@@ -89,13 +89,11 @@ export default async function MainLayout(props: Props) {
 							community={community}
 							availableCommunities={availableCommunities}
 						/>
-						<div className="relative flex-auto bg-sidebar px-4 py-4 md:px-12">
-							{children}
-						</div>
+						<div className="relative flex-auto bg-sidebar">{children}</div>
 						<SidebarTrigger
 							className={cn(
-								"fixed right-2 bottom-2 z-[1000]"
-								// COLLAPSIBLE_TYPE === "icon" && "md:hidden"
+								"fixed right-2 bottom-2 z-[1000]",
+								COLLAPSIBLE_TYPE === "icon" && "md:hidden"
 							)}
 						/>
 					</SidebarProvider>

@@ -70,7 +70,7 @@ export default async function Page(props: Props) {
 					)}
 				</ContentLayoutActions>
 			</ContentLayoutHeader>
-			<ContentLayoutBody className="overflow-hidden">
+			<ContentLayoutBody className="relative inset-0 overflow-hidden p-0">
 				<PaginatedPubList
 					communityId={community.id}
 					searchParams={searchParams}

@@ -64,11 +64,7 @@ export const PubSearch = (props: PubSearchProps) => {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<SearchBar
-				value={inputValues.query}
-				onChange={setQuery}
-				placeholder="Search by pub title..."
-			>
+			<SearchBar value={inputValues.query} onChange={setQuery} placeholder="Search Pubs">
 				<PubTypesFilter
 					availablePubTypes={availablePubTypes}
 					defaultPubTypes={queryParams.pubTypes.map((type) => type.id)}
