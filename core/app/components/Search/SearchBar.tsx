@@ -48,11 +48,11 @@ export const SearchBar = ({
 	return (
 		<div
 			className={cn(
-				"sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 bg-background",
+				"sticky top-0 z-20 mt-0 flex w-full flex-col items-center gap-2 bg-background md:flex-rol",
 				className
 			)}
 		>
-			<div className="relative flex flex-1 items-center gap-x-2">
+			<div className="relative flex w-full flex-1 items-center gap-x-2 md:w-auto">
 				<Search
 					className="-translate-y-1/2 absolute top-1/2 left-2 text-gray-500"
 					size={16}
@@ -90,7 +90,7 @@ export const SearchBar = ({
 					</span>
 				</span>
 			</div>
-			{children}
+			<div className="flex w-full items-center justify-start gap-x-2">{children}</div>
 		</div>
 	)
 }
