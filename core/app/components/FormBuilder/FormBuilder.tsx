@@ -286,7 +286,7 @@ export function FormBuilder({ pubForm, id, stages, pubTypeId, currentDefaultForm
 		control: form.control,
 	})
 
-	const formValues = form.watch()
+	const formValues = form.getValues()
 
 	useUnsavedChangesWarning(isChanged)
 

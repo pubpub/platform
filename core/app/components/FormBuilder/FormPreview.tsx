@@ -11,7 +11,6 @@ import { FormDescription, FormItem, FormLabel } from "ui/form"
 import { usePubTypeContext } from "ui/pubTypes"
 import { toast } from "ui/use-toast"
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider"
 import { transformRichTextValuesToProsemirrorClient } from "~/lib/editor/serialize-client"
 import { didSucceed, useServerAction } from "~/lib/serverActions"
 import { ContextEditorContextProvider } from "../ContextEditor/ContextEditorContext"
@@ -40,7 +39,6 @@ export const FormPreview = (props: FormPreviewProps) => {
 	}
 	const previewPubId = useMemo(() => crypto.randomUUID() as PubsId, [])
 	const pubTypes = usePubTypeContext()
-	const _community = useCommunity()
 
 	const [hydratedElements, setHydratedElements] = useState<Map<string, string>>(new Map())
 	const runHydrate = useServerAction(hydrateMarkdownForPreview)
@@ -49,6 +47,7 @@ export const FormPreview = (props: FormPreviewProps) => {
 		if (!props.selectedPub) {
 			return undefined
 		}
+		console.log("transforming selectedPub", props.selectedPub)
 		return transformRichTextValuesToProsemirrorClient(
 			props.selectedPub as ProcessedPub<{ withPubType: true; withStage: true }>
 		)
@@ -58,6 +57,7 @@ export const FormPreview = (props: FormPreviewProps) => {
 		if (!selectedPub) {
 			return []
 		}
+		console.log("selectedPub", selectedPub)
 		return selectedPub.values
 	}, [selectedPub])
 
@@ -85,6 +85,7 @@ export const FormPreview = (props: FormPreviewProps) => {
 	}, [props.form.elements, props.selectedPub, runHydrate])
 
 	useEffect(() => {
+		console.log("hydrating elements")
 		void hydrateElements()
 	}, [hydrateElements])
 

@@ -15,7 +15,6 @@ export const FormElementToggle = (
 ) => {
 	const formElementToggle = useFormElementToggleContext()
 	const isEnabled = formElementToggle.isEnabled(props.slug)
-	console.log("isEnabled", isEnabled, props.slug)
 	return (
 		<div className="relative">
 			<Tooltip delayDuration={500}>
