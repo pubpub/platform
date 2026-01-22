@@ -27,10 +27,10 @@ export default function Loading() {
 			<ContentLayoutBody className="relative flex flex-col gap-4 overflow-hidden p-4">
 				<SkeletonSearchRoot>
 					<SkeletonSearchBar className="relative w-full" />
-					<div className="flex w-full items-center gap-2">
+					<div className="flex w-full items-center gap-2 md:w-auto">
 						<SkeletonSearchButton className="w-20" />
 						<SkeletonSearchButton className="w-20" />
-						<SkeletonSearchButton className="ml-auto w-26" />
+						<SkeletonSearchButton className="ml-auto w-24 md:ml-0" />
 					</div>
 				</SkeletonSearchRoot>
 				<PubListSkeleton amount={10} />

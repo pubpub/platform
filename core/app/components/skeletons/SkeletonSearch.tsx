@@ -19,7 +19,7 @@ export const SkeletonSearchButton = ({ className }: { className?: string }) => {
 	return <Skeleton className={cn("h-9 w-20 border border-border", className)} />
 }
 export const SkeletonSearchBar = ({ className }: { className?: string }) => {
-	return <Skeleton className={cn("h-9 flex-grow border border-border", className)} />
+	return <Skeleton className={cn("h-9 grow border border-border", className)} />
 }
 
 export const SkeletonSearch = ({ className, buttons }: { className?: string; buttons: number }) => {

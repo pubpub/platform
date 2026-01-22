@@ -5,11 +5,18 @@ import { notFound, redirect } from "next/navigation"
 import { Capabilities, MembershipType } from "db/public"
 import { Activity } from "ui/icon"
 
+import DebugLoading from "~/app/components/skeletons/DebugLoading"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
 import { findCommunityBySlug } from "~/lib/server/community"
-import { ContentLayout } from "../../ContentLayout"
+import {
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../../ContentLayout"
 import { PaginatedAutomationRunList } from "./AutomationRunList"
+import Loading from "./loading"
 
 export const metadata: Metadata = {
 	title: "Automation Logs",
@@ -45,15 +52,25 @@ export default async function Page(props: {
 	}
 
 	return (
-		<ContentLayout
-			title={
-				<>
-					<Activity size={24} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
-					Automation Logs
-				</>
-			}
-		>
-			<PaginatedAutomationRunList communityId={community.id} searchParams={searchParams} />
-		</ContentLayout>
+		<DebugLoading loading={<Loading />}>
+			<ContentLayoutRoot>
+				<ContentLayoutHeader>
+					<ContentLayoutTitle>
+						<Activity
+							size={20}
+							strokeWidth={1}
+							className="mr-2 text-muted-foreground"
+						/>{" "}
+						Automation Logs
+					</ContentLayoutTitle>
+				</ContentLayoutHeader>
+				<ContentLayoutBody className="relative inset-0 overflow-hidden p-0">
+					<PaginatedAutomationRunList
+						communityId={community.id}
+						searchParams={searchParams}
+					/>
+				</ContentLayoutBody>
+			</ContentLayoutRoot>
+		</DebugLoading>
 	)
 }

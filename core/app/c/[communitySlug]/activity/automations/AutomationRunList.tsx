@@ -13,7 +13,6 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "ui/empty"
-import { cn } from "utils"
 
 import { getAutomationRunStatus } from "~/actions/results"
 import { db } from "~/kysely/database"
@@ -133,7 +132,7 @@ const AutomationRunListFooterPagination = async (props: {
 	}
 
 	return (
-		<AutomationRunSearchFooter {...props} {...paginationProps} className="z-20">
+		<AutomationRunSearchFooter {...props} {...paginationProps} className="fixed z-20">
 			{props.children}
 		</AutomationRunSearchFooter>
 	)
@@ -180,29 +179,25 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 	}))
 
 	return (
-		<div className="relative flex h-full flex-col">
+		<div className="relative mb-4 flex h-full w-full flex-col gap-3 overflow-x-hidden overflow-y-scroll p-4 pb-16">
 			<AutomationRunSearchProvider
 				availableAutomations={availableAutomations}
 				availableStages={stages}
 				availableActions={availableActions}
 			>
-				<div
-					className={cn("mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16")}
-				>
-					<AutomationRunSearch>
-						<Suspense fallback={<AutomationRunListSkeleton />}>
-							<PaginatedAutomationRunListInner
-								{...props}
-								community={community}
-								automationRunsPromise={automationRunsPromise}
-								filterParams={{
-									statuses: filterParams.statuses,
-									actions: filterParams.actions,
-								}}
-							/>
-						</Suspense>
-					</AutomationRunSearch>
-				</div>
+				<AutomationRunSearch>
+					<Suspense fallback={<AutomationRunListSkeleton />}>
+						<PaginatedAutomationRunListInner
+							{...props}
+							community={community}
+							automationRunsPromise={automationRunsPromise}
+							filterParams={{
+								statuses: filterParams.statuses,
+								actions: filterParams.actions,
+							}}
+						/>
+					</Suspense>
+				</AutomationRunSearch>
 				<Suspense fallback={null}>
 					<AutomationRunListFooterPagination
 						basePath={basePath}
