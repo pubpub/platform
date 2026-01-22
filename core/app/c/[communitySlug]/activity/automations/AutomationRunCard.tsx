@@ -29,7 +29,6 @@ const getTriggerDescription = (
 	automationRun: AutomationRunCardProps["automationRun"],
 	community: Communities
 ): { description: string | React.ReactNode; icon: React.ReactNode } => {
-	console.log("automationRun", automationRun)
 	if (automationRun.sourceUser) {
 		return {
 			description: `${automationRun.sourceUser.firstName} ${automationRun.sourceUser.lastName}`,

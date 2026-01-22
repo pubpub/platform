@@ -7,7 +7,6 @@ import { interpolate } from "@pubpub/json-interpolate"
 import { logger } from "logger"
 import { tryCatch } from "utils/try-catch"
 
-import { db } from "~/kysely/database"
 import { getPubsWithRelatedValues } from "~/lib/server"
 
 type ResolvedPub = ProcessedPub<{

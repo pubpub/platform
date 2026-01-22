@@ -122,9 +122,6 @@ export const saveForm = defineServerAction(async function saveForm(form: {
 					db.deleteFrom("form_elements").where("form_elements.id", "in", deletes)
 				)
 			}
-			console.log(form)
-
-			console.log({ access, name, isDefault })
 			if (access || name || isDefault) {
 				query = (query as typeof trx)
 					.updateTable("forms")
