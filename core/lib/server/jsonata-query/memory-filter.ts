@@ -14,7 +14,6 @@ import type {
 	TransformFunction,
 } from "./types"
 
-import { UnsupportedExpressionError } from "./errors"
 import {
 	applyMemoryTransform,
 	evaluateMemoryComparison,
@@ -184,12 +183,7 @@ function evaluateRelationFunction(
 		return evaluateMemoryExists(value)
 	}
 
-	return evaluateMemoryStringFunction(
-		funcName as StringFunction,
-		value,
-		args[0],
-		transform
-	)
+	return evaluateMemoryStringFunction(funcName as StringFunction, value, args[0], transform)
 }
 
 function evaluateRelationFilter(ctx: RelationContext, filter: RelationFilterCondition): boolean {
