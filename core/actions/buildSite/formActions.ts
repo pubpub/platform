@@ -1,0 +1,73 @@
+"use server"
+
+import { interpolate } from "@pubpub/json-interpolate"
+
+import { getLoginData } from "~/lib/authentication/loginData"
+import { env } from "~/lib/env/env"
+import { getPubsWithRelatedValues } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { defineServerAction } from "~/lib/server/defineServerAction"
+import { applyJsonataFilter, compileJsonataQuery } from "~/lib/server/jsonata-query"
+import { buildInterpolationContext } from "../_lib/interpolationContext"
+
+export const previewResult = defineServerAction(async function previewResult({
+	slug,
+	filter,
+	transform,
+	automationRunId,
+}: {
+	slug: string
+	filter: string
+	transform: string
+	automationRunId: string
+}) {
+	const [community, loginData] = await Promise.all([findCommunityBySlug(), getLoginData()])
+
+	if (!community) {
+		throw new Error("Community not found")
+	}
+
+	if (!loginData) {
+		throw new Error("Login data not found")
+	}
+
+	const pubs = await getPubsWithRelatedValues(
+		{
+			communityId: community.id,
+		},
+		{
+			customFilter: (eb) =>
+				applyJsonataFilter(eb, compileJsonataQuery(filter), {
+					communitySlug: community.slug,
+				}),
+			depth: 2,
+			withValues: true,
+			withRelatedPubs: true,
+			limit: 5,
+		}
+	)
+
+	const interpolatedPubs = await Promise.all(
+		pubs.map(async (pub) => {
+			const pubContext = buildInterpolationContext({
+				community,
+				pub,
+				env: { PUBPUB_URL: env.PUBPUB_URL },
+				useDummyValues: true,
+			})
+			const _interpolatedSlug = await interpolate(slug, pubContext)
+			const content = await interpolate(transform, pubContext)
+			return {
+				id: pub.id,
+				title: pub.title,
+				content,
+				slug: _interpolatedSlug,
+			}
+		})
+	)
+
+	return {
+		success: true,
+		pubs: interpolatedPubs,
+	}
+})

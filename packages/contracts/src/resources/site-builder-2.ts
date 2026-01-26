@@ -18,10 +18,15 @@ export const siteBuilderApi = contract.router(
 				communitySlug: z.string(),
 				pages: z.array(
 					z.object({
-						id: z.string().uuid(),
-						title: z.string(),
-						slug: z.string(),
-						content: z.string(),
+						pages: z.array(
+							z.object({
+								id: z.string().uuid(),
+								title: z.string(),
+								slug: z.string(),
+								content: z.string(),
+							})
+						),
+						transform: z.string(),
 					})
 				),
 				siteUrl: z.string(),

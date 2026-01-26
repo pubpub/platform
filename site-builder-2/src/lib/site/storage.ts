@@ -1,7 +1,11 @@
 import { readFile } from "node:fs/promises"
 
-import { getBuildPath } from "../shared/storage"
 import { SITE_ENV } from "./env"
+
+export const getBuildPath = (community: string, id: string) => {
+	return new URL(`../../../../.storage/${community}/${id}/pubs-to-build.json`, import.meta.url)
+		.pathname
+}
 
 export const getPubsToBuild = async () => {
 	const automationRunId = SITE_ENV.AUTOMATION_RUN_ID

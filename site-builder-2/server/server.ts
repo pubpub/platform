@@ -14,7 +14,7 @@ import { Hono } from "hono"
 import { siteApi } from "contracts"
 import { siteBuilderApi } from "contracts/resources/site-builder-2"
 
-import { getBuildPath } from "../src/lib/shared/storage"
+import { getBuildPath } from "../src/lib/server/storage"
 import { buildAstroSite } from "./astro"
 
 const env = await import("../src/lib/server/env").then((m) => m.SERVER_ENV)
@@ -311,7 +311,7 @@ const router = tsr.router(siteBuilderApi, {
 			const siteUrl = body.siteUrl
 			const timestamp = Date.now()
 
-			const distDir = `./dist/${communitySlug}`
+			const distDir = `./dist/${communitySlug}/${body.automationRunId}`
 
 			const buildPath = getBuildPath(communitySlug, body.automationRunId)
 
@@ -322,6 +322,8 @@ const router = tsr.router(siteBuilderApi, {
 				getBuildPath(communitySlug, body.automationRunId),
 				JSON.stringify(pages, null, 2)
 			)
+			console.log("pages", pages)
+			console.log("BUILDING ASTRO SITE")
 
 			const buildSuccess = await buildAstroSite({
 				outDir: distDir,
@@ -331,6 +333,7 @@ const router = tsr.router(siteBuilderApi, {
 						"import.meta.env.COMMUNITY_SLUG": JSON.stringify(communitySlug),
 						"import.meta.env.AUTH_TOKEN": JSON.stringify(authToken),
 						"import.meta.env.PUBPUB_URL": JSON.stringify(env.PUBPUB_URL),
+						"import.meta.env.AUTOMATION_RUN_ID": JSON.stringify(body.automationRunId),
 					},
 				},
 			})

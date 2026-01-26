@@ -2,6 +2,7 @@ import type { CommunitiesId, CommunityMembershipsId, PubsId, PubTypesId, StagesI
 
 import { createNextHandler } from "@ts-rest/serverless/next"
 
+import { interpolate } from "@pubpub/json-interpolate"
 import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts"
 import {
 	ApiAccessScope,
@@ -14,6 +15,7 @@ import {
 } from "db/public"
 import { logger } from "logger"
 
+import { buildInterpolationContext } from "~/actions/_lib/interpolationContext"
 import { runAutomation } from "~/actions/_lib/runAutomation"
 import {
 	checkAuthorization,
@@ -23,6 +25,7 @@ import {
 } from "~/lib/authentication/api"
 import { userHasAccessToForm } from "~/lib/authorization/capabilities"
 import { getAutomationsByTriggerConfig, getStage } from "~/lib/db/queries"
+import { env } from "~/lib/env/env"
 import {
 	BadRequestError,
 	createPubRecursiveNew,
@@ -44,6 +47,7 @@ import {
 } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { getForm, getFormsForCommunity } from "~/lib/server/form"
+import { applyJsonataFilter, compileJsonataQuery } from "~/lib/server/jsonata-query"
 import { validateFilter } from "~/lib/server/pub-filters-validate"
 import { getStages } from "~/lib/server/stages"
 import { getMember, getSuggestedUsers } from "~/lib/server/user"
@@ -183,6 +187,13 @@ const handler = createNextHandler(
 					}
 				}
 
+				let customFilter: (eb: AnyExpressionBuilder) => AnyExpressionWrapper | undefined
+				if (query?.query) {
+					const jsonataQuery = compileJsonataQuery(query.query)
+					customFilter = (eb) =>
+						applyJsonataFilter(eb, jsonataQuery, { communitySlug: community.slug })
+				}
+
 				const [pubs, pubCount] = await Promise.all([
 					getPubsWithRelatedValues(
 						{
@@ -196,8 +207,16 @@ const handler = createNextHandler(
 						{
 							...rest,
 							filters: query?.filters,
+							customFilter,
 							allowedPubTypes,
 							allowedStages,
+							...(query?.transform
+								? {
+										withValues: true,
+										withRelatedPubs: true,
+										depth: 3,
+									}
+								: {}),
 						}
 					),
 					getPubsCount({
@@ -207,12 +226,42 @@ const handler = createNextHandler(
 					}),
 				])
 
+				let finalPubs = pubs
+				if (query?.transform) {
+					console.log("transform", query.transform)
+					try {
+						finalPubs = await Promise.all(
+							finalPubs.map(async (pub) => {
+								const pubContext = buildInterpolationContext({
+									community,
+									pub,
+									env: { PUBPUB_URL: env.PUBPUB_URL },
+									useDummyValues: true,
+								})
+
+								console.log("pubContext", pubContext.pub.values)
+								const transformed = await interpolate(query.transform!, pubContext)
+
+								const { values, ...pubWithoutValues } = pub
+
+								return {
+									...pubWithoutValues,
+									content: transformed,
+								}
+							})
+						)
+					} catch (error) {
+						console.error("Error transforming pubs", error)
+						throw new BadRequestError("Error transforming pubs. " + error.message)
+					}
+				}
+
 				// TODO: this does not account for permissions
 				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`)
 
 				return {
 					status: 200,
-					body: pubs,
+					body: finalPubs,
 				}
 			},
 			create: async ({ body }) => {

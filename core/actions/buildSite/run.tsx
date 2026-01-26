@@ -4,18 +4,24 @@ import type { action } from "./action"
 
 import { initClient } from "@ts-rest/core"
 
+import { interpolate } from "@pubpub/json-interpolate"
 import { siteBuilderApi } from "contracts/resources/site-builder-2"
 import { logger } from "logger"
 import { tryCatch } from "utils/try-catch"
 
 import { env } from "~/lib/env/env"
+import { getPubTitle } from "~/lib/pubs"
 import { getPubsWithRelatedValues } from "~/lib/server"
 import { getSiteBuilderToken } from "~/lib/server/apiAccessTokens"
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { getCommunity } from "~/lib/server/community"
+import { applyJsonataFilter, compileJsonataQuery } from "~/lib/server/jsonata-query"
+import { buildInterpolationContext } from "../_lib/interpolationContext"
 import { defineRun } from "../types"
 
 export const run = defineRun<typeof action>(
 	async ({ communityId, pub, config, automationRunId }) => {
+		const community = await getCommunity(communityId)
 		const siteBuilderToken = await getSiteBuilderToken(communityId)
 
 		if (!siteBuilderToken) {
@@ -31,18 +37,43 @@ export const run = defineRun<typeof action>(
 			},
 		})
 
-		const filter = JSON.parse(config.filter)
+		const _pages = await Promise.all(
+			config.pages.map(async (page) => {
+				const query = compileJsonataQuery(page.filter)
 
-		const pubs = await getPubsWithRelatedValues(
-			{ communityId },
-			{
-				filters: filter,
-				depth: 1,
-				withValues: false,
-			}
+				const pubs = await getPubsWithRelatedValues(
+					{ communityId },
+					{
+						customFilter: (eb) => applyJsonataFilter(eb, query, { communitySlug }),
+						depth: 1,
+						withValues: true,
+					}
+				)
+
+				const pubContext = buildInterpolationContext({
+					community,
+					pub,
+					env: { PUBPUB_URL: env.PUBPUB_URL },
+					useDummyValues: true,
+				})
+				const [error, slug] = await tryCatch(interpolate(page.slug, pubContext))
+				logger.error({
+					msg: "Error interpolating slug . Will continue with pub id.",
+					error,
+				})
+				const slllug = error ? pub.id : slug
+
+				return {
+					pages: pubs.map((pub) => ({
+						id: pub.id,
+						title: getPubTitle(pub),
+						content: page.transform,
+						slug: slllug,
+					})),
+					transform: page.transform,
+				}
+			})
 		)
-
-		console.log("AAAAAAAAAA", pubs)
 
 		const [healthError, health] = await tryCatch(siteBuilderClient.health())
 		if (healthError) {
@@ -54,32 +85,23 @@ export const run = defineRun<typeof action>(
 			throw new Error("Site builder server is not healthy")
 		}
 
-		const siteUrl = config.siteUrl ?? "http://localhost:4321"
-
 		logger.debug({
 			msg: `Initializing site build`,
 			communitySlug,
-			journalId: pub.id,
 			mapping: config,
-			siteUrl,
 			headers: {
 				authorization: `Bearer ${siteBuilderToken}`,
 			},
 		})
+		console.log("AAAAAAAAAAAAAAA", _pages[0].pages)
 
 		const [buildError, result] = await tryCatch(
 			siteBuilderClient.build({
 				body: {
 					automationRunId: automationRunId,
 					communitySlug,
-					pages: pubs.map((pub) => ({
-						id: pub.id,
-						title: pub.title,
-						content: config.pages,
-						slug: "/hello",
-					})),
-					mapping: config,
-					siteUrl,
+					pages: _pages,
+					siteUrl: "https://gamer.com",
 				},
 				headers: {
 					authorization: `Bearer ${siteBuilderToken}`,
