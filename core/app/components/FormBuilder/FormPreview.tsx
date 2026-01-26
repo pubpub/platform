@@ -96,7 +96,7 @@ export const FormPreview = (props: FormPreviewProps) => {
 				} else {
 					return {
 						...e,
-						content: `<div className="h-4 w-full animate-pulse rounded-md bg-accent/70" />`,
+						content: `<div class="h-4 w-full animate-pulse rounded-md bg-accent/70"></div>`,
 					}
 				}
 			}

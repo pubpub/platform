@@ -14,7 +14,7 @@ export default function Loading() {
 		<ContentLayoutRoot>
 			<ContentLayoutHeader>
 				<ContentLayoutTitle>
-					<FormInput /> Fields Fields
+					<FormInput /> Fields
 				</ContentLayoutTitle>
 				<ContentLayoutActionsSkeleton />
 			</ContentLayoutHeader>

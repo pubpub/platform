@@ -685,7 +685,7 @@ const FormSettingsPanel = ({ form, currentDefaultForm, slug }: FormSettingsPanel
 									onClick={() => field.onChange(!field.value)}
 									className="w-full"
 								>
-									{field.value ? "Set as Default Form" : "Remove as Default Form"}
+									{field.value ? "Remove as Default Form" : "Set as Default Form"}
 								</Button>
 							</div>
 						)}
