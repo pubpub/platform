@@ -81,23 +81,20 @@ export type JsonataNode =
 	| JsonataFunctionNode
 	| JsonataBlockNode
 
-// our internal representation
+// operator and function definitions
 export const COMPARISON_OPS = ["=", "!=", "<", "<=", ">", ">=", "in"] as const
 export type ComparisonOperator = (typeof COMPARISON_OPS)[number]
 
 export const LOGICAL_OPS = ["and", "or"] as const
 export type LogicalOperator = (typeof LOGICAL_OPS)[number]
 
-export const STRING_FUNCTIONS = [
-	"contains",
-	"startsWith",
-	"endsWith",
-	"lowercase",
-	"uppercase",
-] as const
+export const STRING_FUNCTIONS = ["contains", "startsWith", "endsWith"] as const
 export type StringFunction = (typeof STRING_FUNCTIONS)[number]
 
-export const BOOLEAN_FUNCTIONS = ["exists", "not"] as const
+export const TRANSFORM_FUNCTIONS = ["lowercase", "uppercase"] as const
+export type TransformFunction = (typeof TRANSFORM_FUNCTIONS)[number]
+
+export const BOOLEAN_FUNCTIONS = ["exists"] as const
 export type BooleanFunction = (typeof BOOLEAN_FUNCTIONS)[number]
 
 export const BUILTIN_FIELDS = [
@@ -110,27 +107,27 @@ export const BUILTIN_FIELDS = [
 ] as const
 export type BuiltinField = (typeof BUILTIN_FIELDS)[number]
 
+// path types
 export type PubFieldPath =
 	| { kind: "value"; fieldSlug: string }
 	| { kind: "builtin"; field: BuiltinField }
 	| { kind: "pubType"; field: "name" | "id" }
 
-// paths for use inside relation filters
 export type RelationContextPath =
-	| { kind: "relationValue" } // $.value - the value of the relation itself
-	| { kind: "relatedPubValue"; fieldSlug: string } // $.relatedPub.values.fieldname
+	| { kind: "relationValue" }
+	| { kind: "relatedPubValue"; fieldSlug: string }
 	| { kind: "relatedPubBuiltin"; field: BuiltinField }
 	| { kind: "relatedPubType"; field: "name" | "id" }
 
 export type LiteralValue = string | number | boolean | null | LiteralValue[]
 
+// top-level condition types (for pub queries)
 export interface ComparisonCondition {
 	type: "comparison"
 	path: PubFieldPath
 	operator: ComparisonOperator
 	value: LiteralValue
-	// when we have function wrappers like $lowercase($.pub.values.title)
-	pathTransform?: StringFunction
+	pathTransform?: TransformFunction
 }
 
 export interface FunctionCondition {
@@ -138,8 +135,7 @@ export interface FunctionCondition {
 	name: StringFunction | BooleanFunction
 	path: PubFieldPath
 	arguments: LiteralValue[]
-	// optional transform on the path, e.g. $contains($lowercase($.pub.values.title), "snap")
-	pathTransform?: StringFunction
+	pathTransform?: TransformFunction
 }
 
 export interface LogicalCondition {
@@ -153,19 +149,18 @@ export interface NotCondition {
 	condition: ParsedCondition
 }
 
-// full-text search condition
 export interface SearchCondition {
 	type: "search"
 	query: string
 }
 
-// condition used inside relation filters (different context)
+// relation context condition types (for filters inside relation queries)
 export interface RelationComparisonCondition {
 	type: "relationComparison"
 	path: RelationContextPath
 	operator: ComparisonOperator
 	value: LiteralValue
-	pathTransform?: StringFunction
+	pathTransform?: TransformFunction
 }
 
 export interface RelationFunctionCondition {
@@ -173,7 +168,7 @@ export interface RelationFunctionCondition {
 	name: StringFunction | BooleanFunction
 	path: RelationContextPath
 	arguments: LiteralValue[]
-	pathTransform?: StringFunction
+	pathTransform?: TransformFunction
 }
 
 export interface RelationLogicalCondition {
@@ -193,7 +188,6 @@ export type RelationFilterCondition =
 	| RelationLogicalCondition
 	| RelationNotCondition
 
-// relation query condition: $.pub.out.fieldname[filter] or $.pub.in.fieldname[filter]
 export type RelationDirection = "out" | "in"
 
 export interface RelationCondition {
@@ -211,5 +205,26 @@ export type ParsedCondition =
 	| SearchCondition
 	| RelationCondition
 
-// re-export for convenience (also exported from parser.ts)
+// type guards
+export function isComparisonOp(op: string): op is ComparisonOperator {
+	return (COMPARISON_OPS as readonly string[]).includes(op)
+}
+
+export function isLogicalOp(op: string): op is LogicalOperator {
+	return (LOGICAL_OPS as readonly string[]).includes(op)
+}
+
+export function isStringFunction(name: string): name is StringFunction {
+	return (STRING_FUNCTIONS as readonly string[]).includes(name)
+}
+
+export function isTransformFunction(name: string): name is TransformFunction {
+	return (TRANSFORM_FUNCTIONS as readonly string[]).includes(name)
+}
+
+export function isBooleanFunction(name: string): name is BooleanFunction {
+	return (BOOLEAN_FUNCTIONS as readonly string[]).includes(name)
+}
+
+// re-export for convenience
 export type { ParsedCondition as Condition }

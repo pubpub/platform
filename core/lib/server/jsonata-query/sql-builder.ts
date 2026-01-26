@@ -1,8 +1,8 @@
-import type { ExpressionBuilder, ExpressionWrapper, RawBuilder } from "kysely"
+import type { ExpressionBuilder, ExpressionWrapper } from "kysely"
 import type { CompiledQuery } from "./compiler"
 import type {
-	BuiltinField,
 	ComparisonCondition,
+	ComparisonOperator,
 	FunctionCondition,
 	LogicalCondition,
 	NotCondition,
@@ -15,49 +15,33 @@ import type {
 	RelationFunctionCondition,
 	SearchCondition,
 	StringFunction,
+	TransformFunction,
 } from "./types"
 
 import { sql } from "kysely"
 
-import { UnsupportedExpressionError } from "./errors"
+import { buildSqlComparison, buildSqlExists, buildSqlStringFunction } from "./operators"
 
 type AnyExpressionBuilder = ExpressionBuilder<any, any>
 type AnyExpressionWrapper = ExpressionWrapper<any, any, any>
 
 export interface SqlBuilderOptions {
 	communitySlug?: string
-	// search config for full-text search
 	searchLanguage?: string
 }
 
-/**
- * converts a pub field path to the appropriate sql column reference
- */
-function pathToColumn(path: PubFieldPath): "value" | `pubs.${BuiltinField}` {
-	if (path.kind === "builtin") {
-		return `pubs.${path.field}` as const
-	}
-	// for value fields, we'll handle them via subquery
-	return "value"
-}
-
-/**
- * resolves a field slug, optionally adding community prefix
- */
 function resolveFieldSlug(fieldSlug: string, options?: SqlBuilderOptions): string {
 	if (!options?.communitySlug) {
 		return fieldSlug
 	}
-	// if already has a colon, assume it's already prefixed
 	if (fieldSlug.includes(":")) {
 		return fieldSlug
 	}
 	return `${options.communitySlug}:${fieldSlug}`
 }
 
-/**
- * builds a subquery that checks for a pub value matching certain conditions
- */
+// subquery builders
+
 function buildValueExistsSubquery(
 	eb: AnyExpressionBuilder,
 	fieldSlug: string,
@@ -76,9 +60,6 @@ function buildValueExistsSubquery(
 	)
 }
 
-/**
- * builds a subquery for pubType conditions
- */
 function buildPubTypeSubquery(
 	eb: AnyExpressionBuilder,
 	field: "name" | "id",
@@ -92,214 +73,36 @@ function buildPubTypeSubquery(
 			.selectFrom("pub_types")
 			.select(eb.lit(1).as("exists_check"))
 			.where("pub_types.id", "=", eb.ref("pubs.pubTypeId"))
-			.where((_innerEb) => buildCondition("pub_types.name"))
+			.where(() => buildCondition("pub_types.name"))
 	)
 }
 
-/**
- * wraps a value for json comparison if needed
- */
-function wrapValue(value: unknown): unknown {
-	if (typeof value === "string") {
-		return JSON.stringify(value)
-	}
-	return value
+// column resolution for different path types
+
+interface ColumnInfo {
+	column: string
+	isJsonValue: boolean
 }
 
-/**
- * builds the sql condition for a comparison
- */
-function buildComparisonCondition(
-	eb: AnyExpressionBuilder,
-	condition: ComparisonCondition,
-	options?: SqlBuilderOptions
-): AnyExpressionWrapper {
-	const { path, operator, value, pathTransform } = condition
-
-	// handle builtin fields directly on pubs table
-	// builtin fields are not json, so we don't wrap the value
-	if (path.kind === "builtin") {
-		const column = pathToColumn(path)
-		return buildOperatorCondition(eb, column, operator, value, false, pathTransform)
-	}
-
-	// handle pubType fields (also not json)
-	if (path.kind === "pubType") {
-		return buildPubTypeSubquery(eb, path.field, (column) =>
-			buildOperatorCondition(eb, column, operator, value, false, pathTransform)
-		)
-	}
-
-	// handle value fields via subquery (json values)
-	return buildValueExistsSubquery(
-		eb,
-		path.fieldSlug,
-		(innerEb) => buildOperatorCondition(innerEb, "value", operator, value, true, pathTransform),
-		options
-	)
-}
-
-/**
- * builds an operator condition for a specific column
- */
-function buildOperatorCondition(
-	eb: AnyExpressionBuilder,
-	column: string,
-	operator: string,
-	value: unknown,
-	isJsonValue = true,
-	pathTransform?: StringFunction
-): AnyExpressionWrapper {
-	const colExpr = applyTransform(column, pathTransform)
-
-	const wrappedValue = isJsonValue ? wrapValue(value) : value
-
-	switch (operator) {
-		case "=":
-			return eb(colExpr, "=", wrappedValue)
-		case "!=":
-			return eb(colExpr, "!=", wrappedValue)
-		case "<":
-			return eb(colExpr, "<", wrappedValue)
-		case "<=":
-			return eb(colExpr, "<=", wrappedValue)
-		case ">":
-			return eb(colExpr, ">", wrappedValue)
-		case ">=":
-			return eb(colExpr, ">=", wrappedValue)
-		case "in":
-			if (Array.isArray(value)) {
-				return eb(colExpr, "in", isJsonValue ? value.map(wrapValue) : value)
+function pubFieldPathToColumn(path: PubFieldPath): ColumnInfo {
+	switch (path.kind) {
+		case "builtin":
+			return { column: `pubs.${path.field}`, isJsonValue: false }
+		case "pubType":
+			return {
+				column: path.field === "id" ? "pubs.pubTypeId" : "pub_types.name",
+				isJsonValue: false,
 			}
-			return eb(colExpr, "=", wrappedValue)
-		default:
-			throw new UnsupportedExpressionError(`unsupported operator: ${operator}`)
+		case "value":
+			return { column: "value", isJsonValue: true }
 	}
 }
 
-/**
- * builds the sql condition for a function call
- */
-function buildFunctionCondition(
-	eb: AnyExpressionBuilder,
-	condition: FunctionCondition,
-	options?: SqlBuilderOptions
-): AnyExpressionWrapper {
-	const { name, path, arguments: args, pathTransform } = condition
-
-	const isValueField = path.kind === "value"
-
-	const buildInner = (col: string) => {
-		const strArg = String(args[0])
-
-		const colExpr = applyTransform(col, pathTransform)
-
-		// when using transform, we need to also lowercase/uppercase the search arg
-		let searchArg = strArg
-		if (pathTransform === "lowercase") {
-			searchArg = strArg.toLowerCase()
-		} else if (pathTransform === "uppercase") {
-			searchArg = strArg.toUpperCase()
-		}
-
-		switch (name) {
-			case "contains":
-				return eb(colExpr, "like", `%${searchArg}%`)
-			case "startsWith":
-				// for json values, the string starts with a quote
-				if (isValueField && !pathTransform) {
-					return eb(colExpr, "like", `"${searchArg}%`)
-				}
-				return eb(colExpr, "like", `${searchArg}%`)
-			case "endsWith":
-				// for json values, the string ends with a quote
-				if (isValueField && !pathTransform) {
-					return eb(colExpr, "like", `%${searchArg}"`)
-				}
-				return eb(colExpr, "like", `%${searchArg}`)
-			case "exists":
-				return eb.lit(true)
-			default:
-				throw new UnsupportedExpressionError(`unsupported function: ${name}`)
-		}
-	}
-
-	if (path.kind === "builtin") {
-		const column = pathToColumn(path)
-		// like, when would you use this, but whatever
-		if (name === "exists") {
-			return eb(column, "is not", null)
-		}
-		return buildInner(column)
-	}
-
-	if (path.kind === "pubType") {
-		return buildPubTypeSubquery(eb, path.field, (column) => buildInner(column))
-	}
-
-	if (name === "exists") {
-		return buildValueExistsSubquery(eb, path.fieldSlug, () => eb.lit(true), options)
-	}
-
-	return buildValueExistsSubquery(eb, path.fieldSlug, () => buildInner("value"), options)
-}
-
-function buildLogicalCondition(
-	eb: AnyExpressionBuilder,
-	condition: LogicalCondition,
-	options?: SqlBuilderOptions
-): AnyExpressionWrapper {
-	const conditions = condition.conditions.map((c) => buildCondition(eb, c, options))
-
-	if (condition.operator === "and") {
-		return eb.and(conditions)
-	}
-	return eb.or(conditions)
-}
-
-function buildNotCondition(
-	eb: AnyExpressionBuilder,
-	condition: NotCondition,
-	options?: SqlBuilderOptions
-): AnyExpressionWrapper {
-	return eb.not(buildCondition(eb, condition.condition, options))
-}
-
-function buildSearchCondition(
-	eb: AnyExpressionBuilder,
-	condition: SearchCondition,
-	options?: SqlBuilderOptions
-): AnyExpressionWrapper {
-	const { query } = condition
-	const language = options?.searchLanguage ?? "english"
-
-	const cleanQuery = query.trim().replace(/[:@]/g, "")
-	if (cleanQuery.length < 2) {
-		return eb.lit(false)
-	}
-
-	const terms = cleanQuery.split(/\s+/).filter((word) => word.length >= 2)
-	if (terms.length === 0) {
-		return eb.lit(false)
-	}
-
-	const prefixTerms = terms.map((term) => `${term}:*`).join(" & ")
-
-	return sql`pubs."searchVector" @@ to_tsquery(${language}::regconfig, ${prefixTerms})` as unknown as AnyExpressionWrapper
-}
-
-/**
- * converts a relation context path to the appropriate column reference for subquery
- */
-function relationPathToColumn(
-	path: RelationContextPath,
-	relatedPubAlias: string
-): { column: string; isJsonValue: boolean } {
+function relationPathToColumn(path: RelationContextPath, relatedPubAlias: string): ColumnInfo {
 	switch (path.kind) {
 		case "relationValue":
 			return { column: "pv.value", isJsonValue: true }
 		case "relatedPubValue":
-			// we'll handle this via another subquery
 			return { column: "rpv.value", isJsonValue: true }
 		case "relatedPubBuiltin":
 			return { column: `${relatedPubAlias}.${path.field}`, isJsonValue: false }
@@ -307,44 +110,222 @@ function relationPathToColumn(
 			if (path.field === "id") {
 				return { column: `${relatedPubAlias}.pubTypeId`, isJsonValue: false }
 			}
-			// name requires a join to pub_types
 			return { column: "rpt.name", isJsonValue: false }
-		default: {
-			const _exhaustiveCheck: never = path
-			throw new UnsupportedExpressionError(
-				`unsupported relation context path: ${(path as any)?.kind}`
-			)
-		}
 	}
 }
 
-/**
- * builds a condition for a relation comparison
- */
-function buildRelationComparisonCondition(
-	eb: AnyExpressionBuilder,
-	condition: RelationComparisonCondition,
-	relatedPubAlias: string,
+// generic condition building
+
+interface ConditionBuilderContext {
+	eb: AnyExpressionBuilder
 	options?: SqlBuilderOptions
+}
+
+function buildComparisonForColumn(
+	ctx: ConditionBuilderContext,
+	column: string,
+	operator: ComparisonOperator,
+	value: unknown,
+	isJsonValue: boolean,
+	transform?: TransformFunction
+): AnyExpressionWrapper {
+	return buildSqlComparison(ctx.eb, column, operator, value, isJsonValue, transform)
+}
+
+function buildFunctionForColumn(
+	ctx: ConditionBuilderContext,
+	column: string,
+	funcName: StringFunction | "exists",
+	args: unknown[],
+	isJsonValue: boolean,
+	transform?: TransformFunction
+): AnyExpressionWrapper {
+	if (funcName === "exists") {
+		return buildSqlExists(ctx.eb, column, true)
+	}
+	return buildSqlStringFunction(ctx.eb, column, funcName, String(args[0]), isJsonValue, transform)
+}
+
+// top-level condition builders
+
+function buildComparisonCondition(
+	ctx: ConditionBuilderContext,
+	condition: ComparisonCondition
 ): AnyExpressionWrapper {
 	const { path, operator, value, pathTransform } = condition
-	const { column, isJsonValue } = relationPathToColumn(path, relatedPubAlias)
+
+	if (path.kind === "builtin") {
+		const { column, isJsonValue } = pubFieldPathToColumn(path)
+		return buildComparisonForColumn(ctx, column, operator, value, isJsonValue, pathTransform)
+	}
+
+	if (path.kind === "pubType") {
+		return buildPubTypeSubquery(ctx.eb, path.field, (column) =>
+			buildComparisonForColumn(ctx, column, operator, value, false, pathTransform)
+		)
+	}
+
+	return buildValueExistsSubquery(
+		ctx.eb,
+		path.fieldSlug,
+		(innerEb) =>
+			buildComparisonForColumn(
+				{ eb: innerEb, options: ctx.options },
+				"value",
+				operator,
+				value,
+				true,
+				pathTransform
+			),
+		ctx.options
+	)
+}
+
+function buildFunctionCondition(
+	ctx: ConditionBuilderContext,
+	condition: FunctionCondition
+): AnyExpressionWrapper {
+	const { name, path, arguments: args, pathTransform } = condition
+
+	if (path.kind === "builtin") {
+		const { column, isJsonValue } = pubFieldPathToColumn(path)
+		if (name === "exists") {
+			return ctx.eb(column, "is not", null)
+		}
+		return buildFunctionForColumn(ctx, column, name, args, isJsonValue, pathTransform)
+	}
+
+	if (path.kind === "pubType") {
+		return buildPubTypeSubquery(ctx.eb, path.field, (column) =>
+			buildFunctionForColumn(ctx, column, name, args, false, pathTransform)
+		)
+	}
+
+	if (name === "exists") {
+		return buildValueExistsSubquery(ctx.eb, path.fieldSlug, () => ctx.eb.lit(true), ctx.options)
+	}
+
+	return buildValueExistsSubquery(
+		ctx.eb,
+		path.fieldSlug,
+		() => buildFunctionForColumn(ctx, "value", name, args, true, pathTransform),
+		ctx.options
+	)
+}
+
+function buildLogicalCondition(
+	ctx: ConditionBuilderContext,
+	condition: LogicalCondition
+): AnyExpressionWrapper {
+	const conditions = condition.conditions.map((c) => buildCondition(ctx, c))
+	return condition.operator === "and" ? ctx.eb.and(conditions) : ctx.eb.or(conditions)
+}
+
+function buildNotCondition(
+	ctx: ConditionBuilderContext,
+	condition: NotCondition
+): AnyExpressionWrapper {
+	return ctx.eb.not(buildCondition(ctx, condition.condition))
+}
+
+function buildSearchCondition(
+	ctx: ConditionBuilderContext,
+	condition: SearchCondition
+): AnyExpressionWrapper {
+	const { query } = condition
+	const language = ctx.options?.searchLanguage ?? "english"
+
+	const cleanQuery = query.trim().replace(/[:@]/g, "")
+	if (cleanQuery.length < 2) {
+		return ctx.eb.lit(false)
+	}
+
+	const terms = cleanQuery.split(/\s+/).filter((word) => word.length >= 2)
+	if (terms.length === 0) {
+		return ctx.eb.lit(false)
+	}
+
+	const prefixTerms = terms.map((term) => `${term}:*`).join(" & ")
+
+	return sql`pubs."searchVector" @@ to_tsquery(${language}::regconfig, ${prefixTerms})` as unknown as AnyExpressionWrapper
+}
+
+// relation filter builders
+
+interface RelationFilterContext {
+	eb: AnyExpressionBuilder
+	relatedPubAlias: string
+	options?: SqlBuilderOptions
+}
+
+function buildRelationComparisonCondition(
+	ctx: RelationFilterContext,
+	condition: RelationComparisonCondition
+): AnyExpressionWrapper {
+	const { path, operator, value, pathTransform } = condition
+	const { column, isJsonValue } = relationPathToColumn(path, ctx.relatedPubAlias)
 
 	if (path.kind === "relatedPubValue") {
-		const resolvedSlug = resolveFieldSlug(path.fieldSlug, options)
-		return eb.exists(
-			eb
+		const resolvedSlug = resolveFieldSlug(path.fieldSlug, ctx.options)
+		return ctx.eb.exists(
+			ctx.eb
 				.selectFrom("pub_values as rpv")
 				.innerJoin("pub_fields as rpf", "rpf.id", "rpv.fieldId")
-				.select(eb.lit(1).as("rpv_check"))
-				.where("rpv.pubId", "=", eb.ref(`${relatedPubAlias}.id`))
+				.select(ctx.eb.lit(1).as("rpv_check"))
+				.where("rpv.pubId", "=", ctx.eb.ref(`${ctx.relatedPubAlias}.id`))
 				.where("rpf.slug", "=", resolvedSlug)
 				.where((innerEb) =>
-					buildOperatorCondition(
-						innerEb,
+					buildSqlComparison(innerEb, "rpv.value", operator, value, true, pathTransform)
+				)
+		)
+	}
+
+	if (path.kind === "relatedPubType" && path.field === "name") {
+		return ctx.eb.exists(
+			ctx.eb
+				.selectFrom("pub_types as rpt")
+				.select(ctx.eb.lit(1).as("rpt_check"))
+				.where("rpt.id", "=", ctx.eb.ref(`${ctx.relatedPubAlias}.pubTypeId`))
+				.where((innerEb) =>
+					buildSqlComparison(innerEb, "rpt.name", operator, value, false, pathTransform)
+				)
+		)
+	}
+
+	return buildSqlComparison(ctx.eb, column, operator, value, isJsonValue, pathTransform)
+}
+
+function buildRelationFunctionCondition(
+	ctx: RelationFilterContext,
+	condition: RelationFunctionCondition
+): AnyExpressionWrapper {
+	const { name, path, arguments: args, pathTransform } = condition
+
+	if (path.kind === "relatedPubValue") {
+		const resolvedSlug = resolveFieldSlug(path.fieldSlug, ctx.options)
+		if (name === "exists") {
+			return ctx.eb.exists(
+				ctx.eb
+					.selectFrom("pub_values as rpv")
+					.innerJoin("pub_fields as rpf", "rpf.id", "rpv.fieldId")
+					.select(ctx.eb.lit(1).as("rpv_check"))
+					.where("rpv.pubId", "=", ctx.eb.ref(`${ctx.relatedPubAlias}.id`))
+					.where("rpf.slug", "=", resolvedSlug)
+			)
+		}
+		return ctx.eb.exists(
+			ctx.eb
+				.selectFrom("pub_values as rpv")
+				.innerJoin("pub_fields as rpf", "rpf.id", "rpv.fieldId")
+				.select(ctx.eb.lit(1).as("rpv_check"))
+				.where("rpv.pubId", "=", ctx.eb.ref(`${ctx.relatedPubAlias}.id`))
+				.where("rpf.slug", "=", resolvedSlug)
+				.where(() =>
+					buildSqlStringFunction(
+						ctx.eb,
 						"rpv.value",
-						operator,
-						value,
+						name as StringFunction,
+						String(args[0]),
 						true,
 						pathTransform
 					)
@@ -352,245 +333,117 @@ function buildRelationComparisonCondition(
 		)
 	}
 
-	if (path.kind === "relatedPubType" && path.field === "name") {
-		return eb.exists(
-			eb
-				.selectFrom("pub_types as rpt")
-				.select(eb.lit(1).as("rpt_check"))
-				.where("rpt.id", "=", eb.ref(`${relatedPubAlias}.pubTypeId`))
-				.where((innerEb) =>
-					buildOperatorCondition(
-						innerEb,
-						"rpt.name",
-						operator,
-						value,
-						false,
-						pathTransform
-					)
-				)
-		)
-	}
+	const { column, isJsonValue } = relationPathToColumn(path, ctx.relatedPubAlias)
 
-	return buildOperatorCondition(eb, column, operator, value, isJsonValue, pathTransform)
-}
-
-/**
- * builds a condition for a relation function call
- */
-function buildRelationFunctionCondition(
-	eb: AnyExpressionBuilder,
-	condition: RelationFunctionCondition,
-	relatedPubAlias: string,
-	options?: SqlBuilderOptions
-): AnyExpressionWrapper {
-	const { name, path, arguments: args, pathTransform } = condition
-
-	const buildFunctionInner = (col: string, isJson: boolean) => {
-		const strArg = String(args[0])
-
-		const colExpr = applyTransform(col, pathTransform)
-
-		let searchArg = strArg
-		if (pathTransform === "lowercase") {
-			searchArg = strArg.toLowerCase()
-		} else if (pathTransform === "uppercase") {
-			searchArg = strArg.toUpperCase()
-		}
-
-		switch (name) {
-			case "contains":
-				return eb(colExpr, "like", `%${searchArg}%`)
-			case "startsWith":
-				if (isJson && !pathTransform) {
-					return eb(colExpr, "like", `"${searchArg}%`)
-				}
-				return eb(colExpr, "like", `${searchArg}%`)
-			case "endsWith":
-				if (isJson && !pathTransform) {
-					return eb(colExpr, "like", `%${searchArg}"`)
-				}
-				return eb(colExpr, "like", `%${searchArg}`)
-			case "exists":
-				return eb.lit(true)
-			default:
-				throw new UnsupportedExpressionError(
-					`unsupported function in relation filter: ${name}`
-				)
-		}
-	}
-
-	if (path.kind === "relatedPubValue") {
-		const resolvedSlug = resolveFieldSlug(path.fieldSlug, options)
-		if (name === "exists") {
-			return eb.exists(
-				eb
-					.selectFrom("pub_values as rpv")
-					.innerJoin("pub_fields as rpf", "rpf.id", "rpv.fieldId")
-					.select(eb.lit(1).as("rpv_check"))
-					.where("rpv.pubId", "=", eb.ref(`${relatedPubAlias}.id`))
-					.where("rpf.slug", "=", resolvedSlug)
-			)
-		}
-		return eb.exists(
-			eb
-				.selectFrom("pub_values as rpv")
-				.innerJoin("pub_fields as rpf", "rpf.id", "rpv.fieldId")
-				.select(eb.lit(1).as("rpv_check"))
-				.where("rpv.pubId", "=", eb.ref(`${relatedPubAlias}.id`))
-				.where("rpf.slug", "=", resolvedSlug)
-				.where(() => buildFunctionInner("rpv.value", true))
-		)
-	}
-
-	// handle relationValue ($.value)
-	if (path.kind === "relationValue") {
-		if (name === "exists") {
-			return eb("pv.value", "is not", null)
-		}
-		return buildFunctionInner("pv.value", true)
-	}
-
-	// handle builtin fields
-	const { column, isJsonValue } = relationPathToColumn(path, relatedPubAlias)
 	if (name === "exists") {
-		return eb(column, "is not", null)
+		return ctx.eb(column, "is not", null)
 	}
-	return buildFunctionInner(column, isJsonValue)
+
+	return buildSqlStringFunction(
+		ctx.eb,
+		column,
+		name as StringFunction,
+		String(args[0]),
+		isJsonValue,
+		pathTransform
+	)
 }
 
-/**
- * builds a relation filter condition recursively
- */
 function buildRelationFilter(
-	eb: AnyExpressionBuilder,
-	filter: RelationFilterCondition,
-	relatedPubAlias: string,
-	options?: SqlBuilderOptions
+	ctx: RelationFilterContext,
+	filter: RelationFilterCondition
 ): AnyExpressionWrapper {
 	switch (filter.type) {
 		case "relationComparison":
-			return buildRelationComparisonCondition(eb, filter, relatedPubAlias, options)
+			return buildRelationComparisonCondition(ctx, filter)
 		case "relationFunction":
-			return buildRelationFunctionCondition(eb, filter, relatedPubAlias, options)
+			return buildRelationFunctionCondition(ctx, filter)
 		case "relationLogical": {
-			const conditions = filter.conditions.map((c) =>
-				buildRelationFilter(eb, c, relatedPubAlias, options)
-			)
-			return filter.operator === "and" ? eb.and(conditions) : eb.or(conditions)
+			const conditions = filter.conditions.map((c) => buildRelationFilter(ctx, c))
+			return filter.operator === "and" ? ctx.eb.and(conditions) : ctx.eb.or(conditions)
 		}
 		case "relationNot":
-			return eb.not(buildRelationFilter(eb, filter.condition, relatedPubAlias, options))
+			return ctx.eb.not(buildRelationFilter(ctx, filter.condition))
 	}
 }
 
-/**
- * builds the sql condition for a relation query
- *
- * for "out" relations: find pubs where there's a pub_value with relatedPubId pointing out
- * for "in" relations: find pubs that are referenced by other pubs via the given field
- */
 function buildRelationCondition(
-	eb: AnyExpressionBuilder,
-	condition: RelationCondition,
-	options?: SqlBuilderOptions
+	ctx: ConditionBuilderContext,
+	condition: RelationCondition
 ): AnyExpressionWrapper {
 	const { direction, fieldSlug, filter } = condition
-	const resolvedSlug = resolveFieldSlug(fieldSlug, options)
+	const resolvedSlug = resolveFieldSlug(fieldSlug, ctx.options)
 
 	if (direction === "out") {
-		// outgoing relation: this pub has a value that points to another pub
-		// pv.pubId = pubs.id and pv.relatedPubId = related_pub.id
-		let subquery = eb
+		let subquery = ctx.eb
 			.selectFrom("pub_values as pv")
 			.innerJoin("pub_fields as pf", "pf.id", "pv.fieldId")
 			.innerJoin("pubs as related_pub", "related_pub.id", "pv.relatedPubId")
-			.select(eb.lit(1).as("rel_check"))
-			.where("pv.pubId", "=", eb.ref("pubs.id"))
+			.select(ctx.eb.lit(1).as("rel_check"))
+			.where("pv.pubId", "=", ctx.eb.ref("pubs.id"))
 			.where("pf.slug", "=", resolvedSlug)
 			.where("pv.relatedPubId", "is not", null)
 
 		if (filter) {
 			subquery = subquery.where((innerEb) =>
-				buildRelationFilter(innerEb, filter, "related_pub", options)
+				buildRelationFilter(
+					{ eb: innerEb, relatedPubAlias: "related_pub", options: ctx.options },
+					filter
+				)
 			)
 		}
 
-		return eb.exists(subquery)
+		return ctx.eb.exists(subquery)
 	}
 
-	// incoming relation: another pub has a value pointing to this pub
-	// pv.relatedPubId = pubs.id and pv.pubId = source_pub.id
-	let subquery = eb
+	let subquery = ctx.eb
 		.selectFrom("pub_values as pv")
 		.innerJoin("pub_fields as pf", "pf.id", "pv.fieldId")
 		.innerJoin("pubs as source_pub", "source_pub.id", "pv.pubId")
-		.select(eb.lit(1).as("rel_check"))
-		.where("pv.relatedPubId", "=", eb.ref("pubs.id"))
+		.select(ctx.eb.lit(1).as("rel_check"))
+		.where("pv.relatedPubId", "=", ctx.eb.ref("pubs.id"))
 		.where("pf.slug", "=", resolvedSlug)
 
 	if (filter) {
-		// for incoming, the "relatedPub" in the filter context is the source_pub
 		subquery = subquery.where((innerEb) =>
-			buildRelationFilter(innerEb, filter, "source_pub", options)
+			buildRelationFilter(
+				{ eb: innerEb, relatedPubAlias: "source_pub", options: ctx.options },
+				filter
+			)
 		)
 	}
 
-	return eb.exists(subquery)
+	return ctx.eb.exists(subquery)
 }
 
-/**
- * builds the sql condition for any parsed condition
- */
+// main condition dispatcher
+
 function buildCondition(
-	eb: AnyExpressionBuilder,
-	condition: ParsedCondition,
-	options?: SqlBuilderOptions
+	ctx: ConditionBuilderContext,
+	condition: ParsedCondition
 ): AnyExpressionWrapper {
 	switch (condition.type) {
 		case "comparison":
-			return buildComparisonCondition(eb, condition, options)
+			return buildComparisonCondition(ctx, condition)
 		case "function":
-			return buildFunctionCondition(eb, condition, options)
+			return buildFunctionCondition(ctx, condition)
 		case "logical":
-			return buildLogicalCondition(eb, condition, options)
+			return buildLogicalCondition(ctx, condition)
 		case "not":
-			return buildNotCondition(eb, condition, options)
+			return buildNotCondition(ctx, condition)
 		case "search":
-			return buildSearchCondition(eb, condition, options)
+			return buildSearchCondition(ctx, condition)
 		case "relation":
-			return buildRelationCondition(eb, condition, options)
+			return buildRelationCondition(ctx, condition)
 	}
 }
 
-/**
- * applies a compiled jsonata query as a filter to a kysely query builder
- *
- * @example
- * ```ts
- * const query = compileJsonataQuery('$.pub.values.title = "Test"')
- * const pubs = await db
- *   .selectFrom("pubs")
- *   .selectAll()
- *   .where((eb) => applyJsonataFilter(eb, query, { communitySlug: "my-community" }))
- *   .execute()
- * ```
- */
+// public api
+
 export function applyJsonataFilter<K extends AnyExpressionBuilder>(
 	eb: K,
 	query: CompiledQuery,
 	options?: SqlBuilderOptions
 ): AnyExpressionWrapper {
-	return buildCondition(eb, query.condition, options)
-}
-
-function applyTransform(col: string, pathTransform?: StringFunction): RawBuilder<unknown> {
-	switch (pathTransform) {
-		case "lowercase":
-			return sql`lower(${col}::text)`
-		case "uppercase":
-			return sql`upper(${col}::text)`
-		default: {
-			return sql`${col}::text`
-		}
-	}
+	return buildCondition({ eb, options }, query.condition)
 }
