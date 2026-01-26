@@ -702,7 +702,6 @@ function parseBinary(node: JsonataBinaryNode): ParsedCondition {
 		} satisfies LogicalCondition
 	}
 
-	// handle "in" operator: $.pub.values.number in [42, 24, 54]
 	if (op === "in") {
 		// check if lhs is path and rhs is array
 		if (isPathNode(node.lhs)) {
@@ -710,7 +709,6 @@ function parseBinary(node: JsonataBinaryNode): ParsedCondition {
 			const value = extractLiteral(node.rhs)
 			return { type: "comparison", path, operator: "in", value }
 		}
-		// check if lhs is literal and rhs is path: "value" in $.pub.values.array
 		if (isLiteralNode(node.lhs) && isPathNode(node.rhs)) {
 			const path = extractPubFieldPath(node.rhs.steps)
 			const value = extractLiteral(node.lhs)

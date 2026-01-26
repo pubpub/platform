@@ -42,9 +42,7 @@ function getValueFromPath(pub: AnyProcessedPub, path: PubFieldPath): unknown {
 		return pubType[path.field]
 	}
 
-	// value field - find in values array
 	const value = pub.values.find((v) => {
-		// handle both full slug and short slug
 		const fieldSlug = v.fieldSlug
 		return (
 			path.kind === "value" &&
@@ -56,7 +54,7 @@ function getValueFromPath(pub: AnyProcessedPub, path: PubFieldPath): unknown {
 }
 
 /**
- * applies a path transform to a value
+ * applies a path transform to a value, eg lowercase, uppercase
  */
 function applyTransform(value: unknown, transform?: string): unknown {
 	if (transform === "lowercase" && typeof value === "string") {
@@ -72,7 +70,6 @@ function applyTransform(value: unknown, transform?: string): unknown {
  * compares two values using the given operator
  */
 function compareValues(left: unknown, operator: string, right: unknown): boolean {
-	// handle null comparisons
 	if (right === null) {
 		if (operator === "=") {
 			return left === null || left === undefined
@@ -82,19 +79,17 @@ function compareValues(left: unknown, operator: string, right: unknown): boolean
 		}
 	}
 
-	// handle "in" operator
 	if (operator === "in" && Array.isArray(right)) {
 		return right.includes(left)
 	}
 
-	// convert dates for comparison
 	const normalizeValue = (v: unknown): unknown => {
 		if (v instanceof Date) {
 			return v.getTime()
 		}
 		if (typeof v === "string") {
 			const parsed = Date.parse(v)
-			if (!isNaN(parsed) && v.includes("-")) {
+			if (!Number.isNaN(parsed)) {
 				return parsed
 			}
 		}
@@ -123,7 +118,8 @@ function compareValues(left: unknown, operator: string, right: unknown): boolean
 }
 
 /**
- * evaluates a comparison condition against a pub
+ * evaluates a comparison condition against a pub,
+ * eg $.pub.values.title = "Test"
  */
 function evaluateComparison(pub: AnyProcessedPub, condition: ComparisonCondition): boolean {
 	let value = getValueFromPath(pub, condition.path)
@@ -132,16 +128,14 @@ function evaluateComparison(pub: AnyProcessedPub, condition: ComparisonCondition
 }
 
 /**
- * evaluates a function condition against a pub
+ * evaluates a function condition against a pub, eg $contains($.pub.values.title, "Test")
  */
 function evaluateFunction(pub: AnyProcessedPub, condition: FunctionCondition): boolean {
 	let value = getValueFromPath(pub, condition.path)
 	const args = condition.arguments
 
-	// apply transform if present
 	value = applyTransform(value, condition.pathTransform)
 
-	// also transform the search argument for consistency
 	let searchArg = args[0]
 	if (typeof searchArg === "string" && condition.pathTransform) {
 		searchArg = applyTransform(searchArg, condition.pathTransform) as string
@@ -178,7 +172,7 @@ function evaluateFunction(pub: AnyProcessedPub, condition: FunctionCondition): b
 }
 
 /**
- * evaluates a logical condition against a pub
+ * evaluates a logical condition against a pub, eg $.pub.values.title = "Test" and $.pub.values.count > 10
  */
 function evaluateLogical(pub: AnyProcessedPub, condition: LogicalCondition): boolean {
 	if (condition.operator === "and") {
@@ -188,7 +182,7 @@ function evaluateLogical(pub: AnyProcessedPub, condition: LogicalCondition): boo
 }
 
 /**
- * evaluates a not condition against a pub
+ * evaluates a not condition against a pub, eg $not($.pub.values.title = "Test")
  */
 function evaluateNot(pub: AnyProcessedPub, condition: NotCondition): boolean {
 	return !evaluateCondition(pub, condition.condition)
@@ -205,7 +199,6 @@ function evaluateSearch(pub: AnyProcessedPub, condition: SearchCondition): boole
 		return true
 	}
 
-	// collect all searchable text from the pub
 	const searchableTexts: string[] = []
 
 	for (const v of pub.values) {
@@ -220,13 +213,8 @@ function evaluateSearch(pub: AnyProcessedPub, condition: SearchCondition): boole
 		}
 	}
 
-	// all terms must match somewhere
 	return searchTerms.every((term) => searchableTexts.some((text) => text.includes(term)))
 }
-
-// ============================================================================
-// relation filter evaluation
-// ============================================================================
 
 interface RelationContext {
 	relationValue: unknown
@@ -257,8 +245,17 @@ function getRelationContextValue(ctx: RelationContext, path: RelationContextPath
 					return ctx.relatedPub.updatedAt
 				case "pubTypeId":
 					return ctx.relatedPub.pubTypeId
+				case "title":
+					return ctx.relatedPub.title
+				case "stageId":
+					return ctx.relatedPub.stageId
+				default: {
+					const _exhaustiveCheck: never = path
+					throw new UnsupportedExpressionError(
+						`unsupported related pub builtin field: ${(path as any)?.field}`
+					)
+				}
 			}
-			break
 		case "relatedPubType": {
 			const pubType = (ctx.relatedPub as any).pubType
 			return pubType?.[path.field]
@@ -281,10 +278,8 @@ function evaluateRelationFilter(ctx: RelationContext, filter: RelationFilterCond
 			let value = getRelationContextValue(ctx, filter.path)
 			const args = filter.arguments
 
-			// apply transform if present
 			value = applyTransform(value, filter.pathTransform)
 
-			// also transform the search argument
 			let searchArg = args[0]
 			if (typeof searchArg === "string" && filter.pathTransform) {
 				searchArg = applyTransform(searchArg, filter.pathTransform) as string

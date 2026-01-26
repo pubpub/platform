@@ -14,6 +14,7 @@ import type {
 	RelationFilterCondition,
 	RelationFunctionCondition,
 	SearchCondition,
+	StringFunction,
 } from "./types"
 
 import { sql } from "kysely"
@@ -119,13 +120,13 @@ function buildComparisonCondition(
 	// builtin fields are not json, so we don't wrap the value
 	if (path.kind === "builtin") {
 		const column = pathToColumn(path)
-		return buildOperatorCondition(eb, column, operator, value, pathTransform, false)
+		return buildOperatorCondition(eb, column, operator, value, false, pathTransform)
 	}
 
 	// handle pubType fields (also not json)
 	if (path.kind === "pubType") {
 		return buildPubTypeSubquery(eb, path.field, (column) =>
-			buildOperatorCondition(eb, column, operator, value, pathTransform, false)
+			buildOperatorCondition(eb, column, operator, value, false, pathTransform)
 		)
 	}
 
@@ -133,7 +134,7 @@ function buildComparisonCondition(
 	return buildValueExistsSubquery(
 		eb,
 		path.fieldSlug,
-		(innerEb) => buildOperatorCondition(innerEb, "value", operator, value, pathTransform, true),
+		(innerEb) => buildOperatorCondition(innerEb, "value", operator, value, true, pathTransform),
 		options
 	)
 }
@@ -146,38 +147,31 @@ function buildOperatorCondition(
 	column: string,
 	operator: string,
 	value: unknown,
-	pathTransform?: string,
-	isJsonValue = true
+	isJsonValue = true,
+	pathTransform?: StringFunction
 ): AnyExpressionWrapper {
-	let col: ReturnType<typeof sql.raw> | string = column
-
-	// apply path transform (lowercase, uppercase)
-	if (pathTransform === "lowercase") {
-		col = sql.raw(`lower(${column}::text)`)
-	} else if (pathTransform === "uppercase") {
-		col = sql.raw(`upper(${column}::text)`)
-	}
+	const colExpr = applyTransform(column, pathTransform)
 
 	const wrappedValue = isJsonValue ? wrapValue(value) : value
 
 	switch (operator) {
 		case "=":
-			return eb(col, "=", wrappedValue)
+			return eb(colExpr, "=", wrappedValue)
 		case "!=":
-			return eb(col, "!=", wrappedValue)
+			return eb(colExpr, "!=", wrappedValue)
 		case "<":
-			return eb(col, "<", wrappedValue)
+			return eb(colExpr, "<", wrappedValue)
 		case "<=":
-			return eb(col, "<=", wrappedValue)
+			return eb(colExpr, "<=", wrappedValue)
 		case ">":
-			return eb(col, ">", wrappedValue)
+			return eb(colExpr, ">", wrappedValue)
 		case ">=":
-			return eb(col, ">=", wrappedValue)
+			return eb(colExpr, ">=", wrappedValue)
 		case "in":
 			if (Array.isArray(value)) {
-				return eb(col, "in", isJsonValue ? value.map(wrapValue) : value)
+				return eb(colExpr, "in", isJsonValue ? value.map(wrapValue) : value)
 			}
-			return eb(col, "=", wrappedValue)
+			return eb(colExpr, "=", wrappedValue)
 		default:
 			throw new UnsupportedExpressionError(`unsupported operator: ${operator}`)
 	}
@@ -193,18 +187,12 @@ function buildFunctionCondition(
 ): AnyExpressionWrapper {
 	const { name, path, arguments: args, pathTransform } = condition
 
-	// for value fields, strings are stored as JSON, so we need to account for quotes
 	const isValueField = path.kind === "value"
 
 	const buildInner = (col: string) => {
 		const strArg = String(args[0])
-		// apply transform to column if present
-		let colExpr = `${col}::text`
-		if (pathTransform === "lowercase") {
-			colExpr = `lower(${col}::text)`
-		} else if (pathTransform === "uppercase") {
-			colExpr = `upper(${col}::text)`
-		}
+
+		const colExpr = applyTransform(col, pathTransform)
 
 		// when using transform, we need to also lowercase/uppercase the search arg
 		let searchArg = strArg
@@ -216,19 +204,19 @@ function buildFunctionCondition(
 
 		switch (name) {
 			case "contains":
-				return eb(sql.raw(colExpr), "like", `%${searchArg}%`)
+				return eb(colExpr, "like", `%${searchArg}%`)
 			case "startsWith":
 				// for json values, the string starts with a quote
 				if (isValueField && !pathTransform) {
-					return eb(sql.raw(colExpr), "like", `"${searchArg}%`)
+					return eb(colExpr, "like", `"${searchArg}%`)
 				}
-				return eb(sql.raw(colExpr), "like", `${searchArg}%`)
+				return eb(colExpr, "like", `${searchArg}%`)
 			case "endsWith":
 				// for json values, the string ends with a quote
 				if (isValueField && !pathTransform) {
-					return eb(sql.raw(colExpr), "like", `%${searchArg}"`)
+					return eb(colExpr, "like", `%${searchArg}"`)
 				}
-				return eb(sql.raw(colExpr), "like", `%${searchArg}`)
+				return eb(colExpr, "like", `%${searchArg}`)
 			case "exists":
 				return eb.lit(true)
 			default:
@@ -236,21 +224,19 @@ function buildFunctionCondition(
 		}
 	}
 
-	// handle builtin fields
 	if (path.kind === "builtin") {
 		const column = pathToColumn(path)
+		// like, when would you use this, but whatever
 		if (name === "exists") {
 			return eb(column, "is not", null)
 		}
 		return buildInner(column)
 	}
 
-	// handle pubType fields
 	if (path.kind === "pubType") {
 		return buildPubTypeSubquery(eb, path.field, (column) => buildInner(column))
 	}
 
-	// handle value fields
 	if (name === "exists") {
 		return buildValueExistsSubquery(eb, path.fieldSlug, () => eb.lit(true), options)
 	}
@@ -258,9 +244,6 @@ function buildFunctionCondition(
 	return buildValueExistsSubquery(eb, path.fieldSlug, () => buildInner("value"), options)
 }
 
-/**
- * builds the sql condition for a logical operation
- */
 function buildLogicalCondition(
 	eb: AnyExpressionBuilder,
 	condition: LogicalCondition,
@@ -274,9 +257,6 @@ function buildLogicalCondition(
 	return eb.or(conditions)
 }
 
-/**
- * builds the sql condition for a not operation
- */
 function buildNotCondition(
 	eb: AnyExpressionBuilder,
 	condition: NotCondition,
@@ -285,9 +265,6 @@ function buildNotCondition(
 	return eb.not(buildCondition(eb, condition.condition, options))
 }
 
-/**
- * builds the sql condition for a full-text search
- */
 function buildSearchCondition(
 	eb: AnyExpressionBuilder,
 	condition: SearchCondition,
@@ -296,7 +273,6 @@ function buildSearchCondition(
 	const { query } = condition
 	const language = options?.searchLanguage ?? "english"
 
-	// clean and prepare search terms
 	const cleanQuery = query.trim().replace(/[:@]/g, "")
 	if (cleanQuery.length < 2) {
 		return eb.lit(false)
@@ -307,16 +283,10 @@ function buildSearchCondition(
 		return eb.lit(false)
 	}
 
-	// build tsquery with prefix matching for better UX
 	const prefixTerms = terms.map((term) => `${term}:*`).join(" & ")
 
-	// searchVector is on pubs table
 	return sql`pubs."searchVector" @@ to_tsquery(${language}::regconfig, ${prefixTerms})` as unknown as AnyExpressionWrapper
 }
-
-// ============================================================================
-// relation filter sql building
-// ============================================================================
 
 /**
  * converts a relation context path to the appropriate column reference for subquery
@@ -339,52 +309,12 @@ function relationPathToColumn(
 			}
 			// name requires a join to pub_types
 			return { column: "rpt.name", isJsonValue: false }
-	}
-}
-
-/**
- * builds a relation filter condition for use in a subquery
- */
-function buildRelationFilterOperator(
-	eb: AnyExpressionBuilder,
-	column: string,
-	operator: string,
-	value: unknown,
-	pathTransform: string | undefined,
-	isJsonValue: boolean
-): AnyExpressionWrapper {
-	let col: RawBuilder<unknown> | string = column
-
-	if (pathTransform === "lowercase") {
-		col = sql.raw(`lower(${column}::text)`)
-	} else if (pathTransform === "uppercase") {
-		col = sql.raw(`upper(${column}::text)`)
-	}
-
-	const wrappedValue = isJsonValue ? wrapValue(value) : value
-
-	switch (operator) {
-		case "=":
-			return eb(col, "=", wrappedValue)
-		case "!=":
-			return eb(col, "!=", wrappedValue)
-		case "<":
-			return eb(col, "<", wrappedValue)
-		case "<=":
-			return eb(col, "<=", wrappedValue)
-		case ">":
-			return eb(col, ">", wrappedValue)
-		case ">=":
-			return eb(col, ">=", wrappedValue)
-		case "in":
-			if (Array.isArray(value)) {
-				return eb(col, "in", isJsonValue ? value.map(wrapValue) : value)
-			}
-			return eb(col, "=", wrappedValue)
-		default:
+		default: {
+			const _exhaustiveCheck: never = path
 			throw new UnsupportedExpressionError(
-				`unsupported operator in relation filter: ${operator}`
+				`unsupported relation context path: ${(path as any)?.kind}`
 			)
+		}
 	}
 }
 
@@ -400,7 +330,6 @@ function buildRelationComparisonCondition(
 	const { path, operator, value, pathTransform } = condition
 	const { column, isJsonValue } = relationPathToColumn(path, relatedPubAlias)
 
-	// for relatedPubValue, we need to join to the related pub's values
 	if (path.kind === "relatedPubValue") {
 		const resolvedSlug = resolveFieldSlug(path.fieldSlug, options)
 		return eb.exists(
@@ -411,19 +340,18 @@ function buildRelationComparisonCondition(
 				.where("rpv.pubId", "=", eb.ref(`${relatedPubAlias}.id`))
 				.where("rpf.slug", "=", resolvedSlug)
 				.where((innerEb) =>
-					buildRelationFilterOperator(
+					buildOperatorCondition(
 						innerEb,
 						"rpv.value",
 						operator,
 						value,
-						pathTransform,
-						true
+						true,
+						pathTransform
 					)
 				)
 		)
 	}
 
-	// for relatedPubType name, need a subquery to pub_types
 	if (path.kind === "relatedPubType" && path.field === "name") {
 		return eb.exists(
 			eb
@@ -431,19 +359,19 @@ function buildRelationComparisonCondition(
 				.select(eb.lit(1).as("rpt_check"))
 				.where("rpt.id", "=", eb.ref(`${relatedPubAlias}.pubTypeId`))
 				.where((innerEb) =>
-					buildRelationFilterOperator(
+					buildOperatorCondition(
 						innerEb,
 						"rpt.name",
 						operator,
 						value,
-						pathTransform,
-						false
+						false,
+						pathTransform
 					)
 				)
 		)
 	}
 
-	return buildRelationFilterOperator(eb, column, operator, value, pathTransform, isJsonValue)
+	return buildOperatorCondition(eb, column, operator, value, isJsonValue, pathTransform)
 }
 
 /**
@@ -460,15 +388,8 @@ function buildRelationFunctionCondition(
 	const buildFunctionInner = (col: string, isJson: boolean) => {
 		const strArg = String(args[0])
 
-		// apply transform to column if present
-		let colExpr = `${col}::text`
-		if (pathTransform === "lowercase") {
-			colExpr = `lower(${col}::text)`
-		} else if (pathTransform === "uppercase") {
-			colExpr = `upper(${col}::text)`
-		}
+		const colExpr = applyTransform(col, pathTransform)
 
-		// also transform the search argument
 		let searchArg = strArg
 		if (pathTransform === "lowercase") {
 			searchArg = strArg.toLowerCase()
@@ -478,17 +399,17 @@ function buildRelationFunctionCondition(
 
 		switch (name) {
 			case "contains":
-				return eb(sql.raw(colExpr), "like", `%${searchArg}%`)
+				return eb(colExpr, "like", `%${searchArg}%`)
 			case "startsWith":
 				if (isJson && !pathTransform) {
-					return eb(sql.raw(colExpr), "like", `"${searchArg}%`)
+					return eb(colExpr, "like", `"${searchArg}%`)
 				}
-				return eb(sql.raw(colExpr), "like", `${searchArg}%`)
+				return eb(colExpr, "like", `${searchArg}%`)
 			case "endsWith":
 				if (isJson && !pathTransform) {
-					return eb(sql.raw(colExpr), "like", `%${searchArg}"`)
+					return eb(colExpr, "like", `%${searchArg}"`)
 				}
-				return eb(sql.raw(colExpr), "like", `%${searchArg}`)
+				return eb(colExpr, "like", `%${searchArg}`)
 			case "exists":
 				return eb.lit(true)
 			default:
@@ -498,7 +419,6 @@ function buildRelationFunctionCondition(
 		}
 	}
 
-	// handle relatedPubValue - need subquery
 	if (path.kind === "relatedPubValue") {
 		const resolvedSlug = resolveFieldSlug(path.fieldSlug, options)
 		if (name === "exists") {
@@ -661,4 +581,16 @@ export function applyJsonataFilter<K extends AnyExpressionBuilder>(
 	options?: SqlBuilderOptions
 ): AnyExpressionWrapper {
 	return buildCondition(eb, query.condition, options)
+}
+
+function applyTransform(col: string, pathTransform?: StringFunction): RawBuilder<unknown> {
+	switch (pathTransform) {
+		case "lowercase":
+			return sql`lower(${col}::text)`
+		case "uppercase":
+			return sql`upper(${col}::text)`
+		default: {
+			return sql`${col}::text`
+		}
+	}
 }
