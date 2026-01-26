@@ -86,48 +86,46 @@ export const FileUploadElement = ({
 	}
 
 	return (
-		<div>
-			<FormField
-				control={control}
-				name={slug}
-				render={({ field }) => {
-					// Need the isolate to keep the FileUpload's huge z-index from covering our own header
-					return (
-						<FormItem className="isolate">
-							<FormLabel>{label}</FormLabel>
-							<FormControl>
-								<FileUpload
-									{...field}
-									theme={resolvedTheme as "light" | "dark"}
-									disabled={!isEnabled}
-									upload={signedUploadUrl}
-									onUpdateFiles={(event) => {
-										const newFiles = [
-											...(field.value ?? []),
-											...event.filter(
-												(f) =>
-													!(field.value ?? []).some(
-														(f2) => f2.fileName === f.fileName
-													)
-											),
-										]
-										field.onChange(newFiles)
-									}}
-									id={slug}
-								/>
-							</FormControl>
-							{config.help && <FormDescription>{config.help}</FormDescription>}
-							{field.value && field.value.length > 0 ? (
-								<FileUploadPreview
-									files={field.value}
-									onDelete={(file) => handleDeleteFile(file, field)}
-								/>
-							) : null}
-							<FormMessage />
-						</FormItem>
-					)
-				}}
-			/>
-		</div>
+		<FormField
+			control={control}
+			name={slug}
+			render={({ field }) => {
+				// Need the isolate to keep the FileUpload's huge z-index from covering our own header
+				return (
+					<FormItem className="isolate">
+						<FormLabel>{label}</FormLabel>
+						<FormControl>
+							<FileUpload
+								{...field}
+								theme={resolvedTheme as "light" | "dark"}
+								disabled={!isEnabled}
+								upload={signedUploadUrl}
+								onUpdateFiles={(event) => {
+									const newFiles = [
+										...(field.value ?? []),
+										...event.filter(
+											(f) =>
+												!(field.value ?? []).some(
+													(f2) => f2.fileName === f.fileName
+												)
+										),
+									]
+									field.onChange(newFiles)
+								}}
+								id={slug}
+							/>
+						</FormControl>
+						{config.help && <FormDescription>{config.help}</FormDescription>}
+						{field.value && field.value.length > 0 ? (
+							<FileUploadPreview
+								files={field.value}
+								onDelete={(file) => handleDeleteFile(file, field)}
+							/>
+						) : null}
+						<FormMessage />
+					</FormItem>
+				)
+			}}
+		/>
 	)
 }

@@ -388,9 +388,7 @@ test.describe("Updating a pub", () => {
 			.getByRole("link", { name: "Update The Activity of Snails" })
 			.click()
 
-		await expect(page.getByTestId("save-status-text")).toHaveText(
-			"Form will save when you click save"
-		)
+		await expect(page.getByTestId("save-status-text")).toHaveText("Save form to keep changes")
 
 		const newTitle = `New title ${Date.now()}`
 		await page.getByTestId(`${community.community.slug}:title`).fill(newTitle)
@@ -398,7 +396,10 @@ test.describe("Updating a pub", () => {
 		await expect(page.getByRole("listitem").filter({ hasText: "Updated Pub" })).toHaveCount(1)
 		await expect(page.getByTestId("save-status-text")).toContainText("Last saved at")
 
-		await page.getByRole("link", { name: newTitle, exact: true }).click()
+		await retryAction(async () => {
+			await page.getByTestId("back-to-pub-detail").click()
+			await page.waitForURL(`/c/${community.community.slug}/pubs/*`, { timeout: 10_000 })
+		})
 		await expect(page.getByRole("heading", { name: newTitle })).toHaveCount(1)
 	})
 })

@@ -25,7 +25,7 @@ export class PubTypesPage {
 		await this.page.getByRole("textbox", { name: "Type Name" }).fill(name)
 		await this.page.getByRole("textbox", { name: "Description" }).click()
 		await this.page.getByRole("textbox", { name: "Description" }).fill(description)
-		await this.page.getByRole("button", { name: "Select options" }).click()
+		await this.page.getByRole("button", { name: "Fields" }).click()
 
 		if (!slugs) {
 			const options = await this.page.getByRole("option").all()

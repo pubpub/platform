@@ -41,7 +41,7 @@ export const PubValues = async ({
 	)
 
 	return (
-		<div className="grid grid-cols-12 gap-x-2 gap-y-3 text-sm">
+		<div className="grid grid-cols-14 gap-x-2 gap-y-3 text-sm">
 			{fieldGroups.map((values, idx) => (
 				<Fragment key={`field-row-${values[0].id}-${idx}`}>
 					<FieldRow
@@ -54,7 +54,7 @@ export const PubValues = async ({
 						depth={0}
 					/>
 
-					{idx < fieldGroups.length - 1 && <Separator className="col-span-12" />}
+					{idx < fieldGroups.length - 1 && <Separator className="col-span-14" />}
 				</Fragment>
 			))}
 		</div>

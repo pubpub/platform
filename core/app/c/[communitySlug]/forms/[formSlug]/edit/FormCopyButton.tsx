@@ -11,7 +11,7 @@ const FormCopyButtonBase = ({ formSlug }: { formSlug: string }) => {
 	const link = `${window.location.origin}/c/${community.slug}/public/forms/${formSlug}/fill`
 	return (
 		<CopyButton className="flex h-8 w-auto gap-1 p-3" value={link}>
-			Copy link to live form
+			<span className="sr-only md:not-sr-only">Copy link to live form</span>
 		</CopyButton>
 	)
 }

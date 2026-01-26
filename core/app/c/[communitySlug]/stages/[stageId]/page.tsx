@@ -18,7 +18,13 @@ import { findCommunityBySlug } from "~/lib/server/community"
 import { redirectToUnauthorized } from "~/lib/server/navigation/redirects"
 import { getPubFields } from "~/lib/server/pubFields"
 import { getStages } from "~/lib/server/stages"
-import { ContentLayout } from "../../ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../../ContentLayout"
 import { PubListSkeleton } from "../../pubs/PubList"
 import { StagePubs } from "../components/StageList"
 
@@ -103,19 +109,17 @@ export default async function Page(props: {
 	}
 
 	return (
-		<ContentLayout
-			title={
-				<>
+		<ContentLayoutRoot>
+			<ContentLayoutHeader>
+				<ContentLayoutTitle>
 					<FlagTriangleRightIcon
 						size={20}
 						strokeWidth={1}
 						className="mr-2 text-muted-foreground"
 					/>
 					{stage.name}
-				</>
-			}
-			right={
-				<div className="flex items-center gap-2">
+				</ContentLayoutTitle>
+				<ContentLayoutActions>
 					{showEditButton && (
 						<Button variant="ghost" size="sm" asChild>
 							<Link
@@ -131,26 +135,29 @@ export default async function Page(props: {
 						className="bg-emerald-500 text-white"
 						communityId={community.id}
 					/>
+				</ContentLayoutActions>
+			</ContentLayoutHeader>
+			<ContentLayoutBody>
+				<div className="m-4 max-w-(--breakpoint-lg)">
+					<Suspense
+						fallback={
+							<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />
+						}
+					>
+						<PubFieldProvider pubFields={pubFields.fields}>
+							<StagesProvider stages={stagesDAO(stages)}>
+								<StagePubs
+									userId={user.id}
+									stage={stage}
+									searchParams={searchParams}
+									pagination={{ page, pubsPerPage: 10 }}
+									basePath={""}
+								/>
+							</StagesProvider>
+						</PubFieldProvider>
+					</Suspense>
 				</div>
-			}
-		>
-			<div className="m-4 max-w-(--breakpoint-lg)">
-				<Suspense
-					fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
-				>
-					<PubFieldProvider pubFields={pubFields.fields}>
-						<StagesProvider stages={stagesDAO(stages)}>
-							<StagePubs
-								userId={user.id}
-								stage={stage}
-								searchParams={searchParams}
-								pagination={{ page, pubsPerPage: 10 }}
-								basePath={""}
-							/>
-						</StagesProvider>
-					</PubFieldProvider>
-				</Suspense>
-			</div>
-		</ContentLayout>
+			</ContentLayoutBody>
+		</ContentLayoutRoot>
 	)
 }

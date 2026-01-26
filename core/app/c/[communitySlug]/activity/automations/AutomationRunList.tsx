@@ -1,9 +1,10 @@
 import type { AutoReturnType } from "~/lib/types"
 
 import { Suspense } from "react"
+import { notFound } from "next/navigation"
 import { Activity } from "lucide-react"
 
-import { Action, type CommunitiesId } from "db/public"
+import { Action, type Communities, type CommunitiesId } from "db/public"
 import {
 	Empty,
 	EmptyContent,
@@ -12,7 +13,6 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "ui/empty"
-import { cn } from "utils"
 
 import { getAutomationRunStatus } from "~/actions/results"
 import { db } from "~/kysely/database"
@@ -22,7 +22,7 @@ import {
 	getAutomationRunsCount,
 } from "~/lib/server/actions"
 import { autoCache } from "~/lib/server/cache/autoCache"
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { findCommunityBySlug } from "~/lib/server/community"
 import { getStages } from "~/lib/server/stages"
 import { AutomationRunCard } from "./AutomationRunCard"
 import { AutomationRunListSkeleton } from "./AutomationRunListSkeleton"
@@ -42,7 +42,7 @@ type PaginatedAutomationRunListProps = {
 
 const PaginatedAutomationRunListInner = async (
 	props: PaginatedAutomationRunListProps & {
-		communitySlug: string
+		community: Communities
 		automationRunsPromise: Promise<FullAutomationRun[]>
 		filterParams: {
 			statuses?: string[]
@@ -100,7 +100,7 @@ const PaginatedAutomationRunListInner = async (
 					<AutomationRunCard
 						key={automationRun.id}
 						automationRun={automationRun}
-						communitySlug={props.communitySlug}
+						community={props.community}
 					/>
 				)
 			})}
@@ -132,7 +132,7 @@ const AutomationRunListFooterPagination = async (props: {
 	}
 
 	return (
-		<AutomationRunSearchFooter {...props} {...paginationProps} className="z-20">
+		<AutomationRunSearchFooter {...props} {...paginationProps} className="fixed z-20">
 			{props.children}
 		</AutomationRunSearchFooter>
 	)
@@ -144,10 +144,6 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 	const search = automationRunSearchParamsCache.parse(props.searchParams)
 	const filterParams = getAutomationRunFilterParamsFromSearch(search)
 
-	const communitySlug = await getCommunitySlug()
-
-	const basePath = props.basePath ?? `/c/${communitySlug}/activity/automations`
-
 	const automationRunsPromise = getAutomationRuns(props.communityId, {
 		limit: filterParams.limit,
 		offset: filterParams.offset,
@@ -158,7 +154,8 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 		query: filterParams.query,
 	}).execute()
 
-	const [availableAutomations, stages] = await Promise.all([
+	const [community, availableAutomations, stages] = await Promise.all([
+		findCommunityBySlug(),
 		autoCache(
 			db
 				.selectFrom("automations")
@@ -168,7 +165,11 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 		).execute(),
 		getStages({ communityId: props.communityId, userId: null }).execute(),
 	])
+	if (!community) {
+		notFound()
+	}
 
+	const basePath = props.basePath ?? `/c/${community.slug}/activity/automations`
 	const availableActions = Object.values(Action).map((action) => ({
 		id: action,
 		name: action
@@ -178,29 +179,25 @@ export const PaginatedAutomationRunList: React.FC<PaginatedAutomationRunListProp
 	}))
 
 	return (
-		<div className="relative flex h-full flex-col">
+		<div className="relative mb-4 flex h-full w-full flex-col gap-3 overflow-x-hidden overflow-y-scroll p-4 pb-16">
 			<AutomationRunSearchProvider
 				availableAutomations={availableAutomations}
 				availableStages={stages}
 				availableActions={availableActions}
 			>
-				<div
-					className={cn("mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16")}
-				>
-					<AutomationRunSearch>
-						<Suspense fallback={<AutomationRunListSkeleton />}>
-							<PaginatedAutomationRunListInner
-								{...props}
-								communitySlug={communitySlug}
-								automationRunsPromise={automationRunsPromise}
-								filterParams={{
-									statuses: filterParams.statuses,
-									actions: filterParams.actions,
-								}}
-							/>
-						</Suspense>
-					</AutomationRunSearch>
-				</div>
+				<AutomationRunSearch>
+					<Suspense fallback={<AutomationRunListSkeleton />}>
+						<PaginatedAutomationRunListInner
+							{...props}
+							community={community}
+							automationRunsPromise={automationRunsPromise}
+							filterParams={{
+								statuses: filterParams.statuses,
+								actions: filterParams.actions,
+							}}
+						/>
+					</Suspense>
+				</AutomationRunSearch>
 				<Suspense fallback={null}>
 					<AutomationRunListFooterPagination
 						basePath={basePath}

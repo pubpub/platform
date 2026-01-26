@@ -1,17 +1,17 @@
 "use client"
 
-import type { Action } from "db/public"
+import type { Action, AutomationEvent, Communities } from "db/public"
 import type { FullAutomationRun } from "~/lib/server/actions"
 
 import { useState } from "react"
 import Link from "next/link"
-import { User, Zap } from "lucide-react"
+import { HelpCircle, User, Zap } from "lucide-react"
 
-import { AutomationEvent } from "db/public"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
 import { DynamicIcon } from "ui/dynamic-icon"
 
+import { humanReadableEventBase, triggers } from "~/actions/_lib/triggers"
 import { actions } from "~/actions/api"
 import { getAutomationRunStatus } from "~/actions/results"
 import { ActionRunResult } from "~/app/components/AutomationUI/ActionRunResult"
@@ -22,31 +22,34 @@ import { formatDateAsPossiblyDistance } from "~/lib/dates"
 
 type AutomationRunCardProps = {
 	automationRun: FullAutomationRun
-	communitySlug: string
+	community: Communities
 }
 
-const getTriggerDescription = (automationRun: AutomationRunCardProps["automationRun"]): string => {
+const getTriggerDescription = (
+	automationRun: AutomationRunCardProps["automationRun"],
+	community: Communities
+): { description: string | React.ReactNode; icon: React.ReactNode } => {
 	if (automationRun.sourceUser) {
-		return `${automationRun.sourceUser.firstName} ${automationRun.sourceUser.lastName}`
+		return {
+			description: `${automationRun.sourceUser.firstName} ${automationRun.sourceUser.lastName}`,
+			icon: <User size={12} />,
+		}
 	}
 
-	switch (automationRun.triggerEvent) {
-		case AutomationEvent.automationFailed:
-			return "Automation failed"
-		case AutomationEvent.automationSucceeded:
-			return "Automation succeeded"
-		case AutomationEvent.pubEnteredStage:
-			return `Pub entered stage${automationRun.stage ? `: ${automationRun.stage.name}` : ""}`
-		case AutomationEvent.pubLeftStage:
-			return `Pub left stage${automationRun.stage ? `: ${automationRun.stage.name}` : ""}`
-		case AutomationEvent.pubInStageForDuration:
-			return `Pub in stage for duration${automationRun.stage ? `: ${automationRun.stage.name}` : ""}`
-		case AutomationEvent.webhook:
-			return "Webhook"
-		case AutomationEvent.manual:
-			return "Manual trigger"
-		default:
-			return "Unknown trigger"
+	const trigger = triggers[automationRun.triggerEvent as AutomationEvent]
+
+	if (!trigger) {
+		return {
+			description: "Unknown trigger",
+			icon: <HelpCircle size={12} />,
+		}
+	}
+
+	const description = humanReadableEventBase(automationRun.triggerEvent, community)
+
+	return {
+		description,
+		icon: <trigger.display.icon size={12} />,
 	}
 }
 
@@ -65,15 +68,15 @@ const getInputDescription = (
 	if (automationRun.inputJson) {
 		const jsonString = JSON.stringify(automationRun.inputJson)
 		const preview = jsonString.length > 50 ? `${jsonString.slice(0, 50)}...` : jsonString
-		return <code className="rounded bg-gray-100 px-1 text-xs">{preview}</code>
+		return <code className="rounded bg-muted px-1 text-xs">{preview}</code>
 	}
 
-	return <span className="text-gray-500">No input</span>
+	return <span className="text-muted-foreground">No input</span>
 }
 
-export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRunCardProps) => {
+export const AutomationRunCard = ({ automationRun, community }: AutomationRunCardProps) => {
 	const status = getAutomationRunStatus(automationRun)
-	const triggerDescription = getTriggerDescription(automationRun)
+	const triggerDescription = getTriggerDescription(automationRun, community)
 	const inputDescription = getInputDescription(automationRun)
 
 	const stage = automationRun.stage
@@ -83,14 +86,14 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 		<div
 			// makes it pulse in the search results
 			data-pulse
-			className="gap-4 rounded-md border border-border bg-card p-4"
+			className="min-h-18 gap-4 rounded-md border border-border bg-card p-2"
 			style={{ gridTemplateRows: "auto auto" }}
 			data-testid={`automation-run-card-${automationRun.id}-${automationRun.automation!.name}`}
 		>
 			{/* Header - spans both columns on large screens */}
 			<Collapsible className="flex flex-col gap-3" onOpenChange={setIsOpen}>
 				<div className="flex items-center gap-3">
-					<div className="flex h-8 w-8 items-center justify-center rounded-md border p-0">
+					<div className="flex h-8 w-8 items-center justify-center rounded-md p-0">
 						{automationRun.automation?.icon ? (
 							<DynamicIcon icon={automationRun.automation.icon} size={16} />
 						) : (
@@ -111,20 +114,20 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 							{stage && (
 								<EllipsisMenu orientation="horizontal" triggerSize="icon">
 									<EllipsisMenuButton asChild>
-										<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
+										<Link href={`/c/${community.slug}/stages/${stage.id}`}>
 											View Stage
 										</Link>
 									</EllipsisMenuButton>
 									<EllipsisMenuButton asChild>
 										<Link
-											href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}&tab=automations`}
+											href={`/c/${community.slug}/stages/manage?editingStageId=${stage.id}&tab=automations`}
 										>
 											Edit Stage
 										</Link>
 									</EllipsisMenuButton>
 									<EllipsisMenuButton asChild>
 										<Link
-											href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}&tab=automations&automation-id=${automationRun.automation?.id}`}
+											href={`/c/${community.slug}/stages/manage?editingStageId=${stage.id}&tab=automations&automation-id=${automationRun.automation?.id}`}
 										>
 											Edit Automation
 										</Link>
@@ -134,8 +137,15 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 						</div>
 						<div className="flex items-center justify-between">
 							<div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-								<User size={12} />
-								<span>{triggerDescription}</span>
+								{triggerDescription.icon}
+								<span>{triggerDescription.description}</span>
+								{stage && (
+									<>
+										<span>·</span>
+										<span>{stage.name}</span>
+									</>
+								)}
+
 								<span>·</span>
 								<time
 									dateTime={new Date(automationRun.createdAt).toISOString()}
@@ -157,7 +167,6 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 						<h4 className="font-medium text-xs">Input</h4>
 						{inputDescription}
 					</div>
-					{/* Actions - left side */}
 
 					<div className="flex flex-col gap-2 border-border border-t pt-3 lg:border-t-0 lg:pt-0">
 						<h4 className="font-medium text-xs">Actions</h4>
@@ -179,7 +188,7 @@ export const AutomationRunCard = ({ automationRun, communitySlug }: AutomationRu
 																actionRun.status === "success"
 																	? "bg-green-100 text-green-700"
 																	: actionRun.status === "failure"
-																		? "bg-red-100 text-red-700"
+																		? "bg-destructive text-destructive-foreground"
 																		: "bg-yellow-100 text-yellow-700"
 															}`}
 														>

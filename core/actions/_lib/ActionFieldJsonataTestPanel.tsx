@@ -400,7 +400,7 @@ export function ActionFieldJsonataTestPanel(props: {
 								htmlFor={props.configKey}
 								aria-label="Success: JSONata test interpolated value"
 							>
-								<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded-sm bg-white p-2 font-mono text-gray-900 text-xs">
+								<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded-sm bg-background p-2 font-mono text-foreground text-xs">
 									{JSON.stringify(testResult.interpolated, null, 2)}
 								</pre>
 							</output>

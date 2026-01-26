@@ -6,18 +6,11 @@ import type { FieldValues, UseFormReturn } from "react-hook-form"
 import { useCallback, useMemo } from "react"
 import { typeboxResolver } from "@hookform/resolvers/typebox"
 import { Type } from "@sinclair/typebox"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { IdString } from "schemas/utils"
 
-import {
-	Form,
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "ui/form"
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "ui/field"
+import { Form } from "ui/form"
 import { Input } from "ui/input"
 import { MultiSelect } from "ui/multi-select"
 import { type PubFieldContext, usePubFieldContext } from "ui/pubFields"
@@ -140,33 +133,26 @@ export const NewTypeForm = ({
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(handleSubmit)}>
 				<div className="mb-4 flex flex-col gap-6">
-					<FormField
+					<Controller
 						control={form.control}
 						name="name"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Type Name</FormLabel>
-								<FormControl>
-									<Input placeholder="Name" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
+						render={({ field, fieldState }) => (
+							<Field data-invalid={fieldState.invalid}>
+								<FieldLabel htmlFor="name">Type Name</FieldLabel>
+								<Input placeholder="Name" {...field} id="name" />
+								<FieldError errors={[fieldState.error]} />
+							</Field>
 						)}
 					/>
-					<FormField
+					<Controller
 						control={form.control}
 						name="description"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Description</FormLabel>
-								<FormDescription>
-									Optional. A brief description of the type.
-								</FormDescription>
-								<FormControl>
-									<Input placeholder="Description" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
+						render={({ field, fieldState }) => (
+							<Field data-invalid={fieldState.invalid}>
+								<FieldLabel htmlFor="description">Description</FieldLabel>
+								<Input placeholder="Description" {...field} id="description" />
+								<FieldError errors={[fieldState.error]} />
+							</Field>
 						)}
 					/>
 					{props.mode === "create" && <FieldSelector pubFields={pubFields} form={form} />}
@@ -190,25 +176,28 @@ export const FieldSelector = ({
 	form: FormType
 }) => {
 	return (
-		<FormField
+		<Controller
 			control={form.control}
 			name="fields"
-			render={({ field }) => (
-				<FormItem>
-					<FormLabel>Fields</FormLabel>
-					<FormDescription>
-						Select the fields that will be included in the type (minimum of 1).
-					</FormDescription>
-					<MultiSelect
-						onValueChange={field.onChange}
-						defaultValue={field.value}
-						options={Object.values(pubFields).map((field) => ({
-							label: field.name,
-							value: field.id,
-						}))}
-					/>
-					<FormMessage />
-				</FormItem>
+			render={({ field, fieldState }) => (
+				<Field data-invalid={fieldState.invalid}>
+					<FieldContent>
+						<FieldLabel htmlFor="fields">Fields</FieldLabel>
+						<FieldDescription>
+							Select the fields that will be included in the type (minimum of 1).
+						</FieldDescription>
+						<MultiSelect
+							id="fields"
+							onValueChange={field.onChange}
+							defaultValue={field.value}
+							options={Object.values(pubFields).map((field) => ({
+								label: field.name,
+								value: field.id,
+							}))}
+						/>
+						<FieldError errors={[fieldState.error]} />
+					</FieldContent>
+				</Field>
 			)}
 		/>
 	)

@@ -67,9 +67,9 @@ export const UpdateCircle = (
 						"relative m-1 h-2 w-2 rounded-full transition-colors duration-200",
 						{
 							"bg-green-500": status === "success",
-							"bg-red-500": status === "failure",
+							"bg-destructive": status === "failure",
 							"bg-yellow-500": status === "scheduled",
-							"bg-gray-500":
+							"bg-muted":
 								status !== "success" &&
 								status !== "failure" &&
 								status !== "scheduled",

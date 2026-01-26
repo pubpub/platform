@@ -43,7 +43,7 @@ export const PubSearchFooter = (
 	return (
 		<div
 			className={cn(
-				"absolute bottom-0 left-0 flex w-full flex-col items-center justify-between gap-2 border-t bg-sidebar px-4 py-2 text-sm leading-[19px] shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)] md:flex-row",
+				"-bottom-4 -left-4 -right-4 absolute flex flex-col items-center justify-between gap-2 border-t bg-sidebar px-4 py-2 text-sm leading-[19px] shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)] md:flex-row",
 				className
 			)}
 		>

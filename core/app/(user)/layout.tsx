@@ -1,5 +1,12 @@
 import { LogoWithText } from "../components/Logo"
 
+export const metadata = {
+	title: {
+		template: `%s | PubPub Platform`,
+		default: "PubPub Platform",
+	},
+}
+
 export default async function UserLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<div className="min-h-screen">

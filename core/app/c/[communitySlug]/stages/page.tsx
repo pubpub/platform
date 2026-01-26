@@ -11,7 +11,13 @@ import { getPageLoginData } from "~/lib/authentication/loginData"
 import { userCanViewStagePage } from "~/lib/authorization/capabilities"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
-import { ContentLayout } from "../ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../ContentLayout"
 import { StageList } from "./components/StageList"
 
 export const metadata: Metadata = {
@@ -39,33 +45,32 @@ export default async function Page(props: Props) {
 	}
 
 	return (
-		<ContentLayout
-			title={
-				<>
+		<ContentLayoutRoot>
+			<ContentLayoutHeader>
+				<ContentLayoutTitle>
 					<FlagTriangleRightIcon
 						size={20}
 						strokeWidth={1}
 						className="mr-2 text-muted-foreground"
 					/>
 					Stages
-				</>
-			}
-			right={
-				<div className="flex items-center gap-4">
+				</ContentLayoutTitle>
+				<ContentLayoutActions>
 					<Button asChild variant="link" className="text-sm underline">
 						<Link href={`/c/${community.slug}/stages/manage`}>Manage</Link>
 					</Button>
 					<MainCreatePubButton communityId={community.id} text="Add Pub" />
+				</ContentLayoutActions>
+			</ContentLayoutHeader>
+			<ContentLayoutBody>
+				<div className="max-w-(--breakpoint-lg)">
+					<StageList
+						userId={user.id}
+						communityId={community.id}
+						searchParams={searchParams}
+					/>
 				</div>
-			}
-		>
-			<div className="m-4 max-w-(--breakpoint-lg)">
-				<StageList
-					userId={user.id}
-					communityId={community.id}
-					searchParams={searchParams}
-				/>
-			</div>
-		</ContentLayout>
+			</ContentLayoutBody>
+		</ContentLayoutRoot>
 	)
 }

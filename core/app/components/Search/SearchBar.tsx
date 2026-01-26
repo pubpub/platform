@@ -48,11 +48,11 @@ export const SearchBar = ({
 	return (
 		<div
 			className={cn(
-				"sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 bg-background px-4 py-4",
+				"sticky top-0 z-20 mt-0 flex w-full grow flex-col items-center gap-2 bg-background md:w-auto md:flex-row",
 				className
 			)}
 		>
-			<div className="relative flex flex-1 items-center gap-x-2">
+			<div className="relative flex flex-1 items-center gap-x-2 md:w-auto">
 				<Search
 					className="-translate-y-1/2 absolute top-1/2 left-2 text-gray-500"
 					size={16}
@@ -77,7 +77,7 @@ export const SearchBar = ({
 					)}
 					<span
 						className={cn(
-							"flex w-10 items-center justify-center gap-x-1 transition-opacity duration-200",
+							"hidden w-10 items-center justify-center gap-x-1 transition-opacity duration-200 md:flex",
 							{
 								"opacity-0": platform === "unknown",
 							}
@@ -90,7 +90,9 @@ export const SearchBar = ({
 					</span>
 				</span>
 			</div>
-			{children}
+			<div className="flex w-full items-center justify-start gap-x-2 md:w-auto">
+				{children}
+			</div>
 		</div>
 	)
 }
@@ -99,8 +101,7 @@ export const SearchContent = ({ children, stale }: { children?: ReactNode; stale
 	return (
 		<div
 			className={cn(
-				stale && "opacity-50 transition-opacity duration-200 **:data-pulse:animate-pulse",
-				"m-4 mt-0"
+				stale && "opacity-50 transition-opacity duration-200 **:data-pulse:animate-pulse"
 			)}
 		>
 			{children}

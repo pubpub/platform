@@ -1,6 +1,6 @@
 "use client"
 
-import type { NonGenericProcessedPub, ProcessedPub } from "contracts"
+import type { ProcessedPub } from "contracts"
 import type { PubsId, PubTypesId } from "db/public"
 
 import { useCallback, useMemo, useRef, useState } from "react"
@@ -15,8 +15,20 @@ import { useCommunity } from "../providers/CommunityProvider"
 import { useUser } from "../providers/UserProvider"
 import { PubCardClient } from "./PubCard/PubCardClient"
 
-export type PubSearchSelectProps = {
-	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void
+export type PubSearchSelectProps<
+	WithValues extends boolean = false,
+	WithRelatedPubs extends boolean = false,
+> = {
+	withValues?: WithValues
+	withRelatedPubs?: WithRelatedPubs
+	onSelectedPubsChange?: (
+		pubs: ProcessedPub<{
+			withPubType: true
+			withStage: true
+			withValues: WithValues
+			withRelatedPubs: WithRelatedPubs
+		}>[]
+	) => void
 	disabledPubIds?: PubsId[]
 	pubTypeIds?: PubTypesId[]
 	mode?: "single" | "multi"
@@ -27,9 +39,19 @@ export type PubSearchSelectProps = {
 	multiSelect?: boolean
 }
 
-export const PubSearchSelect = (props: PubSearchSelectProps) => {
+export const PubSearchSelect = <
+	WithValues extends boolean = false,
+	WithRelatedPubs extends boolean = false,
+>(
+	props: PubSearchSelectProps<WithValues, WithRelatedPubs>
+) => {
 	const [selectedPubs, setSelectedPubs] = useState<
-		ProcessedPub<{ withPubType: true; withStage: true; withValues: false }>[]
+		ProcessedPub<{
+			withPubType: true
+			withStage: true
+			withValues: WithValues
+			withRelatedPubs: WithRelatedPubs
+		}>[]
 	>([])
 	const [query, setQuery] = useState("")
 	const [debouncedQuery] = useDebounce(query, 300)
@@ -47,9 +69,9 @@ export const PubSearchSelect = (props: PubSearchSelectProps) => {
 				orderDirection: "desc",
 				pubTypeId: props.pubTypeIds,
 				withPubType: true,
-				withRelatedPubs: false,
+				withRelatedPubs: props.withRelatedPubs,
 				withStage: true,
-				withValues: false,
+				withValues: props.withValues,
 				userId: user.user?.id,
 			},
 			params: { communitySlug: community.slug },
@@ -74,7 +96,8 @@ export const PubSearchSelect = (props: PubSearchSelectProps) => {
 				? (results.body as ProcessedPub<{
 						withPubType: true
 						withStage: true
-						withValues: false
+						withValues: WithValues
+						withRelatedPubs: WithRelatedPubs
 					}>[])
 				: [],
 		[results]
@@ -84,7 +107,7 @@ export const PubSearchSelect = (props: PubSearchSelectProps) => {
 		() =>
 			pubs.map((pub) => ({
 				value: pub.id,
-				label: getPubTitle(pub),
+				label: getPubTitle(pub as any),
 				node: <PubCardClient className="w-full" pub={pub} showCheckbox={false} />,
 				className: "p-1",
 			})),
@@ -97,7 +120,8 @@ export const PubSearchSelect = (props: PubSearchSelectProps) => {
 				selectedPubs[0]
 					? {
 							value: selectedPubs[0].id,
-							label: getPubTitle(selectedPubs[0]),
+							// this is just annoying to get right
+							label: getPubTitle(selectedPubs[0] as any),
 							node: (
 								<PubCardClient
 									className="w-full"

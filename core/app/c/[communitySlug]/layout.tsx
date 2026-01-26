@@ -13,7 +13,7 @@ import { SearchDialogProvider } from "~/app/components/Search/SearchDialogProvid
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { getCommunityRole } from "~/lib/authentication/roles"
 import { findCommunityBySlug } from "~/lib/server/community"
-import SideNav from "./SideNav"
+import SideNav, { COLLAPSIBLE_TYPE } from "./SideNav"
 
 type Props = { children: React.ReactNode; params: Promise<{ communitySlug: string }> }
 
@@ -23,7 +23,14 @@ export async function generateMetadata(props: {
 	const params = await props.params
 	const community = await findCommunityBySlug(params.communitySlug)
 
+	if (!community) {
+		return {
+			title: "Community Not Found",
+		}
+	}
+
 	return {
+		...(community.avatar && { icons: [{ url: community.avatar }] }),
 		title: {
 			template: `%s | ${community?.name ?? "PubPub"}`,
 			default: community?.name ? `${community?.name} on PubPub` : "PubPub",
@@ -48,7 +55,7 @@ export default async function MainLayout(props: Props) {
 	const cookieStore = await cookies()
 	// need to manually write the name of the cookie here
 	// bc we can't import SIDEBAR_COOKIE_NAME here because it's in a "use client" file
-	const defaultOpenCookie = cookieStore.get("sidebar:state")
+	const defaultOpenCookie = cookieStore.get("sidebar_state")
 	// open by default, only if cookie is explicitly set to false will it be closed
 	const defaultOpen = defaultOpenCookie?.value !== "false"
 
@@ -82,13 +89,11 @@ export default async function MainLayout(props: Props) {
 							community={community}
 							availableCommunities={availableCommunities}
 						/>
-						<div className="relative flex-auto bg-sidebar px-4 py-4 md:px-12">
-							{children}
-						</div>
+						<div className="relative flex-auto bg-sidebar">{children}</div>
 						<SidebarTrigger
 							className={cn(
-								"fixed right-2 bottom-2 z-[1000]"
-								// COLLAPSIBLE_TYPE === "icon" && "md:hidden"
+								"fixed right-2 bottom-2 z-[1000]",
+								COLLAPSIBLE_TYPE === "icon" && "md:hidden"
 							)}
 						/>
 					</SidebarProvider>

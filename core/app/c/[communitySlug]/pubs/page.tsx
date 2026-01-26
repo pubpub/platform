@@ -8,10 +8,18 @@ import { Capabilities, MembershipType } from "db/public"
 import { Button } from "ui/button"
 
 import { MainCreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import DebugLoading from "~/app/components/skeletons/DebugLoading"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { userCan, userCanCreateAnyPub } from "~/lib/authorization/capabilities"
 import { findCommunityBySlug } from "~/lib/server/community"
-import { ContentLayout } from "../ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../ContentLayout"
+import Loading from "./loading"
 import { PaginatedPubList } from "./PubList"
 
 export const metadata: Metadata = {
@@ -47,33 +55,37 @@ export default async function Page(props: Props) {
 	const basePath = `/c/${community.slug}/pubs`
 
 	return (
-		<ContentLayout
-			title={
-				<>
-					<BookOpen size={24} strokeWidth={1} className="mr-2 text-muted-foreground" />{" "}
-					Pubs
-				</>
-			}
-			right={
-				<div className="flex items-center gap-x-2">
-					{canEditTypes && (
-						<Button variant="ghost" size="sm" asChild>
-							<Link href="types">Manage Types</Link>
-						</Button>
-					)}
-					{canCreateAnyPub && (
-						<MainCreatePubButton communityId={community.id as CommunitiesId} />
-					)}
-				</div>
-			}
-			className="overflow-hidden"
-		>
-			<PaginatedPubList
-				communityId={community.id}
-				searchParams={searchParams}
-				basePath={basePath}
-				userId={user.id}
-			/>
-		</ContentLayout>
+		<DebugLoading loading={<Loading />}>
+			<ContentLayoutRoot>
+				<ContentLayoutHeader>
+					<ContentLayoutTitle>
+						<BookOpen
+							size={20}
+							strokeWidth={1}
+							className="mr-2 text-muted-foreground"
+						/>{" "}
+						Pubs
+					</ContentLayoutTitle>
+					<ContentLayoutActions>
+						{canEditTypes && (
+							<Button variant="ghost" size="sm" asChild>
+								<Link href="types">Manage Types</Link>
+							</Button>
+						)}
+						{canCreateAnyPub && (
+							<MainCreatePubButton communityId={community.id as CommunitiesId} />
+						)}
+					</ContentLayoutActions>
+				</ContentLayoutHeader>
+				<ContentLayoutBody className="relative inset-0 overflow-hidden p-0">
+					<PaginatedPubList
+						communityId={community.id}
+						searchParams={searchParams}
+						basePath={basePath}
+						userId={user.id}
+					/>
+				</ContentLayoutBody>
+			</ContentLayoutRoot>
+		</DebugLoading>
 	)
 }

@@ -21,8 +21,8 @@ export const ExistingToken = ({
 	const isExpired = expirationDate < now
 
 	return (
-		<Card className={cn("p-4 pb-1", className)}>
-			<div className="flex items-start justify-between gap-4">
+		<Card className={cn("gap-1 p-4 pb-1", className)}>
+			<div className="flex items-start justify-between gap-2">
 				<div className="flex items-start gap-3">
 					{token.issuedBy && <UserAvatar user={token.issuedBy} />}
 					<div className="flex-1">

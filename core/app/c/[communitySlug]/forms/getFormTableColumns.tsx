@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table"
-import type { FormsId } from "db/public"
+import type { FormsId, PubTypesId } from "db/public"
 
+import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Checkbox } from "ui/checkbox"
 import { DataTableColumnHeader } from "ui/data-table"
@@ -11,15 +12,18 @@ import {
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu"
 import { Ellipsis, History, ToyBrick } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
 import { ArchiveFormButton } from "~/app/components/FormBuilder/ArchiveFormButton"
 import { RestoreFormButton } from "~/app/components/FormBuilder/RestoreFormButton"
+import { setFormAsDefault } from "./[formSlug]/edit/actions"
 
 export type TableForm = {
 	id: FormsId
 	slug: string
 	formName: string
 	pubType: string
+	pubTypeId: PubTypesId
 	updated: Date
 	isArchived: boolean
 	isDefault: boolean
@@ -51,17 +55,26 @@ export const getFormTableColumns = () =>
 			enableHiding: false,
 		},
 		{
+			header: () => null,
+			size: 80,
+			accessorKey: "isDefault",
+			cell: ({ row }) =>
+				row.original.isDefault ? (
+					<Tooltip>
+						<TooltipTrigger>
+							<Badge variant="default">default</Badge>
+						</TooltipTrigger>
+						<TooltipContent>
+							This Form is the default Form the {row.original.pubType} type.
+						</TooltipContent>
+					</Tooltip>
+				) : null,
+		},
+		{
 			header: ({ column }) => (
 				<DataTableColumnHeader className="w-52" column={column} title="Name" />
 			),
 			accessorKey: "formName",
-		},
-		{
-			header: ({ column }) => (
-				<DataTableColumnHeader className="w-52" column={column} title="Default" />
-			),
-			accessorKey: "isDefault",
-			cell: ({ row }) => (row.original.isDefault ? "Yes" : "No"),
 		},
 		{
 			header: ({ column }) => (
@@ -120,6 +133,19 @@ export const getFormTableColumns = () =>
 									/>
 								)}
 							</DropdownMenuItem>
+							{!row.original.isDefault ? (
+								<DropdownMenuItem
+									key={row.original.id}
+									onClick={() =>
+										setFormAsDefault({
+											formId: row.original.id,
+											pubTypeId: row.original.pubTypeId,
+										})
+									}
+								>
+									Set as default
+								</DropdownMenuItem>
+							) : null}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				)

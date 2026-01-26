@@ -37,14 +37,14 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 	const isFailure = isActionFailure(result)
 
 	return (
-		<div className={cn("space-y-3 rounded-md bg-gray-50 p-3", className)}>
+		<div className={cn("space-y-3 rounded-md bg-muted p-3", className)}>
 			{isSuccess && (
 				<div className="space-y-2">
 					{result.title && (
 						<div className="font-medium text-green-700 text-sm">{result.title}</div>
 					)}
 					{result.report && (
-						<div className="text-gray-700 text-sm">
+						<div className="text-muted-foreground text-sm">
 							{typeof result.report === "string" ? <p>{result.report}</p> : null}
 						</div>
 					)}
@@ -55,7 +55,7 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 								<CollapsibleTrigger asChild>
 									<button
 										type="button"
-										className="flex items-center gap-1 rounded px-2 py-1 text-gray-600 text-xs hover:bg-gray-200"
+										className="flex items-center gap-1 rounded px-2 py-1 text-muted-foreground text-xs hover:bg-muted"
 									>
 										{showData ? (
 											<ChevronDown size={12} />
@@ -78,9 +78,9 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 			{isFailure && (
 				<div className="space-y-2">
 					{result.title && (
-						<div className="font-medium text-red-700 text-sm">{result.title}</div>
+						<div className="font-medium text-destructive text-sm">{result.title}</div>
 					)}
-					<div className="text-red-700 text-sm">{result.report}</div>
+					<div className="text-destructive text-sm">{result.report}</div>
 					{!!result.error && typeof result.error === "string" && (
 						<Collapsible open={showCause} onOpenChange={setShowCause}>
 							<CollapsibleTrigger asChild>
@@ -97,7 +97,7 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 								</button>
 							</CollapsibleTrigger>
 							<CollapsibleContent>
-								<pre className="mt-2 max-h-40 overflow-auto rounded border border-red-200 bg-red-50 p-2 font-mono text-red-800 text-xs">
+								<pre className="mt-2 max-h-40 overflow-auto rounded border border-destructive bg-destructive/10 p-2 font-mono text-destructive text-xs">
 									{typeof result.error === "string"
 										? result.error
 										: JSON.stringify(result.error, null, 2)}
@@ -119,14 +119,14 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 					<CollapsibleTrigger asChild>
 						<button
 							type="button"
-							className="flex items-center gap-1 rounded px-2 py-1 text-gray-600 text-xs hover:bg-gray-200"
+							className="flex items-center gap-1 rounded px-2 py-1 text-muted-foreground text-xs hover:bg-accent"
 						>
 							{showConfig ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
 							Configuration
 						</button>
 					</CollapsibleTrigger>
 					<CollapsibleContent>
-						<pre className="mt-2 max-h-40 overflow-auto rounded border bg-white p-2 font-mono text-xs">
+						<pre className="mt-2 max-h-40 overflow-auto rounded border bg-card p-2 font-mono text-xs">
 							{JSON.stringify(result.config, null, 2)}
 						</pre>
 					</CollapsibleContent>

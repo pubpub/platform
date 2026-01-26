@@ -13,7 +13,7 @@ import { StagePanelMembers } from "./StagePanelMembers"
 import { StagePanelOverview } from "./StagePanelOverview"
 import { StagePanelPubs } from "./StagePanelPubs"
 import { StagePanelSheet } from "./StagePanelSheet"
-import { TabLink } from "./StagePanelTabLink"
+import { StageTabLink } from "./StagePanelTabLink"
 
 type Props = {
 	stageId: StagesId | undefined
@@ -40,18 +40,18 @@ export const StagePanel = async (props: Props) => {
 		<StagePanelSheet defaultOpen={Boolean(props.stageId)}>
 			<Tabs defaultValue={defaultTab} className="h-full">
 				<TabsList className="mb-2 grid grid-cols-4">
-					<TabLink tab="overview">
+					<StageTabLink tab="overview">
 						<List size={16} />
-					</TabLink>
-					<TabLink tab="pubs">
+					</StageTabLink>
+					<StageTabLink tab="pubs">
 						<BookOpen size={16} />
-					</TabLink>
-					<TabLink tab="automations">
+					</StageTabLink>
+					<StageTabLink tab="automations">
 						<Bot size={16} />
-					</TabLink>
-					<TabLink tab="members">
+					</StageTabLink>
+					<StageTabLink tab="members">
 						<Users size={16} />
-					</TabLink>
+					</StageTabLink>
 				</TabsList>
 				<TabsContent value="overview">
 					<Suspense fallback={<SkeletonCard />}>

@@ -287,6 +287,7 @@ export const FormSubmitButton = ({
 			className={cn("transition-colors duration-500", props.className)}
 			onClick={onClick}
 			variant={variant}
+			size={props.size ?? "sm"}
 			disabled={isDisabled}
 			{...props}
 		>

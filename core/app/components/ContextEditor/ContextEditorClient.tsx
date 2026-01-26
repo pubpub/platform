@@ -68,9 +68,12 @@ export const ContextEditorClient = (
 
 	const debouncedGetPubs = useDebouncedCallback(getPubs, 300)
 
-	const signedUploadUrl = (fileName: string) => {
-		return runUpload(fileName, "temporary")
-	}
+	const signedUploadUrl = useCallback(
+		(fileName: string) => {
+			return runUpload(fileName, "temporary")
+		},
+		[runUpload]
+	)
 
 	const memoEditor = useMemo(() => {
 		return (
@@ -96,7 +99,6 @@ export const ContextEditorClient = (
 	}, [
 		props.pubTypes,
 		props.disabled,
-		getPubs,
 		props.className,
 		props.getterRef,
 		props.hideMenu,

@@ -4,13 +4,23 @@ import type { Metadata } from "next"
 import { cache } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { BookOpen, ChevronLeft } from "lucide-react"
 
 import { Button } from "ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { tryCatch } from "utils/try-catch"
 
-import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutStickySecondaryHeader,
+	ContentLayoutTitle,
+} from "~/app/c/[communitySlug]/ContentLayout"
 import { PubPageStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus"
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor"
+import DebugLoading from "~/app/components/skeletons/DebugLoading"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { getAuthorizedUpdateForms, getAuthorizedViewForms } from "~/lib/authorization/capabilities"
 import { constructRedirectToPubDetailPage } from "~/lib/links"
@@ -19,6 +29,7 @@ import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { resolveFormAccess } from "~/lib/server/form-access"
 import { redirectToPubEditPage, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
+import Loading from "./loading"
 
 const getPubsWithRelatedValuesCached = cache(
 	async ({
@@ -154,49 +165,73 @@ export default async function Page(props: {
 	const htmlFormId = `edit-pub-${pub.id}`
 
 	return (
-		<ContentLayout
-			left={<div />}
-			title={
-				<>
-					<span className="mr-2 font-normal">Editing </span>
-					{hasAccessToAnyViewForm ? (
-						<Link
-							className="underline"
-							href={constructRedirectToPubDetailPage({
-								pubId,
-								communitySlug,
-								formSlug: viewFormToRedirectTo.slug,
-							})}
-						>
-							{getPubTitle(pub)}
-						</Link>
-					) : (
-						getPubTitle(pub)
-					)}
-				</>
-			}
-			right={
-				<Button form={htmlFormId} type="submit">
-					Save
-				</Button>
-			}
-		>
-			<div className="sticky top-0 z-50 flex w-full flex-col items-center border-b bg-background">
-				<PubPageStatus defaultFormSlug={searchParams.form} forms={availableUpdateForms} />
-			</div>
-			<div className="flex justify-center py-10">
-				<div className="max-w-prose flex-1">
-					{/** TODO: Add suspense */}
-					<PubEditor
-						mode="edit"
-						pubId={pub.id}
-						pub={pub}
-						htmlFormId={htmlFormId}
-						pubTypeId={pub.pubTypeId}
-						form={updateFormToRedirectTo}
-					/>
-				</div>
-			</div>
-		</ContentLayout>
+		<DebugLoading loading={<Loading />}>
+			<ContentLayoutRoot>
+				<ContentLayoutHeader>
+					<ContentLayoutTitle>
+						{hasAccessToAnyViewForm ? (
+							<Link
+								data-testid="back-to-pub-detail"
+								href={constructRedirectToPubDetailPage({
+									pubId,
+									communitySlug,
+									formSlug: viewFormToRedirectTo.slug,
+								})}
+							>
+								<ChevronLeft size={24} className="mr-3" strokeWidth={1} />
+							</Link>
+						) : (
+							<BookOpen
+								size={24}
+								strokeWidth={1}
+								className="mr-3 size-6! grow text-muted-foreground"
+							/>
+						)}
+
+						<div className="flex flex-col">
+							<Tooltip delayDuration={300}>
+								<TooltipTrigger className="m-0 line-clamp-1 p-0 text-left">
+									{getPubTitle(pub)}
+								</TooltipTrigger>
+								<TooltipContent
+									side="bottom"
+									align="start"
+									className="z-[200] max-w-sm text-xs"
+								>
+									{getPubTitle(pub)}
+								</TooltipContent>
+							</Tooltip>
+						</div>
+					</ContentLayoutTitle>
+					<ContentLayoutActions>
+						<Button form={htmlFormId} type="submit" size="sm">
+							Save
+						</Button>
+					</ContentLayoutActions>
+				</ContentLayoutHeader>
+
+				<ContentLayoutBody>
+					<ContentLayoutStickySecondaryHeader>
+						<PubPageStatus
+							defaultFormSlug={searchParams.form}
+							forms={availableUpdateForms}
+						/>
+					</ContentLayoutStickySecondaryHeader>
+					<div className="flex justify-center py-10">
+						<div className="max-w-full flex-1 md:max-w-prose">
+							{/** TODO: Add suspense */}
+							<PubEditor
+								mode="edit"
+								pubId={pub.id}
+								pub={pub}
+								htmlFormId={htmlFormId}
+								pubTypeId={pub.pubTypeId}
+								form={updateFormToRedirectTo}
+							/>
+						</div>
+					</div>
+				</ContentLayoutBody>
+			</ContentLayoutRoot>
+		</DebugLoading>
 	)
 }

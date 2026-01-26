@@ -62,6 +62,7 @@ export const env = createEnv({
 		SITE_BUILDER_ENDPOINT: selfHostedOptional(z.string().url()),
 		SKIP_SEED: z.coerce.boolean().optional(),
 		SKIP_RESET: z.coerce.boolean().optional(),
+		DEBUG_LOADING: z.coerce.boolean().optional(),
 	},
 	client: {},
 	experimental__runtimeEnv: {

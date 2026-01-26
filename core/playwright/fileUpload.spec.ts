@@ -83,7 +83,9 @@ test.describe("File upload", () => {
 			timeout: 2_000,
 		})
 
-		await page.getByRole("link", { name: title, exact: true }).click()
+		await page.getByTestId("back-to-pub-detail").click({
+			timeout: 2_000,
+		})
 		await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}*`)
 
 		// there should be 3 files

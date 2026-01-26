@@ -1,4 +1,4 @@
-import type { CommunitiesId } from "db/public"
+import type { CommunitiesId, PubTypesId } from "db/public"
 
 import { notFound, redirect } from "next/navigation"
 
@@ -15,10 +15,15 @@ import { getPageLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
 import { getPubTypesForCommunity } from "~/lib/server"
 import { findCommunityBySlug } from "~/lib/server/community"
-import { getForm } from "~/lib/server/form"
+import { getForm, getSimpleForms } from "~/lib/server/form"
 import { getPubFields } from "~/lib/server/pubFields"
-import { ContentLayout } from "../../../ContentLayout"
-import { EditFormTitleButton } from "./EditFormTitleButton"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../../../ContentLayout"
 import { FormCopyButton } from "./FormCopyButton"
 
 const getCommunityStages = (communityId: CommunitiesId) =>
@@ -62,23 +67,18 @@ export default async function Page(props: {
 		getPubTypesForCommunity(community.id, { limit: 0 }),
 	])
 
+	const formsForPubType = await getSimpleForms(user.id, form.pubTypeId as PubTypesId)
+	const currentDefaultForm = formsForPubType.find((f) => f.isDefault && f.id !== form.id)
+
 	const formBuilderId = "formbuilderform"
 
 	return (
-		<ContentLayout
-			title={
-				<>
-					<ClipboardPenLine
-						size={24}
-						strokeWidth={1}
-						className="mr-2 text-muted-foreground"
-					/>{" "}
+		<ContentLayoutRoot>
+			<ContentLayoutHeader>
+				<ContentLayoutTitle>
+					<ClipboardPenLine />
 					<div className="flex flex-col">
-						<div className="flex items-center">
-							<h1>{form.name}</h1>
-							<EditFormTitleButton formId={form.id} name={form.name} />
-						</div>
-
+						<h1>{form.name}</h1>
 						{form.isDefault && (
 							<div className="flex gap-1 font-normal text-muted-foreground text-xs">
 								Default editor for this type
@@ -94,21 +94,25 @@ export default async function Page(props: {
 							</div>
 						)}
 					</div>
-				</>
-			}
-			right={
-				<div className="flex items-center gap-2">
+				</ContentLayoutTitle>
+				<ContentLayoutActions>
 					<FormCopyButton formSlug={formSlug} />
-					{/* <ArchiveFormButton id={form.id} className="border border-gray-950 px-4" />{" "} */}
 					<SaveFormButton form={formBuilderId} />
-				</div>
-			}
-		>
-			<PubFieldProvider pubFields={fields}>
-				<PubTypeProvider pubTypes={pubTypes}>
-					<FormBuilder pubForm={form} id={formBuilderId} stages={communityStages} />
-				</PubTypeProvider>
-			</PubFieldProvider>
-		</ContentLayout>
+				</ContentLayoutActions>
+			</ContentLayoutHeader>
+			<ContentLayoutBody>
+				<PubFieldProvider pubFields={fields}>
+					<PubTypeProvider pubTypes={pubTypes}>
+						<FormBuilder
+							pubForm={form}
+							id={formBuilderId}
+							stages={communityStages}
+							pubTypeId={form.pubTypeId as PubTypesId}
+							currentDefaultForm={currentDefaultForm}
+						/>
+					</PubTypeProvider>
+				</PubFieldProvider>
+			</ContentLayoutBody>
+		</ContentLayoutRoot>
 	)
 }

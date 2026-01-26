@@ -75,24 +75,26 @@ export const MembersCardList = <T extends TargetId>({
 	}
 
 	return (
-		<div className="flex flex-col gap-2">
+		<div className="flex flex-col gap-4">
 			<SearchBar
 				value={query}
 				onChange={setQuery}
 				placeholder="Search by name or email..."
 				className="bg-transparent px-0"
 			/>
-			{filteredMembers.map((member) => (
-				<MemberCard
-					key={member.id}
-					member={member}
-					targetId={targetId}
-					membershipType={membershipType}
-					readOnly={readOnly}
-					availableForms={availableForms}
-					removeMember={removeMember}
-				/>
-			))}
+			<div className="flex flex-col gap-2">
+				{filteredMembers.map((member) => (
+					<MemberCard
+						key={member.id}
+						member={member}
+						targetId={targetId}
+						membershipType={membershipType}
+						readOnly={readOnly}
+						availableForms={availableForms}
+						removeMember={removeMember}
+					/>
+				))}
+			</div>
 		</div>
 	)
 }

@@ -2,6 +2,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/ca
 
 import ForgotForm from "./ForgotForm"
 
+export const metadata = {
+	title: "Forgot password",
+}
+
 export default async function Page() {
 	return (
 		<div className="mx-auto max-w-sm">

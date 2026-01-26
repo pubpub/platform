@@ -4,6 +4,10 @@ import { SignupForm } from "~/app/components/Signup/SignupForm"
 import { legacySignup } from "~/lib/authentication/actions"
 import { getLoginData } from "~/lib/authentication/loginData"
 
+export const metadata = {
+	title: "Signup",
+}
+
 export default async function Page({
 	searchParams,
 }: {

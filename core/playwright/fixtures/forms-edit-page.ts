@@ -15,6 +15,7 @@ export class FormsEditPage {
 
 	async goto() {
 		await this.page.goto(`/c/${this.communitySlug}/forms/${this.formSlug}/edit`)
+		await this.page.waitForURL(`**/forms/${this.formSlug}/edit**`, { timeout: 10000 })
 	}
 
 	async goToExternalForm() {

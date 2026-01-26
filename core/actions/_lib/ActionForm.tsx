@@ -143,6 +143,7 @@ export function ActionForm(props: ActionFormProps) {
 			<Button
 				variant="outline"
 				type="button"
+				size="sm"
 				className={props.secondaryButton?.className}
 				onClick={props.secondaryButton.onClick}
 			>
