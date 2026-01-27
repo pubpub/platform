@@ -1,8 +1,9 @@
 "use client"
 
 import type { FormElements, PubFieldElement } from "~/app/components/forms/types"
+import type { PubTypesId } from "db/public"
 
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useMemo, useState } from "react"
 import { skipToken } from "@tanstack/react-query"
 import { Braces } from "lucide-react"
 import { Controller, useWatch } from "react-hook-form"
@@ -13,7 +14,7 @@ import { Checkbox } from "ui/checkbox"
 import { Confidence } from "ui/customRenderers/confidence/confidence"
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload"
 import { DatePicker } from "ui/date-picker"
-import { Field, FieldError, FieldLabel, FieldSet } from "ui/field"
+import { Field, FieldDescription, FieldError, FieldLabel, FieldSet } from "ui/field"
 import { Input } from "ui/input"
 import { MultiValueInput } from "ui/multivalue-input"
 import { RadioGroup, RadioGroupItem } from "ui/radio-group"
@@ -26,6 +27,7 @@ import { cn } from "utils"
 import { upload } from "~/app/components/forms/actions"
 import { FileUploadPreview } from "~/app/components/forms/FileUpload"
 import { MemberSelectClientFetch } from "~/app/components/MemberSelect/MemberSelectClientFetch"
+import { PubSearchSelect } from "~/app/components/pubs/PubSearchSelect"
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
 import { client } from "~/lib/api"
 import { useServerAction } from "~/lib/serverActions"
@@ -549,6 +551,274 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 	return <div className="flex flex-col gap-4">{components}</div>
 }
 
+/**
+ * A type representing a relation field from a pub type
+ */
+type RelationField = {
+	id: string
+	name: string
+	slug: string
+	schemaName: string
+	isRelation: true
+	relatedPubTypes?: PubTypesId[]
+}
+
+type RelationConfigSectionProps = {
+	relationFields: RelationField[]
+	pubTypeId: string
+}
+
+/**
+ * Section for configuring an optional relation to an existing pub.
+ * Allows user to select a relation field, the target pub, direction, and value.
+ */
+const RelationConfigSection = ({ relationFields, pubTypeId }: RelationConfigSectionProps) => {
+	const { form, path } = useActionForm()
+	const community = useCommunity()
+
+	const basePath = path ? `${path}.relationConfig` : "relationConfig"
+	const relatedPubIdLabelId = useId()
+	const valueLabelId = useId()
+
+	const selectedFieldSlug = useWatch({
+		control: form.control,
+		name: `${basePath}.fieldSlug`,
+	})
+	const selectedDirection = useWatch({
+		control: form.control,
+		name: `${basePath}.direction`,
+	})
+
+	// Get the selected relation field to determine relatedPubTypes
+	const selectedField = useMemo(
+		() => relationFields.find((f) => f.slug === selectedFieldSlug),
+		[relationFields, selectedFieldSlug]
+	)
+
+	// Fetch pub type info to get field's relatedPubTypes
+	const { data: pubTypeData } = client.site.pubTypes.get.useQuery({
+		queryKey: ["pubType", pubTypeId],
+		queryData: {
+			params: { communitySlug: community.slug, pubTypeId },
+		},
+		enabled: !!pubTypeId,
+	})
+
+	// Extract relatedPubTypes from the selected field in the fetched pub type
+	const relatedPubTypeIds = useMemo(() => {
+		if (!pubTypeData?.body?.fields || !selectedFieldSlug) return undefined
+		const field = pubTypeData.body.fields.find(
+			(f: { slug: string }) => f.slug === selectedFieldSlug
+		)
+		// The field may have relatedPubTypes from form elements
+		return selectedField?.relatedPubTypes
+	}, [pubTypeData, selectedFieldSlug, selectedField])
+
+	// State for JSONata mode toggles
+	const [pubIdMode, setPubIdMode] = useState<"normal" | "jsonata">("normal")
+	const [valueMode, setValueMode] = useState<"normal" | "jsonata">("normal")
+
+	// Check if existing values are JSONata expressions
+	useEffect(() => {
+		const relatedPubId = form.getValues(`${basePath}.relatedPubId`)
+		const value = form.getValues(`${basePath}.value`)
+		if (isJsonTemplate(relatedPubId)) {
+			setPubIdMode("jsonata")
+		}
+		if (isJsonTemplate(value)) {
+			setValueMode("jsonata")
+		}
+	}, [form, basePath])
+
+	if (relationFields.length === 0) {
+		return null
+	}
+
+	return (
+		<FieldSet className="mt-4 rounded-md border border-gray-200 p-4">
+			<FieldLabel className="mb-2 font-medium text-sm">
+				Relate to Existing Pub (Optional)
+			</FieldLabel>
+			<FieldDescription className="mb-4 text-muted-foreground text-xs">
+				Optionally relate the newly created pub to an existing pub via a relation field.
+			</FieldDescription>
+
+			{/* Relation Field Selector */}
+			<Field className="mb-4">
+				<FieldLabel htmlFor={`${basePath}.fieldSlug`}>Relation Field</FieldLabel>
+				<Controller
+					name={`${basePath}.fieldSlug`}
+					control={form.control}
+					render={({ field }) => (
+						<Select onValueChange={field.onChange} value={field.value ?? ""}>
+							<SelectTrigger>
+								<SelectValue placeholder="Select a relation field" />
+							</SelectTrigger>
+							<SelectContent>
+								{relationFields.map((rf) => (
+									<SelectItem key={rf.slug} value={rf.slug}>
+										{rf.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					)}
+				/>
+			</Field>
+
+			{selectedFieldSlug && (
+				<>
+					{/* Direction Selector */}
+					<Field className="mb-4">
+						<FieldLabel htmlFor={`${basePath}.direction`}>Direction</FieldLabel>
+						<FieldDescription className="mb-2 text-xs">
+							Which pub receives the relation field value
+						</FieldDescription>
+						<Controller
+							name={`${basePath}.direction`}
+							control={form.control}
+							render={({ field }) => (
+								<Select
+									onValueChange={field.onChange}
+									value={field.value ?? "source"}
+								>
+									<SelectTrigger>
+										<SelectValue placeholder="Select direction" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="source">
+											New pub → Existing pub (new pub stores the relation)
+										</SelectItem>
+										<SelectItem value="target">
+											Existing pub → New pub (existing pub stores the
+											relation)
+										</SelectItem>
+									</SelectContent>
+								</Select>
+							)}
+						/>
+					</Field>
+
+					{/* Related Pub Selector */}
+					<Field className="mb-4">
+						<div className="flex flex-row items-center justify-between">
+							<FieldLabel
+								id={relatedPubIdLabelId}
+								htmlFor={`${basePath}.relatedPubId`}
+							>
+								{selectedDirection === "target" ? "Source Pub" : "Target Pub"}
+							</FieldLabel>
+							<ButtonGroup>
+								<Button
+									variant="ghost"
+									size="icon"
+									type="button"
+									aria-label="Toggle JSONata mode"
+									className={cn(
+										"font-mono font-semibold text-gray-900 hover:bg-amber-50",
+										"transition-colors duration-200",
+										pubIdMode === "jsonata" &&
+											"border-orange-400 bg-orange-50 text-orange-900"
+									)}
+									onClick={() => {
+										const newMode =
+											pubIdMode === "jsonata" ? "normal" : "jsonata"
+										setPubIdMode(newMode)
+									}}
+								>
+									<Braces size={14} />
+								</Button>
+							</ButtonGroup>
+						</div>
+						<FieldDescription className="mb-2 text-xs">
+							{selectedDirection === "target"
+								? "The existing pub that will store a relation to the new pub"
+								: "The existing pub that the new pub will relate to"}
+						</FieldDescription>
+						<Controller
+							name={`${basePath}.relatedPubId`}
+							control={form.control}
+							render={({ field }) =>
+								pubIdMode === "jsonata" ? (
+									<ActionFieldJsonataInput
+										aria-labelledby={relatedPubIdLabelId}
+										field={field}
+										isDefaultField={false}
+										actionAccepts={["pub", "json"]}
+									/>
+								) : (
+									<PubSearchSelect
+										pubTypeIds={relatedPubTypeIds}
+										placeholder="Search for a pub..."
+										onSelectedPubsChange={(pubs) => {
+											field.onChange(pubs[0]?.id ?? "")
+										}}
+									/>
+								)
+							}
+						/>
+					</Field>
+
+					{/* Relation Value */}
+					<Field>
+						<div className="flex flex-row items-center justify-between">
+							<FieldLabel id={valueLabelId} htmlFor={`${basePath}.value`}>
+								Relation Value
+							</FieldLabel>
+							<ButtonGroup>
+								<Button
+									variant="ghost"
+									size="icon"
+									type="button"
+									aria-label="Toggle JSONata mode for value"
+									className={cn(
+										"font-mono font-semibold text-gray-900 hover:bg-amber-50",
+										"transition-colors duration-200",
+										valueMode === "jsonata" &&
+											"border-orange-400 bg-orange-50 text-orange-900"
+									)}
+									onClick={() => {
+										const newMode =
+											valueMode === "jsonata" ? "normal" : "jsonata"
+										setValueMode(newMode)
+									}}
+								>
+									<Braces size={14} />
+								</Button>
+							</ButtonGroup>
+						</div>
+						<FieldDescription className="mb-2 text-xs">
+							The value to store with the relation (depends on the relation field's
+							schema type)
+						</FieldDescription>
+						<Controller
+							name={`${basePath}.value`}
+							control={form.control}
+							render={({ field }) =>
+								valueMode === "jsonata" ? (
+									<ActionFieldJsonataInput
+										aria-labelledby={valueLabelId}
+										field={field}
+										isDefaultField={false}
+										actionAccepts={["pub", "json"]}
+									/>
+								) : (
+									<Input
+										{...field}
+										value={field.value ?? ""}
+										placeholder="Enter relation value"
+										className="bg-white"
+									/>
+								)
+							}
+						/>
+					</Field>
+				</>
+			)}
+		</FieldSet>
+	)
+}
+
 type CreatePubFormProps = {}
 
 export default function CreatePubForm(props: CreatePubFormProps) {
@@ -637,7 +907,25 @@ export default function CreatePubForm(props: CreatePubFormProps) {
 					<Skeleton className="h-10" />
 				</Skeleton>
 			) : selectedForm ? (
-				<CreatePubFormInner elements={selectedForm.body.elements as FormElements[]} />
+				<>
+					<CreatePubFormInner elements={selectedForm.body.elements as FormElements[]} />
+					<RelationConfigSection
+						relationFields={(selectedForm.body.elements as FormElements[])
+							.filter(
+								(el): el is PubFieldElement =>
+									el.type === "pubfield" && el.isRelation === true
+							)
+							.map((el) => ({
+								id: el.id,
+								name: el.fieldName ?? el.label ?? el.slug,
+								slug: el.slug,
+								schemaName: el.schemaName,
+								isRelation: true as const,
+								relatedPubTypes: el.relatedPubTypes,
+							}))}
+						pubTypeId={selectedForm.body.pubTypeId}
+					/>
+				</>
 			) : null}
 		</FieldSet>
 	)
