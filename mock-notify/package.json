@@ -1,0 +1,29 @@
+{
+	"name": "mock-notify",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "next dev -p 4000",
+		"build": "next build",
+		"start": "next start -p 4000",
+		"type-check": "tsc --noEmit",
+		"type-check:go": "tsgo --noEmit"
+	},
+	"dependencies": {
+		"next": "catalog:",
+		"react": "catalog:react19",
+		"react-dom": "catalog:react19",
+		"tailwindcss": "catalog:",
+		"@tailwindcss/postcss": "catalog:",
+		"clsx": "catalog:"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"@types/react": "catalog:react19",
+		"@types/react-dom": "catalog:react19",
+		"tsconfig": "workspace:*",
+		"typescript": "catalog:",
+		"@typescript/native-preview": "catalog:"
+	}
+}

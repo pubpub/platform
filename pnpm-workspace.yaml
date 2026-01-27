@@ -1,6 +1,7 @@
 packages:
     - "core"
     - "jobs"
+    - "mock-notify"
     - "config/*"
     - "packages/*"
     - "storybook"

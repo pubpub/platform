@@ -2,9 +2,10 @@
 
 import type { FormElements, PubFieldElement } from "~/app/components/forms/types"
 
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { skipToken } from "@tanstack/react-query"
 import { Braces } from "lucide-react"
+import type { FieldValues, UseFormReturn } from "react-hook-form"
 import { Controller, useWatch } from "react-hook-form"
 
 import { Button } from "ui/button"
@@ -124,10 +125,42 @@ type InputState = {
 	normalValue: unknown
 }
 
-const CreatePubFormField = ({ element, path, control, renderInput }: CreatePubFormFieldProps) => {
+const CreatePubFormField = ({
+	element,
+	path,
+	control,
+	renderInput,
+	actionForm,
+}: CreatePubFormFieldProps & { actionForm: UseFormReturn<FieldValues> }) => {
 	const fieldName = path ? `${path}.pubValues.${element.id}` : `pubValues.${element.id}`
 	const labelId = useId()
-	const val = useWatch({ control, name: fieldName })
+
+	// Watch for value under element ID
+	const valById = useWatch({ control, name: fieldName })
+
+	// Also watch for value under field name (for backwards compatibility with seed configs)
+	const fieldNameKey = element.fieldName
+		? path
+			? `${path}.pubValues.${element.fieldName}`
+			: `pubValues.${element.fieldName}`
+		: undefined
+	const valByName = useWatch({ control, name: fieldNameKey ?? fieldName })
+
+	// Use the element ID value if it exists, otherwise fall back to field name value
+	const val = valById !== undefined ? valById : valByName
+
+	// Copy value from field name key to element ID key if needed (one-time on mount)
+	const hasInitialized = useRef(false)
+	useEffect(() => {
+		if (!hasInitialized.current && valById === undefined && valByName !== undefined) {
+			hasInitialized.current = true
+			// Set the value under the element ID key so the Controller sees it
+			actionForm.setValue(fieldName, valByName, {
+				shouldValidate: false,
+				shouldDirty: false,
+			})
+		}
+	}, [valById, valByName, fieldName, actionForm])
 
 	// Initialize state based on whether the current value is a JSONata template
 	const [inputState, setInputState] = useState<InputState>(() => {
@@ -219,23 +252,91 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 	const { form: actionForm, path } = useActionForm()
 	const elements = props.elements.filter((e): e is PubFieldElement => e.type === "pubfield")
 
+	// Build mappings from field name/slug to element ID (memoized)
+	const { fieldNameToElementId, fieldSlugToElementId, elementIds } = useMemo(() => {
+		const nameMap = new Map<string, string>()
+		const slugMap = new Map<string, string>()
+		const ids = new Set<string>()
+
+		for (const element of elements) {
+			ids.add(element.id)
+			if (element.fieldName) {
+				nameMap.set(element.fieldName, element.id)
+				nameMap.set(element.fieldName.toLowerCase(), element.id)
+			}
+			if (element.slug) {
+				slugMap.set(element.slug, element.id)
+				// Also map the short slug (without community prefix)
+				const shortSlug = element.slug.split(":").pop()
+				if (shortSlug) {
+					slugMap.set(shortSlug, element.id)
+					slugMap.set(shortSlug.toLowerCase(), element.id)
+				}
+			}
+		}
+
+		return { fieldNameToElementId: nameMap, fieldSlugToElementId: slugMap, elementIds: ids }
+	}, [elements])
+
 	// Set default values for all pub field elements when elements change
+	// Also transform field names/slugs to element IDs if needed
 	useEffect(() => {
 		const fullPath = path ? `${path}.pubValues` : "pubValues"
 
 		const defaultValues = createDefaultValuesFromElements(props.elements)
 		const currentPubValues = actionForm.getValues(fullPath) || {}
 
+		// Transform any field names/slugs to element IDs
+		const transformedPubValues: Record<string, unknown> = {}
+		for (const [key, value] of Object.entries(currentPubValues)) {
+			// Check if the key is already an element ID (exists in our elements)
+			if (elementIds.has(key)) {
+				transformedPubValues[key] = value
+				continue
+			}
+
+			// Try to map field name or slug to element ID
+			const elementId =
+				fieldNameToElementId.get(key) ||
+				fieldNameToElementId.get(key.toLowerCase()) ||
+				fieldSlugToElementId.get(key) ||
+				fieldSlugToElementId.get(key.toLowerCase())
+
+			if (elementId) {
+				transformedPubValues[elementId] = value
+			}
+		}
+
+		// If we transformed any values, update the form
+		if (Object.keys(transformedPubValues).length > 0) {
+			for (const [elementId, value] of Object.entries(transformedPubValues)) {
+				actionForm.setValue(`${fullPath}.${elementId}`, value, {
+					shouldValidate: false,
+					shouldDirty: false,
+				})
+			}
+		}
+
 		// Only set defaults for fields that don't already have a value
 		for (const [elementId, defaultValue] of Object.entries(defaultValues)) {
-			if (currentPubValues[elementId] === undefined) {
+			if (
+				currentPubValues[elementId] === undefined &&
+				transformedPubValues[elementId] === undefined
+			) {
 				actionForm.setValue(`${fullPath}.${elementId}`, defaultValue, {
 					shouldValidate: false,
 					shouldDirty: false,
 				})
 			}
 		}
-	}, [props.elements, actionForm])
+	}, [
+		props.elements,
+		actionForm,
+		path,
+		elementIds,
+		fieldNameToElementId,
+		fieldSlugToElementId,
+	])
 
 	const components: React.ReactNode[] = []
 
@@ -248,6 +349,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<Input
 								{...field}
@@ -266,6 +368,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<Textarea
 								{...field}
@@ -284,6 +387,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<div className="flex flex-row items-center gap-2">
 								<Checkbox
@@ -304,6 +408,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<DatePicker date={field.value} setDate={field.onChange} />
 						)}
@@ -322,6 +427,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<Select onValueChange={field.onChange} defaultValue={field.value}>
 								<SelectTrigger id={element.id}>
@@ -355,6 +461,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
 								{radioConfig?.options?.map((option) => (
@@ -382,6 +489,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<div className="flex flex-col gap-2">
 								{checkboxConfig?.options?.map((option) => (
@@ -422,6 +530,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<MultiValueInput
 								value={field.value || []}
@@ -441,6 +550,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<div className="flex gap-2">
 								<input
@@ -463,6 +573,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<MemberSelectClientFetch
 								name={element.id}
@@ -481,6 +592,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<div className="mb-6">
 								<Confidence
@@ -504,6 +616,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<FileUploadInput field={field} elementId={element.id} />
 						)}
@@ -519,6 +632,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={() => (
 							<div className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
 								{element.component} component - implementation pending
@@ -536,6 +650,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={() => (
 							<div className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
 								Unknown component type: {element.component}
