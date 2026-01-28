@@ -121,12 +121,8 @@ const seed = createSeed({
 								formSlug: "review-default-editor",
 								pubValues: {
 									title: "Review for: {{ $.pub.values.title }}",
-								},
-								relationConfig: {
-									fieldSlug: `${COMMUNITY_SLUG}:relatedpub`,
-									relatedPubId: "{{ $.pub.id }}",
-									value: "Notification",
-									direction: "source",
+									relatedpub:
+										"<<< [{ 'relatedPubId': $.pub.id, 'value': 'Notification' }] >>>",
 								},
 							},
 						},
