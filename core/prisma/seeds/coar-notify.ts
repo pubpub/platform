@@ -15,22 +15,24 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 	const adminId = "dddddddd-dddd-4ddd-dddd-dddddddddd01" as UsersId
 
 	const STAGE_IDS = {
-		// Notification processing stages
+		// Incoming notification processing stages
 		Inbox: "dddddddd-dddd-4ddd-dddd-dddddddddd10" as StagesId,
-		// Review workflow stages
+		Accepted: "dddddddd-dddd-4ddd-dddd-dddddddddd12" as StagesId,
+		Rejected: "dddddddd-dddd-4ddd-dddd-dddddddddd13" as StagesId,
+		// Review workflow stages (for Reviews created from Notifications)
 		ReviewInbox: "dddddddd-dddd-4ddd-dddd-dddddddddd15" as StagesId,
 		Reviewing: "dddddddd-dddd-4ddd-dddd-dddddddddd16" as StagesId,
 		Published: "dddddddd-dddd-4ddd-dddd-dddddddddd14" as StagesId,
-		// Outbound request stages
+		// Outbound review request stages (for our Submissions)
+		Submissions: "dddddddd-dddd-4ddd-dddd-dddddddddd17" as StagesId,
 		ReviewRequested: "dddddddd-dddd-4ddd-dddd-dddddddddd11" as StagesId,
-		Accepted: "dddddddd-dddd-4ddd-dddd-dddddddddd12" as StagesId,
-		Rejected: "dddddddd-dddd-4ddd-dddd-dddddddddd13" as StagesId,
+		AwaitingResponse: "dddddddd-dddd-4ddd-dddd-dddddddddd18" as StagesId,
 	}
 
 	const WEBHOOK_PATH = "coar-inbox"
 
 	// Default remote inbox URL - can be changed in UI for testing
-	const REMOTE_INBOX_URL = "http://localhost:4000/api/inbox"
+	const REMOTE_INBOX_URL = "http://localhost:4000/inbox"
 
 	return seedCommunity(
 		{
@@ -82,7 +84,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 			pubs: [
 				{
 					pubType: "Submission",
-					stage: "Inbox",
+					stage: "Submissions",
 					values: { Title: "Sample Submission for Review" },
 				},
 			],
@@ -188,6 +190,12 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 						},
 					},
 				},
+				// Entry point for our own submissions that we want to request reviews for
+				Submissions: {
+					id: STAGE_IDS.Submissions,
+					// No automations - this is just an entry/holding stage
+				},
+				// When we request a review from an external service
 				ReviewRequested: {
 					id: STAGE_IDS.ReviewRequested,
 					automations: {
@@ -232,9 +240,18 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 										},
 									},
 								},
+								{
+									action: Action.move,
+									config: { stage: STAGE_IDS.AwaitingResponse },
+								},
 							],
 						},
 					},
+				},
+				// Waiting for Accept/Reject response from external service
+				AwaitingResponse: {
+					id: STAGE_IDS.AwaitingResponse,
+					// No automations - we wait for incoming Accept/Reject notifications
 				},
 				Published: {
 					id: STAGE_IDS.Published,
@@ -403,17 +420,23 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 				},
 			},
 			stageConnections: {
+				// Incoming notification flow: process and either accept, reject, or create review
 				Inbox: {
-					to: ["ReviewRequested", "Published", "Accepted", "Rejected"],
+					to: ["Accepted", "Rejected"],
 				},
+				// Review workflow (for Reviews created from Notifications)
 				ReviewInbox: {
 					to: ["Reviewing"],
 				},
 				Reviewing: {
 					to: ["Published"],
 				},
+				// Outbound request flow: our submissions requesting external reviews
+				Submissions: {
+					to: ["ReviewRequested"],
+				},
 				ReviewRequested: {
-					to: ["Accepted", "Rejected"],
+					to: ["AwaitingResponse"],
 				},
 			},
 		},
