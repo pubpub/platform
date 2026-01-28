@@ -118,14 +118,15 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 								},
 							],
 						},
-						"Create Review for Notification": {
+						// Manual action to accept an incoming review request
+						"Accept Request": {
 							icon: {
-								name: "plus-circle",
-								color: "#10b981",
+								name: "check",
+								color: "#22c55e",
 							},
 							triggers: [
 								{
-									event: AutomationEvent.pubEnteredStage,
+									event: AutomationEvent.manual,
 									config: {},
 								},
 							],
@@ -141,20 +142,37 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 							},
 							actions: [
 								{
-									action: Action.createPub,
-									config: {
-										stage: STAGE_IDS.ReviewInbox,
-										formSlug: "review-default-editor",
-										pubValues: {
-											Title: "Review for: {{ $.pub.values.title }}",
-										},
-										relationConfig: {
-											fieldSlug: "coar-notify:relatedpub",
-											relatedPubId: "{{ $.pub.id }}",
-											value: "Notification",
-											direction: "source",
-										},
+									action: Action.move,
+									config: { stage: STAGE_IDS.Accepted },
+								},
+							],
+						},
+						// Manual action to reject an incoming review request
+						"Reject Request": {
+							icon: {
+								name: "x",
+								color: "#ef4444",
+							},
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "$.pub.pubType.name = 'Notification'",
 									},
+								],
+							},
+							actions: [
+								{
+									action: Action.move,
+									config: { stage: STAGE_IDS.Rejected },
 								},
 							],
 						},
@@ -328,7 +346,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 										url: REMOTE_INBOX_URL,
 										method: "POST",
 										body: `<<< (
-											$payload := $parse($.pub.values.Payload);
+											$payload := $eval($.pub.values.Payload);
 											{
 												"@context": [
 													"https://www.w3.org/ns/activitystreams",
@@ -342,7 +360,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 													"name": $.community.name
 												},
 												"inReplyTo": $payload.id,
-												"object": $payload.object ~> $sift(function($v, $k) { $k != "@context" }),
+												"object": $payload.object,
 												"origin": {
 													"id": $.env.PUBPUB_URL & "/c/" & $.community.slug,
 													"inbox": $.env.PUBPUB_URL & "/api/v0/c/" & $.community.slug & "/site/webhook/${WEBHOOK_PATH}",
@@ -351,6 +369,47 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 												"target": $payload.actor
 											}
 										) >>>`,
+									},
+								},
+							],
+						},
+						// Create a Review pub after accepting the request
+						"Create Review for Notification": {
+							icon: {
+								name: "plus-circle",
+								color: "#10b981",
+							},
+							triggers: [
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+							],
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "$.pub.pubType.name = 'Notification'",
+									},
+								],
+							},
+							actions: [
+								{
+									action: Action.createPub,
+									config: {
+										stage: STAGE_IDS.ReviewInbox,
+										formSlug: "review-default-editor",
+										pubValues: {
+											Title: "Review for: {{ $.pub.values.title }}",
+										},
+										relationConfig: {
+											fieldSlug: "coar-notify:relatedpub",
+											relatedPubId: "{{ $.pub.id }}",
+											value: "Notification",
+											direction: "source",
+										},
 									},
 								},
 							],
@@ -388,7 +447,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 										url: REMOTE_INBOX_URL,
 										method: "POST",
 										body: `<<< (
-											$payload := $parse($.pub.values.Payload);
+											$payload := $eval($.pub.values.Payload);
 											{
 												"@context": [
 													"https://www.w3.org/ns/activitystreams",
@@ -402,7 +461,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 													"name": $.community.name
 												},
 												"inReplyTo": $payload.id,
-												"object": $payload.object ~> $sift(function($v, $k) { $k != "@context" }),
+												"object": $payload.object,
 												"origin": {
 													"id": $.env.PUBPUB_URL & "/c/" & $.community.slug,
 													"inbox": $.env.PUBPUB_URL & "/api/v0/c/" & $.community.slug & "/site/webhook/${WEBHOOK_PATH}",
