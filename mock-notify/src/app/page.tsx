@@ -1,16 +1,20 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import type { StoredNotification } from "~/lib/store"
+import type { PayloadTemplateType } from "~/lib/payloads"
 
-import { NotificationCard } from "./components/NotificationCard"
+import { NotificationCard, type ResponsePrefill } from "./components/NotificationCard"
 import { SendNotificationForm } from "./components/SendNotificationForm"
 
 export default function Home() {
 	const [notifications, setNotifications] = useState<StoredNotification[]>([])
 	const [filter, setFilter] = useState<"all" | "received" | "sent">("all")
 	const [isLoading, setIsLoading] = useState(true)
+	const [prefill, setPrefill] = useState<ResponsePrefill | undefined>(undefined)
+	const [formKey, setFormKey] = useState(0)
+	const formRef = useRef<HTMLDivElement>(null)
 
 	const fetchNotifications = useCallback(async () => {
 		try {
@@ -43,6 +47,19 @@ export default function Home() {
 		setNotifications((prev) => prev.filter((n) => n.id !== id))
 	}
 
+	const handleRespond = (_responseType: PayloadTemplateType, newPrefill: ResponsePrefill) => {
+		setPrefill(newPrefill)
+		// Force form to re-mount with new prefill values
+		setFormKey((k) => k + 1)
+		// Scroll to form
+		formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+	}
+
+	const handleSent = () => {
+		setPrefill(undefined)
+		fetchNotifications()
+	}
+
 	const receivedCount = notifications.filter((n) => n.direction === "received").length
 	const sentCount = notifications.filter((n) => n.direction === "sent").length
 
@@ -62,8 +79,19 @@ export default function Home() {
 
 				<div className="grid gap-8 lg:grid-cols-3">
 					{/* Send Notification Form */}
-					<div className="lg:col-span-1">
-						<SendNotificationForm onSent={fetchNotifications} />
+					<div className="lg:col-span-1" ref={formRef}>
+						<SendNotificationForm key={formKey} onSent={handleSent} prefill={prefill} />
+						{prefill && (
+							<button
+								onClick={() => {
+									setPrefill(undefined)
+									setFormKey((k) => k + 1)
+								}}
+								className="mt-2 w-full text-sm text-gray-500 hover:text-gray-700"
+							>
+								Clear pre-filled values
+							</button>
+						)}
 					</div>
 
 					{/* Notifications List */}
@@ -132,6 +160,7 @@ export default function Home() {
 											key={notification.id}
 											notification={notification}
 											onDelete={() => handleDelete(notification.id)}
+											onRespond={handleRespond}
 										/>
 									))
 								)}

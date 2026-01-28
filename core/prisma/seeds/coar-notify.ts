@@ -25,9 +25,10 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 		Published: "dddddddd-dddd-4ddd-dddd-dddddddddd14" as StagesId,
 		// Outbound review request stages (for our Submissions)
 		Submissions: "dddddddd-dddd-4ddd-dddd-dddddddddd17" as StagesId,
-		ReviewRequested: "dddddddd-dddd-4ddd-dddd-dddddddddd11" as StagesId,
 		AwaitingResponse: "dddddddd-dddd-4ddd-dddd-dddddddddd18" as StagesId,
 	}
+
+	const OUTBOUND_WEBHOOK_PATH = "coar-outbound"
 
 	const WEBHOOK_PATH = "coar-inbox"
 
@@ -48,11 +49,13 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 				Payload: { schemaName: CoreSchemaType.String },
 				SourceURL: { schemaName: CoreSchemaType.String },
 				RelatedPub: { schemaName: CoreSchemaType.String, relation: true },
+				Author: { schemaName: CoreSchemaType.MemberId },
 			},
 			pubTypes: {
 				Submission: {
 					Title: { isTitle: true },
 					Content: { isTitle: false },
+					Author: { isTitle: false },
 				},
 				Notification: {
 					Title: { isTitle: true },
@@ -80,12 +83,23 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 					existing: true,
 					role: MemberRole.admin,
 				},
+				joeAuthor: {
+					id: "dddddddd-dddd-4ddd-dddd-dddddddddd02" as UsersId,
+					firstName: "Joe",
+					lastName: "Author",
+					email: "joe-author@pubpub.org",
+					password: "pubpub-joe",
+					role: MemberRole.contributor,
+				},
 			},
 			pubs: [
 				{
 					pubType: "Submission",
 					stage: "Submissions",
-					values: { Title: "Sample Submission for Review" },
+					values: {
+						Title: "Sample Submission for Review",
+						Author: "dddddddd-dddd-4ddd-dddd-dddddddddd02",
+					},
 				},
 			],
 			stages: {
@@ -211,13 +225,44 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 				// Entry point for our own submissions that we want to request reviews for
 				Submissions: {
 					id: STAGE_IDS.Submissions,
-					// No automations - this is just an entry/holding stage
-				},
-				// When we request a review from an external service
-				ReviewRequested: {
-					id: STAGE_IDS.ReviewRequested,
 					automations: {
-						"Offer Review": {
+						// Manual action to request a review from a remote repository
+						"Request Review": {
+							icon: {
+								name: "send",
+								color: "#f59e0b",
+							},
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "$.pub.pubType.name = 'Submission'",
+									},
+								],
+							},
+							actions: [
+								{
+									action: Action.move,
+									config: { stage: STAGE_IDS.AwaitingResponse },
+								},
+							],
+						},
+					},
+				},
+				// Waiting for response from external service after requesting a review
+				AwaitingResponse: {
+					id: STAGE_IDS.AwaitingResponse,
+					automations: {
+						// Send the Offer when a submission enters this stage
+						"Send Review Offer": {
 							icon: {
 								name: "send",
 								color: "#f59e0b",
@@ -228,6 +273,16 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 									config: {},
 								},
 							],
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "$.pub.pubType.name = 'Submission'",
+									},
+								],
+							},
 							actions: [
 								{
 									action: Action.http,
@@ -258,18 +313,30 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 										},
 									},
 								},
+							],
+						},
+						// Process incoming responses (Accept/Reject/Announce) from external services
+						"Process Response": {
+							icon: {
+								name: "mail",
+								color: "#3b82f6",
+							},
+							triggers: [
 								{
-									action: Action.move,
-									config: { stage: STAGE_IDS.AwaitingResponse },
+									event: AutomationEvent.webhook,
+									config: { path: OUTBOUND_WEBHOOK_PATH },
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: {
+										text: "Received response: {{ $.json.type }} for {{ $.json.inReplyTo }}",
+									},
 								},
 							],
 						},
 					},
-				},
-				// Waiting for Accept/Reject response from external service
-				AwaitingResponse: {
-					id: STAGE_IDS.AwaitingResponse,
-					// No automations - we wait for incoming Accept/Reject notifications
 				},
 				Published: {
 					id: STAGE_IDS.Published,
@@ -492,9 +559,6 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 				},
 				// Outbound request flow: our submissions requesting external reviews
 				Submissions: {
-					to: ["ReviewRequested"],
-				},
-				ReviewRequested: {
 					to: ["AwaitingResponse"],
 				},
 			},
