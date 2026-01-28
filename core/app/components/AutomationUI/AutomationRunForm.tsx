@@ -155,7 +155,7 @@ export const AutomationRunForm = (props: Props) => {
 						<span className="overflow-auto text-ellipsis">{props.automation.name}</span>
 					</Button>
 				</DialogTrigger>
-				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
+				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0 md:max-w-2xl">
 					<DialogHeader className="sticky inset-0 top-0 z-10 bg-background p-6 pb-2">
 						<div className="flex items-start gap-x-2">
 							<DynamicIcon

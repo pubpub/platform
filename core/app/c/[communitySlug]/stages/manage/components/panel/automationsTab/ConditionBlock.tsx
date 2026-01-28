@@ -4,7 +4,7 @@ import type { DragEndEvent } from "@dnd-kit/core"
 import type { Control, ControllerFieldState, FieldErrors } from "react-hook-form"
 import type { CreateAutomationsSchema } from "./StagePanelAutomationForm"
 
-import { memo, useCallback, useId } from "react"
+import { memo, useCallback, useId, useState } from "react"
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
@@ -18,14 +18,25 @@ import { Controller, useFieldArray, useWatch } from "react-hook-form"
 
 import { AutomationConditionBlockType, AutomationConditionType } from "db/public"
 import { Button } from "ui/button"
-import { GripVertical, Plus, X } from "ui/icon"
+import { Code2, GripVertical, Layers, Plus, X } from "ui/icon"
 import { Input } from "ui/input"
-import { Item, ItemActions, ItemContent, ItemHeader, ItemMedia } from "ui/item"
+import { Item, ItemContent, ItemHeader } from "ui/item"
 import { Label } from "ui/label"
+import { usePubFieldContext } from "ui/pubFields"
+import { usePubTypeContext } from "ui/pubTypes"
+import {
+	type FieldType,
+	type Operator,
+	OperatorSelector,
+	PathSelector,
+	ValueSelector,
+} from "ui/queryBuilder"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 import { cn } from "utils"
 
+import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu"
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank"
+import { useStages } from "../../../StagesContext"
 
 export type ConditionBlockFormValue = {
 	id?: string
@@ -45,27 +56,148 @@ export type ConditionFormValue = {
 
 export type ConditionItemFormValue = ConditionFormValue | ConditionBlockFormValue
 
+// parse expression string into path, operator, value
+function parseExpression(expression: string): {
+	path: string
+	operator: Operator
+	value: string
+} | null {
+	if (!expression.trim()) return null
+
+	// handle $exists(path)
+	const existsMatch = expression.match(/^\$exists\(([^)]+)\)$/)
+	if (existsMatch) {
+		return { path: existsMatch[1].trim(), operator: "exists", value: "" }
+	}
+
+	// handle string functions
+	const funcMatch = expression.match(/^\$(contains|startsWith|endsWith)\(([^,]+),\s*(.+)\)$/)
+	if (funcMatch) {
+		const [, func, path, rawValue] = funcMatch
+		let value = rawValue.trim()
+		if (
+			(value.startsWith('"') && value.endsWith('"')) ||
+			(value.startsWith("'") && value.endsWith("'"))
+		) {
+			value = value.slice(1, -1)
+		}
+		return { path: path.trim(), operator: func as Operator, value }
+	}
+
+	// handle comparison operators
+	const compMatch = expression.match(/^([^\s=!<>]+)\s*(=|!=|<=|>=|<|>|in)\s*(.+)$/)
+	if (compMatch) {
+		const [, path, op, rawValue] = compMatch
+		let value = rawValue.trim()
+		if (
+			(value.startsWith('"') && value.endsWith('"')) ||
+			(value.startsWith("'") && value.endsWith("'"))
+		) {
+			value = value.slice(1, -1)
+		}
+		return { path: path.trim(), operator: op as Operator, value }
+	}
+
+	return null
+}
+
+// convert path, operator, value to expression string
+function toExpression(path: string, operator: Operator, value: string): string {
+	if (!path) return ""
+
+	if (operator === "exists") {
+		return `$exists(${path})`
+	}
+
+	if (operator === "contains" || operator === "startsWith" || operator === "endsWith") {
+		return `$${operator}(${path}, ${JSON.stringify(value)})`
+	}
+
+	const escapedValue = isNaN(Number(value)) ? JSON.stringify(value) : value
+	return `${path} ${operator} ${escapedValue}`
+}
+
 type ConditionItemProps = {
 	id: string
 	expression: string
 	onRemove: () => void
-	slug: string
+	onChange: (value: string) => void
 	fieldState: ControllerFieldState
-	control: Control<Record<string, ConditionItemFormValue>, any>
 }
 
 const ConditionItem = memo(
-	({ id, expression, onRemove, slug, fieldState, control }: ConditionItemProps) => {
+	({ id, expression, onRemove, onChange, fieldState }: ConditionItemProps) => {
 		const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-			useSortable({
-				id,
-			})
+			useSortable({ id })
 		const { invalid, error } = fieldState
+		const pubFields = usePubFieldContext()
+		const pubTypes = usePubTypeContext()
+		const { stages } = useStages()
+
+		// parse the expression to get initial values
+		const parsed = parseExpression(expression)
+		const [isCodeMode, setIsCodeMode] = useState(!parsed && !!expression)
+		const [path, setPath] = useState(parsed?.path ?? "")
+		const [operator, setOperator] = useState<Operator>(parsed?.operator ?? "=")
+		const [value, setValue] = useState(parsed?.value ?? "")
+		const [fieldType, setFieldType] = useState<FieldType>("unknown")
+		const [codeValue, setCodeValue] = useState(expression)
 
 		const style = {
 			transform: CSS.Translate.toString(transform),
 			transition,
 		}
+
+		const handlePathChange = useCallback(
+			(newPath: string, type: FieldType) => {
+				setPath(newPath)
+				setFieldType(type)
+				onChange(toExpression(newPath, operator, value))
+			},
+			[operator, value, onChange]
+		)
+
+		const handleOperatorChange = useCallback(
+			(newOperator: Operator) => {
+				setOperator(newOperator)
+				onChange(toExpression(path, newOperator, value))
+			},
+			[path, value, onChange]
+		)
+
+		const handleValueChange = useCallback(
+			(newValue: string) => {
+				setValue(newValue)
+				onChange(toExpression(path, operator, newValue))
+			},
+			[path, operator, onChange]
+		)
+
+		const handleCodeChange = useCallback(
+			(newValue: string) => {
+				setCodeValue(newValue)
+				onChange(newValue)
+			},
+			[onChange]
+		)
+
+		const toggleMode = useCallback(() => {
+			if (isCodeMode) {
+				// try to parse code into visual
+				const p = parseExpression(codeValue)
+				if (p) {
+					setPath(p.path)
+					setOperator(p.operator)
+					setValue(p.value)
+				}
+			} else {
+				// sync visual to code
+				setCodeValue(toExpression(path, operator, value))
+			}
+			setIsCodeMode(!isCodeMode)
+		}, [isCodeMode, codeValue, operator, path, value])
+
+		const showValueInput = operator !== "exists"
 
 		return (
 			<Item
@@ -73,31 +205,60 @@ const ConditionItem = memo(
 				ref={setNodeRef}
 				style={style}
 				className={cn(
-					"relative border-l-4 border-l-blue-100! bg-card p-2",
+					"relative border-l-4 border-l-blue-100! bg-card px-1 py-2",
 					isDragging && "z-10 cursor-grabbing",
 					invalid && "border-red-300"
 				)}
 			>
-				<ItemMedia>
+				<ItemContent className="flex flex-row items-center gap-0.5">
 					<Button
 						type="button"
 						aria-label="Drag handle"
+						size="icon-sm"
 						variant="ghost"
 						className={cn("cursor-grab p-1", isDragging && "cursor-grabbing")}
 						{...listeners}
 						{...attributes}
 					>
-						<GripVertical size={16} className="text-neutral-400" />
+						<GripVertical size={14} className="text-muted-foreground" />
 					</Button>
-				</ItemMedia>
-				<ItemContent>
-					<div className="flex-1 space-y-2">
-						<Input
-							{...control.register(slug)}
-							placeholder="Enter JSONata expression (e.g., $.fieldName = 'value')"
-							defaultValue={expression}
-							className={cn("font-mono text-sm", invalid && "border-red-300")}
-						/>
+					<div className="flex grow flex-col gap-2">
+						<div className="flex w-full items-center gap-2">
+							{isCodeMode ? (
+								<Input
+									value={codeValue}
+									onChange={(e) => handleCodeChange(e.target.value)}
+									placeholder="$.pub.pubType.name = 'Article'"
+									className="h-8 grow font-mono text-xs"
+								/>
+							) : (
+								<>
+									<PathSelector
+										value={path}
+										onChange={handlePathChange}
+										pubFields={pubFields}
+										pubTypes={pubTypes}
+										stages={stages}
+									/>
+									<OperatorSelector
+										value={operator}
+										onChange={handleOperatorChange}
+										fieldType={fieldType}
+									/>
+									{showValueInput && (
+										<ValueSelector
+											value={value}
+											onChange={handleValueChange}
+											path={path}
+											operator={operator}
+											fieldType={fieldType}
+											pubTypes={pubTypes}
+											stages={stages}
+										/>
+									)}
+								</>
+							)}
+						</div>
 						{invalid && error && (
 							<p className="text-destructive text-xs">
 								{error.type === "too_small"
@@ -106,19 +267,26 @@ const ConditionItem = memo(
 							</p>
 						)}
 					</div>
+
+					<EllipsisMenu orientation="vertical">
+						<EllipsisMenuButton
+							onClick={toggleMode}
+							className="h-8 px-2"
+							title={isCodeMode ? "Switch to visual" : "Switch to code"}
+							icon={isCodeMode ? Layers : Code2}
+						>
+							{isCodeMode ? "Visual" : "Code"}
+						</EllipsisMenuButton>
+						<EllipsisMenuButton
+							className="p-1 text-muted-foreground-400"
+							aria-label="Delete condition"
+							onClick={onRemove}
+							icon={X}
+						>
+							Remove
+						</EllipsisMenuButton>
+					</EllipsisMenu>
 				</ItemContent>
-				<ItemActions>
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						className="p-1 text-neutral-400"
-						aria-label="Delete condition"
-						onClick={onRemove}
-					>
-						<X size={14} />
-					</Button>
-				</ItemActions>
 			</Item>
 		)
 	},
@@ -126,7 +294,6 @@ const ConditionItem = memo(
 		return (
 			prevProps.id === nextProps.id &&
 			prevProps.expression === nextProps.expression &&
-			prevProps.slug === nextProps.slug &&
 			prevProps.fieldState.invalid === nextProps.fieldState.invalid &&
 			prevProps.fieldState.error?.message === nextProps.fieldState.error?.message
 		)
@@ -238,29 +405,26 @@ export const ConditionBlock = memo(
 				ref={setNodeRef}
 				style={style}
 				className={cn(
-					"border-l-4 border-l-blue-100!",
 					isDragging && "z-10 cursor-grabbing",
 					depth % 2 === 1 && "bg-card",
-					depth % 2 === 0 && "bg-muted/50",
-					depth > 0 && "p-2",
+					depth % 2 === 0 && depth > 0 && "bg-muted/50",
+					depth > 0 ? "border-l-4 border-l-blue-100! p-0.5 py-2" : "border-none p-0",
 					rootItemError && "border-red-300"
 				)}
 			>
 				<ItemHeader>
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-1">
 						{depth > 0 && (
 							<Button
 								type="button"
 								aria-label="Drag handle"
+								size="icon-sm"
 								variant="ghost"
-								className={cn(
-									"mr-2 cursor-grab p-1",
-									isDragging && "cursor-grabbing"
-								)}
+								className={cn("cursor-grab p-1", isDragging && "cursor-grabbing")}
 								{...listeners}
 								{...attributes}
 							>
-								<GripVertical size={16} className="text-muted-foreground" />
+								<GripVertical size={14} className="text-muted-foreground" />
 							</Button>
 						)}
 						{depth === 0 && (
@@ -278,7 +442,7 @@ export const ConditionBlock = memo(
 										field.onChange(value as AutomationConditionBlockType)
 									}
 								>
-									<SelectTrigger className="h-8 w-24 text-xs">
+									<SelectTrigger className="h-8! w-24 text-xs">
 										<SelectValue />
 									</SelectTrigger>
 									<SelectContent>
@@ -323,10 +487,14 @@ export const ConditionBlock = memo(
 												<ConditionItem
 													id={arrayField.id}
 													fieldState={fieldState}
-													control={control}
 													expression={field.value.expression}
 													onRemove={() => handleRemove(index)}
-													slug={`${slug}.items.${index}.expression`}
+													onChange={(value) => {
+														field.onChange({
+															...field.value,
+															expression: value,
+														})
+													}}
 												/>
 											) : (
 												<ConditionBlock

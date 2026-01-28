@@ -101,7 +101,10 @@ const finalGetManyQuerySchema = getPubQuerySchema.extend({
 				"- JSON array filter: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'`",
 			].join("\n")
 		),
+	transform: z.string().optional().describe("A JSONata expression that transforms a Pub"),
+	query: z.string().optional().describe("A JSONata expression that queries many Pubs"),
 })
+
 const siteBuilderCheckResponseCodeSchema = z.enum([
 	"NON_SITE_BUILDER_TOKEN",
 	"HAS_WRITE_PERMISSIONS",
@@ -211,6 +214,7 @@ export const siteApi = contract.router(
 					pubId: z.string().uuid(),
 				}),
 				query: getPubQuerySchema.optional(),
+
 				responses: {
 					200: processedPubSchema,
 				},

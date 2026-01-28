@@ -135,7 +135,7 @@ async function loadAutomationContext(args: {
 					}
 				)
 			: null,
-		getAutomation(args.automationId),
+		getAutomation(args.automationId, { communityId: args.communityId }),
 		// query community directly from db instead of using memoized getCommunity
 		// to avoid cache issues in tests
 		db
@@ -144,6 +144,7 @@ async function loadAutomationContext(args: {
 			.where("id", "=", args.communityId)
 			.executeTakeFirst(),
 	])
+
 
 	if (!automation) {
 		throw new Error(`Automation ${args.automationId} not found`)

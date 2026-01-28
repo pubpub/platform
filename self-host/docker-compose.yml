@@ -75,27 +75,29 @@ services:
         ports:
             - "${POSTGRES_PORT}:${POSTGRES_PORT}" # you can choose another port if you want, just make sure the first one matches the POSTGRES_PORT in .env
 
-    # recommended reverse proxy solution
+    # recommended reverse proxy solution with s3fs for serving static sites
     # can be removed if you manually set up a reverse proxy like nginx instead
     # useful if you want your assets, platform, and site to be on the same domain
     # but with different paths
-    # caddy:
-    #     image: caddy:latest
-    #     depends_on:
-    #         - platform
-    #         - platform-jobs
-    #         - minio
-    #     env_file:
-    #         - path: .env
-    #           required: true
-    #     ports:
-    #         - "443:443"
-    #     volumes:
-    #         - ./caddy:/etc/caddy
-    #         - caddy-data:/data
-    #         - caddy-config:/config
-    #     networks:
-    #         - app-network
+    # note: requires the caddy-sites image built from Dockerfile.caddy
+    # you can build it with: docker build -f Dockerfile.caddy -t ghcr.io/pubpub/caddy-sites:latest .
+    caddy:
+        image: ghcr.io/pubpub/caddy-sites:latest
+        depends_on:
+            - platform
+            - platform-jobs
+            - minio
+        env_file:
+            - path: .env
+              required: true
+        ports:
+            - "443:443"
+        volumes:
+            - ./caddy:/etc/caddy
+            - caddy-data:/data
+            - caddy-config:/config
+        networks:
+            - app-network
 
     # assets storage
     # can be removed if you manually set up a storage service like s3 or minio instead

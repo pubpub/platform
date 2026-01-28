@@ -66,7 +66,7 @@ export const StagePanelSheet = (props: Props) => {
 				<SheetDescription>Edit the stage settings and actions.</SheetDescription>
 			</SheetHeader>
 			<StagePanelSheetContent
-				className="[&>button]:!top-5 [&>button]:!right-4 md:[&>button]:!top-8 md:[&>button]:!right-6 w-screen overflow-y-auto border-none bg-transparent p-2 shadow-none sm:max-w-lg md:p-6"
+				className="[&>button]:!top-5 [&>button]:!right-4 md:[&>button]:!top-8 md:[&>button]:!right-6 overflow-y-auto border-none bg-transparent p-2 shadow-none sm:max-w-lg md:max-w-3xl md:p-6"
 				overlayStyle={maskStyle}
 			>
 				<SheetTitle className="sr-only">Edit Stage</SheetTitle>

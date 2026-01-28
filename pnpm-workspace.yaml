@@ -1,11 +1,13 @@
 packages:
     - "core"
     - "jobs"
+    - "mock-notify"
     - "config/*"
     - "packages/*"
     - "storybook"
     - "docs"
     - "site-builder"
+    - "site-builder-2"
 
 # A catalog is used to line up the package versions across workspaces
 catalog:
