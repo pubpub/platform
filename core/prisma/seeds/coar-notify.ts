@@ -32,7 +32,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 	const WEBHOOK_PATH = "coar-inbox"
 
 	// Default remote inbox URL - can be changed in UI for testing
-	const REMOTE_INBOX_URL = "http://localhost:4000/inbox"
+	const REMOTE_INBOX_URL = "http://localhost:4000/api/inbox"
 
 	return seedCommunity(
 		{
