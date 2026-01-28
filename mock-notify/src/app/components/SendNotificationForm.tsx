@@ -16,6 +16,15 @@ import {
 
 interface SendNotificationFormProps {
 	onSent: () => void
+	/** Pre-fill values for a response to an existing notification */
+	prefill?: {
+		targetUrl?: string
+		templateType?: PayloadTemplateType
+		inReplyTo?: string
+		inReplyToObjectUrl?: string
+		originUrl?: string
+		targetServiceUrl?: string
+	}
 }
 
 type FormMode = "template" | "custom"
@@ -29,46 +38,78 @@ const TEMPLATE_OPTIONS: PayloadTemplateType[] = [
 	"Reject",
 ]
 
-export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
+export function SendNotificationForm({ onSent, prefill }: SendNotificationFormProps) {
 	const [mode, setMode] = useState<FormMode>("template")
 	const [targetUrl, setTargetUrl] = useState(
-		"http://localhost:3000/api/v0/c/coar-notify/site/webhook/coar-inbox"
+		prefill?.targetUrl ?? "http://localhost:3000/api/v0/c/coar-notify/site/webhook/coar-inbox"
 	)
-	const [templateType, setTemplateType] = useState<PayloadTemplateType>("Offer Review")
+	const [templateType, setTemplateType] = useState<PayloadTemplateType>(
+		prefill?.templateType ?? "Offer Review"
+	)
 	const [customPayload, setCustomPayload] = useState("")
 	const [isSending, setIsSending] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState(false)
 
-	// Template fields
-	const [preprintId, setPreprintId] = useState("12345")
-	const [reviewId, setReviewId] = useState("review-001")
-	const [repositoryUrl, setRepositoryUrl] = useState("http://localhost:4000")
-	const [serviceUrl, setServiceUrl] = useState("http://localhost:3000")
+	// Template fields - using complete URLs instead of IDs
+	const [objectUrl, setObjectUrl] = useState(
+		prefill?.inReplyToObjectUrl ?? "https://www.biorxiv.org/content/10.1101/2024.01.01.123456"
+	)
+	const [objectCiteAs, setObjectCiteAs] = useState("")
+	const [objectItemUrl, setObjectItemUrl] = useState("")
+	const [reviewUrl, setReviewUrl] = useState("http://localhost:4001/review/review-001")
+	const [originUrl, setOriginUrl] = useState(prefill?.originUrl ?? "http://localhost:4001")
+	const [targetServiceUrl, setTargetServiceUrl] = useState(
+		prefill?.targetServiceUrl ?? "http://localhost:3000"
+	)
 	const [serviceName, setServiceName] = useState("Mock Review Service")
-	const [aggregatorUrl, setAggregatorUrl] = useState("http://localhost:4000")
-	const [inReplyTo, setInReplyTo] = useState("")
+	const [inReplyTo, setInReplyTo] = useState(prefill?.inReplyTo ?? "")
+	const [inReplyToUrl, setInReplyToUrl] = useState(prefill?.inReplyToObjectUrl ?? "")
 
 	const generatePayload = (): CoarNotifyPayload => {
 		switch (templateType) {
 			case "Offer Review":
-				return createOfferReviewPayload({ preprintId, repositoryUrl, serviceUrl })
+				return createOfferReviewPayload({
+					objectUrl,
+					objectCiteAs: objectCiteAs || undefined,
+					objectItemUrl: objectItemUrl || undefined,
+					originUrl,
+					targetUrl: targetServiceUrl,
+				})
 			case "Announce Review":
 				return createAnnounceReviewPayload({
-					preprintId,
-					reviewId,
-					repositoryUrl,
-					serviceUrl,
+					reviewUrl,
+					inReplyToUrl: inReplyToUrl || objectUrl,
+					originUrl,
+					targetUrl: targetServiceUrl,
 					serviceName,
 				})
 			case "Offer Ingest":
-				return createOfferIngestPayload({ reviewId, serviceUrl, aggregatorUrl })
+				return createOfferIngestPayload({
+					reviewUrl,
+					originUrl,
+					targetUrl: targetServiceUrl,
+				})
 			case "Announce Ingest":
-				return createAnnounceIngestPayload({ reviewId, serviceUrl, aggregatorUrl })
+				return createAnnounceIngestPayload({
+					reviewUrl,
+					originUrl,
+					targetUrl: targetServiceUrl,
+				})
 			case "Accept":
-				return createAcceptPayload({ inReplyTo, repositoryUrl, serviceUrl })
+				return createAcceptPayload({
+					inReplyTo,
+					originUrl,
+					targetUrl: targetServiceUrl,
+					serviceName,
+				})
 			case "Reject":
-				return createRejectPayload({ inReplyTo, repositoryUrl, serviceUrl })
+				return createRejectPayload({
+					inReplyTo,
+					originUrl,
+					targetUrl: targetServiceUrl,
+					serviceName,
+				})
 		}
 	}
 
@@ -123,49 +164,62 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label
-								htmlFor="preprintId"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Preprint ID
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Object URL (preprint/article to review)
+								<input
+									type="text"
+									value={objectUrl}
+									onChange={(e) => setObjectUrl(e.target.value)}
+									placeholder="https://www.biorxiv.org/content/10.1101/..."
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
-							<input
-								type="text"
-								id="preprintId"
-								value={preprintId}
-								onChange={(e) => setPreprintId(e.target.value)}
-								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
 						</div>
 						<div>
-							<label
-								htmlFor="repositoryUrl"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Repository URL
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Cite As DOI (optional)
+								<input
+									type="text"
+									value={objectCiteAs}
+									onChange={(e) => setObjectCiteAs(e.target.value)}
+									placeholder="https://doi.org/10.1101/2024.01.01.123456"
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
-							<input
-								type="text"
-								id="repositoryUrl"
-								value={repositoryUrl}
-								onChange={(e) => setRepositoryUrl(e.target.value)}
-								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
 						</div>
 						<div>
-							<label
-								htmlFor="serviceUrl"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Service URL (target)
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Item URL (optional, e.g. PDF link)
+								<input
+									type="text"
+									value={objectItemUrl}
+									onChange={(e) => setObjectItemUrl(e.target.value)}
+									placeholder="http://example.com/paper.pdf"
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
-							<input
-								type="text"
-								id="serviceUrl"
-								value={serviceUrl}
-								onChange={(e) => setServiceUrl(e.target.value)}
-								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
+						</div>
+						<div>
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Origin URL (this service)
+								<input
+									type="text"
+									value={originUrl}
+									onChange={(e) => setOriginUrl(e.target.value)}
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
+							</label>
+						</div>
+						<div>
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Target Service URL
+								<input
+									type="text"
+									value={targetServiceUrl}
+									onChange={(e) => setTargetServiceUrl(e.target.value)}
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
+							</label>
 						</div>
 					</>
 				)
@@ -173,64 +227,57 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label
-								htmlFor="preprintId"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Preprint ID
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Review URL (full URL of the review)
+								<input
+									type="text"
+									value={reviewUrl}
+									onChange={(e) => setReviewUrl(e.target.value)}
+									placeholder="http://localhost:4000/review/..."
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
 							<input
 								type="text"
-								id="preprintId"
-								value={preprintId}
-								onChange={(e) => setPreprintId(e.target.value)}
+								value={reviewUrl}
+								onChange={(e) => setReviewUrl(e.target.value)}
+								placeholder="http://localhost:4001/review/..."
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label
-								htmlFor="reviewId"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Review ID
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								In Reply To URL (the original preprint/pub)
+								<input
+									type="text"
+									value={inReplyToUrl}
+									onChange={(e) => setInReplyToUrl(e.target.value)}
+									placeholder="http://localhost:3000/c/community/pub/..."
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
-							<input
-								type="text"
-								id="reviewId"
-								value={reviewId}
-								onChange={(e) => setReviewId(e.target.value)}
-								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
 						</div>
 						<div>
-							<label
-								htmlFor="repositoryUrl"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Repository URL
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Origin URL (this service)
+								<input
+									type="text"
+									value={originUrl}
+									onChange={(e) => setOriginUrl(e.target.value)}
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
-							<input
-								type="text"
-								id="repositoryUrl"
-								value={repositoryUrl}
-								onChange={(e) => setRepositoryUrl(e.target.value)}
-								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
 						</div>
 						<div>
-							<label
-								htmlFor="serviceUrl"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Service URL
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Target Service URL (where to send)
+								<input
+									type="text"
+									value={targetServiceUrl}
+									onChange={(e) => setTargetServiceUrl(e.target.value)}
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
-							<input
-								type="text"
-								id="serviceUrl"
-								value={serviceUrl}
-								onChange={(e) => setServiceUrl(e.target.value)}
-								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
 						</div>
 						<div>
 							<label
@@ -254,34 +301,34 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label
-								htmlFor="reviewId"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Review ID
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Review URL (full URL)
+								<input
+									type="text"
+									value={reviewUrl}
+									onChange={(e) => setReviewUrl(e.target.value)}
+									placeholder="http://localhost:4000/review/..."
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
 							<input
 								type="text"
-								id="reviewId"
-								value={reviewId}
-								onChange={(e) => setReviewId(e.target.value)}
+								value={reviewUrl}
+								onChange={(e) => setReviewUrl(e.target.value)}
+								placeholder="http://localhost:4001/review/..."
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label
-								htmlFor="serviceUrl"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Service URL
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Origin URL (this service)
+								<input
+									type="text"
+									value={originUrl}
+									onChange={(e) => setOriginUrl(e.target.value)}
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
-							<input
-								type="text"
-								id="serviceUrl"
-								value={serviceUrl}
-								onChange={(e) => setServiceUrl(e.target.value)}
-								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
 						</div>
 						<div>
 							<label
@@ -292,9 +339,8 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							</label>
 							<input
 								type="text"
-								id="aggregatorUrl"
-								value={aggregatorUrl}
-								onChange={(e) => setAggregatorUrl(e.target.value)}
+								value={targetServiceUrl}
+								onChange={(e) => setTargetServiceUrl(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
@@ -321,34 +367,37 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label
-								htmlFor="repositoryUrl"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Repository URL
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Origin URL (this service)
+								<input
+									type="text"
+									value={originUrl}
+									onChange={(e) => setOriginUrl(e.target.value)}
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
-							<input
-								type="text"
-								id="repositoryUrl"
-								value={repositoryUrl}
-								onChange={(e) => setRepositoryUrl(e.target.value)}
-								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
 						</div>
 						<div>
-							<label
-								htmlFor="serviceUrl"
-								className="mb-1 block font-medium text-gray-700 text-sm"
-							>
-								Service URL
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Target Service URL
+								<input
+									type="text"
+									value={targetServiceUrl}
+									onChange={(e) => setTargetServiceUrl(e.target.value)}
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
 							</label>
-							<input
-								type="text"
-								id="serviceUrl"
-								value={serviceUrl}
-								onChange={(e) => setServiceUrl(e.target.value)}
-								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
+						</div>
+						<div>
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
+								Service Name
+								<input
+									type="text"
+									value={serviceName}
+									onChange={(e) => setServiceName(e.target.value)}
+									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
+							</label>
 						</div>
 					</>
 				)

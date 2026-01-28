@@ -2,112 +2,119 @@ import type { CoarNotifyPayload } from "./store"
 
 /**
  * Helper functions to create COAR Notify payloads
+ * All object IDs should be complete URLs, not fragments to be composed
  */
 
 export function createOfferReviewPayload({
-	preprintId,
-	repositoryUrl,
-	serviceUrl,
+	objectUrl,
+	objectCiteAs,
+	objectItemUrl,
+	actorId,
+	actorName,
+	originUrl,
+	targetUrl,
 }: {
-	preprintId: string
-	repositoryUrl: string
-	serviceUrl: string
+	objectUrl: string
+	objectCiteAs?: string
+	objectItemUrl?: string
+	actorId?: string
+	actorName?: string
+	originUrl: string
+	targetUrl: string
 }): CoarNotifyPayload {
-	const preprintUrl = `${repositoryUrl}/preprint/${preprintId}`
 	return {
 		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
 		id: `urn:uuid:${crypto.randomUUID()}`,
 		type: ["Offer", "coar-notify:ReviewAction"],
 		actor: {
-			id: "https://orcid.org/0000-0002-1825-0097",
+			id: actorId ?? "https://orcid.org/0000-0002-1825-0097",
 			type: "Person",
-			name: "Josiah Carberry",
+			name: actorName ?? "Josiah Carberry",
 		},
 		object: {
-			id: preprintUrl,
+			id: objectUrl,
 			type: ["Page", "sorg:AboutPage"],
-			"ietf:cite-as": `https://doi.org/10.5555/${preprintId}`,
-			"ietf:item": {
-				id: `${preprintUrl}/content.pdf`,
-				mediaType: "application/pdf",
-				type: ["Article", "sorg:ScholarlyArticle"],
-			},
+			...(objectCiteAs && { "ietf:cite-as": objectCiteAs }),
+			...(objectItemUrl && {
+				"ietf:item": {
+					id: objectItemUrl,
+					mediaType: "application/pdf",
+					type: ["Article", "sorg:ScholarlyArticle"],
+				},
+			}),
 		},
 		target: {
-			id: serviceUrl,
-			inbox: `${serviceUrl}/inbox/`,
+			id: targetUrl,
+			inbox: `${targetUrl}/inbox/`,
 			type: "Service",
 		},
 		origin: {
-			id: repositoryUrl,
-			inbox: `${repositoryUrl}/inbox/`,
+			id: originUrl,
+			inbox: `${originUrl}/inbox/`,
 			type: "Service",
 		},
 	}
 }
 
 export function createAnnounceReviewPayload({
-	preprintId,
-	reviewId,
-	repositoryUrl,
-	serviceUrl,
+	reviewUrl,
+	inReplyToUrl,
+	originUrl,
+	targetUrl,
 	serviceName,
 }: {
-	preprintId: string
-	reviewId: string
-	repositoryUrl: string
-	serviceUrl: string
-	serviceName: string
+	reviewUrl: string
+	inReplyToUrl: string
+	originUrl: string
+	targetUrl: string
+	serviceName?: string
 }): CoarNotifyPayload {
-	const preprintUrl = `${repositoryUrl}/preprint/${preprintId}`
-	const reviewUrl = `${serviceUrl}/review/${reviewId}`
 	return {
 		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
 		id: `urn:uuid:${crypto.randomUUID()}`,
 		type: ["Announce", "coar-notify:ReviewAction"],
 		actor: {
-			id: serviceUrl,
+			id: originUrl,
 			type: "Service",
-			name: serviceName,
+			name: serviceName ?? "Mock Review Service",
 		},
 		object: {
 			id: reviewUrl,
 			type: ["Page", "sorg:Review"],
-			"as:inReplyTo": preprintUrl,
+			"as:inReplyTo": inReplyToUrl,
 		},
 		target: {
-			id: repositoryUrl,
-			inbox: `${repositoryUrl}/inbox/`,
+			id: targetUrl,
+			inbox: `${targetUrl}/inbox/`,
 			type: "Service",
 		},
 		origin: {
-			id: serviceUrl,
-			inbox: `${serviceUrl}/inbox/`,
+			id: originUrl,
+			inbox: `${originUrl}/inbox/`,
 			type: "Service",
 		},
 		context: {
-			id: preprintUrl,
+			id: inReplyToUrl,
 			type: "Page",
 		},
 	}
 }
 
 export function createOfferIngestPayload({
-	reviewId,
-	serviceUrl,
-	aggregatorUrl,
+	reviewUrl,
+	originUrl,
+	targetUrl,
 }: {
-	reviewId: string
-	serviceUrl: string
-	aggregatorUrl: string
+	reviewUrl: string
+	originUrl: string
+	targetUrl: string
 }): CoarNotifyPayload {
-	const reviewUrl = `${serviceUrl}/review/${reviewId}`
 	return {
 		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
 		id: `urn:uuid:${crypto.randomUUID()}`,
 		type: ["Offer", "coar-notify:IngestAction"],
 		actor: {
-			id: serviceUrl,
+			id: originUrl,
 			type: "Service",
 			name: "Review Group",
 		},
@@ -116,34 +123,33 @@ export function createOfferIngestPayload({
 			type: ["Page", "sorg:Review"],
 		},
 		target: {
-			id: aggregatorUrl,
-			inbox: `${aggregatorUrl}/inbox/`,
+			id: targetUrl,
+			inbox: `${targetUrl}/inbox/`,
 			type: "Service",
 		},
 		origin: {
-			id: serviceUrl,
-			inbox: `${serviceUrl}/inbox/`,
+			id: originUrl,
+			inbox: `${originUrl}/inbox/`,
 			type: "Service",
 		},
 	}
 }
 
 export function createAnnounceIngestPayload({
-	reviewId,
-	serviceUrl,
-	aggregatorUrl,
+	reviewUrl,
+	originUrl,
+	targetUrl,
 }: {
-	reviewId: string
-	serviceUrl: string
-	aggregatorUrl: string
+	reviewUrl: string
+	originUrl: string
+	targetUrl: string
 }): CoarNotifyPayload {
-	const reviewUrl = `${serviceUrl}/review/${reviewId}`
 	return {
 		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
 		id: `urn:uuid:${crypto.randomUUID()}`,
 		type: ["Announce", "coar-notify:IngestAction"],
 		actor: {
-			id: aggregatorUrl,
+			id: targetUrl,
 			type: "Service",
 			name: "Aggregator",
 		},
@@ -152,13 +158,13 @@ export function createAnnounceIngestPayload({
 			type: ["Page", "sorg:Review"],
 		},
 		target: {
-			id: serviceUrl,
-			inbox: `${serviceUrl}/inbox/`,
+			id: originUrl,
+			inbox: `${originUrl}/inbox/`,
 			type: "Service",
 		},
 		origin: {
-			id: aggregatorUrl,
-			inbox: `${aggregatorUrl}/inbox/`,
+			id: targetUrl,
+			inbox: `${targetUrl}/inbox/`,
 			type: "Service",
 		},
 	}
@@ -166,12 +172,14 @@ export function createAnnounceIngestPayload({
 
 export function createAcceptPayload({
 	inReplyTo,
-	repositoryUrl,
-	serviceUrl,
+	originUrl,
+	targetUrl,
+	serviceName,
 }: {
 	inReplyTo: string
-	repositoryUrl: string
-	serviceUrl: string
+	originUrl: string
+	targetUrl: string
+	serviceName?: string
 }): CoarNotifyPayload {
 	return {
 		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
@@ -179,22 +187,22 @@ export function createAcceptPayload({
 		type: ["Accept"],
 		inReplyTo,
 		actor: {
-			id: serviceUrl,
+			id: originUrl,
 			type: "Service",
-			name: "Service Name",
+			name: serviceName ?? "Mock Service",
 		},
 		object: {
 			id: inReplyTo,
 			type: "Offer",
 		},
 		target: {
-			id: repositoryUrl,
-			inbox: `${repositoryUrl}/inbox/`,
+			id: targetUrl,
+			inbox: `${targetUrl}/inbox/`,
 			type: "Service",
 		},
 		origin: {
-			id: serviceUrl,
-			inbox: `${serviceUrl}/inbox/`,
+			id: originUrl,
+			inbox: `${originUrl}/inbox/`,
 			type: "Service",
 		},
 	}
@@ -202,12 +210,14 @@ export function createAcceptPayload({
 
 export function createRejectPayload({
 	inReplyTo,
-	repositoryUrl,
-	serviceUrl,
+	originUrl,
+	targetUrl,
+	serviceName,
 }: {
 	inReplyTo: string
-	repositoryUrl: string
-	serviceUrl: string
+	originUrl: string
+	targetUrl: string
+	serviceName?: string
 }): CoarNotifyPayload {
 	return {
 		"@context": ["https://www.w3.org/ns/activitystreams", "https://coar-notify.net"],
@@ -215,22 +225,22 @@ export function createRejectPayload({
 		type: ["Reject"],
 		inReplyTo,
 		actor: {
-			id: serviceUrl,
+			id: originUrl,
 			type: "Service",
-			name: "Service Name",
+			name: serviceName ?? "Mock Service",
 		},
 		object: {
 			id: inReplyTo,
 			type: "Offer",
 		},
 		target: {
-			id: repositoryUrl,
-			inbox: `${repositoryUrl}/inbox/`,
+			id: targetUrl,
+			inbox: `${targetUrl}/inbox/`,
 			type: "Service",
 		},
 		origin: {
-			id: serviceUrl,
-			inbox: `${serviceUrl}/inbox/`,
+			id: originUrl,
+			inbox: `${originUrl}/inbox/`,
 			type: "Service",
 		},
 	}
@@ -246,3 +256,20 @@ export const PAYLOAD_TEMPLATES = {
 } as const
 
 export type PayloadTemplateType = keyof typeof PAYLOAD_TEMPLATES
+
+/**
+ * Determine possible response types for a given notification
+ */
+export function getAvailableResponses(
+	payload: CoarNotifyPayload
+): Array<"Accept" | "Reject" | "Announce Review" | "Announce Ingest"> {
+	const types = Array.isArray(payload.type) ? payload.type : [payload.type]
+
+	if (types.includes("Offer") && types.includes("coar-notify:ReviewAction")) {
+		return ["Accept", "Reject", "Announce Review"]
+	}
+	if (types.includes("Offer") && types.includes("coar-notify:IngestAction")) {
+		return ["Accept", "Reject", "Announce Ingest"]
+	}
+	return []
+}
