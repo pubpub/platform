@@ -4,7 +4,9 @@ import type { FieldValues, Path } from "react-hook-form"
 import type { MonacoFormFieldProps, ValidationResult } from "./types"
 
 import * as React from "react"
-import { AlertTriangle, Check, X } from "lucide-react"
+import { AlertTriangle, Check, Maximize2, Minimize2, X } from "lucide-react"
+
+import { cn } from "utils"
 
 import { Button } from "../button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip"
@@ -17,14 +19,21 @@ export function MonacoFormField<
 	field,
 	allowInvalid = false,
 	showValidationStatus = true,
+	expandable = true,
+	expandedHeight = "70vh",
 	onValidate,
+	height = "200px",
 	...props
-}: MonacoFormFieldProps<TFieldValues, TName>) {
+}: MonacoFormFieldProps<TFieldValues, TName> & {
+	expandable?: boolean
+	expandedHeight?: string
+}) {
 	const [validation, setValidation] = React.useState<ValidationResult>({
 		valid: true,
 		errors: [],
 	})
 	const [overridden, setOverridden] = React.useState(false)
+	const [expanded, setExpanded] = React.useState(false)
 
 	const handleValidate = React.useCallback(
 		(result: ValidationResult) => {
@@ -46,10 +55,37 @@ export function MonacoFormField<
 		setOverridden(true)
 	}, [])
 
+	const toggleExpand = React.useCallback(() => {
+		setExpanded((prev) => !prev)
+	}, [])
+
+	const currentHeight = expanded ? expandedHeight : height
+
 	return (
-		<div className="relative">
+		<div className={cn("relative", expanded && "z-50")}>
+			{expandable && (
+				<div className="absolute top-1 left-1 z-20">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								className="h-6 w-6 bg-background/80 backdrop-blur-sm hover:bg-background"
+								onClick={toggleExpand}
+							>
+								{expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							{expanded ? "Collapse editor" : "Expand editor"}
+						</TooltipContent>
+					</Tooltip>
+				</div>
+			)}
 			<MonacoEditor
 				{...props}
+				height={currentHeight}
 				value={field.value ?? ""}
 				onChange={handleChange}
 				onValidate={handleValidate}

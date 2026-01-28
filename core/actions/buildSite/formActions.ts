@@ -47,7 +47,7 @@ export const previewResult = defineServerAction(async function previewResult({
 					applyJsonataFilter(eb, query, {
 						communitySlug: community.slug,
 					}),
-				depth: 2,
+				depth: 3,
 				withValues: true,
 				withRelatedPubs: true,
 				limit: 5,

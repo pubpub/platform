@@ -405,14 +405,16 @@ const router = tsr.router(siteBuilderApi, {
 			const buildPath = getBuildPath(communitySlug, body.automationRunId)
 
 			const pages = body.pages
+			const css = body.css ?? ""
+			console.log("pages", css)
 			await mkdir(dirname(buildPath), { recursive: true })
 
+			// write build data (pages and css) to storage
+			const buildData = { pages, css }
 			await fs.writeFile(
 				getBuildPath(communitySlug, body.automationRunId),
-				JSON.stringify(pages, null, 2)
+				JSON.stringify(buildData, null, 2)
 			)
-			console.log("pages", pages)
-			console.log("BUILDING ASTRO SITE")
 
 			const buildSuccess = await buildAstroSite({
 				outDir: distDir,
@@ -453,11 +455,11 @@ const router = tsr.router(siteBuilderApi, {
 				const s3Prefix = `sites/${communitySlug}/${subpath}`
 				folderUploadResult = await uploadDirectoryToS3(distDir, s3Prefix)
 
-				// compute the public site URL if siteBaseUrl is provided
+				// compute the public site URL from SITES_BASE_URL env var
 				let publicSiteUrl: string | undefined
 				let firstPageUrl: string | undefined
-				if (body.siteBaseUrl) {
-					const baseUrl = body.siteBaseUrl.replace(/\/$/, "")
+				if (env.SITES_BASE_URL) {
+					const baseUrl = env.SITES_BASE_URL.replace(/\/$/, "")
 					publicSiteUrl = `${baseUrl}/${communitySlug}/${subpath}/`
 
 					// find the first page to link to

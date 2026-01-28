@@ -1,93 +1,67 @@
 ---
-// import type { FileUpload } from "../layouts/Layout.astro"
-// import Layout from "../layouts/Layout.astro"
-
-// import { getHeader, getJournal, getPages } from "../lib/site/client/queries"
 import type { GetStaticPaths, InferGetStaticParamsType, InferGetStaticPropsType } from "astro"
-import { getFieldValue } from "../lib/getValue"
-import { getPubsToBuild } from "../lib/site/storage"
+import { getPubsToBuild, getSiteCss } from "../lib/site/storage"
 import { getClient } from "../lib/site/client/client"
 
-
 export const getStaticPaths = (async () => {
-	console.log("YEAH OI")
-	const pages = await getPubsToBuild() as [{pages: { slug: string,
-		title: string,
-		id: string,
-		 content: string }[], transform: string}]
+	const pages = await getPubsToBuild() as [{
+		pages: { slug: string; title: string; id: string; content: string }[]
+		transform: string
+	}]
+	const css = await getSiteCss()
 
-		 console.log("pages", pages)
-		 try {
-	const pubs = (await Promise.all(pages.flatMap(async ({pages, transform}) => {
-		const pubs = await getClient().pubs.getMany({
-		params: {
-			communitySlug: import.meta.env.COMMUNITY_SLUG,
-		},
-		query: {
-			transform: transform,
-			pubIds: pages.map((page) => page.id ) as any,
-		}})
-
-		if(pubs.status !== 200) {
-			throw new Error("Failed to fetch pubs. Status: " + pubs.status + " Message: " + pubs.body?.message)
-		}
-
-
-		return pubs.body?.flatMap((pub) => {
-			console.dir(pub, { depth: null })
-			return {
-			content: pub.content,
-			slug: pages.find((page) => page.id === pub.id)?.slug ,
-			title: pages.find((page) => page.id === pub.id)?.title,
-			}
-		})
-	}).flat())).flat()
-
-
-
-
-
-
-
-	const paths = pubs
-		.map((page) => {
-			const slug = page.slug 
-
-
-			return {
+	try {
+		const pubs = (await Promise.all(pages.flatMap(async ({ pages, transform }) => {
+			const pubs = await getClient().pubs.getMany({
 				params: {
-					slug,
+					communitySlug: import.meta.env.COMMUNITY_SLUG,
 				},
-				props: { page },
-			}
-		})
+				query: {
+					transform: transform,
+					pubIds: pages.map((page) => page.id) as any,
+				}
+			})
 
-		console.dir(paths, { depth: null })
-	return paths
+			if (pubs.status !== 200) {
+				throw new Error("Failed to fetch pubs. Status: " + pubs.status + " Message: " + pubs.body?.message)
+			}
+
+			return pubs.body?.flatMap((pub) => ({
+				content: pub.content,
+				slug: pages.find((page) => page.id === pub.id)?.slug,
+				title: pages.find((page) => page.id === pub.id)?.title,
+			}))
+		}).flat())).flat()
+
+		console.log("pubs", pubs.length)
+		return pubs.map((page) => ({
+			params: { slug: page.slug },
+			props: { page, css },
+		}))
 	} catch (error) {
 		console.error("Error fetching pubs", error)
 		throw error
-		return []
 	}
-
-
 }) satisfies GetStaticPaths
 
 type Params = InferGetStaticParamsType<typeof getStaticPaths>
 type Props = InferGetStaticPropsType<typeof getStaticPaths>
 
-const { slug } = Astro.params as Params
-
-const { page } = Astro.props as Props
-
-// const title = getFieldValue<string>(page, "Title")
-// const description = getFieldValue<string>(page, "Description")
-// const layout = getFieldValue<string>(page, "content")
-// const avatar = getFieldValue<FileUpload | undefined>(page, "Avatar")
-
+const { page, css } = Astro.props as Props
+const { slug } = Astro.params
+console.log("slug", slug)
+// console.log("page", page, "css", css)
 ---
 
-	<div class="container mx-auto prose">
-		<h1>{page.title}</h1>
-		<div set:html={page.content} />
-	</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>{page.title}</title>
+	{css && <style set:html={css} />}
+</head>
+<body>
+	<Fragment set:html={page.content} />
+</body>
+</html>

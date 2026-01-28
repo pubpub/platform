@@ -68,28 +68,42 @@ export const run = defineRun<typeof action>(
 						customFilter: (eb) => applyJsonataFilter(eb, query, { communitySlug }),
 						depth: 1,
 						withValues: true,
+						withRelatedPubs: true,
 					}
 				)
 
-				const pubContext = buildInterpolationContext({
-					community,
-					pub,
-					env: { PUBPUB_URL: env.PUBPUB_URL },
-					useDummyValues: true,
-				})
-				const [error, slug] = await tryCatch(interpolate(page.slug, pubContext))
-				logger.error({
-					msg: "Error interpolating slug . Will continue with pub id.",
-					error,
-				})
-				const slllug = error ? pub.id : slug
+				const interpolatedPubs = await Promise.all(
+					pubs.map(async (pub) => {
+						const pubContext = buildInterpolationContext({
+							community,
+							pub,
+							env: { PUBPUB_URL: env.PUBPUB_URL },
+							useDummyValues: true,
+						})
+						const [error, slug] = await tryCatch(interpolate(page.slug, pubContext))
+						if (!slug)
+							logger.error({
+								msg: "Error interpolating slug . Will continue with pub id.",
+								err: error,
+							})
+						const slllug = error ? pub.id : slug
+						return {
+							id: pub.id,
+							title: getPubTitle(pub),
+							content: page.transform,
+							slug: slllug,
+						}
+					})
+				)
+
+				console.log("interpolatedPubs", interpolatedPubs)
 
 				return {
-					pages: pubs.map((pub) => ({
+					pages: interpolatedPubs.map((pub) => ({
 						id: pub.id,
-						title: getPubTitle(pub),
+						title: pub.title,
 						content: page.transform,
-						slug: slllug,
+						slug: pub.slug,
 					})),
 					transform: page.transform,
 				}
@@ -122,9 +136,9 @@ export const run = defineRun<typeof action>(
 					automationRunId: automationRunId,
 					communitySlug,
 					subpath: config.subpath,
-					siteBaseUrl: config.siteBaseUrl,
+					css: config.css,
 					pages: _pages,
-					siteUrl: "https://gamer.com",
+					siteUrl: env.PUBPUB_URL,
 				},
 				headers: {
 					authorization: `Bearer ${siteBuilderToken}`,
@@ -170,13 +184,10 @@ export const run = defineRun<typeof action>(
 					})
 				)
 
-				const pubValues = mappedOutputs.reduce(
-					(acc, { pubField, resValue }) => {
-						acc[pubField] = resValue
-						return acc
-					},
-					{} as PubValues
-				)
+				const pubValues = mappedOutputs.reduce((acc, { pubField, resValue }) => {
+					acc[pubField] = resValue
+					return acc
+				}, {} as PubValues)
 
 				await updatePub({
 					pubId: pub.id as PubsId,

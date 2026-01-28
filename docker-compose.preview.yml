@@ -56,6 +56,7 @@ services:
             - S3_SECRET_KEY=preview-different123
             - S3_BUCKET_NAME=assets
             - PORT=4000
+            - SITES_BASE_URL=https://${PULLPREVIEW_PUBLIC_DNS}/sites
 
     caddy:
         image: CADDY_SITES_IMAGE

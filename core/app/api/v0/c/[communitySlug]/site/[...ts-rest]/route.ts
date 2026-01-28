@@ -228,7 +228,7 @@ const handler = createNextHandler(
 
 				let finalPubs = pubs
 				if (query?.transform) {
-					console.log("transform", query.transform)
+					// console.log("transform", query.transform)
 					try {
 						finalPubs = await Promise.all(
 							finalPubs.map(async (pub) => {
