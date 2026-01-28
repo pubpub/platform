@@ -45,7 +45,9 @@ import { Input } from "ui/input"
 import { Item, ItemContent, ItemHeader } from "ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 import { FormSubmitButton } from "ui/submit-button"
+import { Textarea } from "ui/textarea"
 import { type TokenContext, TokenProvider } from "ui/tokens"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { cn } from "utils"
 
 import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder"
@@ -386,62 +388,90 @@ const ResolverFieldSection = memo(
 		form: UseFormReturn<CreateAutomationsSchema>
 		resolver: string | null | undefined
 	}) {
+		const hasResolver = props.resolver !== undefined && props.resolver !== null
+
+		if (!hasResolver) {
+			return (
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="h-8 p-0 text-muted-foreground text-xs"
+					onClick={() => props.form.setValue("resolver", "")}
+				>
+					<Plus size={14} />
+					Add resolver
+				</Button>
+			)
+		}
+
 		return (
 			<Controller
 				control={props.form.control}
 				name="resolver"
 				render={({ field, fieldState }) => (
-					<Field data-invalid={fieldState.invalid}>
-						<div className="flex items-center justify-between">
-							<FieldLabel>
-								Resolver (optional)
-								<InfoButton>
-									<p className="text-xs">
-										A JSONata expression to resolve a different Pub or transform
-										JSON input before actions run.
-										<br />
-										<br />
-										<strong>Comparison expressions</strong> like{" "}
-										<code>$.json.some.id = $.pub.values.fieldname</code> will
-										find a Pub where the field matches the left side value.
-										<br />
-										<br />
-										<strong>Transform expressions</strong> can restructure the
-										input data for the automation's actions.
-									</p>
-								</InfoButton>
-							</FieldLabel>
-							{props.resolver && (
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									className="h-7 text-neutral-500 text-xs"
-									onClick={() => {
-										field.onChange(undefined)
-									}}
-								>
-									Remove resolver
-								</Button>
-							)}
+					<div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800 dark:bg-amber-950/20">
+						<div className="mb-2 flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<Tooltip delayDuration={300}>
+									<TooltipTrigger asChild>
+										<span className="cursor-help rounded bg-amber-100 px-1.5 py-0.5 font-medium text-amber-800 text-xs dark:bg-amber-900 dark:text-amber-200">
+											Resolver
+										</span>
+									</TooltipTrigger>
+									<TooltipContent className="max-w-sm text-xs">
+										<p>
+											Find a different Pub or transform JSON input before
+											actions run.
+										</p>
+										<p className="mt-2">
+											<strong>Find Pub:</strong> Use{" "}
+											<code className="rounded bg-muted px-1 text-xs">
+												{"{{ $.json.* }}"}
+											</code>{" "}
+											to reference values from the incoming JSON
+										</p>
+										<p className="mt-1">
+											<strong>Transform:</strong>{" "}
+											<code className="rounded bg-muted px-1 text-xs">
+												{'{ "key": $.json.value }'}
+											</code>
+										</p>
+									</TooltipContent>
+								</Tooltip>
+								<span className="text-xs text-amber-700 dark:text-amber-300">
+									Find a pub or transform input
+								</span>
+							</div>
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								className="h-6 p-1 text-muted-foreground hover:text-destructive"
+								onClick={() => field.onChange(undefined)}
+							>
+								<X size={14} />
+							</Button>
 						</div>
-						<Input
+						<Textarea
 							{...field}
 							value={field.value ?? ""}
-							placeholder="Enter JSONata expression (e.g., $.json.articleId = $.pub.values.externalId)"
+							placeholder="$.pub.values.externalId = {{ $.json.body.articleId }}"
 							className={cn(
-								"font-mono text-sm",
+								"min-h-[80px] border-amber-300 bg-white font-mono text-sm focus:border-amber-400 focus-visible:ring-amber-400 dark:border-amber-700 dark:bg-amber-950/30 dark:text-white",
 								fieldState.invalid && "border-red-300"
 							)}
 						/>
-						<FieldDescription>
-							Use a JSONata expression to resolve a Pub by comparing values, e.g.,{" "}
-							<code>$.json.id = $.pub.values.externalId</code>
-						</FieldDescription>
+						<p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+							Use <code className="rounded bg-amber-100 px-1 dark:bg-amber-900">{"{{ }}"}</code> to
+							interpolate values from the automation context
+						</p>
 						{fieldState.error && (
-							<FieldError className="text-xs">{fieldState.error.message}</FieldError>
+							<p className="mt-1 text-destructive text-xs">
+								{fieldState.error.message}
+							</p>
 						)}
-					</Field>
+					</div>
 				)}
 			/>
 		)

@@ -157,6 +157,31 @@ const JSONataToggleButton = memo(
 	}
 )
 
+const isZodObject = (schema: z.ZodType<any>): schema is z.ZodObject<z.ZodRawShape> => {
+	return "typeName" in schema._def && schema._def.typeName === "ZodObject"
+}
+
+const isZodArray = (schema: z.ZodType<any>): schema is z.ZodArray<any> => {
+	return "typeName" in schema._def && schema._def.typeName === "ZodArray"
+}
+
+const getNestedSchema = (schema: z.ZodObject<z.ZodRawShape>, path: string): z.ZodType<any> => {
+	const pathParts = path.split(".")
+	let currentSchema = schema as z.ZodType<any>
+	for (const part of pathParts) {
+		if (isZodObject(currentSchema)) {
+			currentSchema = currentSchema.shape[part] as z.ZodObject<z.ZodRawShape>
+			continue
+		}
+
+		if (isZodArray(currentSchema)) {
+			currentSchema = currentSchema.element as z.ZodType<any>
+		}
+	}
+
+	return currentSchema
+}
+
 const InnerActionField = memo(
 	function InnerActionField(
 		props: Omit<ActionFieldProps, "form"> & {
@@ -169,11 +194,13 @@ const InnerActionField = memo(
 			"innerType" in props.schema._def
 				? (props.schema._def?.innerType as z.ZodObject<z.ZodRawShape>)
 				: (props.schema as z.ZodObject<z.ZodRawShape>)
-		const schemaShape = innerSchema?.shape ?? {}
-		const fieldSchema = schemaShape[props.name] as z.ZodType<any>
+		const fieldSchema = getNestedSchema(innerSchema, props.name)
 		const required = fieldSchema && !fieldSchema.isOptional()
 		const isDefaultField = props.defaultFields.includes(props.name)
-		const isInitialJsonata = isJsonTemplate(props.field.value)
+		const forbidsJsonata = props.action?.config?.interpolation?.exclude?.includes(
+			props.name.split(".")?.[0]
+		)
+		const isInitialJsonata = isJsonTemplate(props.field.value) && !forbidsJsonata
 
 		const [inputState, setInputState] = useState<InputState>({
 			state: isInitialJsonata ? "jsonata" : "normal",
@@ -249,33 +276,37 @@ const InnerActionField = memo(
 							{props.description ?? fieldSchema.description}
 						</FieldDescription>
 					</div>
-					<ButtonGroup>
-						{showTestButton && (
-							<Tooltip delayDuration={500}>
-								<TooltipTrigger asChild>
-									<Button
-										variant="ghost"
-										size="sm"
-										aria-label={isTestOpen ? "Close test" : "Open test"}
-										data-testid={`toggle-jsonata-test-button-${props.field.name}`}
-										className="h-9 px-2 font-mono text-xs"
-										onClick={() => setIsTestOpen((prev) => !prev)}
-									>
-										{isTestOpen ? <X size={14} /> : <TestTube size={14} />}
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>
-									{isTestOpen ? "Close test" : "Test the result of this field"}
-								</TooltipContent>
-							</Tooltip>
-						)}
-						<JSONataToggleButton
-							inputState={inputState}
-							setInputState={setInputState}
-							fieldName={props.field.name}
-							onChange={props.field.onChange}
-						/>
-					</ButtonGroup>
+					{!forbidsJsonata && (
+						<ButtonGroup>
+							{showTestButton && (
+								<Tooltip delayDuration={500}>
+									<TooltipTrigger asChild>
+										<Button
+											variant="ghost"
+											size="sm"
+											aria-label={isTestOpen ? "Close test" : "Open test"}
+											data-testid={`toggle-jsonata-test-button-${props.field.name}`}
+											className="h-9 px-2 font-mono text-xs"
+											onClick={() => setIsTestOpen((prev) => !prev)}
+										>
+											{isTestOpen ? <X size={14} /> : <TestTube size={14} />}
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>
+										{isTestOpen
+											? "Close test"
+											: "Test the result of this field"}
+									</TooltipContent>
+								</Tooltip>
+							)}
+							<JSONataToggleButton
+								inputState={inputState}
+								setInputState={setInputState}
+								fieldName={props.field.name}
+								onChange={props.field.onChange}
+							/>
+						</ButtonGroup>
+					)}
 				</div>
 				{inputState.state === "jsonata" ? (
 					<ActionFieldJsonInput

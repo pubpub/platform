@@ -43,77 +43,77 @@ import type { UsersTable } from "./Users"
 export interface PublicSchema {
 	PubFieldSchema: PubFieldSchemaTable
 
-	automation_runs: AutomationRunsTable
+	api_access_tokens: ApiAccessTokensTable
 
-	membership_capabilities: MembershipCapabilitiesTable
+	users: UsersTable
+
+	pubs: PubsTable
+
+	stages: StagesTable
 
 	sessions: SessionsTable
+
+	automation_triggers: AutomationTriggersTable
+
+	action_runs: ActionRunsTable
+
+	community_memberships: CommunityMembershipsTable
+
+	automations: AutomationsTable
+
+	_prisma_migrations: PrismaMigrationsTable
+
+	invites_history: InvitesHistoryTable
+
+	pub_values: PubValuesTable
 
 	move_constraint: MoveConstraintTable
 
 	pub_values_history: PubValuesHistoryTable
 
-	api_access_tokens: ApiAccessTokensTable
-
-	_MemberGroupToUser: MemberGroupToUserTable
-
 	PubsInStages: PubsInStagesTable
-
-	_FormElementToPubType: FormElementToPubTypeTable
-
-	stage_memberships: StageMembershipsTable
-
-	_prisma_migrations: PrismaMigrationsTable
-
-	auth_tokens: AuthTokensTable
-
-	api_access_logs: ApiAccessLogsTable
-
-	api_access_permissions: ApiAccessPermissionsTable
-
-	pub_types: PubTypesTable
-
-	automation_conditions: AutomationConditionsTable
-
-	pub_fields: PubFieldsTable
-
-	invites_history: InvitesHistoryTable
-
-	communities: CommunitiesTable
-
-	automation_triggers: AutomationTriggersTable
-
-	users: UsersTable
 
 	_PubFieldToPubType: PubFieldToPubTypeTable
 
-	pub_values: PubValuesTable
+	automation_runs: AutomationRunsTable
 
-	action_runs: ActionRunsTable
+	pub_types: PubTypesTable
 
-	pubs: PubsTable
+	communities: CommunitiesTable
 
 	invites: InvitesTable
 
-	action_instances: ActionInstancesTable
-
 	action_config_defaults: ActionConfigDefaultsTable
 
-	community_memberships: CommunityMembershipsTable
-
-	member_groups: MemberGroupsTable
+	action_instances: ActionInstancesTable
 
 	pub_memberships: PubMembershipsTable
-
-	stages: StagesTable
 
 	automation_condition_blocks: AutomationConditionBlocksTable
 
 	form_elements: FormElementsTable
 
-	forms: FormsTable
+	_MemberGroupToUser: MemberGroupToUserTable
 
-	automations: AutomationsTable
+	_FormElementToPubType: FormElementToPubTypeTable
+
+	stage_memberships: StageMembershipsTable
+
+	api_access_permissions: ApiAccessPermissionsTable
+
+	automation_conditions: AutomationConditionsTable
+
+	pub_fields: PubFieldsTable
 
 	invite_forms: InviteFormsTable
+
+	membership_capabilities: MembershipCapabilitiesTable
+
+	auth_tokens: AuthTokensTable
+
+	api_access_logs: ApiAccessLogsTable
+
+	member_groups: MemberGroupsTable
+
+	forms: FormsTable
 }

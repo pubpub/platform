@@ -38,3 +38,15 @@ output "rds_connection_components" {
 output "valkey_host" {
   value = aws_elasticache_replication_group.core_valkey.primary_endpoint_address
 }
+
+output "sites_cloudfront_domain" {
+  value = aws_cloudfront_distribution.sites.domain_name
+}
+
+output "sites_cloudfront_distribution_id" {
+  value = aws_cloudfront_distribution.sites.id
+}
+
+output "sites_base_url" {
+  value = "https://${aws_cloudfront_distribution.sites.domain_name}"
+}

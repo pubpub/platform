@@ -7,12 +7,14 @@ import { logger } from "logger"
 import { isUniqueConstraintError } from "~/kysely/errors"
 import { env } from "~/lib/env/env"
 import { seedBlank } from "./seeds/blank"
+import { seedCoarNotify } from "./seeds/coar-notify"
 import { seedLegacy } from "./seeds/legacy"
 import { seedStarter } from "./seeds/starter"
 
 const legacyId = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" as CommunitiesId
 const starterId = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb" as CommunitiesId
 const blankId = "cccccccc-cccc-4ccc-cccc-cccccccccccc" as CommunitiesId
+const coarNotifyId = "dddddddd-dddd-4ddd-dddd-dddddddddddd" as CommunitiesId
 
 async function main() {
 	// do not seed arcadia if the minimal seed flag is set
@@ -48,6 +50,8 @@ async function main() {
 	}
 
 	await seedBlank(blankId)
+
+	await seedCoarNotify(coarNotifyId)
 }
 main()
 	.then(async () => {

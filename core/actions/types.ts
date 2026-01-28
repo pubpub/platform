@@ -100,6 +100,9 @@ export type Action<
 		fieldConfig?: {
 			[K in keyof FieldConfig<C["_output"]>]: FieldConfigItem
 		}
+		interpolation?: {
+			exclude?: (keyof C["_output"])[]
+		}
 		dependencies?: Dependency<z.infer<C>>[]
 	}
 	/**

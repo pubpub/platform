@@ -8,6 +8,7 @@
 		".": "./dist/contracts.js",
 		"./resources/site": "./dist/contracts-resources-site.js",
 		"./resources/site-builder": "./dist/contracts-resources-site-builder.js",
+		"./resources/site-builder-2": "./dist/contracts-resources-site-builder-2.js",
 		"./package.json": "./package.json"
 	},
 	"files": ["dist"],
@@ -35,7 +36,12 @@
 	},
 	"preconstruct": {
 		"exports": true,
-		"entrypoints": ["index.ts", "resources/site.ts", "resources/site-builder.ts"],
+		"entrypoints": [
+			"index.ts",
+			"resources/site.ts",
+			"resources/site-builder.ts",
+			"resources/site-builder-2.ts"
+		],
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,
 			"distInRoot": true,
