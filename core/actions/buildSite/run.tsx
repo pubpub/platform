@@ -1,8 +1,11 @@
 "use server"
 
+import type { PubsId } from "db/public"
+import type { PubValues } from "~/lib/server"
 import type { action } from "./action"
 
 import { initClient } from "@ts-rest/core"
+import { JSONPath } from "jsonpath-plus"
 
 import { interpolate } from "@pubpub/json-interpolate"
 import { siteBuilderApi } from "contracts/resources/site-builder-2"
@@ -16,11 +19,29 @@ import { getSiteBuilderToken } from "~/lib/server/apiAccessTokens"
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
 import { getCommunity } from "~/lib/server/community"
 import { applyJsonataFilter, compileJsonataQuery } from "~/lib/server/jsonata-query"
+import { updatePub } from "~/lib/server/pub"
 import { buildInterpolationContext } from "../_lib/interpolationContext"
 import { defineRun } from "../types"
 
+/**
+ * extracts a value from data using either JSONPath or JSONata
+ * JSONPath expressions start with $. and use bracket notation
+ * JSONata expressions are everything else
+ */
+const extractValue = async (data: unknown, expression: string): Promise<unknown> => {
+	// heuristic: JSONPath uses $. prefix with bracket notation like $[...] or $.field
+	// if it looks like JSONPath, use JSONPath library for backward compatibility
+	const looksLikeJsonPath = expression.startsWith("$") && /^\$(\.|(\[))/.test(expression)
+	if (looksLikeJsonPath) {
+		const result = JSONPath({ path: expression, json: data as object, wrap: false })
+		return result
+	}
+	// otherwise use JSONata
+	return interpolate(expression, data)
+}
+
 export const run = defineRun<typeof action>(
-	async ({ communityId, pub, config, automationRunId }) => {
+	async ({ communityId, pub, config, automationRunId, lastModifiedBy }) => {
 		const community = await getCommunity(communityId)
 		const siteBuilderToken = await getSiteBuilderToken(communityId)
 
@@ -100,6 +121,8 @@ export const run = defineRun<typeof action>(
 				body: {
 					automationRunId: automationRunId,
 					communitySlug,
+					subpath: config.subpath,
+					siteBaseUrl: config.siteBaseUrl,
 					pages: _pages,
 					siteUrl: "https://gamer.com",
 				},
@@ -128,6 +151,85 @@ export const run = defineRun<typeof action>(
 
 		const dataUrl = new URL(data.url)
 
+		// apply output mapping if configured
+		const finalOutputMap = config.outputMap ?? []
+		if (finalOutputMap.length > 0 && pub) {
+			try {
+				const mappedOutputs = await Promise.all(
+					finalOutputMap.map(async ({ pubField, responseField }) => {
+						if (responseField === undefined) {
+							throw new Error(`Field ${pubField} was not provided in the output map`)
+						}
+						const resValue = await extractValue(data, responseField)
+						if (resValue === undefined) {
+							throw new Error(
+								`Field "${responseField}" not found in response. Response was ${JSON.stringify(data)}`
+							)
+						}
+						return { pubField, resValue }
+					})
+				)
+
+				const pubValues = mappedOutputs.reduce(
+					(acc, { pubField, resValue }) => {
+						acc[pubField] = resValue
+						return acc
+					},
+					{} as PubValues
+				)
+
+				await updatePub({
+					pubId: pub.id as PubsId,
+					communityId: pub.communityId,
+					pubValues,
+					continueOnValidationError: false,
+					lastModifiedBy,
+				})
+
+				const displayUrl = data.firstPageUrl || data.siteUrl || data.s3FolderUrl
+
+				return {
+					success: true as const,
+					report: (
+						<div>
+							<p>Journal site built and pub fields updated</p>
+							<p>
+								<a className="font-bold underline" href={dataUrl.toString()}>
+									Download ZIP
+								</a>
+							</p>
+							{displayUrl && (
+								<p>
+									Site URL:{" "}
+									<a className="font-bold underline" href={displayUrl}>
+										{displayUrl}
+									</a>
+								</p>
+							)}
+							<p>Updated fields: {mappedOutputs.map((m) => m.pubField).join(", ")}</p>
+						</div>
+					),
+					data: {
+						...data,
+						url: dataUrl.toString(),
+					},
+				}
+			} catch (error) {
+				logger.error({ msg: "Failed to update pub fields", error })
+				return {
+					success: false,
+					title: "Site built but failed to update pub fields",
+					error: `${error}`,
+					data: {
+						...data,
+						url: dataUrl.toString(),
+					},
+				}
+			}
+		}
+
+		const displayUrl = data.firstPageUrl || data.siteUrl || data.s3FolderUrl
+
 		return {
 			success: true as const,
 			report: (
@@ -135,9 +237,17 @@ export const run = defineRun<typeof action>(
 					<p>Journal site built</p>
 					<p>
 						<a className="font-bold underline" href={dataUrl.toString()}>
-							Download
+							Download ZIP
 						</a>
 					</p>
+					{displayUrl && (
+						<p>
+							Site URL:{" "}
+							<a className="font-bold underline" href={displayUrl}>
+								{displayUrl}
+							</a>
+						</p>
+					)}
 				</div>
 			),
 			data: {

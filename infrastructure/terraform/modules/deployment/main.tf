@@ -96,7 +96,8 @@ module "service_core" {
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "DATACITE_API_URL", value = var.DATACITE_API_URL },
       { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host },
-      { name = "SITE_BUILDER_ENDPOINT", value = local.PUBPUB_URL }
+      { name = "SITE_BUILDER_ENDPOINT", value = local.PUBPUB_URL },
+      { name = "SITES_BASE_URL", value = module.core_dependency_services.sites_base_url }
     ]
 
     secrets = [

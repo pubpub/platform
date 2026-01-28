@@ -16,6 +16,8 @@ export const siteBuilderApi = contract.router(
 			body: z.object({
 				automationRunId: z.string().uuid(),
 				communitySlug: z.string(),
+				subpath: z.string().optional(),
+				siteBaseUrl: z.string().url().optional(),
 				pages: z.array(
 					z.object({
 						pages: z.array(
@@ -42,6 +44,8 @@ export const siteBuilderApi = contract.router(
 					fileSizeFormatted: z.string(),
 					s3FolderUrl: z.string().optional(),
 					s3FolderPath: z.string().optional(),
+					siteUrl: z.string().optional(),
+					firstPageUrl: z.string().optional(),
 				}),
 				401: z.object({
 					success: z.literal(false),

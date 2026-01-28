@@ -260,6 +260,95 @@ const createZipAndUploadToS3 = async (
 	})
 }
 
+/**
+ * gets the content type for a file based on its extension
+ */
+const getContentType = (filePath: string): string => {
+	const ext = path.extname(filePath).toLowerCase()
+	const contentTypes: Record<string, string> = {
+		".html": "text/html",
+		".css": "text/css",
+		".js": "application/javascript",
+		".json": "application/json",
+		".png": "image/png",
+		".jpg": "image/jpeg",
+		".jpeg": "image/jpeg",
+		".gif": "image/gif",
+		".svg": "image/svg+xml",
+		".webp": "image/webp",
+		".woff": "font/woff",
+		".woff2": "font/woff2",
+		".ttf": "font/ttf",
+		".eot": "application/vnd.ms-fontobject",
+		".ico": "image/x-icon",
+		".xml": "application/xml",
+		".txt": "text/plain",
+	}
+	return contentTypes[ext] ?? "application/octet-stream"
+}
+
+/**
+ * uploads all files from a directory to S3 recursively
+ * @param sourceDir - local directory to upload
+ * @param s3Prefix - prefix/folder path in S3 bucket
+ * @returns count of uploaded files and the folder URL
+ */
+const uploadDirectoryToS3 = async (
+	sourceDir: string,
+	s3Prefix: string
+): Promise<{ uploadedFiles: number; s3FolderPath: string; s3FolderUrl: string }> => {
+	const client = getS3Client()
+	const bucket = env.S3_BUCKET_NAME
+	let uploadedFiles = 0
+
+	const uploadRecursive = async (dir: string, prefix: string): Promise<void> => {
+		const entries = await fs.readdir(dir, { withFileTypes: true })
+
+		for (const entry of entries) {
+			const fullPath = path.join(dir, entry.name)
+			const s3Key = `${prefix}/${entry.name}`
+
+			if (entry.isDirectory()) {
+				await uploadRecursive(fullPath, s3Key)
+			} else {
+				const fileData = await fs.readFile(fullPath)
+				const contentType = getContentType(fullPath)
+
+				const upload = new Upload({
+					client,
+					params: {
+						Bucket: bucket,
+						Key: s3Key,
+						Body: fileData,
+						ContentType: contentType,
+					},
+					queueSize: 3,
+					partSize: 1024 * 1024 * 5,
+					leavePartsOnError: false,
+				})
+
+				await upload.done()
+				uploadedFiles++
+			}
+		}
+	}
+
+	await uploadRecursive(sourceDir, s3Prefix)
+
+	// construct the folder URL based on whether we're using S3 or MinIO
+	const s3FolderPath = s3Prefix
+	let s3FolderUrl: string
+	if (env.S3_ENDPOINT) {
+		// minio or custom S3 endpoint
+		s3FolderUrl = `${env.S3_ENDPOINT}/${bucket}/${s3Prefix}`
+	} else {
+		// standard S3
+		s3FolderUrl = `https://${bucket}.s3.${env.S3_REGION}.amazonaws.com/${s3Prefix}`
+	}
+
+	return { uploadedFiles, s3FolderPath, s3FolderUrl }
+}
+
 const verifySiteBuilderToken = async (authHeader: string, communitySlug: string) => {
 	if (!authHeader || !authHeader.startsWith("Bearer ")) {
 		throw new Error("Invalid or missing authorization token")
@@ -347,28 +436,53 @@ const router = tsr.router(siteBuilderApi, {
 				}
 			}
 
-			let uploadResult: string | undefined
+			let zipUploadResult: string | undefined
+			let folderUploadResult:
+				| { uploadedFiles: number; s3FolderPath: string; s3FolderUrl: string }
+				| undefined
 			let error: Error | undefined
 
 			try {
-				// Stream zip directly to S3 without saving to disk first
+				// stream zip directly to S3 without saving to disk first
 				const zipFileName = `site-${timestamp}.zip`
-				const uploadId = "site-archives" // Folder name in the bucket
+				const zipUploadId = "site-archives"
+				zipUploadResult = await createZipAndUploadToS3(distDir, zipUploadId, zipFileName)
 
-				// This creates the zip and streams it directly to S3
-				uploadResult = await createZipAndUploadToS3(distDir, uploadId, zipFileName)
+				// upload individual files for static serving
+				const subpath = body.subpath ?? body.automationRunId
+				const s3Prefix = `sites/${communitySlug}/${subpath}`
+				folderUploadResult = await uploadDirectoryToS3(distDir, s3Prefix)
+
+				// compute the public site URL if siteBaseUrl is provided
+				let publicSiteUrl: string | undefined
+				let firstPageUrl: string | undefined
+				if (body.siteBaseUrl) {
+					const baseUrl = body.siteBaseUrl.replace(/\/$/, "")
+					publicSiteUrl = `${baseUrl}/${communitySlug}/${subpath}/`
+
+					// find the first page to link to
+					const firstPage = pages[0]?.pages?.[0]
+					if (firstPage) {
+						const pageSlug = firstPage.slug || firstPage.id
+						firstPageUrl = `${publicSiteUrl}${pageSlug}`
+					} else {
+						firstPageUrl = publicSiteUrl
+					}
+				}
 
 				return {
 					status: 200,
 					body: {
 						success: true,
 						message: "Site built and uploaded successfully",
-						url: uploadResult,
+						url: zipUploadResult,
 						timestamp: timestamp,
-						// We can't determine the exact file size without saving to disk
-						// or collecting that data during archiving/upload, so we provide estimated values
-						fileSize: 0, // Required by the API contract, but we don't know the exact size
-						fileSizeFormatted: "Unknown (streaming upload)",
+						fileSize: 0,
+						fileSizeFormatted: `${folderUploadResult.uploadedFiles} files uploaded`,
+						s3FolderPath: folderUploadResult.s3FolderPath,
+						s3FolderUrl: folderUploadResult.s3FolderUrl,
+						siteUrl: publicSiteUrl,
+						firstPageUrl: firstPageUrl,
 					},
 				}
 			} catch (err) {
@@ -379,7 +493,7 @@ const router = tsr.router(siteBuilderApi, {
 					body: {
 						success: false,
 						message: error.message || "An unknown error occurred",
-						...(uploadResult && { url: uploadResult }),
+						...(zipUploadResult && { url: zipUploadResult }),
 					},
 				}
 			}

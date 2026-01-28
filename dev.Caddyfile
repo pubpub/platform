@@ -1,0 +1,90 @@
+# development caddyfile for serving static sites locally from garage/s3
+# 
+# there are two approaches to serve static files from S3:
+# 1. using the caddy-fs-s3 plugin (requires building caddy with xcaddy)
+# 2. using reverse_proxy to garage/minio directly (works with stock caddy)
+#
+# this file uses approach 2 (reverse proxy) because it works with stock caddy.
+# for approach 1, see the commented section at the bottom.
+
+# template for serving static sites from S3 via reverse proxy
+# handles index.html fallback for directory requests
+(s3site) {
+    # strip trailing slash from paths (except root)
+    @pathWithSlash path_regexp dir (.+)/$
+    handle @pathWithSlash {
+        redir {re.dir.1} permanent
+    }
+
+    # rewrite to include bucket path
+    rewrite * /{args[0]}{uri}
+    
+    # reverse proxy to garage S3 API
+    reverse_proxy {args[1]} {
+        # handle 403/404 by trying index.html
+        @error status 403 404
+        handle_response @error {
+            rewrite * {uri}/index.html
+            reverse_proxy {args[1]} {
+                @nestedError status 404
+                handle_response @nestedError {
+                    respond "Not found" 404
+                }
+            }
+        }
+    }
+}
+
+:8080 {
+    # serve static sites from garage bucket
+    # the path structure is: /sites/{communitySlug}/{subpath}/...
+    # 
+    # to access a site built with:
+    #   communitySlug: "my-community"
+    #   subpath: "journal-2024"
+    # visit: http://localhost:8080/my-community/journal-2024/
+    
+    handle_path /sites/* {
+        import s3site {$ASSETS_BUCKET_NAME:assets} {$S3_ENDPOINT:garage:3900}
+    }
+
+    # simpler path without /sites prefix
+    # handles /{communitySlug}/{subpath}/...
+    handle /* {
+        import s3site "{$ASSETS_BUCKET_NAME:assets}/sites" {$S3_ENDPOINT:garage:3900}
+    }
+}
+
+# alternative approach using garage's built-in web hosting (port 3902)
+# this requires enabling website access on the bucket
+# and doesn't need the index.html fallback logic
+#
+# :8081 {
+#     reverse_proxy garage:3902
+# }
+
+# ============================================================================
+# APPROACH 1: Using caddy-fs-s3 plugin (requires custom caddy build)
+# ============================================================================
+# to use this approach:
+# 1. build caddy with: xcaddy build --with github.com/sagikazarmark/caddy-fs-s3
+# 2. uncomment the section below and comment out the section above
+#
+# {
+#     filesystem sites s3 {
+#         bucket {$ASSETS_BUCKET_NAME:assets}
+#         region {$S3_REGION:garage}
+#         endpoint {$S3_ENDPOINT:http://garage:3900}
+#         use_path_style
+#     }
+# }
+#
+# :8080 {
+#     handle_path /* {
+#         root * /sites
+#         try_files {path} {path}/index.html {path}.html
+#         file_server {
+#             fs sites
+#         }
+#     }
+# }

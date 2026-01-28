@@ -7,7 +7,7 @@ import { logger } from "logger"
 import { isUniqueConstraintError } from "~/kysely/errors"
 import { env } from "~/lib/env/env"
 import { seedBlank } from "./seeds/blank"
-import { seedCoarNotify } from "./seeds/coar-notify"
+// import { seedCoarNotify } from "./seeds/coar-notify"
 import { seedLegacy } from "./seeds/legacy"
 import { seedStarter } from "./seeds/starter"
 
@@ -51,7 +51,7 @@ async function main() {
 
 	await seedBlank(blankId)
 
-	await seedCoarNotify(coarNotifyId)
+	// await seedCoarNotify(coarNotifyId)
 }
 main()
 	.then(async () => {

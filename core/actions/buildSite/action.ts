@@ -6,6 +6,21 @@ import { Action } from "db/public"
 import { defineAction } from "../types"
 
 const schema = z.object({
+	siteBaseUrl: z
+		.string()
+		.url()
+		.optional()
+		.describe(
+			"Base URL where the site will be accessible (e.g., 'https://sites.example.com/{communitySlug}'). " +
+				"The full URL will be: {siteBaseUrl}/{communitySlug}/{subpath}/"
+		),
+	subpath: z
+		.string()
+		.optional()
+		.describe(
+			"Subpath for deployment (e.g., 'journal-2024'). If not provided, uses the automation run ID. " +
+				"Preview builds always use the automation run ID."
+		),
 	pages: z
 		.array(
 			z.object({
@@ -13,11 +28,19 @@ const schema = z.object({
 					.string()
 					.describe("A filter expression that gets a list of Pubs to build"),
 				slug: z.string().describe("A JSONata expression that returns a slugs for the page"),
-				transform: z.string().describe("A JSONata expression that returns the HTML content for the page"),
+				transform: z
+					.string()
+					.describe("A JSONata expression that returns the HTML content for the page"),
 			})
 		)
 		.min(1)
 		.max(10),
+	outputMap: z
+		.array(z.object({ pubField: z.string(), responseField: z.string() }))
+		.optional()
+		.describe(
+			"Map response fields to pub fields. Supports JSONPath ($.field) or JSONata expressions."
+		),
 })
 
 export const action = defineAction({

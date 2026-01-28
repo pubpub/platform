@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { ArrowRight, FileText, Link2, Plus, X } from "lucide-react"
 import { useTheme } from "next-themes"
@@ -7,6 +7,7 @@ import { useFieldArray, useWatch } from "react-hook-form"
 import { Button } from "ui/button"
 import { FieldDescription, FieldLabel, FieldSet } from "ui/field"
 import { MonacoFormField } from "ui/monaco"
+import { FieldOutputMap } from "ui/outputMap"
 import { usePubFieldContext } from "ui/pubFields"
 import { usePubTypeContext } from "ui/pubTypes"
 import { QueryBuilder } from "ui/queryBuilder"
@@ -17,17 +18,26 @@ import { useActionForm } from "../_lib/ActionForm"
 import { previewResult } from "./formActions"
 
 export default function BuildJournalSiteActionForm() {
-	const { form } = useActionForm()
+	const { form, path } = useActionForm()
+
+	const pagesPath = path ? `${path}.pages` : "pages"
 
 	const pubFields = usePubFieldContext()
 	const pubTypes = usePubTypeContext()
 
+	useEffect(() => {
+		if (!form.getValues("outputMap")) {
+			form.setValue("outputMap", [])
+		}
+	}, [form])
+
 	const { append, remove } = useFieldArray({
 		control: form.control,
-		name: "pages",
+		name: pagesPath,
 	})
 
-	const fields = useWatch({ control: form.control, name: "pages" }) ?? []
+	const fields = useWatch({ control: form.control, name: pagesPath }) ?? []
+	console.log("fields", fields)
 
 	const { resolvedTheme } = useTheme()
 	const theme = resolvedTheme as "light" | "dark"
@@ -47,6 +57,12 @@ export default function BuildJournalSiteActionForm() {
 
 	return (
 		<FieldSet>
+			<ActionField
+				name="subpath"
+				label="Deployment Subpath"
+				description="URL subpath where the site will be deployed (e.g., 'journal-2024'). If not set, uses the automation run ID."
+			/>
+
 			{fields.map((_field, index) => (
 				<div
 					key={index}
@@ -76,7 +92,7 @@ export default function BuildJournalSiteActionForm() {
 							<span className="rounded bg-blue-100 px-1.5 py-0.5 font-medium text-blue-800 text-xs dark:bg-blue-900 dark:text-blue-200">
 								Source
 							</span>
-							<span className="text-xs text-blue-700 dark:text-blue-300">
+							<span className="text-blue-700 text-xs dark:text-blue-300">
 								Which pubs to include
 							</span>
 						</div>
@@ -105,11 +121,11 @@ export default function BuildJournalSiteActionForm() {
 							<span className="rounded bg-green-100 px-1.5 py-0.5 font-medium text-green-800 text-xs dark:bg-green-900 dark:text-green-200">
 								URL Slug
 							</span>
-							<span className="text-xs text-green-700 dark:text-green-300">
+							<span className="text-green-700 text-xs dark:text-green-300">
 								Outputs a string
 							</span>
 						</div>
-						<FieldDescription className="mb-2 text-xs text-green-600 dark:text-green-400">
+						<FieldDescription className="mb-2 text-green-600 text-xs dark:text-green-400">
 							Expression evaluated for each pub to generate its URL path
 						</FieldDescription>
 						<ActionField
@@ -126,11 +142,11 @@ export default function BuildJournalSiteActionForm() {
 							<span className="rounded bg-purple-100 px-1.5 py-0.5 font-medium text-purple-800 text-xs dark:bg-purple-900 dark:text-purple-200">
 								Content Transform
 							</span>
-							<span className="text-xs text-purple-700 dark:text-purple-300">
+							<span className="text-purple-700 text-xs dark:text-purple-300">
 								Outputs the page data
 							</span>
 						</div>
-						<FieldDescription className="mb-2 text-xs text-purple-600 dark:text-purple-400">
+						<FieldDescription className="mb-2 text-purple-600 text-xs dark:text-purple-400">
 							Expression evaluated for each pub to generate its page content
 						</FieldDescription>
 						<ActionField
@@ -150,9 +166,9 @@ export default function BuildJournalSiteActionForm() {
 						onClick={() => {
 							setActivePreviewIndex(index)
 							handlePreviewMutation({
-								slug: form.getValues(`pages.${index}.slug`) ?? "",
-								filter: form.getValues(`pages.${index}.filter`) ?? "",
-								transform: form.getValues(`pages.${index}.transform`) ?? "",
+								slug: fields[index].slug ?? "",
+								filter: fields[index].filter ?? "",
+								transform: fields[index].transform ?? "",
 								automationRunId: form.getValues(`automationRunId`) ?? "",
 							})
 						}}
@@ -162,13 +178,13 @@ export default function BuildJournalSiteActionForm() {
 							: "Preview (first 5 pubs)"}
 					</Button>
 					{previewError && activePreviewIndex === index && (
-						<p className="text-sm text-destructive">
+						<p className="text-destructive text-sm">
 							Preview failed: {previewError.message}
 						</p>
 					)}
 					{previewData && activePreviewIndex === index && (
 						<div className="rounded-md border border-border bg-muted/50 p-2">
-							<p className="mb-2 font-medium text-xs text-muted-foreground">
+							<p className="mb-2 font-medium text-muted-foreground text-xs">
 								Preview results ({previewData.pubs?.length ?? 0} pubs)
 							</p>
 							<pre className="max-h-[200px] overflow-auto text-xs">
@@ -186,6 +202,11 @@ export default function BuildJournalSiteActionForm() {
 				<Plus size={16} className="mr-1" />
 				Add Page Group
 			</Button>
+
+			<ActionField
+				name="outputMap"
+				render={({ field }) => <FieldOutputMap form={form} fieldName={field.name} />}
+			/>
 		</FieldSet>
 	)
 }

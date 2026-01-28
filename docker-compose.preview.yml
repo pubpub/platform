@@ -58,13 +58,19 @@ services:
             - PORT=4000
 
     caddy:
-        image: caddy:latest
+        image: CADDY_SITES_IMAGE
         restart: on-failure
         depends_on:
             - platform
             - platform-jobs
             - minio
         env_file: .env
+        environment:
+            - S3_ENDPOINT=http://minio:9000
+            - S3_REGION=us-east-1
+            - ASSETS_BUCKET_NAME=assets
+            - ASSETS_UPLOAD_KEY=preview-different
+            - ASSETS_UPLOAD_SECRET_KEY=preview-different123
         ports:
             - "443:443"
         volumes:

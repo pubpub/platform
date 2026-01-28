@@ -1,6 +1,7 @@
 "use server"
 
 import { interpolate } from "@pubpub/json-interpolate"
+import { logger } from "logger"
 
 import { getLoginData } from "~/lib/authentication/loginData"
 import { env } from "~/lib/env/env"
@@ -31,43 +32,56 @@ export const previewResult = defineServerAction(async function previewResult({
 		throw new Error("Login data not found")
 	}
 
-	const pubs = await getPubsWithRelatedValues(
-		{
-			communityId: community.id,
-		},
-		{
-			customFilter: (eb) =>
-				applyJsonataFilter(eb, compileJsonataQuery(filter), {
-					communitySlug: community.slug,
-				}),
-			depth: 2,
-			withValues: true,
-			withRelatedPubs: true,
-			limit: 5,
-		}
-	)
+	if (!filter) {
+		throw new Error("Filter is required")
+	}
 
-	const interpolatedPubs = await Promise.all(
-		pubs.map(async (pub) => {
-			const pubContext = buildInterpolationContext({
-				community,
-				pub,
-				env: { PUBPUB_URL: env.PUBPUB_URL },
-				useDummyValues: true,
-			})
-			const _interpolatedSlug = await interpolate(slug, pubContext)
-			const content = await interpolate(transform, pubContext)
-			return {
-				id: pub.id,
-				title: pub.title,
-				content,
-				slug: _interpolatedSlug,
+	try {
+		const query = compileJsonataQuery(filter)
+		const pubs = await getPubsWithRelatedValues(
+			{
+				communityId: community.id,
+			},
+			{
+				customFilter: (eb) =>
+					applyJsonataFilter(eb, query, {
+						communitySlug: community.slug,
+					}),
+				depth: 2,
+				withValues: true,
+				withRelatedPubs: true,
+				limit: 5,
 			}
-		})
-	)
+		)
 
-	return {
-		success: true,
-		pubs: interpolatedPubs,
+		const interpolatedPubs = await Promise.all(
+			pubs.map(async (pub) => {
+				const pubContext = buildInterpolationContext({
+					community,
+					pub,
+					env: { PUBPUB_URL: env.PUBPUB_URL },
+					useDummyValues: true,
+				})
+				const _interpolatedSlug = await interpolate(slug, pubContext)
+				const content = await interpolate(transform, pubContext)
+				return {
+					id: pub.id,
+					title: pub.title,
+					content,
+					slug: _interpolatedSlug,
+				}
+			})
+		)
+
+		return {
+			success: true,
+			pubs: interpolatedPubs,
+		}
+	} catch (error) {
+		logger.error(error)
+		return {
+			success: false,
+			error: error.message,
+		}
 	}
 })
