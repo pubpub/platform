@@ -28,8 +28,6 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 		AwaitingResponse: "dddddddd-dddd-4ddd-dddd-dddddddddd18" as StagesId,
 	}
 
-	const OUTBOUND_WEBHOOK_PATH = "coar-outbound"
-
 	const WEBHOOK_PATH = "coar-inbox"
 
 	// Default remote inbox URL - can be changed in UI for testing
@@ -117,6 +115,17 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 									config: { path: WEBHOOK_PATH },
 								},
 							],
+							// Only process incoming Offer notifications (review requests from external services)
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "'Offer' in $.json.type",
+									},
+								],
+							},
 							actions: [
 								{
 									action: Action.createPub,
@@ -310,6 +319,11 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 												inbox: REMOTE_INBOX_URL,
 												type: "Service",
 											},
+											origin: {
+												id: "{{ $.env.PUBPUB_URL }}/c/{{ $.community.slug }}",
+												inbox: `{{ $.env.PUBPUB_URL }}/api/v0/c/{{ $.community.slug }}/site/webhook/${WEBHOOK_PATH}`,
+												type: "Service",
+											},
 										},
 									},
 								},
@@ -324,14 +338,29 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 							triggers: [
 								{
 									event: AutomationEvent.webhook,
-									config: { path: OUTBOUND_WEBHOOK_PATH },
+									config: { path: WEBHOOK_PATH },
 								},
 							],
+							// Only process Accept, Reject, or Announce responses (not Offer)
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression:
+											"'Accept' in $.json.type or 'Reject' in $.json.type or 'Announce' in $.json.type",
+									},
+								],
+							},
+							// Resolver finds the Submission pub that matches the inReplyTo field
+							// The inReplyTo will be like "urn:uuid:<pub-id>" from our sent Offer
+							resolver: `$contains({{ $.json.inReplyTo }}, $.pub.id)`,
 							actions: [
 								{
 									action: Action.log,
 									config: {
-										text: "Received response: {{ $.json.type }} for {{ $.json.inReplyTo }}",
+										text: "Received response: {{ $.json.type }} for pub {{ $.pub.values.title }} ({{ $.pub.id }})",
 									},
 								},
 							],
