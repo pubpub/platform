@@ -94,7 +94,7 @@ export function NotificationCard({ notification, onDelete, onRespond }: Notifica
 			templateType: responseType,
 			inReplyTo: payload.id,
 			inReplyToObjectUrl: payload.object?.id ?? "",
-			originUrl: "http://localhost:4000",
+			originUrl: "http://localhost:4001",
 			targetServiceUrl: payload.origin?.id ?? "",
 		}
 

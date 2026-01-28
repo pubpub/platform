@@ -56,8 +56,8 @@ export function SendNotificationForm({ onSent, prefill }: SendNotificationFormPr
 	)
 	const [objectCiteAs, setObjectCiteAs] = useState("")
 	const [objectItemUrl, setObjectItemUrl] = useState("")
-	const [reviewUrl, setReviewUrl] = useState("http://localhost:4000/review/review-001")
-	const [originUrl, setOriginUrl] = useState(prefill?.originUrl ?? "http://localhost:4000")
+	const [reviewUrl, setReviewUrl] = useState("http://localhost:4001/review/review-001")
+	const [originUrl, setOriginUrl] = useState(prefill?.originUrl ?? "http://localhost:4001")
 	const [targetServiceUrl, setTargetServiceUrl] = useState(
 		prefill?.targetServiceUrl ?? "http://localhost:3000"
 	)
@@ -233,7 +233,7 @@ export function SendNotificationForm({ onSent, prefill }: SendNotificationFormPr
 								type="text"
 								value={reviewUrl}
 								onChange={(e) => setReviewUrl(e.target.value)}
-								placeholder="http://localhost:4000/review/..."
+								placeholder="http://localhost:4001/review/..."
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
@@ -296,7 +296,7 @@ export function SendNotificationForm({ onSent, prefill }: SendNotificationFormPr
 								type="text"
 								value={reviewUrl}
 								onChange={(e) => setReviewUrl(e.target.value)}
-								placeholder="http://localhost:4000/review/..."
+								placeholder="http://localhost:4001/review/..."
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>

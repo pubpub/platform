@@ -72,7 +72,7 @@ export default function Home() {
 					<p className="mt-2 text-gray-600">
 						Inbox URL:{" "}
 						<code className="rounded bg-gray-100 px-2 py-1 text-sm">
-							http://localhost:4000/api/inbox
+							http://localhost:4001/api/inbox
 						</code>
 					</p>
 				</div>

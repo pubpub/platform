@@ -31,7 +31,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 	const WEBHOOK_PATH = "coar-inbox"
 
 	// Default remote inbox URL - can be changed in UI for testing
-	const REMOTE_INBOX_URL = "http://localhost:4000/api/inbox"
+	const REMOTE_INBOX_URL = "http://localhost:4001/api/inbox"
 
 	return seedCommunity(
 		{
@@ -355,7 +355,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 							},
 							// Resolver finds the Submission pub that matches the inReplyTo field
 							// The inReplyTo will be like "urn:uuid:<pub-id>" from our sent Offer
-							resolver: `$contains({{ $.json.inReplyTo }}, $.pub.id)`,
+							resolver: `{{ $replace($.json.inReplyTo, "http://localhost:3000/c/coar-notify/pub/", "") }} = $.pub.id`,
 							actions: [
 								{
 									action: Action.log,
@@ -395,7 +395,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 											"type": ["Announce", "coar-notify:ReviewAction"],
 											"id": "urn:uuid:" & $.pub.id,
 											"object": {
-												"id": $.env.PUBPUB_URL & "/c/" & $.community.slug & "/pub/" & $.pub.id,
+												"id": "http://localhost:8080" & $.community.slug & "/reviews/" & $.pub.id,
 												"type": ["Page", "sorg:Review"],
 												"as:inReplyTo": $.pub.out.RelatedPub.values.SourceURL
 											},
@@ -405,6 +405,119 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 												"type": "Service"
 											}
 										} >>>`,
+									},
+								},
+							],
+						},
+						"Build Site": {
+							icon: {
+								name: "globe",
+								color: "#6366f1",
+							},
+							triggers: [
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "$.pub.pubType.name = 'Review'",
+									},
+								],
+							},
+							actions: [
+								{
+									action: Action.buildSite,
+									config: {
+										css: `:root {
+  --color-bg: #ffffff;
+  --color-text: #1a1a1a;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-accent: #3b82f6;
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  color: var(--color-text);
+  background: var(--color-bg);
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+h1, h2, h3 { line-height: 1.3; margin-bottom: 0.5em; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; color: var(--color-muted); }
+
+.pub-field { margin-bottom: 1.5rem; }
+.pub-field-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  margin-bottom: 0.25rem;
+}
+.pub-field-value { font-size: 1rem; }
+.pub-field-value:empty::after { content: "—"; color: var(--color-muted); }
+
+a { color: var(--color-accent); }
+pre, code { font-family: var(--font-mono); font-size: 0.875rem; }
+pre { background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+
+.review-list { list-style: none; }
+.review-list li { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
+.review-list li:last-child { border-bottom: none; }`,
+										subpath: "reviews",
+										pages: [
+											{
+												// Individual review page - one per Review pub
+												slug: "$.pub.id",
+												// Use all published pubs
+												filter: '$.pub.pubType.name = "Review"',
+												transform: `'<article>' &
+  '<h1>' & $.pub.title & '</h1>' &
+  $join(
+    $map(
+      $filter($keys($.pub.values), function($v){ $not($contains($v, ":")) }),
+      function($v){
+        '<div class="pub-field">' &
+          '<div class="pub-field-label">' & $v & '</div>' &
+          '<div class="pub-field-value">' & 
+            $string($lookup($.pub.values, $v)) & '</div>' &
+        '</div>'
+      }
+    ),
+    ''
+  ) &
+  '<p><a href="/">← Back to all reviews</a></p>' &
+'</article>'`,
+											},
+											{
+												// Index page - lists all published reviews
+												slug: '"/"',
+												filter: '$.pub.pubType.name = "Review"',
+												transform: `'<h1>Published Reviews</h1>' &
+'<ul class="review-list">' &
+  '<li><a href="/coar-notify/reviews/' & $.pub.id & '">' & $.pub.title & '</a></li>' &
+'</ul>'`,
+											},
+										],
+										outputMap: [],
 									},
 								},
 							],

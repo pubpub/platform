@@ -5,6 +5,7 @@
 	"version": "0.0.1",
 	"scripts": {
 		"type-check": "astro check",
+		"dev": "pnpm server:dev",
 		"site:dev": "astro dev",
 		"site:build": "astro build",
 		"site:preview": "astro preview",
