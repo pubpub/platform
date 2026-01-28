@@ -182,7 +182,10 @@ export async function StagePubs({
 				withStageActionInstances: true,
 			}
 		),
-		getStageAutomations(stage.id, { event: AutomationEvent.manual }),
+		getStageAutomations(stage.id, {
+			event: AutomationEvent.manual,
+			communityId: stage.communityId,
+		}),
 		userCanEditAllPubs(),
 		userCanArchiveAllPubs(),
 		userCanRunActionsAllPubs(),

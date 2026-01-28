@@ -56,6 +56,7 @@ export const StagePanelPubs = async (props: Props) => {
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getStageAutomations(props.stageId, {
 			event: AutomationEvent.manual,
+			communityId: community.id,
 		}),
 		userCanArchiveAllPubs(),
 		userCanEditAllPubs(),

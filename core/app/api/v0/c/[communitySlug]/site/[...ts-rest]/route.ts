@@ -823,6 +823,7 @@ const handler = createNextHandler(
 
 			const automations = await getAutomationsByTriggerConfig("path", path, {
 				event: AutomationEvent.webhook,
+				communityId: community.id as CommunitiesId,
 			})
 
 			if (!automations || automations.length === 0) {

@@ -1,8 +1,10 @@
 "use client"
 
+import type { PubTypesId } from "db/public"
+import type { FieldValues, UseFormReturn } from "react-hook-form"
 import type { FormElements, PubFieldElement } from "~/app/components/forms/types"
 
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { skipToken } from "@tanstack/react-query"
 import { Braces } from "lucide-react"
 import { Controller, useWatch } from "react-hook-form"
@@ -13,7 +15,7 @@ import { Checkbox } from "ui/checkbox"
 import { Confidence } from "ui/customRenderers/confidence/confidence"
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload"
 import { DatePicker } from "ui/date-picker"
-import { Field, FieldError, FieldLabel, FieldSet } from "ui/field"
+import { Field, FieldDescription, FieldError, FieldLabel, FieldSet } from "ui/field"
 import { Input } from "ui/input"
 import { MultiValueInput } from "ui/multivalue-input"
 import { RadioGroup, RadioGroupItem } from "ui/radio-group"
@@ -27,6 +29,7 @@ import { upload } from "~/app/components/forms/actions"
 import { FileUploadPreview } from "~/app/components/forms/FileUpload"
 import { MemberSelectClientFetch } from "~/app/components/MemberSelect/MemberSelectClientFetch"
 import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { PubSearchSelect } from "~/app/components/pubs/PubSearchSelect"
 import { client } from "~/lib/api"
 import { useServerAction } from "~/lib/serverActions"
 import { ActionField } from "../_lib/ActionField"
@@ -124,10 +127,42 @@ type InputState = {
 	normalValue: unknown
 }
 
-const CreatePubFormField = ({ element, path, control, renderInput }: CreatePubFormFieldProps) => {
+const CreatePubFormField = ({
+	element,
+	path,
+	control,
+	renderInput,
+	actionForm,
+}: CreatePubFormFieldProps & { actionForm: UseFormReturn<FieldValues> }) => {
 	const fieldName = path ? `${path}.pubValues.${element.id}` : `pubValues.${element.id}`
 	const labelId = useId()
-	const val = useWatch({ control, name: fieldName })
+
+	// Watch for value under element ID
+	const valById = useWatch({ control, name: fieldName })
+
+	// Also watch for value under field name (for backwards compatibility with seed configs)
+	const fieldNameKey = element.fieldName
+		? path
+			? `${path}.pubValues.${element.fieldName}`
+			: `pubValues.${element.fieldName}`
+		: undefined
+	const valByName = useWatch({ control, name: fieldNameKey ?? fieldName })
+
+	// Use the element ID value if it exists, otherwise fall back to field name value
+	const val = valById !== undefined ? valById : valByName
+
+	// Copy value from field name key to element ID key if needed (one-time on mount)
+	const hasInitialized = useRef(false)
+	useEffect(() => {
+		if (!hasInitialized.current && valById === undefined && valByName !== undefined) {
+			hasInitialized.current = true
+			// Set the value under the element ID key so the Controller sees it
+			actionForm.setValue(fieldName, valByName, {
+				shouldValidate: false,
+				shouldDirty: false,
+			})
+		}
+	}, [valById, valByName, fieldName, actionForm])
 
 	// Initialize state based on whether the current value is a JSONata template
 	const [inputState, setInputState] = useState<InputState>(() => {
@@ -219,23 +254,84 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 	const { form: actionForm, path } = useActionForm()
 	const elements = props.elements.filter((e): e is PubFieldElement => e.type === "pubfield")
 
+	// Build mappings from field name/slug to element ID (memoized)
+	const { fieldNameToElementId, fieldSlugToElementId, elementIds } = useMemo(() => {
+		const nameMap = new Map<string, string>()
+		const slugMap = new Map<string, string>()
+		const ids = new Set<string>()
+
+		for (const element of elements) {
+			ids.add(element.id)
+			if (element.fieldName) {
+				nameMap.set(element.fieldName, element.id)
+				nameMap.set(element.fieldName.toLowerCase(), element.id)
+			}
+			if (element.slug) {
+				slugMap.set(element.slug, element.id)
+				// Also map the short slug (without community prefix)
+				const shortSlug = element.slug.split(":").pop()
+				if (shortSlug) {
+					slugMap.set(shortSlug, element.id)
+					slugMap.set(shortSlug.toLowerCase(), element.id)
+				}
+			}
+		}
+
+		return { fieldNameToElementId: nameMap, fieldSlugToElementId: slugMap, elementIds: ids }
+	}, [elements])
+
 	// Set default values for all pub field elements when elements change
+	// Also transform field names/slugs to element IDs if needed
 	useEffect(() => {
 		const fullPath = path ? `${path}.pubValues` : "pubValues"
 
 		const defaultValues = createDefaultValuesFromElements(props.elements)
 		const currentPubValues = actionForm.getValues(fullPath) || {}
 
+		// Transform any field names/slugs to element IDs
+		const transformedPubValues: Record<string, unknown> = {}
+		for (const [key, value] of Object.entries(currentPubValues)) {
+			// Check if the key is already an element ID (exists in our elements)
+			if (elementIds.has(key)) {
+				transformedPubValues[key] = value
+				continue
+			}
+
+			// Try to map field name or slug to element ID
+			const elementId =
+				fieldNameToElementId.get(key) ||
+				fieldNameToElementId.get(key.toLowerCase()) ||
+				fieldSlugToElementId.get(key) ||
+				fieldSlugToElementId.get(key.toLowerCase())
+
+			if (elementId) {
+				transformedPubValues[elementId] = value
+			}
+		}
+
+		// If we transformed any values, update the form
+		if (Object.keys(transformedPubValues).length > 0) {
+			for (const [elementId, value] of Object.entries(transformedPubValues)) {
+				actionForm.setValue(`${fullPath}.${elementId}`, value, {
+					shouldValidate: false,
+					shouldDirty: false,
+				})
+			}
+		}
+
 		// Only set defaults for fields that don't already have a value
 		for (const [elementId, defaultValue] of Object.entries(defaultValues)) {
-			if (currentPubValues[elementId] === undefined) {
+			if (
+				currentPubValues[elementId] === undefined &&
+				transformedPubValues[elementId] === undefined
+			) {
 				actionForm.setValue(`${fullPath}.${elementId}`, defaultValue, {
 					shouldValidate: false,
 					shouldDirty: false,
 				})
 			}
 		}
-	}, [props.elements, actionForm])
+	}, [props.elements, actionForm, path, elementIds, fieldNameToElementId, fieldSlugToElementId])
 
 	const components: React.ReactNode[] = []
 
@@ -248,6 +344,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<Input
 								{...field}
@@ -266,6 +363,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<Textarea
 								{...field}
@@ -284,6 +382,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<div className="flex flex-row items-center gap-2">
 								<Checkbox
@@ -304,6 +403,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<DatePicker date={field.value} setDate={field.onChange} />
 						)}
@@ -322,6 +422,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<Select onValueChange={field.onChange} defaultValue={field.value}>
 								<SelectTrigger id={element.id}>
@@ -355,6 +456,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
 								{radioConfig?.options?.map((option) => (
@@ -382,6 +484,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<div className="flex flex-col gap-2">
 								{checkboxConfig?.options?.map((option) => (
@@ -422,6 +525,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<MultiValueInput
 								value={field.value || []}
@@ -441,6 +545,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<div className="flex gap-2">
 								<input
@@ -463,6 +568,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<MemberSelectClientFetch
 								name={element.id}
@@ -481,6 +587,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<div className="mb-6">
 								<Confidence
@@ -504,6 +611,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={(field) => (
 							<FileUploadInput field={field} elementId={element.id} />
 						)}
@@ -519,6 +627,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={() => (
 							<div className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
 								{element.component} component - implementation pending
@@ -536,6 +645,7 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 						element={element}
 						control={actionForm.control}
 						path={path}
+						actionForm={actionForm}
 						renderInput={() => (
 							<div className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
 								Unknown component type: {element.component}
@@ -546,7 +656,266 @@ const CreatePubFormInner = (props: CreatePubFormInnerProps) => {
 				break
 		}
 	}
-	return <div className="flex flex-col gap-4">{components}</div>
+	return <div className="flex min-w-0 flex-col gap-4">{components}</div>
+}
+
+/**
+ * A type representing a relation field from a pub type
+ */
+type RelationField = {
+	id: string
+	name: string
+	slug: string
+	schemaName: string
+	isRelation: true
+	relatedPubTypes?: PubTypesId[]
+}
+
+type RelationConfigSectionProps = {
+	relationFields: RelationField[]
+}
+
+/**
+ * Section for configuring an optional relation to an existing pub.
+ * Allows user to select a relation field, the target pub, direction, and value.
+ */
+const RelationConfigSection = ({ relationFields }: RelationConfigSectionProps) => {
+	const { form, path } = useActionForm()
+
+	const basePath = path ? `${path}.relationConfig` : "relationConfig"
+	const relatedPubIdLabelId = useId()
+	const valueLabelId = useId()
+
+	const selectedFieldSlug = useWatch({
+		control: form.control,
+		name: `${basePath}.fieldSlug`,
+	})
+	const selectedDirection = useWatch({
+		control: form.control,
+		name: `${basePath}.direction`,
+	})
+
+	// Get the selected relation field to determine relatedPubTypes
+	const selectedField = useMemo(
+		() => relationFields.find((f) => f.slug === selectedFieldSlug),
+		[relationFields, selectedFieldSlug]
+	)
+
+	// Get relatedPubTypes from the selected field (passed via relationFields prop)
+	const relatedPubTypeIds = selectedField?.relatedPubTypes
+
+	// Watch the relatedPubId and value fields to detect JSONata expressions
+	const watchedRelatedPubId = useWatch({
+		control: form.control,
+		name: `${basePath}.relatedPubId`,
+	})
+	const watchedValue = useWatch({
+		control: form.control,
+		name: `${basePath}.value`,
+	})
+
+	// State for JSONata mode toggles - initialize based on current values
+	const [pubIdMode, setPubIdMode] = useState<"normal" | "jsonata">(() =>
+		isJsonTemplate(watchedRelatedPubId) ? "jsonata" : "normal"
+	)
+	const [valueMode, setValueMode] = useState<"normal" | "jsonata">(() =>
+		isJsonTemplate(watchedValue) ? "jsonata" : "normal"
+	)
+
+	// Update mode when values change (e.g., when form loads with existing data)
+	useEffect(() => {
+		if (isJsonTemplate(watchedRelatedPubId) && pubIdMode !== "jsonata") {
+			setPubIdMode("jsonata")
+		}
+	}, [watchedRelatedPubId, pubIdMode])
+
+	useEffect(() => {
+		if (isJsonTemplate(watchedValue) && valueMode !== "jsonata") {
+			setValueMode("jsonata")
+		}
+	}, [watchedValue, valueMode])
+
+	if (relationFields.length === 0) {
+		return null
+	}
+
+	return (
+		<FieldSet className="mt-4 min-w-0 overflow-hidden rounded-md border border-gray-200 p-4">
+			<FieldLabel className="mb-2 font-medium text-sm">
+				Relate to Existing Pub (Optional)
+			</FieldLabel>
+			<FieldDescription className="mb-4 text-muted-foreground text-xs">
+				Optionally relate the newly created pub to an existing pub via a relation field.
+			</FieldDescription>
+
+			{/* Relation Field Selector */}
+			<Field className="mb-4">
+				<FieldLabel htmlFor={`${basePath}.fieldSlug`}>Relation Field</FieldLabel>
+				<Controller
+					name={`${basePath}.fieldSlug`}
+					control={form.control}
+					render={({ field }) => (
+						<Select onValueChange={field.onChange} value={field.value ?? ""}>
+							<SelectTrigger className="w-full">
+								<SelectValue placeholder="Select a relation field" />
+							</SelectTrigger>
+							<SelectContent>
+								{relationFields.map((rf) => (
+									<SelectItem key={rf.slug} value={rf.slug}>
+										{rf.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					)}
+				/>
+			</Field>
+
+			{selectedFieldSlug && (
+				<>
+					{/* Direction Selector */}
+					<Field className="mb-4">
+						<FieldLabel htmlFor={`${basePath}.direction`}>Direction</FieldLabel>
+						<FieldDescription className="mb-2 text-xs">
+							Which pub receives the relation field value
+						</FieldDescription>
+						<Controller
+							name={`${basePath}.direction`}
+							control={form.control}
+							render={({ field }) => (
+								<Select
+									onValueChange={field.onChange}
+									value={field.value ?? "source"}
+								>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder="Select direction" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="source">
+											New pub → Existing pub (new pub stores the relation)
+										</SelectItem>
+										<SelectItem value="target">
+											Existing pub → New pub (existing pub stores the
+											relation)
+										</SelectItem>
+									</SelectContent>
+								</Select>
+							)}
+						/>
+					</Field>
+
+					{/* Related Pub Selector */}
+					<Field className="mb-4">
+						<div className="flex flex-row items-center justify-between">
+							<FieldLabel
+								id={relatedPubIdLabelId}
+								htmlFor={`${basePath}.relatedPubId`}
+							>
+								{selectedDirection === "target" ? "Source Pub" : "Target Pub"}
+							</FieldLabel>
+							<Button
+								variant="outline"
+								size="icon-sm"
+								type="button"
+								aria-label="Toggle JSONata mode"
+								className={cn(
+									"h-7 w-7 font-mono",
+									pubIdMode === "jsonata" &&
+										"border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100"
+								)}
+								onClick={() => {
+									const newMode =
+										pubIdMode === "jsonata" ? "normal" : "jsonata"
+									setPubIdMode(newMode)
+								}}
+							>
+								<Braces size={14} />
+							</Button>
+						</div>
+						<FieldDescription className="mb-2 text-xs">
+							{selectedDirection === "target"
+								? "The existing pub that will store a relation to the new pub"
+								: "The existing pub that the new pub will relate to"}
+						</FieldDescription>
+						<Controller
+							name={`${basePath}.relatedPubId`}
+							control={form.control}
+							render={({ field }) =>
+								pubIdMode === "jsonata" ? (
+									<ActionFieldJsonataInput
+										aria-labelledby={relatedPubIdLabelId}
+										field={field}
+										isDefaultField={false}
+										actionAccepts={["pub", "json"]}
+									/>
+								) : (
+									<PubSearchSelect
+										pubTypeIds={relatedPubTypeIds}
+										placeholder="Search for a pub..."
+										onSelectedPubsChange={(pubs) => {
+											field.onChange(pubs[0]?.id ?? "")
+										}}
+									/>
+								)
+							}
+						/>
+					</Field>
+
+					{/* Relation Value */}
+					<Field>
+						<div className="flex flex-row items-center justify-between">
+							<FieldLabel id={valueLabelId} htmlFor={`${basePath}.value`}>
+								Relation Value
+							</FieldLabel>
+							<Button
+								variant="outline"
+								size="icon-sm"
+								type="button"
+								aria-label="Toggle JSONata mode for value"
+								className={cn(
+									"h-7 w-7 font-mono",
+									valueMode === "jsonata" &&
+										"border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100"
+								)}
+								onClick={() => {
+									const newMode =
+										valueMode === "jsonata" ? "normal" : "jsonata"
+									setValueMode(newMode)
+								}}
+							>
+								<Braces size={14} />
+							</Button>
+						</div>
+						<FieldDescription className="mb-2 text-xs">
+							The value to store with the relation (depends on the relation field's
+							schema type)
+						</FieldDescription>
+						<Controller
+							name={`${basePath}.value`}
+							control={form.control}
+							render={({ field }) =>
+								valueMode === "jsonata" ? (
+									<ActionFieldJsonataInput
+										aria-labelledby={valueLabelId}
+										field={field}
+										isDefaultField={false}
+										actionAccepts={["pub", "json"]}
+									/>
+								) : (
+									<Input
+										{...field}
+										value={field.value ?? ""}
+										placeholder="Enter relation value"
+										className="bg-white"
+									/>
+								)
+							}
+						/>
+					</Field>
+				</>
+			)}
+		</FieldSet>
+	)
 }
 
 type CreatePubFormProps = {}
@@ -582,7 +951,7 @@ export default function CreatePubForm(props: CreatePubFormProps) {
 	})
 
 	return (
-		<FieldSet>
+		<FieldSet className="w-full min-w-0">
 			<ActionField
 				name="stage"
 				label="Stage"
@@ -637,7 +1006,24 @@ export default function CreatePubForm(props: CreatePubFormProps) {
 					<Skeleton className="h-10" />
 				</Skeleton>
 			) : selectedForm ? (
-				<CreatePubFormInner elements={selectedForm.body.elements as FormElements[]} />
+				<div className="min-w-0">
+					<CreatePubFormInner elements={selectedForm.body.elements as FormElements[]} />
+					<RelationConfigSection
+						relationFields={(selectedForm.body.elements as FormElements[])
+							.filter(
+								(el): el is PubFieldElement =>
+									el.type === "pubfield" && el.isRelation === true
+							)
+							.map((el) => ({
+								id: el.id,
+								name: el.fieldName ?? el.label ?? el.slug,
+								slug: el.slug,
+								schemaName: el.schemaName,
+								isRelation: true as const,
+								relatedPubTypes: el.relatedPubTypes,
+							}))}
+					/>
+				</div>
 			) : null}
 		</FieldSet>
 	)

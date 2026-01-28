@@ -37,7 +37,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 		cache: "no-store",
 	})
 
-	if (res.status !== 200) {
+	if (!res.ok) {
 		return {
 			success: false,
 			title: "Error",
