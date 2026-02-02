@@ -56,16 +56,19 @@ export const FieldRow = ({
 	}
 
 	return (
-		<div className="group relative col-span-14 grid grid-cols-12 gap-x-1">
+		<div className="group relative col-span-14 grid grid-cols-subgrid gap-x-1 gap-y-2 align-top md:gap-y-0">
 			<FieldHeader
 				name={name}
 				slug={slugWithoutCommunity}
 				depth={depth}
 				SchemaTypeIcon={SchemaTypeIcon}
 				isRelationEdgeValue={isRelationEdgeValue}
-				className="col-span-2 col-start-2"
+				className="col-span-14 md:col-span-3 md:col-start-2"
 			/>
-			<div className="col-span-8 mt-1" data-testid={`${name}-value`}>
+			<div
+				className="col-span-14 col-start-1 md:col-span-9 md:col-start-5"
+				data-testid={`${name}-value`}
+			>
 				{isEditing && canEdit ? (
 					<InlineEditForm
 						values={values}
@@ -82,8 +85,8 @@ export const FieldRow = ({
 					variant="ghost"
 					size="icon"
 					className={cn(
-						"absolute top-1 right-8 translate-x-full text-muted-foreground/50",
-						"opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:flex"
+						"absolute col-span-1 col-start-13 translate-x-full text-muted-foreground/50",
+						"transition-opacity duration-200 group-hover:opacity-100 md:flex md:opacity-0"
 					)}
 					onClick={() => setIsEditing(true)}
 					aria-label="Edit field"
@@ -115,13 +118,18 @@ const FieldHeader = ({
 	}
 
 	return (
-		<div className={cn("flex flex-col gap-0", className)}>
-			<FieldHeading depth={depth} className="font-medium">
+		<div
+			className={cn(
+				"flex items-center justify-between gap-x-2 md:flex-col md:items-start md:justify-start md:gap-0",
+				className
+			)}
+		>
+			<FieldHeading depth={depth} className="font-medium text-sm">
 				{name}
 			</FieldHeading>
-			<div className="flex items-center gap-1">
+			<div className="items- flex gap-1 truncate">
 				{SchemaTypeIcon && (
-					<SchemaTypeIcon className="size-3 text-muted-foreground md:size-3.5" />
+					<SchemaTypeIcon className="mt-[3px] size-3 text-muted-foreground md:mt-0 md:size-3.5" />
 				)}
 				<code className="truncate text-muted-foreground text-xs">{slug}</code>
 			</div>

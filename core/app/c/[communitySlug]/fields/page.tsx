@@ -9,7 +9,13 @@ import { FormInput } from "ui/icon"
 import { PubFieldProvider } from "ui/pubFields"
 import { cn } from "utils"
 
-import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "~/app/c/[communitySlug]/ContentLayout"
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs"
 import { getPageLoginData } from "~/lib/authentication/loginData"
 import { userCan } from "~/lib/authorization/capabilities"
@@ -71,20 +77,16 @@ export default async function Page(props: Props) {
 
 	return (
 		<PubFieldProvider pubFields={pubFields.fields}>
-			<ContentLayout
-				title={
-					<>
-						<FormInput
-							size={24}
-							strokeWidth={1}
-							className="mr-2 text-muted-foreground"
-						/>{" "}
-						Fields
-					</>
-				}
-				right={<NewFieldButton />}
-			>
-				<div className="m-4">
+			<ContentLayoutRoot>
+				<ContentLayoutHeader>
+					<ContentLayoutTitle>
+						<FormInput /> Fields
+					</ContentLayoutTitle>
+					<ContentLayoutActions>
+						<NewFieldButton />
+					</ContentLayoutActions>
+				</ContentLayoutHeader>
+				<ContentLayoutBody>
 					{archived.length ? (
 						<ActiveArchiveTabs
 							activeContent={<FieldsTable fields={active} />}
@@ -96,8 +98,8 @@ export default async function Page(props: Props) {
 							{!hasFields ? <EmptyState className="mt-12" /> : null}{" "}
 						</>
 					)}
-				</div>
-			</ContentLayout>
+				</ContentLayoutBody>
+			</ContentLayoutRoot>
 		</PubFieldProvider>
 	)
 }

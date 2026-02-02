@@ -159,10 +159,20 @@ export const PubListSkeleton = ({
 }) => (
 	<div className={cn(["flex flex-col gap-3", className])}>
 		{Array.from({ length: amount }).map((_, index) => (
-			<Skeleton key={index} className="flex h-[90px] w-full flex-col gap-2 px-4 py-3">
-				<Skeleton className="mt-3 h-6 w-24 space-y-1.5" />
-				<Skeleton className="h-8 w-1/2 space-y-1.5" />
-			</Skeleton>
+			<div
+				key={index}
+				className="flex h-[94px] w-full flex-col gap-2 rounded-lg border border-card bg-card px-4 py-2 md:max-w-(--breakpoint-lg)"
+			>
+				<div className="flex items-start gap-2">
+					<Skeleton className="h-5 w-24" />
+					<Skeleton className="h-5 w-12" />
+				</div>
+				<Skeleton className="h-7 w-3/4 md:w-1/2 lg:w-1/3" />
+				<div className="flex items-start gap-2 opacity-50">
+					<Skeleton className="h-4 w-24" />
+					<Skeleton className="h-4 w-16" />
+				</div>
+			</div>
 		))}
 	</div>
 )
@@ -200,7 +210,7 @@ const PubListFooterPagination = async (props: {
 	}
 
 	return (
-		<PubSearchFooter {...props} {...paginationProps} className="z-20">
+		<PubSearchFooter {...props} {...paginationProps} className="fixed z-20">
 			{props.children}
 			<PubsSelectedCounter pageSize={Math.min(search.perPage, count)} />
 		</PubSearchFooter>
@@ -252,28 +262,22 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 	])
 
 	return (
-		<div className="relative flex h-full flex-col">
+		<div className="relative mb-4 flex h-full w-full flex-col gap-3 overflow-x-hidden overflow-y-scroll p-4 pb-16">
 			{/* field and stage provider are necessary for the ActionDropDown used in the pubcard to work */}
 			<PubFieldProvider pubFields={pubFields.fields}>
 				<StagesProvider stages={stagesDAO(stages)}>
 					<PubSearchProvider availablePubTypes={pubTypes} availableStages={stages}>
 						<PubsSelectedProvider pubIds={[]}>
-							<div
-								className={cn(
-									"mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16"
-								)}
-							>
-								<PubSearch>
-									<Suspense fallback={<PubListSkeleton />}>
-										<PaginatedPubListInner
-											{...props}
-											communitySlug={communitySlug}
-											pubsPromise={pubsPromise}
-											stagesPromise={Promise.resolve(stages)}
-										/>
-									</Suspense>
-								</PubSearch>
-							</div>
+							<PubSearch>
+								<Suspense fallback={<PubListSkeleton />}>
+									<PaginatedPubListInner
+										{...props}
+										communitySlug={communitySlug}
+										pubsPromise={pubsPromise}
+										stagesPromise={Promise.resolve(stages)}
+									/>
+								</Suspense>
+							</PubSearch>
 							<Suspense fallback={null}>
 								<PubListFooterPagination
 									basePath={basePath}

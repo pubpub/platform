@@ -442,6 +442,7 @@ test.describe("changing access", () => {
 		)
 		await formEditPage.goto()
 
+		await page.getByTestId("form-builder-tab-settings").click()
 		await page.getByTestId("select-form-access").click()
 		await page.getByTestId("select-form-access-public").click()
 
@@ -451,6 +452,7 @@ test.describe("changing access", () => {
 		})
 
 		await test.step("should be able to save form if access is changed", async () => {
+			await page.getByTestId("form-builder-tab-settings").click()
 			await page.getByTestId("select-form-access").click()
 			await page.getByTestId("select-form-access-private").click()
 
@@ -462,6 +464,7 @@ test.describe("changing access", () => {
 
 		await test.step("changes should be persisted", async () => {
 			await formEditPage.goto()
+			await page.getByTestId("form-builder-tab-settings").click()
 			const text = await page.getByTestId("select-form-access").textContent()
 
 			expect(text).toMatch(/private/i)

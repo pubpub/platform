@@ -6,7 +6,7 @@ import type { NewPubFieldToPubType, PubFieldsId, PubTypesId } from "db/public"
 import type { PanelState } from "~/app/components/FormBuilder/types"
 import type { GetPubTypesResult } from "~/lib/server"
 
-import React, { useCallback, useId, useMemo, useReducer, useRef } from "react"
+import React, { useCallback, useId, useMemo, useReducer, useRef, useState } from "react"
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
@@ -25,8 +25,10 @@ import { logger } from "logger"
 import { Button } from "ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form"
 import { useUnsavedChangesWarning } from "ui/hooks"
+import { Menu } from "ui/icon"
 import { Input } from "ui/input"
 import { usePubFieldContext } from "ui/pubFields"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "ui/sheet"
 import { toast } from "ui/use-toast"
 
 import { BuilderProvider, useBuilder } from "~/app/components/FormBuilder/BuilderContext"
@@ -147,6 +149,7 @@ export const TypeBuilder = ({
 	formId: string
 }) => {
 	const [isChanged, setIsChanged] = useIsChanged()
+	const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
 
 	const defaultValues = useMemo(() => {
 		return {
@@ -287,9 +290,22 @@ export const TypeBuilder = ({
 
 	const dndContextId = useId()
 
+	const sidebarContent = (
+		<FormItem className="relative flex h-full flex-col">
+			<PanelHeader
+				title="Fields"
+				showCancel={!(panelState.state === "initial")}
+				onCancel={() => dispatch({ eventName: "cancel" })}
+			/>
+			<FormControl>
+				<FieldPanel panelState={panelState} />
+			</FormControl>
+		</FormItem>
+	)
+
 	return (
 		<>
-			<div className="pr-[380px]">
+			<div className="md:pr-[380px]">
 				<BuilderProvider
 					removeIfUnconfigured={removeIfUnconfigured}
 					addElement={addElement}
@@ -326,12 +342,32 @@ export const TypeBuilder = ({
 								})
 							)}
 						>
+							<div className="flex items-center justify-between pb-4 md:hidden">
+								<h2 className="font-medium text-lg">Type Builder</h2>
+								<Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+									<SheetTrigger asChild>
+										<Button variant="outline" size="sm">
+											<Menu className="mr-2 h-4 w-4" />
+											Fields
+										</Button>
+									</SheetTrigger>
+									<SheetContent
+										side="right"
+										className="w-full overflow-auto sm:max-w-md"
+									>
+										<SheetHeader>
+											<SheetTitle>Type Fields</SheetTitle>
+										</SheetHeader>
+										<div className="p-4">{sidebarContent}</div>
+									</SheetContent>
+								</Sheet>
+							</div>
 							<FormField
 								control={form.control}
 								name="fields"
 								render={() => (
 									<>
-										<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto p-10">
+										<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
 											<DndContext
 												id={dndContextId}
 												modifiers={[
@@ -389,18 +425,7 @@ export const TypeBuilder = ({
 											</DndContext>
 										</ol>
 										<PanelWrapper sidebar={sidebarRef.current}>
-											<FormItem className="relative flex h-screen flex-col">
-												<PanelHeader
-													title="Fields"
-													showCancel={!(panelState.state === "initial")}
-													onCancel={() =>
-														dispatch({ eventName: "cancel" })
-													}
-												/>
-												<FormControl>
-													<FieldPanel panelState={panelState} />
-												</FormControl>
-											</FormItem>
+											{sidebarContent}
 										</PanelWrapper>
 									</>
 								)}
@@ -409,7 +434,7 @@ export const TypeBuilder = ({
 					</Form>
 				</BuilderProvider>
 			</div>
-			<SidePanel ref={sidebarRef} />
+			<SidePanel ref={sidebarRef} className="hidden md:flex" />
 		</>
 	)
 }

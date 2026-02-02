@@ -8,13 +8,39 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 import { capitalize } from "~/lib/string"
 import { useAutomationId, usePanelTab } from "./usePanelQueryParams"
 
-export function TabLink({ tab, children }: { tab: StageManageTab; children: React.ReactNode }) {
+export function StageTabLink({
+	tab,
+	children,
+}: {
+	tab: StageManageTab
+	children?: React.ReactNode
+}) {
 	const { setTab } = usePanelTab()
 	const { setAutomationId } = useAutomationId()
 
-	const handleClick = () => {
-		setTab(tab)
+	const handleClick = (tab: string) => {
+		setTab(tab as StageManageTab)
 		setAutomationId(null)
+	}
+
+	return (
+		<TabLink tab={tab} onClick={handleClick}>
+			{children}
+		</TabLink>
+	)
+}
+
+export function TabLink({
+	tab,
+	onClick,
+	children,
+}: {
+	tab: string
+	onClick?: (tab: string) => void
+	children?: React.ReactNode
+}) {
+	const handleClick = () => {
+		onClick?.(tab)
 	}
 
 	return (
@@ -27,8 +53,14 @@ export function TabLink({ tab, children }: { tab: StageManageTab; children: Reac
 			>
 				<TooltipTrigger>
 					<div>
-						{children}
-						<span className="sr-only">{capitalize(tab)}</span>
+						{children ? (
+							<>
+								{children}
+								<span className="sr-only">{capitalize(tab)}</span>
+							</>
+						) : (
+							capitalize(tab)
+						)}
 					</div>
 				</TooltipTrigger>
 			</TabsTrigger>

@@ -71,7 +71,7 @@ export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, _ref) =>
 					<span className={cn({ "sr-only": props.iconOnly })}>{props.buttonText}</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="max-h-full min-w-lg max-w-fit overflow-auto">
+			<DialogContent className="max-h-full min-w-xs max-w-fit overflow-auto md:min-w-lg">
 				<DialogTitle>{props.title}</DialogTitle>
 				{isOpen && <Suspense fallback={<SkeletonCard />}>{props.children}</Suspense>}
 			</DialogContent>

@@ -44,44 +44,42 @@ export const FormSwitcher = ({
 	const currentForm = forms.find((form) => form.slug === selectedFormSlug)
 
 	return (
-		<div className="flex items-center gap-2">
-			<Select
-				onValueChange={(slug: string) => {
-					setSelectedFormSlug(slug)
-				}}
-				defaultValue={selectedFormSlug || defaultFormSlug}
-			>
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<SelectTrigger
-							id={htmlId}
-							className={cn(
-								"flex h-6 items-center gap-1 border-none bg-transparent!",
-								className
-							)}
-						>
-							{children}
-							{currentForm?.name}
-						</SelectTrigger>
-					</TooltipTrigger>
+		<Select
+			onValueChange={(slug: string) => {
+				setSelectedFormSlug(slug)
+			}}
+			defaultValue={selectedFormSlug || defaultFormSlug}
+		>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<SelectTrigger
+						id={htmlId}
+						className={cn(
+							"flex h-6 items-center gap-1 border-none bg-transparent!",
+							className
+						)}
+					>
+						{children}
+						<span className="inline-block truncate">{currentForm?.name}</span>
+					</SelectTrigger>
+				</TooltipTrigger>
 
-					<TooltipContent>
-						Viewing as <em>{currentForm?.name}</em>
-					</TooltipContent>
-				</Tooltip>
-				<SelectContent>
-					<SelectGroup>
-						<SelectLabel className="font-normal text-muted-foreground text-xs">
-							Content will change upon selection. You may lose unsaved changes.
-						</SelectLabel>
-						{forms.map((form) => (
-							<SelectItem key={form.id} value={form.slug}>
-								{form.name}
-							</SelectItem>
-						))}
-					</SelectGroup>
-				</SelectContent>
-			</Select>
-		</div>
+				<TooltipContent>
+					Viewing as <em>{currentForm?.name}</em>
+				</TooltipContent>
+			</Tooltip>
+			<SelectContent>
+				<SelectGroup>
+					<SelectLabel className="font-normal text-muted-foreground text-xs">
+						Content will change upon selection. You may lose unsaved changes.
+					</SelectLabel>
+					{forms.map((form) => (
+						<SelectItem key={form.id} value={form.slug}>
+							{form.name}
+						</SelectItem>
+					))}
+				</SelectGroup>
+			</SelectContent>
+		</Select>
 	)
 }

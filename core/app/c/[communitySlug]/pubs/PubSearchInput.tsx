@@ -64,11 +64,7 @@ export const PubSearch = (props: PubSearchProps) => {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<SearchBar
-				value={inputValues.query}
-				onChange={setQuery}
-				placeholder="Search by pub title..."
-			>
+			<SearchBar value={inputValues.query} onChange={setQuery} placeholder="Search Pubs">
 				<PubTypesFilter
 					availablePubTypes={availablePubTypes}
 					defaultPubTypes={queryParams.pubTypes.map((type) => type.id)}
@@ -146,7 +142,7 @@ export const PubTypesFilter = memo(
 				value={selectedPubTypes}
 				asChild
 			>
-				<Button variant="outline" className="h-9" size="sm">
+				<Button variant="outline" className="h-9 w-20" size="sm">
 					<PlusCircle size={16} />
 					Type
 					{selectedPubTypes?.length ? (
@@ -186,7 +182,7 @@ export const StagesFilter = memo(
 				showClearAll
 				asChild
 			>
-				<Button variant="outline" className="h-9" size="sm">
+				<Button variant="outline" className="h-9 w-20" size="sm">
 					<PlusCircle size={16} />
 					Stage
 					{currentStages?.length ? (
