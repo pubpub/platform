@@ -79,6 +79,7 @@ export class PubsPage {
 			exact: true,
 		})
 
+		await this.page.waitForTimeout(1000)
 		// .all() doesn't work here because the list of matching elements changes as they're toggled
 		for (const toggle of await fieldToggles.elementHandles()) {
 			await toggle.click()

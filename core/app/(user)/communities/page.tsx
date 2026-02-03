@@ -5,6 +5,10 @@ import { getPageLoginData } from "~/lib/authentication/loginData"
 import { AddCommunity } from "./AddCommunityDialog"
 import { CommunityTable } from "./CommunityTable"
 
+export const metadata = {
+	title: "Communities",
+}
+
 export default async function Page() {
 	const { user } = await getPageLoginData()
 

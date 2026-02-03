@@ -75,7 +75,7 @@ export const InlineEditForm = ({ values, formSlug, pubId, onClose }: InlineEditF
 		<PubEditorClient
 			withAutoSave={false}
 			withButtonElements={false}
-			className="[&_label]:sr-only"
+			className="w-full items-start gap-2 p-0 [&_label]:sr-only"
 			mode="edit"
 			pub={{
 				id: pubId,
@@ -96,7 +96,7 @@ export const InlineEditForm = ({ values, formSlug, pubId, onClose }: InlineEditF
 						pendingText="Saving..."
 						successText="Saved"
 						errorText="Error saving"
-						className="-right-2 absolute top-0 translate-x-full"
+						className="ml-auto w-30"
 					/>
 				</>
 			)}

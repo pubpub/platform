@@ -38,14 +38,18 @@ export const AutomationRunResult = ({
 	}
 
 	if (!automationRun.actionRuns || automationRun.actionRuns.length === 0) {
-		return <div className={cn("text-gray-500 text-sm", className)}>No action runs found</div>
+		return (
+			<div className={cn("text-muted-foreground text-sm", className)}>
+				No action runs found
+			</div>
+		)
 	}
 
 	return (
 		<div className={cn("space-y-2", className)}>
 			{showOverallStatus && (
 				<div className="flex items-center gap-2">
-					<span className="text-gray-600 text-xs">Overall Status:</span>
+					<span className="text-muted-foreground text-xs">Overall Status:</span>
 					<AutomationRunStatusBadge status={status} />
 				</div>
 			)}
@@ -62,11 +66,11 @@ export const AutomationRunResult = ({
 								open={isExpanded}
 								onOpenChange={() => toggleActionRun(actionRun.id)}
 							>
-								<div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+								<div className="rounded-md border border-border bg-muted p-2">
 									<CollapsibleTrigger asChild>
 										<button
 											type="button"
-											className="flex w-full items-center justify-between text-sm hover:text-gray-900"
+											className="flex w-full items-center justify-between text-sm hover:text-muted-foreground"
 										>
 											<div className="flex items-center gap-2">
 												{isExpanded ? (
