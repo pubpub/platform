@@ -1,13 +1,20 @@
 import type { ProcessedPub } from "contracts"
-import type { CommunitiesId, PubsId } from "db/public"
+import type { CommunitiesId } from "db/public"
 import type { FullAutomation, Json } from "db/types"
 import type { InterpolationContext } from "./interpolationContext"
+
+import jsonata from "jsonata"
 
 import { interpolate } from "@pubpub/json-interpolate"
 import { logger } from "logger"
 import { tryCatch } from "utils/try-catch"
 
 import { getPubsWithRelatedValues } from "~/lib/server"
+import {
+	applyJsonataFilter,
+	compileJsonataQuery,
+	parseJsonataQuery,
+} from "~/lib/server/jsonata-query"
 
 type ResolvedPub = ProcessedPub<{
 	withPubType: true
@@ -21,154 +28,158 @@ export type ResolvedInput =
 	| { type: "json"; json: Json }
 	| { type: "unchanged" }
 
-type ResolverExpressionType =
-	| { kind: "comparison"; leftPath: string; operator: string; rightPath: string }
-	| { kind: "transform" }
-	| { kind: "unknown" }
-
 /**
- * Parses a resolver expression to understand its structure.
- *
- * Supports comparison expressions like:
- * - `$.json.some.id = $.pub.values.fieldname` - matches incoming json against pub field values
- * - `$.pub.id = someExternalId` - matches pub by id
- *
- * Or transformation expressions that just transform the input.
+ * parses template string to find all {{ }} interpolation blocks
  */
-function parseResolverExpression(expression: string): ResolverExpressionType {
-	// Simple regex to detect comparison patterns
-	// This handles basic cases like `$.path.to.value = $.other.path`
-	const comparisonMatch = expression.match(
-		/^\s*(\$\.[^\s=!<>]+)\s*(=|!=|<|>|<=|>=)\s*(\$\.[^\s]+|\S+)\s*$/
-	)
+function parseInterpolationBlocks(
+	template: string
+): { expression: string; startIndex: number; endIndex: number }[] {
+	const blocks: { expression: string; startIndex: number; endIndex: number }[] = []
+	let i = 0
 
-	if (comparisonMatch) {
-		const [, leftPath, operator, rightPath] = comparisonMatch
-		return {
-			kind: "comparison",
-			leftPath,
-			operator,
-			rightPath,
+	while (i < template.length) {
+		if (template[i] === "{" && template[i + 1] === "{") {
+			const startIndex = i
+			i += 2
+
+			let braceDepth = 0
+			let expression = ""
+			let foundClosing = false
+
+			while (i < template.length) {
+				const char = template[i]
+				const nextChar = template[i + 1]
+
+				if (char === "}" && nextChar === "}" && braceDepth === 0) {
+					foundClosing = true
+					blocks.push({
+						expression: expression.trim(),
+						startIndex,
+						endIndex: i + 2,
+					})
+					i += 2
+					break
+				}
+
+				if (char === "{") {
+					braceDepth++
+				} else if (char === "}") {
+					braceDepth--
+				}
+
+				expression += char
+				i++
+			}
+
+			if (!foundClosing) {
+				throw new Error(`unclosed interpolation block starting at position ${startIndex}`)
+			}
+		} else {
+			i++
 		}
 	}
 
-	// Check if it looks like a transform (returns an object or processes data)
-	if (expression.includes("{") || expression.includes("$map") || expression.includes("$filter")) {
-		return { kind: "transform" }
-	}
-
-	return { kind: "unknown" }
+	return blocks
 }
 
 /**
- * Extracts the field slug from a pub values path like `$.pub.values.fieldname`
+ * converts a javascript value to a jsonata literal representation
  */
-function extractFieldSlugFromPath(path: string): string | null {
-	// Handle both formats:
-	// - $.pub.values.fieldname
-	// - $.pub.values["field-name"] or $.pub.values['field-name']
-	const simpleMatch = path.match(/^\$\.pub\.values\.([a-zA-Z_][a-zA-Z0-9_-]*)$/)
-	if (simpleMatch) {
-		return simpleMatch[1]
+function valueToJsonataLiteral(value: unknown): string {
+	if (value === null) {
+		return "null"
 	}
-
-	const bracketMatch = path.match(/^\$\.pub\.values\[["']([^"']+)["']\]$/)
-	if (bracketMatch) {
-		return bracketMatch[1]
+	if (typeof value === "string") {
+		// escape quotes and wrap in quotes
+		return JSON.stringify(value)
 	}
-
-	return null
+	if (typeof value === "number" || typeof value === "boolean") {
+		return String(value)
+	}
+	if (Array.isArray(value)) {
+		return `[${value.map(valueToJsonataLiteral).join(", ")}]`
+	}
+	if (typeof value === "object") {
+		const entries = Object.entries(value)
+			.map(([k, v]) => `"${k}": ${valueToJsonataLiteral(v)}`)
+			.join(", ")
+		return `{${entries}}`
+	}
+	return String(value)
 }
 
 /**
- * Extracts pubId from a path like `$.pub.id`
+ * interpolates {{ }} blocks in a resolver expression, replacing them with literal values
+ *
+ * @example
+ * input: `$.pub.values.externalId = {{ $.json.body.articleId }}`
+ * context: { json: { body: { articleId: "abc123" } } }
+ * output: `$.pub.values.externalId = "abc123"`
  */
-function isPubIdPath(path: string): boolean {
-	return path === "$.pub.id"
-}
+async function interpolateResolverExpression(
+	expression: string,
+	context: InterpolationContext
+): Promise<string> {
+	const blocks = parseInterpolationBlocks(expression)
 
-/**
- * Resolves a value from the interpolation context using a JSONata path.
- */
-async function resolvePathValue(path: string, context: InterpolationContext): Promise<unknown> {
-	const [error, result] = await tryCatch(interpolate(path, context))
-	if (error) {
-		logger.warn("Failed to resolve path value", { path, error: error.message })
-		return undefined
+	if (blocks.length === 0) {
+		return expression
 	}
+
+	let result = expression
+
+	// process in reverse order to maintain correct indices
+	for (let i = blocks.length - 1; i >= 0; i--) {
+		const block = blocks[i]
+		const jsonataExpr = jsonata(block.expression)
+		const value = await jsonataExpr.evaluate(context)
+
+		if (value === undefined) {
+			throw new Error(`resolver interpolation '${block.expression}' returned undefined`)
+		}
+
+		const literal = valueToJsonataLiteral(value)
+		result = result.slice(0, block.startIndex) + literal + result.slice(block.endIndex)
+	}
+
 	return result
 }
 
 /**
- * Finds a pub where a field value matches the given value.
+ * determines if expression is a query (for finding pubs) or a transform (returning json)
  */
-async function findPubByFieldValue(
-	communityId: CommunitiesId,
-	fieldSlug: string,
-	value: unknown,
-	communitySlug: string
-): Promise<ResolvedPub | null> {
-	const slugWithCommunitySlug = fieldSlug.startsWith(`${communitySlug}:`)
-		? fieldSlug
-		: `${communitySlug}:${fieldSlug}`
-
-	const pubs = (await getPubsWithRelatedValues(
-		{ communityId },
-		{
-			withPubType: true,
-			withRelatedPubs: true,
-			withStage: false,
-			withValues: true,
-			depth: 3,
-			filters: {
-				[slugWithCommunitySlug]: { $eq: value },
-			},
-			limit: 1,
-		}
-	)) as ResolvedPub[]
-
-	if (pubs.length > 0) {
-		return pubs[0]
+function isQueryExpression(expression: string): boolean {
+	// queries start with $.pub and contain comparison operators or relation paths
+	if (!expression.includes("$.pub")) {
+		return false
 	}
-
-	logger.debug("No pub found with matching field value", { fieldSlug, value })
-	return null
-}
-
-async function findPubById(communityId: CommunitiesId, pubId: PubsId): Promise<ResolvedPub | null> {
-	const [error, pub] = await tryCatch(
-		getPubsWithRelatedValues(
-			{ pubId, communityId },
-			{
-				withPubType: true,
-				withRelatedPubs: true,
-				withStage: false,
-				withValues: true,
-				depth: 3,
-			}
-		)
+	// check for comparison operators or relation syntax
+	return (
+		/\s*(=|!=|<|>|<=|>=|in)\s*/.test(expression) ||
+		expression.includes("$.pub.out.") ||
+		expression.includes("$.pub.in.") ||
+		expression.includes("$search(") ||
+		expression.includes("$contains(") ||
+		expression.includes("$startsWith(") ||
+		expression.includes("$endsWith(") ||
+		expression.includes("$exists(")
 	)
-
-	if (error) {
-		logger.warn("Failed to find pub by id", { pubId, error: error.message })
-		return null
-	}
-
-	return pub as ResolvedPub
 }
 
 /**
- * Resolves the automation input based on a resolver expression.
+ * resolves the automation input based on a resolver expression.
  *
- * The resolver expression is a JSONata expression that can:
- * 1. Resolve a different Pub using comparisons like `$.json.some.id = $.pub.values.fieldname`
- * 2. Transform JSON input into a new structure for actions
+ * the resolver expression can be:
+ * 1. a query to find a pub, e.g. `$.pub.values.externalId = {{ $.json.body.id }}`
+ * 2. a transform to restructure the input, e.g. `{ "title": $.json.body.name }`
  *
- * @param resolver - The JSONata resolver expression from the automation
- * @param context - The interpolation context containing pub, json, community, etc.
- * @param communityId - The community ID to search for pubs
- * @param communitySlug - The community slug for field lookups
- * @returns The resolved input (pub, json, or unchanged)
+ * use {{ expr }} syntax to interpolate values from the context into the expression.
+ *
+ * @param resolver - the resolver expression from the automation
+ * @param context - the interpolation context containing pub, json, community, etc.
+ * @param communityId - the community ID to search for pubs
+ * @param communitySlug - the community slug for field lookups
+ * @returns the resolved input (pub, json, or unchanged)
  */
 export async function resolveAutomationInput(
 	resolver: string,
@@ -176,66 +187,89 @@ export async function resolveAutomationInput(
 	communityId: CommunitiesId,
 	communitySlug: string
 ): Promise<ResolvedInput> {
-	const parsed = parseResolverExpression(resolver)
+	// first, interpolate any {{ }} blocks
+	const [interpolateError, interpolatedExpression] = await tryCatch(
+		interpolateResolverExpression(resolver, context)
+	)
 
-	if (parsed.kind === "comparison") {
-		// For comparison expressions, we resolve the left side and search for a pub
-		// where the right side matches
-		const leftValue = await resolvePathValue(parsed.leftPath, context)
-
-		if (leftValue === undefined) {
-			logger.warn("Resolver left path resolved to undefined", { path: parsed.leftPath })
-			return { type: "unchanged" }
-		}
-
-		// Check if right side is a pub field value path
-		const fieldSlug = extractFieldSlugFromPath(parsed.rightPath)
-		if (fieldSlug) {
-			const pub = await findPubByFieldValue(communityId, fieldSlug, leftValue, communitySlug)
-			if (pub) {
-				return { type: "pub", pub }
-			}
-			logger.debug("No pub found matching resolver comparison", {
-				leftPath: parsed.leftPath,
-				leftValue,
-				fieldSlug,
-			})
-			return { type: "unchanged" }
-		}
-
-		// Check if right side is pub.id
-		if (isPubIdPath(parsed.rightPath)) {
-			// In this case, we're looking for a pub where id = leftValue
-			const pub = await findPubById(communityId, leftValue as PubsId)
-			if (pub) {
-				return { type: "pub", pub }
-			}
-			return { type: "unchanged" }
-		}
-
-		// If we can't parse the right side, try evaluating as a transform
-		logger.debug("Could not parse right side of comparison, treating as transform", {
-			rightPath: parsed.rightPath,
+	if (interpolateError) {
+		logger.warn("failed to interpolate resolver expression", {
+			resolver,
+			error: interpolateError.message,
 		})
-	}
-
-	// For transform expressions or unknown patterns, evaluate the entire expression
-	const [error, result] = await tryCatch(interpolate(resolver, context))
-
-	if (error) {
-		logger.error("Failed to evaluate resolver expression", { resolver, error: error.message })
 		return { type: "unchanged" }
 	}
 
-	// Otherwise, treat it as JSON
+	// determine if this is a query (to find a pub) or a transform
+	if (isQueryExpression(interpolatedExpression)) {
+		// parse and compile the query
+		const [parseError, _parsedQuery] = await tryCatch(
+			Promise.resolve(parseJsonataQuery(interpolatedExpression))
+		)
+
+		if (parseError) {
+			logger.warn("failed to parse resolver as query", {
+				expression: interpolatedExpression,
+				error: parseError.message,
+			})
+			// fall through to transform mode
+		} else {
+			const compiled = compileJsonataQuery(interpolatedExpression)
+
+			// execute the query to find a matching pub
+			const [queryError, pubs] = await tryCatch(
+				getPubsWithRelatedValues(
+					{ communityId },
+					{
+						withPubType: true,
+						withRelatedPubs: true,
+						withStage: false,
+						withValues: true,
+						depth: 3,
+						limit: 1,
+						customFilter: (eb) => applyJsonataFilter(eb, compiled, { communitySlug }),
+					}
+				)
+			)
+
+			if (queryError) {
+				logger.warn("failed to execute resolver query", {
+					expression: interpolatedExpression,
+					error: queryError.message,
+				})
+				return { type: "unchanged" }
+			}
+
+			if (pubs.length > 0) {
+				return { type: "pub", pub: pubs[0] as ResolvedPub }
+			}
+
+			logger.debug("no pub found matching resolver query", {
+				expression: interpolatedExpression,
+			})
+			return { type: "unchanged" }
+		}
+	}
+
+	// treat as a transform expression
+	const [transformError, result] = await tryCatch(interpolate(resolver, context))
+
+	if (transformError) {
+		logger.error("failed to evaluate resolver transform", {
+			resolver,
+			error: transformError.message,
+		})
+		return { type: "unchanged" }
+	}
+
 	return { type: "json", json: result as Json }
 }
 
 /**
- * Checks if an automation has a resolver configured.
+ * checks if an automation has a resolver configured.
  */
-export function hasResolver(automation: FullAutomation): automation is FullAutomation & {
-	resolver: string
-} {
+export function hasResolver(
+	automation: FullAutomation
+): automation is FullAutomation & { resolver: string } {
 	return Boolean(automation.resolver && automation.resolver.trim().length > 0)
 }
