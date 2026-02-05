@@ -324,6 +324,168 @@ Run tests with:
 pnpm test
 ```
 
+## Nested Queries and Subqueries
+
+The subset supports nested queries in several contexts, enabling powerful data retrieval patterns similar to GROQ.
+
+### Scalar Subqueries in Filters
+
+Filter by comparing against aggregated values from another query:
+
+```
+JSONata: ($avg := $average(pubs[type="article"].size); pubs[type="blog" and size > $avg])
+SQL:     SELECT * FROM pubs WHERE type = 'blog' AND size > (SELECT AVG(size) FROM pubs WHERE type = 'article')
+```
+
+Alternative using chained filters:
+```
+JSONata: pubs[type="blog"][size > $average($$.pubs[type="article"].size)]
+SQL:     SELECT * FROM pubs WHERE type = 'blog' AND size > (SELECT AVG(size) FROM pubs WHERE type = 'article')
+```
+
+### Correlated Subqueries in Projections
+
+Reference the current row being projected using variable binding:
+
+```
+JSONata: pubs[type="blog"].($this := $; {
+           "id": id,
+           "laterPubs": $$.pubs[createdAt > $this.createdAt]
+         })
+
+SQL:     SELECT
+           p.id,
+           (SELECT json_agg(p2.*) FROM pubs p2 WHERE p2.created_at > p.created_at) AS "laterPubs"
+         FROM pubs p
+         WHERE p.type = 'blog'
+```
+
+The pattern `$this := $` captures the current context, allowing nested queries to reference it via `$this`.
+
+### Variable Conventions in Nested Queries
+
+| Variable | Context | Meaning |
+|----------|---------|---------|
+| `$` | Inside projection | Current item being projected |
+| `$$` | Anywhere | Root context (table references) |
+| `$varName` | After binding | Named reference for use in nested queries |
+
+### Nested Query Limitations
+
+1. Nested queries in filters must return scalar values (use aggregates like `$count`, `$sum`, `$average`, `$min`, `$max`)
+2. Nested queries in projections return arrays (translated to `json_agg` or `jsonArrayFrom`)
+3. Deep nesting (more than 2-3 levels) may have performance implications
+
+## Limiting and Slicing
+
+Array slicing provides LIMIT/OFFSET functionality.
+
+### Single Item (LIMIT 1)
+
+```
+JSONata: pubs[0]
+SQL:     SELECT * FROM pubs LIMIT 1
+
+JSONata: pubs[-1]
+SQL:     SELECT * FROM pubs ORDER BY <default> DESC LIMIT 1
+```
+
+### Range Slicing (LIMIT with OFFSET)
+
+```
+JSONata: pubs[[0..9]]
+SQL:     SELECT * FROM pubs LIMIT 10
+
+JSONata: pubs[[10..19]]
+SQL:     SELECT * FROM pubs LIMIT 10 OFFSET 10
+
+JSONata: pubs[[0..4]]
+SQL:     SELECT * FROM pubs LIMIT 5
+```
+
+Note: JSONata ranges are inclusive on both ends, so `[0..9]` means 10 items.
+
+### Combined with Sort
+
+```
+JSONata: pubs^(>createdAt)[0]
+SQL:     SELECT * FROM pubs ORDER BY createdAt DESC LIMIT 1
+
+JSONata: pubs^(>score)[[0..9]]
+SQL:     SELECT * FROM pubs ORDER BY score DESC LIMIT 10
+```
+
+### Combined with Filter
+
+```
+JSONata: pubs[status="active"]^(>createdAt)[[0..9]]
+SQL:     SELECT * FROM pubs WHERE status = 'active' ORDER BY createdAt DESC LIMIT 10
+```
+
+### In Nested Queries
+
+```
+JSONata: pubs[type="blog"].($this := $; {
+           "id": id,
+           "topRelated": $$.pubs[type="article" and size > $this.size]^(>size)[[0..2]]
+         })
+
+SQL:     SELECT
+           p.id,
+           (SELECT json_agg(sub.*)
+            FROM (SELECT * FROM pubs p2
+                  WHERE p2.type = 'article' AND p2.size > p.size
+                  ORDER BY p2.size DESC LIMIT 3) sub) AS "topRelated"
+         FROM pubs p
+         WHERE p.type = 'blog'
+```
+
+## Query Chaining Patterns
+
+Multiple operations can be chained to build complex queries.
+
+### Filter-Sort-Limit-Project Chain
+
+```
+JSONata: pubs[status="published"]^(>views)[[0..9]].{
+           "title": title,
+           "author": author.name,
+           "views": views
+         }
+
+SQL:     SELECT
+           p.title,
+           a.name AS author,
+           p.views
+         FROM pubs p
+         JOIN authors a ON p.author_id = a.id
+         WHERE p.status = 'published'
+         ORDER BY p.views DESC
+         LIMIT 10
+```
+
+### Multiple Nested Queries
+
+```
+JSONata: pubs[type="blog"].($this := $; {
+           "id": id,
+           "title": title,
+           "relatedCount": $count($$.pubs[category = $this.category and id != $this.id]),
+           "topRelated": $$.pubs[category = $this.category and id != $this.id]^(>score)[[0..2]].title
+         })
+
+SQL:     SELECT
+           p.id,
+           p.title,
+           (SELECT COUNT(*) FROM pubs p2 WHERE p2.category = p.category AND p2.id != p.id) AS "relatedCount",
+           (SELECT json_agg(sub.title)
+            FROM (SELECT title FROM pubs p3
+                  WHERE p3.category = p.category AND p3.id != p.id
+                  ORDER BY p3.score DESC LIMIT 3) sub) AS "topRelated"
+         FROM pubs p
+         WHERE p.type = 'blog'
+```
+
 ## Future Considerations
 
 Features that could potentially be added with more work:

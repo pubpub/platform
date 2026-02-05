@@ -8,6 +8,7 @@ import {
 	COMPLETE_QUERY_PATTERNS,
 	CONDITIONAL_PATTERNS,
 	FILTER_PATTERNS,
+	LIMIT_PATTERNS,
 	NUMERIC_PATTERNS,
 	PROJECTION_PATTERNS,
 	SELECTION_PATTERNS,
@@ -152,13 +153,96 @@ describe("subquery patterns", () => {
 		})
 	}
 
-	// note: subquery patterns with parent refs may not be fully supported
-	it("scalar subquery pattern parses correctly", () => {
+	it("scalar subquery with variable binding parses correctly", () => {
 		const pattern = SUBQUERY_PATTERNS.find(
-			(p: TranslationPattern) => p.name === "scalar subquery in filter"
+			(p: TranslationPattern) => p.name === "scalar subquery in filter with variable binding"
 		)
 		expect(pattern).toBeDefined()
 		expect(parsesSuccessfully(pattern!.jsonata)).toBe(true)
+	})
+
+	it("correlated subquery in projection parses correctly", () => {
+		const pattern = SUBQUERY_PATTERNS.find(
+			(p: TranslationPattern) => p.name === "correlated subquery in projection"
+		)
+		expect(pattern).toBeDefined()
+		expect(parsesSuccessfully(pattern!.jsonata)).toBe(true)
+	})
+
+	it("nested query with limit parses correctly", () => {
+		const pattern = SUBQUERY_PATTERNS.find(
+			(p: TranslationPattern) => p.name === "nested query with filter and limit"
+		)
+		expect(pattern).toBeDefined()
+		expect(parsesSuccessfully(pattern!.jsonata)).toBe(true)
+	})
+})
+
+describe("limit patterns", () => {
+	for (const pattern of LIMIT_PATTERNS) {
+		it(`${pattern.name}: parses as valid JSONata`, () => {
+			expect(parsesSuccessfully(pattern.jsonata)).toBe(true)
+		})
+	}
+
+	it("single item access creates filter with number", () => {
+		const ast = jsonata("items[0]").ast()
+		expect(ast.type).toBe("path")
+		const steps = ast.steps as Array<{
+			type: string
+			stages?: Array<{ type: string; expr?: { type: string; value?: number } }>
+		}>
+		expect(steps[0].stages).toBeDefined()
+		expect(steps[0].stages![0].type).toBe("filter")
+		expect(steps[0].stages![0].expr?.type).toBe("number")
+		expect(steps[0].stages![0].expr?.value).toBe(0)
+	})
+
+	it("range slice creates filter with range operator", () => {
+		const ast = jsonata("items[[0..9]]").ast()
+		expect(ast.type).toBe("path")
+		const steps = ast.steps as Array<{
+			type: string
+			stages?: Array<{
+				type: string
+				expr?: {
+					type: string
+					value?: string
+					expressions?: Array<{
+						type: string
+						value?: string
+						lhs?: { value: number }
+						rhs?: { value: number }
+					}>
+				}
+			}>
+		}>
+		expect(steps[0].stages![0].expr?.type).toBe("unary")
+		expect(steps[0].stages![0].expr?.value).toBe("[")
+		expect(steps[0].stages![0].expr?.expressions![0].type).toBe("binary")
+		expect(steps[0].stages![0].expr?.expressions![0].value).toBe("..")
+	})
+
+	it("sort then limit creates sort with stages", () => {
+		const ast = jsonata("items^(>price)[0]").ast()
+		expect(ast.type).toBe("path")
+		const steps = ast.steps as Array<{
+			type: string
+			stages?: Array<{ type: string }>
+		}>
+		const sortStep = steps.find((s) => s.type === "sort")
+		expect(sortStep).toBeDefined()
+		expect(sortStep!.stages).toBeDefined()
+		expect(sortStep!.stages![0].type).toBe("filter")
+	})
+
+	it("all basic limit patterns should be valid in our subset", () => {
+		const basicPatterns = LIMIT_PATTERNS.filter(
+			(p: TranslationPattern) => !p.notes?.includes("negative")
+		)
+		for (const pattern of basicPatterns) {
+			expect(isValid(pattern.jsonata)).toBe(true)
+		}
 	})
 })
 

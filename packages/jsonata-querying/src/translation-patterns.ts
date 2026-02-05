@@ -58,16 +58,14 @@ export const FILTER_PATTERNS: TranslationPattern[] = [
 		description: "filter by exact match",
 		jsonata: "items[status = 'active']",
 		sql: "SELECT * FROM items WHERE status = 'active'",
-		kyselyPattern:
-			"db.selectFrom('items').selectAll().where('status', '=', 'active')",
+		kyselyPattern: "db.selectFrom('items').selectAll().where('status', '=', 'active')",
 	},
 	{
 		name: "numeric comparison filter",
 		description: "filter by numeric comparison",
 		jsonata: "items[price > 100]",
 		sql: "SELECT * FROM items WHERE price > 100",
-		kyselyPattern:
-			"db.selectFrom('items').selectAll().where('price', '>', 100)",
+		kyselyPattern: "db.selectFrom('items').selectAll().where('price', '>', 100)",
 	},
 	{
 		name: "compound filter with and",
@@ -105,8 +103,7 @@ export const FILTER_PATTERNS: TranslationPattern[] = [
 		description: "filter for non-null values",
 		jsonata: "items[$exists(description)]",
 		sql: "SELECT * FROM items WHERE description IS NOT NULL",
-		kyselyPattern:
-			"db.selectFrom('items').selectAll().where('description', 'is not', null)",
+		kyselyPattern: "db.selectFrom('items').selectAll().where('description', 'is not', null)",
 	},
 	{
 		name: "contains filter",
@@ -131,8 +128,7 @@ export const SORT_PATTERNS: TranslationPattern[] = [
 		description: "sort by field descending",
 		jsonata: "items^(>price)",
 		sql: "SELECT * FROM items ORDER BY price DESC",
-		kyselyPattern:
-			"db.selectFrom('items').selectAll().orderBy('price', 'desc')",
+		kyselyPattern: "db.selectFrom('items').selectAll().orderBy('price', 'desc')",
 	},
 	{
 		name: "multi-column sort",
@@ -358,17 +354,105 @@ export const CONDITIONAL_PATTERNS: TranslationPattern[] = [
 // subquery patterns
 export const SUBQUERY_PATTERNS: TranslationPattern[] = [
 	{
-		name: "scalar subquery in filter",
-		description: "compare to aggregate from subquery",
-		jsonata: "items[price > $avg(otherItems.price)]",
-		sql: "SELECT * FROM items WHERE price > (SELECT AVG(price) FROM otherItems)",
+		name: "scalar subquery in filter with variable binding",
+		description: "compare to aggregate from subquery using block expression",
+		jsonata: '($avg := $average(pubs[type="article"].size); pubs[type="blog" and size > $avg])',
+		sql: "SELECT * FROM pubs WHERE type = 'blog' AND size > (SELECT AVG(size) FROM pubs WHERE type = 'article')",
+		notes: "block expression with variable binding for scalar subquery",
 	},
 	{
-		name: "exists subquery",
-		description: "check existence in related table",
-		jsonata: "orders[$exists(items[productId = %.orderId])]",
-		sql: "SELECT * FROM orders WHERE EXISTS (SELECT 1 FROM items WHERE items.orderId = orders.id)",
-		notes: "% parent reference would need special handling",
+		name: "scalar subquery with chained filters",
+		description: "compare to aggregate using chained filter and root reference",
+		jsonata: 'pubs[type="blog"][size > $average($$.pubs[type="article"].size)]',
+		sql: "SELECT * FROM pubs WHERE type = 'blog' AND size > (SELECT AVG(size) FROM pubs WHERE type = 'article')",
+		notes: "$$ references root to access other table in nested query",
+	},
+	{
+		name: "correlated subquery in projection",
+		description: "nested query referencing current row via variable binding",
+		jsonata:
+			'pubs[type="blog"].($this := $; { "id": id, "laterPubs": $$.pubs[createdAt > $this.createdAt] })',
+		sql: "SELECT p.id, (SELECT json_agg(p2.*) FROM pubs p2 WHERE p2.created_at > p.created_at) AS laterPubs FROM pubs p WHERE p.type = 'blog'",
+		kyselyPattern:
+			"db.selectFrom('pubs as p').select(['p.id', (eb) => jsonArrayFrom(eb.selectFrom('pubs as p2').selectAll().where('p2.created_at', '>', eb.ref('p.created_at'))).as('laterPubs')]).where('p.type', '=', 'blog')",
+		notes: "$this := $ captures current context for use in nested query",
+	},
+	{
+		name: "count in nested query",
+		description: "scalar aggregate in projection",
+		jsonata:
+			'pubs.($this := $; { "id": id, "relatedCount": $count($$.pubs[category = $this.category and id != $this.id]) })',
+		sql: "SELECT p.id, (SELECT COUNT(*) FROM pubs p2 WHERE p2.category = p.category AND p2.id != p.id) AS relatedCount FROM pubs p",
+	},
+	{
+		name: "nested query with filter and limit",
+		description: "correlated subquery with ordering and limiting",
+		jsonata:
+			'pubs[type="blog"].($this := $; { "id": id, "topRelated": $$.pubs[category = $this.category]^(>score)[[0..2]] })',
+		sql: "SELECT p.id, (SELECT json_agg(sub.*) FROM (SELECT * FROM pubs p2 WHERE p2.category = p.category ORDER BY p2.score DESC LIMIT 3) sub) AS topRelated FROM pubs p WHERE p.type = 'blog'",
+		notes: "nested query with sort and limit translates to subquery with ORDER BY and LIMIT",
+	},
+]
+
+// limiting and slicing patterns
+export const LIMIT_PATTERNS: TranslationPattern[] = [
+	{
+		name: "single item access",
+		description: "get first item using index",
+		jsonata: "items[0]",
+		sql: "SELECT * FROM items LIMIT 1",
+		kyselyPattern: "db.selectFrom('items').selectAll().limit(1)",
+	},
+	{
+		name: "last item access",
+		description: "get last item using negative index",
+		jsonata: "items[-1]",
+		sql: "SELECT * FROM items ORDER BY id DESC LIMIT 1",
+		notes: "requires a default ordering column or explicit sort before",
+	},
+	{
+		name: "range slice first n",
+		description: "get first n items using range",
+		jsonata: "items[[0..9]]",
+		sql: "SELECT * FROM items LIMIT 10",
+		kyselyPattern: "db.selectFrom('items').selectAll().limit(10)",
+		notes: "jsonata range [0..9] is inclusive, so 10 items",
+	},
+	{
+		name: "range slice with offset",
+		description: "get items with offset",
+		jsonata: "items[[10..19]]",
+		sql: "SELECT * FROM items LIMIT 10 OFFSET 10",
+		kyselyPattern: "db.selectFrom('items').selectAll().limit(10).offset(10)",
+	},
+	{
+		name: "sort then limit",
+		description: "order by then take first",
+		jsonata: "items^(>price)[0]",
+		sql: "SELECT * FROM items ORDER BY price DESC LIMIT 1",
+		kyselyPattern: "db.selectFrom('items').selectAll().orderBy('price', 'desc').limit(1)",
+	},
+	{
+		name: "sort then range",
+		description: "order by then take range",
+		jsonata: "items^(>createdAt)[[0..9]]",
+		sql: "SELECT * FROM items ORDER BY createdAt DESC LIMIT 10",
+		kyselyPattern: "db.selectFrom('items').selectAll().orderBy('createdAt', 'desc').limit(10)",
+	},
+	{
+		name: "filter sort limit chain",
+		description: "full query chain with limiting",
+		jsonata: "items[status='active']^(>score)[[0..4]]",
+		sql: "SELECT * FROM items WHERE status = 'active' ORDER BY score DESC LIMIT 5",
+		kyselyPattern:
+			"db.selectFrom('items').selectAll().where('status', '=', 'active').orderBy('score', 'desc').limit(5)",
+	},
+	{
+		name: "limit in projection subquery",
+		description: "limiting nested query results",
+		jsonata:
+			'items.($this := $; { "id": id, "top3Related": $$.items[category = $this.category]^(>score)[[0..2]].id })',
+		sql: "SELECT i.id, (SELECT json_agg(sub.id) FROM (SELECT id FROM items i2 WHERE i2.category = i.category ORDER BY score DESC LIMIT 3) sub) AS top3Related FROM items i",
 	},
 ]
 
@@ -468,6 +552,7 @@ export const ALL_PATTERNS: TranslationPattern[] = [
 	...AGGREGATE_PATTERNS,
 	...CONDITIONAL_PATTERNS,
 	...SUBQUERY_PATTERNS,
+	...LIMIT_PATTERNS,
 	...PROJECTION_PATTERNS,
 	...COMPLETE_QUERY_PATTERNS,
 ]
