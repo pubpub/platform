@@ -1,0 +1,11 @@
+{
+	"extends": "tsconfig/base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"target": "ES2022",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext"
+	},
+	"include": ["."],
+	"exclude": ["dist", "build", "node_modules"]
+}
