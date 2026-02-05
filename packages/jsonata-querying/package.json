@@ -18,15 +18,16 @@
 	},
 	"devDependencies": {
 		"@types/node": "^25.2.0",
+		"@types/pg": "^8.11.6",
 		"@typescript/native-preview": "catalog:",
+		"db": "workspace:*",
+		"pg": "^8.14.1",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"preconstruct": {
-		"entrypoints": [
-			"index.ts"
-		],
+		"entrypoints": ["index.ts"],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,
