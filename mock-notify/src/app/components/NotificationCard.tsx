@@ -28,7 +28,13 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 		if (notification.direction === "received") {
 			return (
 				<span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 font-medium text-purple-800 text-xs">
-					<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<svg
+						className="h-3 w-3"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						aria-hidden="true"
+					>
 						<path
 							strokeLinecap="round"
 							strokeLinejoin="round"
@@ -48,7 +54,13 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 						: "bg-orange-100 text-orange-800"
 				}`}
 			>
-				<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<svg
+					className="h-3 w-3"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+					aria-hidden="true"
+				>
 					<path
 						strokeLinecap="round"
 						strokeLinejoin="round"
@@ -105,11 +117,13 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 
 				<div className="flex items-center gap-2">
 					<button
+						type="button"
 						onClick={() => setIsExpanded(!isExpanded)}
 						className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
 						title={isExpanded ? "Collapse" : "Expand"}
 					>
 						<svg
+							aria-hidden="true"
 							className={`h-5 w-5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
 							fill="none"
 							viewBox="0 0 24 24"
@@ -124,12 +138,14 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 						</svg>
 					</button>
 					<button
+						type="button"
 						onClick={onDelete}
 						className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
 						title="Delete"
 					>
 						<svg
 							className="h-5 w-5"
+							aria-hidden="true"
 							fill="none"
 							viewBox="0 0 24 24"
 							stroke="currentColor"

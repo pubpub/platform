@@ -19,6 +19,7 @@ export default function Home() {
 			const data = await res.json()
 			setNotifications(data.notifications)
 		} catch (error) {
+			// biome-ignore lint/suspicious/noConsole: shh
 			console.error("Failed to fetch notifications:", error)
 		} finally {
 			setIsLoading(false)
@@ -26,7 +27,7 @@ export default function Home() {
 	}, [filter])
 
 	useEffect(() => {
-		fetchNotifications()
+		void fetchNotifications()
 		// Poll for new notifications every 2 seconds
 		const interval = setInterval(fetchNotifications, 2000)
 		return () => clearInterval(interval)
@@ -75,6 +76,7 @@ export default function Home() {
 									<h2 className="font-semibold text-lg">Notifications</h2>
 									<div className="flex gap-1 rounded-lg bg-gray-100 p-1">
 										<button
+											type="button"
 											onClick={() => setFilter("all")}
 											className={`rounded-md px-3 py-1 font-medium text-sm transition-colors ${
 												filter === "all"
@@ -85,6 +87,7 @@ export default function Home() {
 											All ({notifications.length})
 										</button>
 										<button
+											type="button"
 											onClick={() => setFilter("received")}
 											className={`rounded-md px-3 py-1 font-medium text-sm transition-colors ${
 												filter === "received"
@@ -95,6 +98,7 @@ export default function Home() {
 											Received ({receivedCount})
 										</button>
 										<button
+											type="button"
 											onClick={() => setFilter("sent")}
 											className={`rounded-md px-3 py-1 font-medium text-sm transition-colors ${
 												filter === "sent"
@@ -108,6 +112,7 @@ export default function Home() {
 								</div>
 								{notifications.length > 0 && (
 									<button
+										type="button"
 										onClick={handleClearAll}
 										className="text-red-600 text-sm hover:text-red-800"
 									>

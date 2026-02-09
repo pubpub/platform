@@ -153,6 +153,7 @@ function splitByOperator(expression: string, operator: LogicalOperator): string[
 	let lastIndex = 0
 	let match: RegExpExecArray | null
 
+	// biome-ignore lint/suspicious/noAssignInExpressions: no it's fine
 	while ((match = regex.exec(expression)) !== null) {
 		const beforeMatch = expression.substring(lastIndex, match.index)
 		depth += (beforeMatch.match(/\(/g) || []).length - (beforeMatch.match(/\)/g) || []).length

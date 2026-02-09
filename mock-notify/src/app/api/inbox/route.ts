@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noConsole: <explanation> */
 import type { CoarNotifyPayload } from "~/lib/store"
 
 import { NextResponse } from "next/server"

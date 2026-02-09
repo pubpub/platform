@@ -406,7 +406,6 @@ const router = tsr.router(siteBuilderApi, {
 
 			const pages = body.pages
 			const css = body.css ?? ""
-			console.log("pages", css)
 			await mkdir(dirname(buildPath), { recursive: true })
 
 			// write build data (pages and css) to storage
@@ -428,8 +427,6 @@ const router = tsr.router(siteBuilderApi, {
 					},
 				},
 			})
-
-			console.log("buildSuccess", buildSuccess)
 
 			if (!buildSuccess) {
 				return {

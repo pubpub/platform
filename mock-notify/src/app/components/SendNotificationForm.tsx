@@ -123,33 +123,45 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="preprintId"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Preprint ID
 							</label>
 							<input
 								type="text"
+								id="preprintId"
 								value={preprintId}
 								onChange={(e) => setPreprintId(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="repositoryUrl"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Repository URL
 							</label>
 							<input
 								type="text"
+								id="repositoryUrl"
 								value={repositoryUrl}
 								onChange={(e) => setRepositoryUrl(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="serviceUrl"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Service URL (target)
 							</label>
 							<input
 								type="text"
+								id="serviceUrl"
 								value={serviceUrl}
 								onChange={(e) => setServiceUrl(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -161,55 +173,75 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="preprintId"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Preprint ID
 							</label>
 							<input
 								type="text"
+								id="preprintId"
 								value={preprintId}
 								onChange={(e) => setPreprintId(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="reviewId"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Review ID
 							</label>
 							<input
 								type="text"
+								id="reviewId"
 								value={reviewId}
 								onChange={(e) => setReviewId(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="repositoryUrl"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Repository URL
 							</label>
 							<input
 								type="text"
+								id="repositoryUrl"
 								value={repositoryUrl}
 								onChange={(e) => setRepositoryUrl(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="serviceUrl"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Service URL
 							</label>
 							<input
 								type="text"
+								id="serviceUrl"
 								value={serviceUrl}
 								onChange={(e) => setServiceUrl(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="serviceName"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Service Name
 							</label>
 							<input
 								type="text"
+								id="serviceName"
 								value={serviceName}
 								onChange={(e) => setServiceName(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -222,33 +254,45 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="reviewId"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Review ID
 							</label>
 							<input
 								type="text"
+								id="reviewId"
 								value={reviewId}
 								onChange={(e) => setReviewId(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="serviceUrl"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Service URL
 							</label>
 							<input
 								type="text"
+								id="serviceUrl"
 								value={serviceUrl}
 								onChange={(e) => setServiceUrl(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="aggregatorUrl"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Aggregator URL
 							</label>
 							<input
 								type="text"
+								id="aggregatorUrl"
 								value={aggregatorUrl}
 								onChange={(e) => setAggregatorUrl(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -261,11 +305,15 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="inReplyTo"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								In Reply To (Offer ID)
 							</label>
 							<input
 								type="text"
+								id="inReplyTo"
 								value={inReplyTo}
 								onChange={(e) => setInReplyTo(e.target.value)}
 								placeholder="urn:uuid:..."
@@ -273,22 +321,30 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="repositoryUrl"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Repository URL
 							</label>
 							<input
 								type="text"
+								id="repositoryUrl"
 								value={repositoryUrl}
 								onChange={(e) => setRepositoryUrl(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="serviceUrl"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Service URL
 							</label>
 							<input
 								type="text"
+								id="serviceUrl"
 								value={serviceUrl}
 								onChange={(e) => setServiceUrl(e.target.value)}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -306,6 +362,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 			{/* Mode Toggle */}
 			<div className="mb-4 flex gap-1 rounded-lg bg-gray-100 p-1">
 				<button
+					type="button"
 					onClick={() => setMode("template")}
 					className={`flex-1 rounded-md px-3 py-1.5 font-medium text-sm transition-colors ${
 						mode === "template"
@@ -316,6 +373,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 					Template
 				</button>
 				<button
+					type="button"
 					onClick={() => setMode("custom")}
 					className={`flex-1 rounded-md px-3 py-1.5 font-medium text-sm transition-colors ${
 						mode === "custom"
@@ -330,10 +388,14 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 			<div className="space-y-4">
 				{/* Target URL */}
 				<div>
-					<label className="mb-1 block font-medium text-gray-700 text-sm">
+					<label
+						htmlFor="targetUrl"
+						className="mb-1 block font-medium text-gray-700 text-sm"
+					>
 						Target URL
 					</label>
 					<input
+						id="targetUrl"
 						type="text"
 						value={targetUrl}
 						onChange={(e) => setTargetUrl(e.target.value)}
@@ -346,10 +408,14 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 					<>
 						{/* Template Type */}
 						<div>
-							<label className="mb-1 block font-medium text-gray-700 text-sm">
+							<label
+								htmlFor="templateType"
+								className="mb-1 block font-medium text-gray-700 text-sm"
+							>
 								Notification Type
 							</label>
 							<select
+								id="templateType"
 								value={templateType}
 								onChange={(e) =>
 									setTemplateType(e.target.value as PayloadTemplateType)
@@ -369,6 +435,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 
 						{/* Preview button */}
 						<button
+							type="button"
 							onClick={handlePreview}
 							className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 text-sm hover:bg-gray-50"
 						>
@@ -377,10 +444,14 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 					</>
 				) : (
 					<div>
-						<label className="mb-1 block font-medium text-gray-700 text-sm">
+						<label
+							htmlFor="customPayload"
+							className="mb-1 block font-medium text-gray-700 text-sm"
+						>
 							JSON Payload
 						</label>
 						<textarea
+							id="customPayload"
 							value={customPayload}
 							onChange={(e) => setCustomPayload(e.target.value)}
 							className="h-64 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -401,6 +472,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 
 				{/* Send Button */}
 				<button
+					type="button"
 					onClick={handleSend}
 					disabled={isSending}
 					className="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
