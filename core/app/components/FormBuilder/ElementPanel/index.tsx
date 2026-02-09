@@ -12,7 +12,6 @@ import { SubmissionSettings } from "../SubmissionSettings"
 import { isFieldInput, isStructuralElement } from "../types"
 import { ButtonConfigurationForm } from "./ButtonConfigurationForm"
 import { InputComponentConfigurationForm } from "./InputComponentConfigurationForm"
-import { SelectAccess } from "./SelectAccess"
 import { SelectElement } from "./SelectElement"
 import { StructuralElementConfigurationForm } from "./StructuralElementConfigurationForm"
 
@@ -47,7 +46,6 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 						<hr className="my-2" />
 						<Input disabled value={slug} />
 					</div>
-					<SelectAccess />
 					<SubmissionSettings />
 				</div>
 			)

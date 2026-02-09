@@ -10,6 +10,7 @@ import { AutomationEvent } from "db/public"
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
 import { Pencil } from "ui/icon"
 import { PubFieldProvider } from "ui/pubFields"
+import { Skeleton } from "ui/skeleton"
 import { StagesProvider, stagesDAO } from "ui/stages"
 
 import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu"
@@ -82,9 +83,9 @@ async function StageCard({
 	return (
 		<Card
 			key={stage.id}
-			className="relative flex flex-col justify-between gap-2 rounded-l-none border-none bg-transparent py-2 shadow-none"
+			className="relative flex flex-col justify-between gap-2 rounded-l-none border-none bg-transparent py-0 shadow-none"
 		>
-			<CardHeader className="!pb-2 my-1 flex items-center justify-between">
+			<CardHeader className="my-1 flex items-center justify-between p-0">
 				<CardTitle className="flex items-baseline gap-3">
 					<Link
 						href={`/c/${communitySlug}/stages/${stage.id}`}
@@ -117,13 +118,18 @@ async function StageCard({
 			</CardHeader>
 
 			{!!stage.pubsCount && stage.pubsCount > 0 && (
-				<CardContent>
+				<CardContent className="p-0">
 					<Suspense
 						fallback={
-							<PubListSkeleton
-								amount={stage.pubsCount < 3 ? stage.pubsCount : 3}
-								className="gap-4"
-							/>
+							<>
+								<PubListSkeleton
+									amount={stage.pubsCount < 3 ? stage.pubsCount : 3}
+									className="gap-4"
+								/>
+								{stage.pubsCount > 3 && (
+									<Skeleton className="mx-auto mt-4 h-6 w-24 rounded-full" />
+								)}
+							</>
 						}
 					>
 						<StagePubs

@@ -12,7 +12,13 @@ import { findCommunityBySlug } from "~/lib/server/community"
 import { redirectToLogin } from "~/lib/server/navigation/redirects"
 import { getPubFields } from "~/lib/server/pubFields"
 import { getPubTypesForCommunity } from "~/lib/server/pubtype"
-import { ContentLayout } from "../ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../ContentLayout"
 import { CreatePubTypeButton } from "./CreatePubTypeDialog"
 import { TypesTable } from "./TypesTable"
 
@@ -64,23 +70,20 @@ export default async function Page(props: {
 
 	return (
 		<PubFieldProvider pubFields={fields}>
-			<ContentLayout
-				title={
-					<>
-						<ToyBrick
-							size={24}
-							strokeWidth={1}
-							className="mr-2 text-muted-foreground"
-						/>{" "}
+			<ContentLayoutRoot>
+				<ContentLayoutHeader>
+					<ContentLayoutTitle>
+						<ToyBrick />
 						Types
-					</>
-				}
-				right={<CreatePubTypeButton />}
-			>
-				<div className="m-4">
+					</ContentLayoutTitle>
+					<ContentLayoutActions>
+						<CreatePubTypeButton />
+					</ContentLayoutActions>
+				</ContentLayoutHeader>
+				<ContentLayoutBody>
 					<TypesTable types={types} />
-				</div>
-			</ContentLayout>
+				</ContentLayoutBody>
+			</ContentLayoutRoot>
 		</PubFieldProvider>
 	)
 }

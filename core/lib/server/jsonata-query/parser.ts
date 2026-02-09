@@ -724,9 +724,7 @@ function calculateRelationDepth(condition: ParsedCondition, currentDepth = 0): n
 // public api
 
 export function parseJsonataQuery(expression: string): ParsedQuery {
-	console.log("expression", expression)
 	const ast = jsonata(expression).ast() as JsonataNode
-	console.log("ast", ast)
 
 	const condition = parseNode(ast)
 	const maxRelationDepth = calculateRelationDepth(condition)

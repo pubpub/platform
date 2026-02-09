@@ -439,7 +439,7 @@ const ResolverFieldSection = memo(
 										</p>
 									</TooltipContent>
 								</Tooltip>
-								<span className="text-xs text-amber-700 dark:text-amber-300">
+								<span className="text-amber-700 text-xs dark:text-amber-300">
 									Find a pub or transform input
 								</span>
 							</div>
@@ -462,9 +462,12 @@ const ResolverFieldSection = memo(
 								fieldState.invalid && "border-red-300"
 							)}
 						/>
-						<p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-							Use <code className="rounded bg-amber-100 px-1 dark:bg-amber-900">{"{{ }}"}</code> to
-							interpolate values from the automation context
+						<p className="mt-2 text-amber-600 text-xs dark:text-amber-400">
+							Use{" "}
+							<code className="rounded bg-amber-100 px-1 dark:bg-amber-900">
+								{"{{ }}"}
+							</code>{" "}
+							to interpolate values from the automation context
 						</p>
 						{fieldState.error && (
 							<p className="mt-1 text-destructive text-xs">

@@ -15,7 +15,13 @@ import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens"
 import { findCommunityBySlug } from "~/lib/server/community"
 import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
 import { getStages } from "~/lib/server/stages"
-import { ContentLayout } from "../../ContentLayout"
+import {
+	ContentLayoutActions,
+	ContentLayoutBody,
+	ContentLayoutHeader,
+	ContentLayoutRoot,
+	ContentLayoutTitle,
+} from "../../ContentLayout"
 import { CreateTokenButton } from "./CreateTokenButton"
 import { ExistingToken } from "./ExistingToken"
 
@@ -74,17 +80,18 @@ export default async function Page(_props: { params: { communitySlug: string } }
 	} satisfies CreateTokenFormContext["pubTypes"]
 
 	return (
-		<ContentLayout
-			title={
-				<>
-					<Key size={24} strokeWidth={1} className="mr-2 text-muted-foreground" /> API
+		<ContentLayoutRoot>
+			<ContentLayoutHeader>
+				<ContentLayoutTitle>
+					<Key size={20} strokeWidth={1} className="mr-2 text-muted-foreground" /> API
 					Tokens
-				</>
-			}
-			right={<CreateTokenButton stages={stagesOptions} pubTypes={pubTypesOptions} />}
-		>
-			<div className="m-4">
-				<div className="grid gap-6">
+				</ContentLayoutTitle>
+				<ContentLayoutActions>
+					<CreateTokenButton stages={stagesOptions} pubTypes={pubTypesOptions} />
+				</ContentLayoutActions>
+			</ContentLayoutHeader>
+			<ContentLayoutBody>
+				<div className="grid gap-2">
 					{existingTokens.length > 0 ? (
 						<div className="overflow-auto">
 							{existingTokens.map((token, idx) => (
@@ -110,7 +117,7 @@ export default async function Page(_props: { params: { communitySlug: string } }
 						</div>
 					)}
 				</div>
-			</div>
-		</ContentLayout>
+			</ContentLayoutBody>
+		</ContentLayoutRoot>
 	)
 }

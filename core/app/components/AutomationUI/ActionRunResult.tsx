@@ -78,9 +78,9 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 			{isFailure && (
 				<div className="space-y-2">
 					{result.title && (
-						<div className="font-medium text-red-700 text-sm">{result.title}</div>
+						<div className="font-medium text-destructive text-sm">{result.title}</div>
 					)}
-					<div className="text-red-700 text-sm">{result.report}</div>
+					<div className="text-destructive text-sm">{result.report}</div>
 					{!!result.error && typeof result.error === "string" && (
 						<Collapsible open={showCause} onOpenChange={setShowCause}>
 							<CollapsibleTrigger asChild>

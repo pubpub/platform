@@ -43,7 +43,8 @@ export const CreateTokenButton = ({
 			<DialogTrigger asChild>
 				<Button
 					data-testid="new-token-button"
-					className={cn("h-10 bg-emerald-500 text-white", className)}
+					size="sm"
+					className={cn("bg-emerald-500 text-white", className)}
 				>
 					{children || (
 						<>

@@ -79,6 +79,8 @@ export const isButtonElement = (element: FormElementData): element is ButtonElem
 	element.type === ElementType.button
 
 export const formBuilderSchema = z.object({
+	name: z.string(),
+	isDefault: z.boolean(),
 	access: z.nativeEnum(FormAccessType),
 	elements: z.array(formElementSchema),
 	formId: formsIdSchema,

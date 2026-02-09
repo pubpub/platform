@@ -10,9 +10,9 @@ import {
 	BookOpen,
 	BookOpenText,
 	Bot,
-	CurlyBraces,
 	FlagTriangleRightIcon,
 	Form,
+	FormInput,
 	Layers3,
 	Settings2,
 	ToyBrick,
@@ -138,7 +138,7 @@ const manageLinks: LinkGroupDefinition = {
 		{
 			href: "/fields",
 			text: "Fields",
-			icon: <CurlyBraces size={16} />,
+			icon: <FormInput size={16} />,
 			authorization: userCanEditCommunityCached,
 		},
 		{
@@ -352,7 +352,7 @@ const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => 
 
 	return (
 		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="fixed z-40 border-r-0!">
-			<SidebarHeader className="py-4 group-data-[state=expanded]:p-4 group-data-[collapsible=icon]:pt-5 group-data-[state=expanded]:pb-2">
+			<SidebarHeader className="py-4 group-data-[state=expanded]:p-4 group-data-[collapsible=icon]:pt-4 group-data-[state=expanded]:pb-2">
 				<SidebarMenu>
 					<SidebarMenuItem className={`h-full`}>
 						<CommunitySwitcher
