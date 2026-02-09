@@ -7,7 +7,8 @@ export type TestFixtures = {
 }
 
 export const test = base.extend<TestFixtures>({
-	mockPreprintRepo: async (_testInfo, use) => {
+	// biome-ignore lint/correctness/noEmptyPattern: shh
+	mockPreprintRepo: async ({}, use) => {
 		const repo = new MockPreprintRepo()
 		await repo.start()
 		await use(repo)
