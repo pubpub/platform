@@ -212,6 +212,34 @@ function translateVariable(
 	throw new TranslationError(`unresolved variable: $${varName}`, node, ctx)
 }
 
+// check if a result references a jsonb field
+function isJsonbField(result: TranslationResult, ctx: TranslationContext): boolean {
+	if (result.type !== "reference" || !ctx.currentTable) return false
+
+	const tableSchema = ctx.schema.tables[ctx.currentTable]
+	if (!tableSchema) return false
+
+	// find the field by column name
+	for (const field of Object.values(tableSchema.fields)) {
+		if (field.column === result.column && field.type === "jsonb") {
+			return true
+		}
+	}
+	return false
+}
+
+// wrap a literal value for jsonb comparison (auto-stringify strings)
+function wrapForJsonbComparison(
+	result: TranslationResult,
+	ctx: TranslationContext
+): RawBuilder<unknown> {
+	if (result.type === "literal" && typeof result.value === "string") {
+		// json stringify the string value for jsonb comparison
+		return sql.lit(JSON.stringify(result.value))
+	}
+	return resultToSql(result, ctx)
+}
+
 // translate a binary expression
 function translateBinary(
 	node: ExprNode & { type: "binary" },
@@ -227,10 +255,27 @@ function translateBinary(
 	const left = translateExpression(binaryNode.lhs, ctx)
 	const right = translateExpression(binaryNode.rhs, ctx)
 
-	const leftSql = resultToSql(left, ctx)
-	const rightSql = resultToSql(right, ctx)
-
 	const op = binaryNode.value
+
+	// for comparison operators, check if we're comparing against a jsonb field
+	// and auto-stringify string literals
+	const isComparison = ["=", "!=", "<", "<=", ">", ">="].includes(op)
+	const leftIsJsonb = isJsonbField(left, ctx)
+	const rightIsJsonb = isJsonbField(right, ctx)
+
+	let leftSql: RawBuilder<unknown>
+	let rightSql: RawBuilder<unknown>
+
+	if (isComparison && leftIsJsonb) {
+		leftSql = resultToSql(left, ctx)
+		rightSql = wrapForJsonbComparison(right, ctx)
+	} else if (isComparison && rightIsJsonb) {
+		leftSql = wrapForJsonbComparison(left, ctx)
+		rightSql = resultToSql(right, ctx)
+	} else {
+		leftSql = resultToSql(left, ctx)
+		rightSql = resultToSql(right, ctx)
+	}
 
 	// map jsonata operators to sql
 	switch (op) {
@@ -681,10 +726,20 @@ function substringFunc(args: TranslationResult[], ctx: TranslationContext): Tran
 	}
 }
 
-// contains function
+// contains function - handles both text and jsonb fields
 function containsFunc(args: TranslationResult[], ctx: TranslationContext): TranslationResult {
-	const strSql = resultToSql(args[0], ctx)
+	const firstArg = args[0]
+	const strSql = resultToSql(firstArg, ctx)
 	const patternSql = resultToSql(args[1], ctx)
+
+	// if the first argument is a jsonb field, cast to text and use ILIKE for case-insensitive
+	if (isJsonbField(firstArg, ctx)) {
+		return {
+			type: "expression",
+			value: sql`${strSql}::text ILIKE '%' || ${patternSql} || '%'`,
+		}
+	}
+
 	return {
 		type: "expression",
 		value: sql`POSITION(${patternSql} IN ${strSql}) > 0`,

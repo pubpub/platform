@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: <explanation> */
 import type {
 	CreatePubRequestBodyWithNullsNew,
 	Filter,
@@ -61,6 +62,7 @@ import { findRanksBetween } from "../rank"
 import { autoCache } from "./cache/autoCache"
 import { autoRevalidate } from "./cache/autoRevalidate"
 import { BadRequestError, NotFoundError } from "./errors"
+import { compilePubFilter } from "./jsonata-query/pubpub-quata"
 import { maybeWithTrx } from "./maybeWithTrx"
 import { applyFilters } from "./pub-filters"
 import { _getPubFields } from "./pubFields"
@@ -1238,6 +1240,13 @@ export interface GetPubsWithRelatedValuesOptions
 	trx?: typeof db
 	filters?: Filter
 	/**
+	 * a quata/jsonata expression for filtering pubs
+	 * uses the pubpub-quata compiler to generate sql conditions
+	 * supports: values.fieldSlug, pubType.name, stage.name, direct fields
+	 * communitySlug is required for resolving value field shorthands
+	 */
+	quataExpression?: { expression: string; communitySlug: string }
+	/**
 	 * Constraints on which pub types the user/token has access to. Will also filter related pubs.
 	 */
 	allowedPubTypes?: PubTypesId[]
@@ -1728,10 +1737,16 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.$if(Boolean(allowedPubTypes?.length), (qb) =>
 						qb.where("pubs.pubTypeId", "in", allowedPubTypes!)
 					)
-					// pub value filter
+					// pub value filter (structured filter DSL)
 					.$if(Boolean(options?.filters), (qb) =>
 						qb.where((eb) => applyFilters(eb, options!.filters!))
 					)
+					// quata expression filter (jsonata-based)
+					.$if(Boolean(options?.quataExpression), (qb) => {
+						const { expression, communitySlug } = options!.quataExpression!
+						const compiled = compilePubFilter(expression, { communitySlug })
+						return qb.where((eb) => compiled.apply(eb, "pubs"))
+					})
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
 					.$if(Boolean(offset), (qb) => qb.offset(offset!))

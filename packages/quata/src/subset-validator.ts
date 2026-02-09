@@ -3,6 +3,7 @@ import type {
 	BinaryNode,
 	BlockNode,
 	ConditionNode,
+	ExprNode,
 	FunctionNode,
 	NegationNode,
 	ObjectConstructorNode,
@@ -12,8 +13,7 @@ import type {
 	VariableNode,
 } from "./jsonata.overrides.js"
 
-import jsonata from "jsonata"
-
+import { parseExpression } from "./ast-cache.js"
 import { getFunctionMapping } from "./function-mapping.js"
 import {
 	BINARY_OPERATOR_CLASSIFICATION,
@@ -36,7 +36,7 @@ export interface ValidationResult {
 }
 
 // using any for node types since the jsonata types don't fully match runtime
-type AstNode = jsonata.ExprNode | { type: string; [key: string]: unknown }
+type AstNode = ExprNode | { type: string; [key: string]: unknown }
 
 // validate an entire expression
 export function validateExpression(expr: string): ValidationResult {
@@ -45,7 +45,7 @@ export function validateExpression(expr: string): ValidationResult {
 
 	let ast: AstNode
 	try {
-		ast = jsonata(expr).ast() as AstNode
+		ast = parseExpression(expr) as AstNode
 	} catch (e) {
 		return {
 			valid: false,

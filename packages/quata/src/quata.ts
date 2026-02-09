@@ -4,11 +4,11 @@
 import type { ExprNode, PathNode, SortNode } from "./jsonata.overrides.js"
 import type { QuataSchema, TableSchema } from "./schema/types.js"
 
-import jsonata from "jsonata"
 import { type Kysely, type RawBuilder, type SelectQueryBuilder, sql } from "kysely"
 
+import { parseExpression } from "./ast-cache.js"
 import { normalizeSchema } from "./schema/types.js"
-import { isValid, validateExpression } from "./subset-validator.js"
+import { validateExpression } from "./subset-validator.js"
 import { createContext, generateAlias, type TranslationContext } from "./translator/context.js"
 import { resultToSql, TranslationError, translateExpression } from "./translator/expression.js"
 
@@ -16,6 +16,30 @@ import { resultToSql, TranslationError, translateExpression } from "./translator
 export interface QuataOptions<TSchema extends QuataSchema> {
 	schema: TSchema
 	db: Kysely<Record<string, unknown>>
+}
+
+// extracted query parts for integration with existing queries
+export interface QueryParts {
+	// the table name and alias
+	table: { name: string; alias: string } | null
+	// WHERE conditions as raw sql builders
+	filters: RawBuilder<unknown>[]
+	// ORDER BY clauses
+	orderBy: Array<{ column: string; direction: "asc" | "desc" }>
+	// LIMIT value
+	limit: number | undefined
+	// OFFSET value
+	offset: number | undefined
+	// projection field expressions (key -> sql expression)
+	projection: Array<{ key: string; sql: RawBuilder<unknown> }> | null
+	// joins needed for relation traversal
+	joins: Array<{
+		table: string
+		alias: string
+		sourceAlias: string
+		foreignKey: string
+		targetKey: string
+	}>
 }
 
 // a compiled query ready for execution
@@ -28,6 +52,8 @@ export interface CompiledQuery<T = unknown> {
 	execute: (params?: Record<string, unknown>) => Promise<T[]>
 	// get the kysely query builder (for further modification)
 	toQueryBuilder: () => SelectQueryBuilder<Record<string, unknown>, string, T>
+	// get the extracted query parts for integration
+	getParts: () => QueryParts
 }
 
 // the main quata instance
@@ -71,16 +97,16 @@ export function createQuata<TSchema extends QuataSchema>(
 			expression: string,
 			params?: Record<string, unknown>
 		): CompiledQuery<T> {
-			// validate the expression first
-			if (!isValid(expression)) {
-				const validation = validateExpression(expression)
+			// parse the expression to ast (cached)
+			const ast = parseExpression(expression)
+
+			// validate the ast
+			const validation = validateExpression(expression)
+			if (!validation.valid) {
 				throw new Error(
 					`invalid expression: ${validation.errors.map((e) => e.message).join(", ")}`
 				)
 			}
-
-			// parse the expression to ast
-			const ast = jsonata(expression).ast() as ExprNode
 
 			// create translation context
 			const ctx = createContext({
@@ -95,9 +121,20 @@ export function createQuata<TSchema extends QuataSchema>(
 			// compile to sql
 			const compiled = query.compile()
 
+			// extract query parts for integration
+			const extractParts = (): QueryParts => {
+				const partsCtx = createContext({
+					schema: normalizedSchema,
+					parameters: params ?? {},
+					db,
+				})
+				return extractQueryParts(ast, partsCtx)
+			}
+
 			return {
 				sql: compiled.sql,
 				parameters: compiled.parameters as unknown[],
+				getParts: extractParts,
 				execute: async (runtimeParams?: Record<string, unknown>) => {
 					if (runtimeParams) {
 						// merge runtime params with compile-time params
@@ -601,6 +638,183 @@ function applyProjection(
 	}
 
 	return q
+}
+
+// extract query parts without building the full query
+// useful for integrating filters/ordering into existing queries
+function extractQueryParts(ast: ExprNode, ctx: TranslationContext): QueryParts {
+	// handle $$table expressions
+	if (ast.type === "variable") {
+		const varNode = ast as unknown as {
+			value: string
+			predicate?: Array<{ type: string; expr?: ExprNode }>
+		}
+
+		if (varNode.value.startsWith("$")) {
+			const tableName = varNode.value.slice(1)
+			const tableSchema = ctx.schema.tables[tableName]
+			if (!tableSchema) {
+				return {
+					table: null,
+					filters: [],
+					orderBy: [],
+					limit: undefined,
+					offset: undefined,
+					projection: null,
+					joins: [],
+				}
+			}
+
+			const tableAlias = generateAlias(ctx)
+			ctx.currentTable = tableName
+			ctx.currentTableAlias = tableAlias
+
+			const filters: RawBuilder<unknown>[] = []
+			let limitValue: number | undefined
+			let offsetValue: number | undefined
+
+			const originalTable = ctx.currentTable
+			const originalAlias = ctx.currentTableAlias
+
+			if (varNode.predicate) {
+				for (const pred of varNode.predicate) {
+					if (pred.type === "filter" && pred.expr) {
+						if (pred.expr.type === "number") {
+							const idx = (pred.expr as unknown as { value: number }).value
+							limitValue = 1
+							if (idx > 0) offsetValue = idx
+						} else if (pred.expr.type === "unary") {
+							const unaryExpr = pred.expr as unknown as {
+								value: string
+								expressions?: ExprNode[]
+							}
+							if (unaryExpr.value === "[" && unaryExpr.expressions?.length === 1) {
+								const rangeExpr = unaryExpr.expressions[0] as unknown as {
+									type: string
+									value: string
+									lhs?: { value: number }
+									rhs?: { value: number }
+								}
+								if (rangeExpr.type === "binary" && rangeExpr.value === "..") {
+									const start = rangeExpr.lhs?.value ?? 0
+									const end = rangeExpr.rhs?.value ?? 0
+									limitValue = end - start + 1
+									if (start > 0) offsetValue = start
+								}
+							}
+						} else {
+							ctx.currentTable = originalTable
+							ctx.currentTableAlias = originalAlias
+							const result = translateExpression(pred.expr, ctx)
+							filters.push(resultToSql(result, ctx))
+						}
+					}
+				}
+			}
+
+			ctx.currentTable = originalTable
+			ctx.currentTableAlias = originalAlias
+
+			// collect joins
+			const joins = Array.from(ctx.pendingJoins.values()).map((j) => {
+				const targetTable = ctx.schema.tables[j.targetTableName]
+				return {
+					table: targetTable?.table ?? j.targetTableName,
+					alias: j.targetAlias,
+					sourceAlias: j.sourceAlias,
+					foreignKey: j.relation.foreignKey,
+					targetKey: j.relation.targetKey,
+				}
+			})
+
+			return {
+				table: { name: tableSchema.table, alias: tableAlias },
+				filters,
+				orderBy: [],
+				limit: limitValue,
+				offset: offsetValue,
+				projection: null,
+				joins,
+			}
+		}
+	}
+
+	// handle path expressions
+	if (ast.type === "path") {
+		const pathNode = ast as unknown as PathNode
+		const analysis = analyzePathExpression(pathNode, ctx)
+
+		if (!analysis.tableName) {
+			return {
+				table: null,
+				filters: [],
+				orderBy: [],
+				limit: undefined,
+				offset: undefined,
+				projection: null,
+				joins: [],
+			}
+		}
+
+		const tableSchema = ctx.schema.tables[analysis.tableName]
+
+		// update context for projection extraction
+		ctx.currentTable = analysis.tableName
+		ctx.currentTableAlias = analysis.tableAlias
+
+		// extract projection expressions
+		let projectionParts: Array<{ key: string; sql: RawBuilder<unknown> }> | null = null
+		if (analysis.projection) {
+			const originalTable = ctx.currentTable
+			const originalAlias = ctx.currentTableAlias
+			projectionParts = []
+
+			for (const [key, valueExpr] of analysis.projection) {
+				ctx.currentTable = originalTable
+				ctx.currentTableAlias = originalAlias
+				const result = translateExpression(valueExpr, ctx)
+				projectionParts.push({ key, sql: resultToSql(result, ctx) })
+			}
+
+			ctx.currentTable = originalTable
+			ctx.currentTableAlias = originalAlias
+		}
+
+		// collect joins
+		const joins = Array.from(ctx.pendingJoins.values()).map((j) => {
+			const targetTable = ctx.schema.tables[j.targetTableName]
+			return {
+				table: targetTable?.table ?? j.targetTableName,
+				alias: j.targetAlias,
+				sourceAlias: j.sourceAlias,
+				foreignKey: j.relation.foreignKey,
+				targetKey: j.relation.targetKey,
+			}
+		})
+
+		return {
+			table: tableSchema
+				? { name: tableSchema.table, alias: analysis.tableAlias ?? "t0" }
+				: null,
+			filters: analysis.whereConditions,
+			orderBy: analysis.orderBy,
+			limit: analysis.limit,
+			offset: analysis.offset,
+			projection: projectionParts,
+			joins,
+		}
+	}
+
+	// fallback for other ast types
+	return {
+		table: null,
+		filters: [],
+		orderBy: [],
+		limit: undefined,
+		offset: undefined,
+		projection: null,
+		joins: [],
+	}
 }
 
 // re-export types and utilities
