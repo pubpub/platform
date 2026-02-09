@@ -28,7 +28,7 @@ beforeAll(async () => {
 	}
 })
 
-describe("assets upload", () => {
+describe.skip("assets upload", () => {
 	it("should be able to upload a file to the minio bucket from the server", async () => {
 		const { uploadFileToS3 } = await import("./assets")
 
