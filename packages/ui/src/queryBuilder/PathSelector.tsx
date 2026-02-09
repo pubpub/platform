@@ -3,6 +3,7 @@
 import type { PubTypes, Stages } from "db/public"
 import type { PubField } from "../pubFields/PubFieldContext"
 
+import * as React from "react"
 import { useState } from "react"
 import { ChevronRight, Code } from "lucide-react"
 

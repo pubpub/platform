@@ -4,6 +4,7 @@ import type { PubTypes, Stages } from "db/public"
 import type { PubField } from "../pubFields/PubFieldContext"
 import type { Operator, VisualCondition } from "./types"
 
+import * as React from "react"
 import { useState } from "react"
 import { X } from "lucide-react"
 

@@ -4,6 +4,7 @@ import type { PubTypes, Stages } from "db/public"
 import type { PubField } from "../pubFields/PubFieldContext"
 import type { LogicalOperator, VisualCondition, VisualConditionGroup, VisualQuery } from "./types"
 
+import * as React from "react"
 import { Plus, X } from "lucide-react"
 
 import { cn } from "utils"

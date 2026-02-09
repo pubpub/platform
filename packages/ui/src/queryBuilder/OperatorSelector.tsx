@@ -3,7 +3,7 @@
 import type { FieldType } from "./PathSelector"
 import type { Operator } from "./types"
 
-import React from "react"
+import * as React from "react"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select"
 
@@ -35,7 +35,7 @@ interface OperatorSelectorProps {
 
 export function OperatorSelector({ value, onChange, fieldType, disabled }: OperatorSelectorProps) {
 	const availableOperators = ALL_OPERATORS.filter(
-		(op) => op.types.includes(fieldType) || fieldType === "unknown"
+		(op) => op.types.some((type) => type === fieldType) || fieldType === "unknown"
 	)
 
 	// if current value is not in available operators, default to first one

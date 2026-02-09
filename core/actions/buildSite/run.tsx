@@ -1,5 +1,6 @@
 "use server"
 
+import type { JsonValue } from "contracts"
 import type { PubsId } from "db/public"
 import type { PubValues } from "~/lib/server"
 import type { action } from "./action"
@@ -45,6 +46,10 @@ export const run = defineRun<typeof action>(
 		const community = await getCommunity(communityId)
 		const siteBuilderToken = await getSiteBuilderToken(communityId)
 
+		if (!community) {
+			throw new Error("Community not found")
+		}
+
 		if (!siteBuilderToken) {
 			throw new Error("Site builder token not found")
 		}
@@ -58,7 +63,7 @@ export const run = defineRun<typeof action>(
 			},
 		})
 
-		const _pages = await Promise.all(
+		const pages = await Promise.all(
 			config.pages.map(async (page) => {
 				const query = compileJsonataQuery(page.filter)
 
@@ -69,6 +74,7 @@ export const run = defineRun<typeof action>(
 						depth: 1,
 						withValues: true,
 						withRelatedPubs: true,
+						withPubType: true,
 					}
 				)
 
@@ -96,14 +102,12 @@ export const run = defineRun<typeof action>(
 					})
 				)
 
-				console.log("interpolatedPubs", interpolatedPubs)
-
 				return {
 					pages: interpolatedPubs.map((pub) => ({
 						id: pub.id,
 						title: pub.title,
 						content: page.transform,
-						slug: pub.slug,
+						slug: pub.slug as string,
 					})),
 					transform: page.transform,
 				}
@@ -128,7 +132,6 @@ export const run = defineRun<typeof action>(
 				authorization: `Bearer ${siteBuilderToken}`,
 			},
 		})
-		console.log("AAAAAAAAAAAAAAA", _pages[0].pages)
 
 		const [buildError, result] = await tryCatch(
 			siteBuilderClient.build({
@@ -137,7 +140,7 @@ export const run = defineRun<typeof action>(
 					communitySlug,
 					subpath: config.subpath,
 					css: config.css,
-					pages: _pages,
+					pages,
 					siteUrl: env.PUBPUB_URL,
 				},
 				headers: {
@@ -185,7 +188,7 @@ export const run = defineRun<typeof action>(
 				)
 
 				const pubValues = mappedOutputs.reduce((acc, { pubField, resValue }) => {
-					acc[pubField] = resValue
+					acc[pubField] = resValue as JsonValue
 					return acc
 				}, {} as PubValues)
 

@@ -2,7 +2,7 @@
 
 import type { QueryBuilderProps, QueryMode } from "./types"
 
-import React from "react"
+import * as React from "react"
 import { Code2, Layers } from "lucide-react"
 
 import { cn } from "utils"
@@ -103,12 +103,12 @@ export function QueryBuilder({
 					language="jsonata"
 					theme={theme}
 					height="120px"
-					options={{
-						minimap: { enabled: false },
-						lineNumbers: "off",
+					{...{
+						minimap: false,
+						lineNumbers: false,
 						folding: false,
 						scrollBeyondLastLine: false,
-						wordWrap: "on",
+						wordWrap: true,
 						placeholder: placeholder,
 					}}
 				/>

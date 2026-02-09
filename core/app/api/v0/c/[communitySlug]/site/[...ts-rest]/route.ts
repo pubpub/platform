@@ -1,4 +1,5 @@
 import type { CommunitiesId, CommunityMembershipsId, PubsId, PubTypesId, StagesId } from "db/public"
+import type { ExpressionBuilder, ExpressionWrapper } from "kysely"
 
 import { createNextHandler } from "@ts-rest/serverless/next"
 
@@ -187,7 +188,9 @@ const handler = createNextHandler(
 					}
 				}
 
-				let customFilter: (eb: AnyExpressionBuilder) => AnyExpressionWrapper | undefined
+				let customFilter:
+					| ((eb: ExpressionBuilder<any, any>) => ExpressionWrapper<any, any, any>)
+					| undefined
 				if (query?.query) {
 					const jsonataQuery = compileJsonataQuery(query.query)
 					customFilter = (eb) =>
@@ -228,7 +231,6 @@ const handler = createNextHandler(
 
 				let finalPubs = pubs
 				if (query?.transform) {
-					// console.log("transform", query.transform)
 					try {
 						finalPubs = await Promise.all(
 							finalPubs.map(async (pub) => {
@@ -239,7 +241,6 @@ const handler = createNextHandler(
 									useDummyValues: true,
 								})
 
-								console.log("pubContext", pubContext.pub.values)
 								const transformed = await interpolate(query.transform!, pubContext)
 
 								const { values, ...pubWithoutValues } = pub
@@ -248,10 +249,10 @@ const handler = createNextHandler(
 									...pubWithoutValues,
 									content: transformed,
 								}
-							})
+							}) as any[]
 						)
 					} catch (error) {
-						console.error("Error transforming pubs", error)
+						logger.error("Error transforming pubs", error)
 						throw new BadRequestError("Error transforming pubs. " + error.message)
 					}
 				}

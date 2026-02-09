@@ -1,5 +1,6 @@
 "use server"
 
+import type { JsonValue } from "contracts"
 import type { PubsId } from "db/public"
 import type { PubValues } from "~/lib/server"
 import type { action } from "./action"
@@ -97,7 +98,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 	)
 
 	const pubValues = mappedOutputs.reduce((acc, { pubField, resValue }) => {
-		acc[pubField] = resValue
+		acc[pubField] = resValue as JsonValue
 		return acc
 	}, {} as PubValues)
 

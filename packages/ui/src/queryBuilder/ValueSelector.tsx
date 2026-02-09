@@ -3,6 +3,8 @@
 import type { PubTypes, Stages } from "db/public"
 import type { FieldType } from "./PathSelector"
 
+import * as React from "react"
+
 import { cn } from "utils"
 
 import { Input } from "../input"
@@ -29,7 +31,6 @@ export function ValueSelector({
 	stages,
 	disabled,
 }: ValueSelectorProps) {
-	// show dropdown for pub type selection
 	if (path === "$.pub.pubType.name" && operator === "=" && pubTypes && pubTypes.length > 0) {
 		return (
 			<Select value={value} onValueChange={onChange} disabled={disabled}>
