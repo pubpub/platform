@@ -71,6 +71,8 @@ export function compilePubFilter(
 // expand user-facing shorthands to valid jsonata
 // values.fieldSlug -> values[field.slug = 'communitySlug:fieldSlug'].value
 // values['field-slug'] -> values[field.slug = 'communitySlug:field-slug'].value
+// out['slug'] -> out['communitySlug:slug']
+// in['slug'] -> in['communitySlug:slug']
 // this keeps the expression valid jsonata for frontend preview
 function expandShorthands(expression: string, communitySlug: string): string {
 	// dot notation: values.fieldSlug (not followed by . or [ or ()
@@ -87,6 +89,25 @@ function expandShorthands(expression: string, communitySlug: string): string {
 		/values\[['"]([^'"]+)['"]\]/g,
 		(_match, fieldSlug) =>
 			`values[field.slug = '${communitySlug}:${fieldSlug.toLowerCase()}'].value`
+	)
+
+	// out['slug'] -> out['communitySlug:slug'] (prefix community slug for relation fields)
+	// only prefix if the slug doesn't already contain a colon
+	result = result.replace(
+		/out\[['"]([^'"]+)['"]\]/g,
+		(_match, slug) => {
+			const prefixed = slug.includes(":") ? slug : `${communitySlug}:${slug.toLowerCase()}`
+			return `out['${prefixed}']`
+		}
+	)
+
+	// in['slug'] -> in['communitySlug:slug']
+	result = result.replace(
+		/in\[['"]([^'"]+)['"]\]/g,
+		(_match, slug) => {
+			const prefixed = slug.includes(":") ? slug : `${communitySlug}:${slug.toLowerCase()}`
+			return `in['${prefixed}']`
+		}
 	)
 
 	return result
@@ -300,17 +321,14 @@ function translateComparison<DB, TB extends keyof DB>(
 		return eb.val(true) as any
 	}
 
-	// value access pattern: values[field.slug = '...'].value
 	if (leftPath.type === "value_access") {
 		return buildValueExistsSubquery(eb, leftPath.fieldSlug, op, rightValue, pubRef)
 	}
 
-	// relation path: pubType.name, stage.name, etc.
 	if (leftPath.type === "relation") {
 		return buildRelationCondition(eb, leftPath.relation, leftPath.field, op, rightValue, pubRef)
 	}
 
-	// direct field on pubs table
 	if (leftPath.type === "direct") {
 		const sqlOp = mapOperator(op)
 		const ref = sql.ref(`${pubRef}.${leftPath.field}`)
@@ -322,6 +340,34 @@ function translateComparison<DB, TB extends keyof DB>(
 		return eb(ref as any, sqlOp as any, rightValue) as any
 	}
 
+	// outgoing relation with direct field: out['slug'].title
+	if (leftPath.type === "out_direct") {
+		return buildOutRelationDirectCondition(
+			eb, leftPath.relationSlug, leftPath.field, op, rightValue, pubRef
+		)
+	}
+
+	// outgoing relation with value access: out['slug'].values.fieldSlug
+	if (leftPath.type === "out_value") {
+		return buildOutRelationValueCondition(
+			eb, leftPath.relationSlug, leftPath.valueFieldSlug, op, rightValue, pubRef
+		)
+	}
+
+	// incoming relation with direct field: in['slug'].title
+	if (leftPath.type === "in_direct") {
+		return buildInRelationDirectCondition(
+			eb, leftPath.relationSlug, leftPath.field, op, rightValue, pubRef
+		)
+	}
+
+	// incoming relation with value access: in['slug'].values.fieldSlug
+	if (leftPath.type === "in_value") {
+		return buildInRelationValueCondition(
+			eb, leftPath.relationSlug, leftPath.valueFieldSlug, op, rightValue, pubRef
+		)
+	}
+
 	return eb.val(true) as any
 }
 
@@ -329,11 +375,49 @@ type ResolvedPath =
 	| { type: "direct"; field: string }
 	| { type: "value_access"; fieldSlug: string }
 	| { type: "relation"; relation: string; field: string }
+	| { type: "out_direct"; relationSlug: string; field: string }
+	| { type: "out_value"; relationSlug: string; valueFieldSlug: string }
+	| { type: "in_direct"; relationSlug: string; field: string }
+	| { type: "in_value"; relationSlug: string; valueFieldSlug: string }
 
-// resolve a path expression to understand what it references
+// extract a bare string from a filter predicate (for bracket notation: name['string'])
+function extractStringFilter(predicates: Array<Record<string, any>>): string | null {
+	for (const pred of predicates) {
+		if (pred.type === "filter" && pred.expr?.type === "string") {
+			return pred.expr.value as string
+		}
+	}
+	return null
+}
+
+// resolve remaining path steps after an out/in prefix to determine the nested access type
+function resolveNestedAccess(steps: Array<Record<string, any>>): {
+	type: "direct"
+	field: string
+} | {
+	type: "value_access"
+	fieldSlug: string
+} | null {
+	if (steps.length === 0) return null
+
+	// single step: direct field (e.g., .title)
+	if (steps.length === 1 && steps[0]?.type === "name") {
+		return { type: "direct", field: steps[0].value as string }
+	}
+
+	// values[field.slug = '...'].value pattern (expanded from values.fieldSlug)
+	if (steps[0]?.value === "values" && (steps[0]?.stages || steps[0]?.predicate)) {
+		const filterSource = steps[0].stages ?? steps[0].predicate
+		const fieldSlug = extractFieldSlugFromPredicate(filterSource)
+		if (fieldSlug) {
+			return { type: "value_access", fieldSlug }
+		}
+	}
+
+	return null
+}
+
 function resolvePath(node: Record<string, any>): ResolvedPath | null {
-	console.dir(node, { depth: null })
-	// simple name node: title, createdAt, etc.
 	if (node.type === "name") {
 		const name = node.value as string
 		if (DIRECT_PUB_FIELDS.has(name)) {
@@ -342,48 +426,65 @@ function resolvePath(node: Record<string, any>): ResolvedPath | null {
 		return null
 	}
 
-	// path expression: pubType.name, values[...].value, stage.name
-	if (node.type === "path") {
-		const steps = node.steps as Array<Record<string, any>>
-		if (steps.length === 0) return null
+	if (node.type !== "path") return null
 
-		const firstName = steps[0]?.value as string | undefined
-		if (!firstName) return null
+	const steps = node.steps as Array<Record<string, any>>
+	if (steps.length === 0) return null
 
-		// detect values[field.slug = '...'].value pattern
-		// this is what expandShorthands produces from values.fieldSlug
-		// jsonata stores filters as "stages" on name nodes inside paths
-		if (firstName === "values" && (steps[0]?.stages || steps[0]?.predicate)) {
-			const filterSource = steps[0].stages ?? steps[0].predicate
-			const fieldSlug = extractFieldSlugFromPredicate(filterSource)
-			if (fieldSlug) {
-				return { type: "value_access", fieldSlug }
+	const firstName = steps[0]?.value as string | undefined
+	if (!firstName) return null
+
+	// out['slug'].field or out['slug'].values.fieldSlug
+	if (firstName === "out" && (steps[0]?.stages || steps[0]?.predicate)) {
+		const filterSource = steps[0].stages ?? steps[0].predicate
+		const relationSlug = extractStringFilter(filterSource)
+		if (relationSlug) {
+			const nested = resolveNestedAccess(steps.slice(1))
+			if (nested?.type === "direct") {
+				return { type: "out_direct", relationSlug, field: nested.field }
 			}
-		}
-
-		// detect relation paths like pubType.name, stage.name
-		if (steps.length === 2 && steps[1]?.type === "name") {
-			const relationName = firstName
-			const fieldName = steps[1].value as string
-
-			if (DIRECT_PUB_FIELDS.has(relationName)) {
-				// something like id.something - not a relation
-				return null
+			if (nested?.type === "value_access") {
+				return { type: "out_value", relationSlug, valueFieldSlug: nested.fieldSlug }
 			}
-
-			return { type: "relation", relation: relationName, field: fieldName }
-		}
-
-		// single step path that's a direct field
-		if (steps.length === 1 && DIRECT_PUB_FIELDS.has(firstName)) {
-			return { type: "direct", field: firstName }
 		}
 	}
 
-	// variable reference like $.field (in projection context)
-	if (node.type === "variable" && node.value === "") {
-		// $ by itself, check for stages
-		return null
+	// in['slug'].field or in['slug'].values.fieldSlug
+	if (firstName === "in" && (steps[0]?.stages || steps[0]?.predicate)) {
+		const filterSource = steps[0].stages ?? steps[0].predicate
+		const relationSlug = extractStringFilter(filterSource)
+		if (relationSlug) {
+			const nested = resolveNestedAccess(steps.slice(1))
+			if (nested?.type === "direct") {
+				return { type: "in_direct", relationSlug, field: nested.field }
+			}
+			if (nested?.type === "value_access") {
+				return { type: "in_value", relationSlug, valueFieldSlug: nested.fieldSlug }
+			}
+		}
+	}
+
+	// values[field.slug = '...'].value pattern
+	if (firstName === "values" && (steps[0]?.stages || steps[0]?.predicate)) {
+		const filterSource = steps[0].stages ?? steps[0].predicate
+		const fieldSlug = extractFieldSlugFromPredicate(filterSource)
+		if (fieldSlug) {
+			return { type: "value_access", fieldSlug }
+		}
+	}
+
+	// relation paths: pubType.name, stage.name
+	if (steps.length === 2 && steps[1]?.type === "name") {
+		const relationName = firstName
+		const fieldName = steps[1].value as string
+		if (!DIRECT_PUB_FIELDS.has(relationName)) {
+			return { type: "relation", relation: relationName, field: fieldName }
+		}
+	}
+
+	// single step direct field
+	if (steps.length === 1 && DIRECT_PUB_FIELDS.has(firstName)) {
+		return { type: "direct", field: firstName }
 	}
 
 	return null
@@ -504,6 +605,129 @@ function buildRelationCondition<DB, TB extends keyof DB>(
 	}
 
 	return eb.val(true) as any
+}
+
+// outgoing relation, direct field on the related pub
+// out['some-relation'].title = 'X'
+// -> EXISTS (select 1 from pub_values join pub_fields join pubs
+//    where pub_values.pubId = pubs.id and field slug matches
+//    and related pub's field matches)
+function buildOutRelationDirectCondition<DB, TB extends keyof DB>(
+	eb: ExpressionBuilder<DB, TB>,
+	relationSlug: string,
+	field: string,
+	op: string,
+	value: unknown,
+	pubRef: string
+): ExpressionWrapper<DB, TB, any> {
+	const sqlOp = mapOperator(op)
+	const subquery = (eb as any)
+		.selectFrom("pub_values as pv_rel")
+		.innerJoin("pub_fields as pf_rel", "pf_rel.id", "pv_rel.fieldId")
+		.innerJoin("pubs as related", "related.id", "pv_rel.relatedPubId")
+		.select(sql.lit(1).as("exists_check"))
+		.where("pv_rel.pubId", "=", sql.ref(`${pubRef}.id`))
+		.where("pf_rel.slug", "=", relationSlug)
+		.where(`related.${field}`, sqlOp, value)
+	return eb.exists(subquery) as ExpressionWrapper<DB, TB, any>
+}
+
+// outgoing relation, value access on the related pub
+// out['some-relation'].values.Title = 'X'
+// -> EXISTS (select 1 from pub_values join pub_fields
+//    where pub_values.pubId = pubs.id and field slug matches
+//    and EXISTS (select 1 from pub_values join pub_fields
+//       where pubId = relatedPubId and nested field slug matches and value matches))
+function buildOutRelationValueCondition<DB, TB extends keyof DB>(
+	eb: ExpressionBuilder<DB, TB>,
+	relationSlug: string,
+	valueFieldSlug: string,
+	op: string,
+	value: unknown,
+	pubRef: string
+): ExpressionWrapper<DB, TB, any> {
+	const sqlOp = mapOperator(op)
+	const sqlValue = typeof value === "string" ? JSON.stringify(value) : value
+
+	const innerSubquery = sql`EXISTS (
+		SELECT 1 FROM pub_values AS pv_val
+		INNER JOIN pub_fields AS pf_val ON pf_val.id = pv_val."fieldId"
+		WHERE pv_val."pubId" = pv_rel."relatedPubId"
+		AND pf_val.slug = ${valueFieldSlug}
+		AND pv_val.value ${sql.raw(sqlOp)} ${sqlValue}
+	)`
+
+	const subquery = (eb as any)
+		.selectFrom("pub_values as pv_rel")
+		.innerJoin("pub_fields as pf_rel", "pf_rel.id", "pv_rel.fieldId")
+		.select(sql.lit(1).as("exists_check"))
+		.where("pv_rel.pubId", "=", sql.ref(`${pubRef}.id`))
+		.where("pf_rel.slug", "=", relationSlug)
+		.where(sql.raw(`pv_rel."relatedPubId" IS NOT NULL`))
+		.where(innerSubquery)
+
+	return eb.exists(subquery) as ExpressionWrapper<DB, TB, any>
+}
+
+// incoming relation, direct field on the source pub
+// in['some-relation'].title = 'X'
+// -> EXISTS (select 1 from pub_values join pub_fields join pubs
+//    where pub_values.relatedPubId = pubs.id and field slug matches
+//    and source pub's field matches)
+function buildInRelationDirectCondition<DB, TB extends keyof DB>(
+	eb: ExpressionBuilder<DB, TB>,
+	relationSlug: string,
+	field: string,
+	op: string,
+	value: unknown,
+	pubRef: string
+): ExpressionWrapper<DB, TB, any> {
+	const sqlOp = mapOperator(op)
+	const subquery = (eb as any)
+		.selectFrom("pub_values as pv_rel")
+		.innerJoin("pub_fields as pf_rel", "pf_rel.id", "pv_rel.fieldId")
+		.innerJoin("pubs as source", "source.id", "pv_rel.pubId")
+		.select(sql.lit(1).as("exists_check"))
+		.where("pv_rel.relatedPubId", "=", sql.ref(`${pubRef}.id`))
+		.where("pf_rel.slug", "=", relationSlug)
+		.where(`source.${field}`, sqlOp, value)
+	return eb.exists(subquery) as ExpressionWrapper<DB, TB, any>
+}
+
+// incoming relation, value access on the source pub
+// in['some-relation'].values.Title = 'X'
+// -> EXISTS (select 1 from pub_values join pub_fields
+//    where pub_values.relatedPubId = pubs.id and field slug matches
+//    and EXISTS (select 1 from pub_values join pub_fields
+//       where pubId = source pubId and nested field slug matches))
+function buildInRelationValueCondition<DB, TB extends keyof DB>(
+	eb: ExpressionBuilder<DB, TB>,
+	relationSlug: string,
+	valueFieldSlug: string,
+	op: string,
+	value: unknown,
+	pubRef: string
+): ExpressionWrapper<DB, TB, any> {
+	const sqlOp = mapOperator(op)
+	const sqlValue = typeof value === "string" ? JSON.stringify(value) : value
+
+	const innerSubquery = sql`EXISTS (
+		SELECT 1 FROM pub_values AS pv_val
+		INNER JOIN pub_fields AS pf_val ON pf_val.id = pv_val."fieldId"
+		WHERE pv_val."pubId" = pv_rel."pubId"
+		AND pf_val.slug = ${valueFieldSlug}
+		AND pv_val.value ${sql.raw(sqlOp)} ${sqlValue}
+	)`
+
+	const subquery = (eb as any)
+		.selectFrom("pub_values as pv_rel")
+		.innerJoin("pub_fields as pf_rel", "pf_rel.id", "pv_rel.fieldId")
+		.select(sql.lit(1).as("exists_check"))
+		.where("pv_rel.relatedPubId", "=", sql.ref(`${pubRef}.id`))
+		.where("pf_rel.slug", "=", relationSlug)
+		.where(innerSubquery)
+
+	return eb.exists(subquery) as ExpressionWrapper<DB, TB, any>
 }
 
 function translateFunctionFilter<DB, TB extends keyof DB>(
