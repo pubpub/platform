@@ -1,12 +1,12 @@
 "use client"
 
 import type { PubTypes, Stages } from "db/public"
+import type { FieldType } from "./PathSelector"
 
 import { cn } from "utils"
 
 import { Input } from "../input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select"
-import type { FieldType } from "./PathSelector"
 
 interface ValueSelectorProps {
 	value: string
@@ -87,11 +87,10 @@ export function ValueSelector({
 		<Input
 			value={value}
 			onChange={(e) => onChange(e.target.value)}
-			placeholder={fieldType === "number" ? "0" : fieldType === "date" ? "2024-01-01" : "value"}
-			className={cn(
-				"h-8 min-w-[150px] text-xs",
-				fieldType === "number" && "font-mono"
-			)}
+			placeholder={
+				fieldType === "number" ? "0" : fieldType === "date" ? "2024-01-01" : "value"
+			}
+			className={cn("h-8 min-w-[150px] text-xs", fieldType === "number" && "font-mono")}
 			type={fieldType === "number" ? "number" : "text"}
 			disabled={disabled}
 		/>

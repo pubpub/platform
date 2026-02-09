@@ -1,21 +1,16 @@
 "use client"
 
 import type { PubTypes, Stages } from "db/public"
+import type { PubField } from "../pubFields/PubFieldContext"
+import type { LogicalOperator, VisualCondition, VisualConditionGroup, VisualQuery } from "./types"
 
 import { Plus, X } from "lucide-react"
 
 import { cn } from "utils"
 
 import { Button } from "../button"
-import type { PubField } from "../pubFields/PubFieldContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select"
 import { ConditionRow } from "./ConditionRow"
-import type {
-	LogicalOperator,
-	VisualCondition,
-	VisualConditionGroup,
-	VisualQuery,
-} from "./types"
 
 function generateId(): string {
 	return Math.random().toString(36).substring(2, 9)
@@ -94,9 +89,7 @@ function ConditionGroup({
 		>
 			<div className="flex items-center justify-between gap-2">
 				<div className="flex items-center gap-2">
-					{!isRoot && (
-						<span className="text-xs text-muted-foreground">Match</span>
-					)}
+					{!isRoot && <span className="text-muted-foreground text-xs">Match</span>}
 					<Select
 						value={group.operator}
 						onValueChange={(v) => handleOperatorChange(v as LogicalOperator)}
@@ -106,12 +99,16 @@ function ConditionGroup({
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="and" className="text-xs">AND</SelectItem>
-							<SelectItem value="or" className="text-xs">OR</SelectItem>
+							<SelectItem value="and" className="text-xs">
+								AND
+							</SelectItem>
+							<SelectItem value="or" className="text-xs">
+								OR
+							</SelectItem>
 						</SelectContent>
 					</Select>
 					{!isRoot && (
-						<span className="text-xs text-muted-foreground">of the following</span>
+						<span className="text-muted-foreground text-xs">of the following</span>
 					)}
 				</div>
 				{!isRoot && onRemove && (
@@ -167,7 +164,7 @@ function ConditionGroup({
 					size="sm"
 					onClick={handleAddCondition}
 					disabled={disabled}
-					className="h-7 text-xs text-muted-foreground"
+					className="h-7 text-muted-foreground text-xs"
 				>
 					<Plus className="mr-1 h-3 w-3" />
 					Add condition
@@ -179,7 +176,7 @@ function ConditionGroup({
 						size="sm"
 						onClick={handleAddGroup}
 						disabled={disabled}
-						className="h-7 text-xs text-muted-foreground"
+						className="h-7 text-muted-foreground text-xs"
 					>
 						<Plus className="mr-1 h-3 w-3" />
 						Add group

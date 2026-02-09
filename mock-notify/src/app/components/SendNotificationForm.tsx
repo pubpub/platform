@@ -1,8 +1,9 @@
 "use client"
 
+import type { CoarNotifyPayload } from "~/lib/store"
+
 import { useState } from "react"
 
-import type { CoarNotifyPayload } from "~/lib/store"
 import {
 	createAcceptPayload,
 	createAnnounceIngestPayload,
@@ -30,7 +31,9 @@ const TEMPLATE_OPTIONS: PayloadTemplateType[] = [
 
 export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 	const [mode, setMode] = useState<FormMode>("template")
-	const [targetUrl, setTargetUrl] = useState("http://localhost:3000/api/v0/c/coar-notify/site/webhook/coar-inbox")
+	const [targetUrl, setTargetUrl] = useState(
+		"http://localhost:3000/api/v0/c/coar-notify/site/webhook/coar-inbox"
+	)
 	const [templateType, setTemplateType] = useState<PayloadTemplateType>("Offer Review")
 	const [customPayload, setCustomPayload] = useState("")
 	const [isSending, setIsSending] = useState(false)
@@ -120,7 +123,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Preprint ID
 							</label>
 							<input
@@ -131,7 +134,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Repository URL
 							</label>
 							<input
@@ -142,7 +145,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Service URL (target)
 							</label>
 							<input
@@ -158,7 +161,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Preprint ID
 							</label>
 							<input
@@ -169,7 +172,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Review ID
 							</label>
 							<input
@@ -180,7 +183,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Repository URL
 							</label>
 							<input
@@ -191,7 +194,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Service URL
 							</label>
 							<input
@@ -202,7 +205,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Service Name
 							</label>
 							<input
@@ -219,7 +222,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Review ID
 							</label>
 							<input
@@ -230,7 +233,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Service URL
 							</label>
 							<input
@@ -241,7 +244,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Aggregator URL
 							</label>
 							<input
@@ -258,7 +261,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				return (
 					<>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								In Reply To (Offer ID)
 							</label>
 							<input
@@ -270,7 +273,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Repository URL
 							</label>
 							<input
@@ -281,7 +284,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 							/>
 						</div>
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Service URL
 							</label>
 							<input
@@ -298,13 +301,13 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 
 	return (
 		<div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-			<h2 className="mb-4 text-lg font-semibold">Send Notification</h2>
+			<h2 className="mb-4 font-semibold text-lg">Send Notification</h2>
 
 			{/* Mode Toggle */}
 			<div className="mb-4 flex gap-1 rounded-lg bg-gray-100 p-1">
 				<button
 					onClick={() => setMode("template")}
-					className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+					className={`flex-1 rounded-md px-3 py-1.5 font-medium text-sm transition-colors ${
 						mode === "template"
 							? "bg-white text-gray-900 shadow-sm"
 							: "text-gray-600 hover:text-gray-900"
@@ -314,7 +317,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				</button>
 				<button
 					onClick={() => setMode("custom")}
-					className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+					className={`flex-1 rounded-md px-3 py-1.5 font-medium text-sm transition-colors ${
 						mode === "custom"
 							? "bg-white text-gray-900 shadow-sm"
 							: "text-gray-600 hover:text-gray-900"
@@ -327,7 +330,9 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 			<div className="space-y-4">
 				{/* Target URL */}
 				<div>
-					<label className="mb-1 block text-sm font-medium text-gray-700">Target URL</label>
+					<label className="mb-1 block font-medium text-gray-700 text-sm">
+						Target URL
+					</label>
 					<input
 						type="text"
 						value={targetUrl}
@@ -341,12 +346,14 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 					<>
 						{/* Template Type */}
 						<div>
-							<label className="mb-1 block text-sm font-medium text-gray-700">
+							<label className="mb-1 block font-medium text-gray-700 text-sm">
 								Notification Type
 							</label>
 							<select
 								value={templateType}
-								onChange={(e) => setTemplateType(e.target.value as PayloadTemplateType)}
+								onChange={(e) =>
+									setTemplateType(e.target.value as PayloadTemplateType)
+								}
 								className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 							>
 								{TEMPLATE_OPTIONS.map((opt) => (
@@ -363,14 +370,14 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 						{/* Preview button */}
 						<button
 							onClick={handlePreview}
-							className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+							className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 text-sm hover:bg-gray-50"
 						>
 							Preview JSON
 						</button>
 					</>
 				) : (
 					<div>
-						<label className="mb-1 block text-sm font-medium text-gray-700">
+						<label className="mb-1 block font-medium text-gray-700 text-sm">
 							JSON Payload
 						</label>
 						<textarea
@@ -384,10 +391,10 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 
 				{/* Error/Success Messages */}
 				{error && (
-					<div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+					<div className="rounded-md bg-red-50 p-3 text-red-700 text-sm">{error}</div>
 				)}
 				{success && (
-					<div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
+					<div className="rounded-md bg-green-50 p-3 text-green-700 text-sm">
 						Notification sent successfully!
 					</div>
 				)}
@@ -396,7 +403,7 @@ export function SendNotificationForm({ onSent }: SendNotificationFormProps) {
 				<button
 					onClick={handleSend}
 					disabled={isSending}
-					className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+					className="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{isSending ? "Sending..." : "Send Notification"}
 				</button>

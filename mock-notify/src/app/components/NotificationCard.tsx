@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
-
 import type { StoredNotification } from "~/lib/store"
+
+import { useState } from "react"
 
 interface NotificationCardProps {
 	notification: StoredNotification
@@ -27,7 +27,7 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 	const getDirectionBadge = () => {
 		if (notification.direction === "received") {
 			return (
-				<span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800">
+				<span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 font-medium text-purple-800 text-xs">
 					<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path
 							strokeLinecap="round"
@@ -42,7 +42,7 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 		}
 		return (
 			<span
-				className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+				className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-xs ${
 					notification.status === "success"
 						? "bg-teal-100 text-teal-800"
 						: "bg-orange-100 text-orange-800"
@@ -70,34 +70,35 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 						{types.map((type) => (
 							<span
 								key={type}
-								className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getTypeColor(type)}`}
+								className={`inline-flex rounded-full px-2 py-0.5 font-medium text-xs ${getTypeColor(type)}`}
 							>
 								{type}
 							</span>
 						))}
 					</div>
 
-					<p className="mt-2 truncate font-mono text-sm text-gray-600">
+					<p className="mt-2 truncate font-mono text-gray-600 text-sm">
 						{notification.payload.id}
 					</p>
 
 					{notification.direction === "sent" && notification.targetUrl && (
-						<p className="mt-1 truncate text-sm text-gray-500">
+						<p className="mt-1 truncate text-gray-500 text-sm">
 							To: <span className="font-mono">{notification.targetUrl}</span>
 						</p>
 					)}
 
 					{notification.direction === "received" && notification.payload.origin && (
-						<p className="mt-1 truncate text-sm text-gray-500">
-							From: <span className="font-mono">{notification.payload.origin.id}</span>
+						<p className="mt-1 truncate text-gray-500 text-sm">
+							From:{" "}
+							<span className="font-mono">{notification.payload.origin.id}</span>
 						</p>
 					)}
 
 					{notification.error && (
-						<p className="mt-1 text-sm text-red-600">Error: {notification.error}</p>
+						<p className="mt-1 text-red-600 text-sm">Error: {notification.error}</p>
 					)}
 
-					<p className="mt-1 text-xs text-gray-400">
+					<p className="mt-1 text-gray-400 text-xs">
 						{new Date(notification.timestamp).toLocaleString()}
 					</p>
 				</div>
@@ -127,7 +128,12 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 						className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
 						title="Delete"
 					>
-						<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<svg
+							className="h-5 w-5"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"
@@ -141,7 +147,7 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 
 			{isExpanded && (
 				<div className="mt-4">
-					<pre className="max-h-96 overflow-auto rounded-lg bg-gray-900 p-4 text-sm text-gray-100">
+					<pre className="max-h-96 overflow-auto rounded-lg bg-gray-900 p-4 text-gray-100 text-sm">
 						{JSON.stringify(notification.payload, null, 2)}
 					</pre>
 				</div>

@@ -146,7 +146,10 @@ const createLookupProxy = <T>(
 	})
 }
 
-export const createPubProxy = (pub: ProcessedPub, communitySlug: string): Record<string, unknown> => {
+export const createPubProxy = (
+	pub: ProcessedPub,
+	communitySlug: string
+): Record<string, unknown> => {
 	// build plain objects for all lookups
 	const fields: Record<string, true> = {}
 	const values: Record<string, unknown> = {}

@@ -156,7 +156,10 @@ export const run = defineRun<typeof action>(async (props) => {
 
 				// Interpolate value if it's a JSONata expression
 				let resolvedValue: JsonValue = (relationConfig.value as JsonValue) ?? null
-				if (typeof relationConfig.value === "string" && needsInterpolation(relationConfig.value)) {
+				if (
+					typeof relationConfig.value === "string" &&
+					needsInterpolation(relationConfig.value)
+				) {
 					const expression = extractJsonata(relationConfig.value)
 					resolvedValue = (await interpolate(expression, interpolationData)) as JsonValue
 				}
@@ -179,13 +182,9 @@ export const run = defineRun<typeof action>(async (props) => {
 					// "target" = existing pub stores the relation to new pub
 					const direction = relationConfig.direction ?? "source"
 					const sourcePubId =
-						direction === "source"
-							? createdPub.id
-							: (resolvedRelatedPubId as PubsId)
+						direction === "source" ? createdPub.id : (resolvedRelatedPubId as PubsId)
 					const targetPubId =
-						direction === "source"
-							? (resolvedRelatedPubId as PubsId)
-							: createdPub.id
+						direction === "source" ? (resolvedRelatedPubId as PubsId) : createdPub.id
 
 					await upsertPubRelationValues({
 						pubId: sourcePubId,

@@ -1,6 +1,8 @@
 "use client"
 
 import type { PubTypes, Stages } from "db/public"
+import type { PubField } from "../pubFields/PubFieldContext"
+import type { Operator, VisualCondition } from "./types"
 
 import { useState } from "react"
 import { X } from "lucide-react"
@@ -8,10 +10,8 @@ import { X } from "lucide-react"
 import { cn } from "utils"
 
 import { Button } from "../button"
-import type { PubField } from "../pubFields/PubFieldContext"
 import { OperatorSelector } from "./OperatorSelector"
-import { PathSelector, type FieldType } from "./PathSelector"
-import type { Operator, VisualCondition } from "./types"
+import { type FieldType, PathSelector } from "./PathSelector"
 import { ValueSelector } from "./ValueSelector"
 
 export interface ConditionRowProps {

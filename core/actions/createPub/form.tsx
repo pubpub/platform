@@ -824,8 +824,7 @@ const RelationConfigSection = ({ relationFields }: RelationConfigSectionProps) =
 										"border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100"
 								)}
 								onClick={() => {
-									const newMode =
-										pubIdMode === "jsonata" ? "normal" : "jsonata"
+									const newMode = pubIdMode === "jsonata" ? "normal" : "jsonata"
 									setPubIdMode(newMode)
 								}}
 							>
@@ -878,8 +877,7 @@ const RelationConfigSection = ({ relationFields }: RelationConfigSectionProps) =
 										"border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100"
 								)}
 								onClick={() => {
-									const newMode =
-										valueMode === "jsonata" ? "normal" : "jsonata"
+									const newMode = valueMode === "jsonata" ? "normal" : "jsonata"
 									setValueMode(newMode)
 								}}
 							>

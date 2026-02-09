@@ -1,7 +1,5 @@
 "use client"
 
-import { useCallback, useState } from "react"
-
 import type {
 	LogicalOperator,
 	Operator,
@@ -10,6 +8,8 @@ import type {
 	VisualConditionGroup,
 	VisualQuery,
 } from "./types"
+
+import { useCallback, useState } from "react"
 
 // generate a unique id for conditions
 function generateId(): string {
@@ -103,7 +103,7 @@ function parseJsonataToQuery(expression: string): VisualQuery | null {
 		const orMatch = expression.match(/^(.+?)\s+or\s+(.+)$/i)
 
 		if (andMatch || orMatch) {
-			const match = andMatch || orMatch
+			const _match = andMatch || orMatch
 			const operator: LogicalOperator = andMatch ? "and" : "or"
 			const parts = splitByOperator(expression, operator)
 
@@ -196,7 +196,10 @@ function parseSimpleCondition(expression: string): VisualCondition | null {
 		const [, func, path, rawValue] = funcMatch
 		let value = rawValue.trim()
 		// remove quotes if present
-		if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+		if (
+			(value.startsWith('"') && value.endsWith('"')) ||
+			(value.startsWith("'") && value.endsWith("'"))
+		) {
 			value = value.slice(1, -1)
 		}
 		return {
@@ -213,7 +216,10 @@ function parseSimpleCondition(expression: string): VisualCondition | null {
 		const [, path, op, rawValue] = compMatch
 		let value = rawValue.trim()
 		// remove quotes if present
-		if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+		if (
+			(value.startsWith('"') && value.endsWith('"')) ||
+			(value.startsWith("'") && value.endsWith("'"))
+		) {
 			value = value.slice(1, -1)
 		}
 		return {
@@ -324,9 +330,7 @@ export function useQueryBuilder({
 
 	const removeCondition = useCallback(
 		(id: string) => {
-			const removeFromGroup = (
-				group: VisualConditionGroup
-			): VisualConditionGroup => {
+			const removeFromGroup = (group: VisualConditionGroup): VisualConditionGroup => {
 				return {
 					...group,
 					conditions: group.conditions
@@ -346,9 +350,7 @@ export function useQueryBuilder({
 
 	const updateCondition = useCallback(
 		(id: string, condition: VisualCondition) => {
-			const updateInGroup = (
-				group: VisualConditionGroup
-			): VisualConditionGroup => {
+			const updateInGroup = (group: VisualConditionGroup): VisualConditionGroup => {
 				return {
 					...group,
 					conditions: group.conditions.map((c) => {
@@ -369,9 +371,7 @@ export function useQueryBuilder({
 
 	const updateGroupOperator = useCallback(
 		(id: string, operator: LogicalOperator) => {
-			const updateInGroup = (
-				group: VisualConditionGroup
-			): VisualConditionGroup => {
+			const updateInGroup = (group: VisualConditionGroup): VisualConditionGroup => {
 				if (group.id === id) {
 					return { ...group, operator }
 				}

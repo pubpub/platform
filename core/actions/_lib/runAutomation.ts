@@ -145,7 +145,6 @@ async function loadAutomationContext(args: {
 			.executeTakeFirst(),
 	])
 
-
 	if (!automation) {
 		throw new Error(`Automation ${args.automationId} not found`)
 	}

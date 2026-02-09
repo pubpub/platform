@@ -1,26 +1,24 @@
 "use client"
 
 import type { PubTypes, Stages } from "db/public"
+import type { PubField } from "../pubFields/PubFieldContext"
 
 import { useState } from "react"
 import { ChevronRight, Code } from "lucide-react"
 
-import { cn } from "utils"
-
 import { Button } from "../button"
-import { Input } from "../input"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
 	DropdownMenuSub,
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
-	DropdownMenuSeparator,
-	DropdownMenuLabel,
 } from "../dropdown-menu"
-import type { PubField } from "../pubFields/PubFieldContext"
+import { Input } from "../input"
 
 export type FieldType = "string" | "number" | "date" | "boolean" | "array" | "object" | "unknown"
 
@@ -42,7 +40,7 @@ interface PathSelectorProps {
 
 function ValueBadge({ children }: { children: React.ReactNode }) {
 	return (
-		<span className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-xs lowercase text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+		<span className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-blue-700 text-xs lowercase dark:bg-blue-900/30 dark:text-blue-300">
 			{children}
 		</span>
 	)
@@ -175,15 +173,13 @@ export function PathSelector({
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="start" className="w-56">
-				<DropdownMenuLabel className="text-xs text-muted-foreground">
+				<DropdownMenuLabel className="text-muted-foreground text-xs">
 					Pub Fields
 				</DropdownMenuLabel>
 
 				{/* builtin pub fields */}
 				<DropdownMenuSub>
-					<DropdownMenuSubTrigger className="text-xs">
-						Builtin
-					</DropdownMenuSubTrigger>
+					<DropdownMenuSubTrigger className="text-xs">Builtin</DropdownMenuSubTrigger>
 					<DropdownMenuSubContent>
 						<DropdownMenuItem
 							onClick={() => handleSelectPath("$.pub.id", "string")}
@@ -214,9 +210,7 @@ export function PathSelector({
 
 				{/* pub type */}
 				<DropdownMenuSub>
-					<DropdownMenuSubTrigger className="text-xs">
-						Pub Type
-					</DropdownMenuSubTrigger>
+					<DropdownMenuSubTrigger className="text-xs">Pub Type</DropdownMenuSubTrigger>
 					<DropdownMenuSubContent>
 						<DropdownMenuItem
 							onClick={() => handleSelectPath("$.pub.pubType.name", "string")}
@@ -244,9 +238,7 @@ export function PathSelector({
 				{/* custom values */}
 				{valueFields.length > 0 && (
 					<DropdownMenuSub>
-						<DropdownMenuSubTrigger className="text-xs">
-							Values
-						</DropdownMenuSubTrigger>
+						<DropdownMenuSubTrigger className="text-xs">Values</DropdownMenuSubTrigger>
 						<DropdownMenuSubContent className="max-h-[300px] overflow-y-auto">
 							{valueFields.map((field) => (
 								<DropdownMenuItem
@@ -266,7 +258,7 @@ export function PathSelector({
 
 				<DropdownMenuSeparator />
 
-				<DropdownMenuLabel className="text-xs text-muted-foreground">
+				<DropdownMenuLabel className="text-muted-foreground text-xs">
 					JSON Context
 				</DropdownMenuLabel>
 

@@ -1,6 +1,5 @@
 import type { Monaco } from "@monaco-editor/react"
 import type { editor, languages } from "monaco-editor"
-
 import type { JsonataContextSchema, JsonataPropertySchema, ValidationError } from "../types"
 
 export const JSONATA_BUILTIN_FUNCTIONS = [

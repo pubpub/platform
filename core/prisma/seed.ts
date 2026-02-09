@@ -14,7 +14,7 @@ import { seedStarter } from "./seeds/starter"
 const legacyId = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" as CommunitiesId
 const starterId = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb" as CommunitiesId
 const blankId = "cccccccc-cccc-4ccc-cccc-cccccccccccc" as CommunitiesId
-const coarNotifyId = "dddddddd-dddd-4ddd-dddd-dddddddddddd" as CommunitiesId
+const _coarNotifyId = "dddddddd-dddd-4ddd-dddd-dddddddddddd" as CommunitiesId
 
 async function main() {
 	// do not seed arcadia if the minimal seed flag is set

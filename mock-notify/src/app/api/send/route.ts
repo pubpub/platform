@@ -1,6 +1,7 @@
+import type { CoarNotifyPayload } from "~/lib/store"
+
 import { NextResponse } from "next/server"
 
-import type { CoarNotifyPayload } from "~/lib/store"
 import { notificationStore } from "~/lib/store"
 
 interface SendRequest {

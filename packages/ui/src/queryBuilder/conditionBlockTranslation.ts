@@ -1,8 +1,13 @@
 "use client"
 
 import type { AutomationConditionBlockType, AutomationConditionType } from "db/public"
-
-import type { LogicalOperator, Operator, VisualCondition, VisualConditionGroup, VisualQuery } from "./types"
+import type {
+	LogicalOperator,
+	Operator,
+	VisualCondition,
+	VisualConditionGroup,
+	VisualQuery,
+} from "./types"
 
 // form types that match what the ConditionBlock component uses
 export type ConditionFormValue = {
@@ -33,7 +38,9 @@ function generateRank(index: number): string {
 }
 
 // parse a jsonata expression string into path, operator, value
-function parseExpression(expression: string): { path: string; operator: Operator; value: string } | null {
+function parseExpression(
+	expression: string
+): { path: string; operator: Operator; value: string } | null {
 	const trimmed = expression.trim()
 
 	// handle $exists(path)
@@ -51,7 +58,10 @@ function parseExpression(expression: string): { path: string; operator: Operator
 	if (funcMatch) {
 		const [, func, path, rawValue] = funcMatch
 		let value = rawValue.trim()
-		if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+		if (
+			(value.startsWith('"') && value.endsWith('"')) ||
+			(value.startsWith("'") && value.endsWith("'"))
+		) {
 			value = value.slice(1, -1)
 		}
 		return {
@@ -66,7 +76,10 @@ function parseExpression(expression: string): { path: string; operator: Operator
 	if (compMatch) {
 		const [, path, op, rawValue] = compMatch
 		let value = rawValue.trim()
-		if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+		if (
+			(value.startsWith('"') && value.endsWith('"')) ||
+			(value.startsWith("'") && value.endsWith("'"))
+		) {
 			value = value.slice(1, -1)
 		}
 		return {
@@ -107,7 +120,10 @@ export function visualQueryToConditionBlock(
 	query: VisualQuery,
 	automationConditionType: AutomationConditionType = "jsonata" as AutomationConditionType
 ): ConditionBlockFormValue {
-	function translateGroup(group: VisualConditionGroup, depth: number = 0): ConditionBlockFormValue {
+	function translateGroup(
+		group: VisualConditionGroup,
+		depth: number = 0
+	): ConditionBlockFormValue {
 		const blockType = group.operator === "and" ? "AND" : "OR"
 
 		const items: ConditionItemFormValue[] = group.conditions.map((item, index) => {

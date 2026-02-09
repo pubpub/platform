@@ -1,20 +1,12 @@
 "use client"
 
 import type { FieldValues, Path } from "react-hook-form"
+import type { JsonataContextSchema, MonacoEditorProps, MonacoFormFieldProps } from "./types"
 
 import * as React from "react"
 
 import { MonacoEditor } from "./MonacoEditor"
 import { MonacoFormField } from "./MonacoFormField"
-import type {
-	JsonataContextSchema,
-	MonacoEditorProps,
-	MonacoFormFieldProps,
-} from "./types"
-
-// re-export core components
-export { MonacoEditor } from "./MonacoEditor"
-export { MonacoFormField } from "./MonacoFormField"
 
 // re-export types
 export type {
@@ -30,7 +22,9 @@ export type {
 
 // re-export hooks
 export { useMonaco, useValidation } from "./hooks"
-
+// re-export core components
+export { MonacoEditor } from "./MonacoEditor"
+export { MonacoFormField } from "./MonacoFormField"
 // re-export schema utilities
 export { createBasicFilterSchema, createFilterSchema } from "./schemas/filter-schema"
 
