@@ -57,9 +57,9 @@ export interface PublicSchema {
 
 	_MemberGroupToUser: MemberGroupToUserTable
 
-	PubsInStages: PubsInStagesTable
-
 	_FormElementToPubType: FormElementToPubTypeTable
+
+	PubsInStages: PubsInStagesTable
 
 	stage_memberships: StageMembershipsTable
 
@@ -67,9 +67,9 @@ export interface PublicSchema {
 
 	auth_tokens: AuthTokensTable
 
-	api_access_logs: ApiAccessLogsTable
-
 	api_access_permissions: ApiAccessPermissionsTable
+
+	api_access_logs: ApiAccessLogsTable
 
 	pub_types: PubTypesTable
 
@@ -91,13 +91,13 @@ export interface PublicSchema {
 
 	action_runs: ActionRunsTable
 
-	pubs: PubsTable
-
 	invites: InvitesTable
 
-	action_instances: ActionInstancesTable
+	pubs: PubsTable
 
 	action_config_defaults: ActionConfigDefaultsTable
+
+	action_instances: ActionInstancesTable
 
 	community_memberships: CommunityMembershipsTable
 

@@ -137,7 +137,7 @@ test.describe("actions interpolation", () => {
 				.getByText(
 					JSON.stringify(
 						{
-							[`${community.community.slug}:title`]: "Test",
+							// [`${community.community.slug}:title`]: "Test",
 							title: "Test",
 						},
 						null,

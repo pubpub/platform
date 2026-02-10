@@ -1,23 +1,34 @@
 "use server"
 
+import type { JsonValue } from "contracts"
 import type { PubsId } from "db/public"
 import type { PubValues } from "~/lib/server"
 import type { action } from "./action"
 
 import { JSONPath } from "jsonpath-plus"
 
+import { interpolate } from "@pubpub/json-interpolate"
 import { logger } from "logger"
 
 import { updatePub } from "~/lib/server/pub"
 import { defineRun } from "../types"
 
-const findNestedStructure = (json: unknown, path: string) => {
-	if (typeof json !== "object") {
-		// TODO: handle this
-		return
+/**
+ * extracts a value from data using either JSONPath or JSONata
+ * JSONPath expressions start with $. and use bracket notation
+ * JSONata expressions are everything else
+ * maintains backward compatibility with existing JSONPath expressions
+ */
+const extractValue = async (data: unknown, expression: string): Promise<unknown> => {
+	// heuristic: JSONPath uses $. prefix with bracket notation like $[...] or $.field
+	// if it looks like JSONPath, use JSONPath library for backward compatibility
+	const looksLikeJsonPath = expression.startsWith("$") && /^\$(\.|(\[))/.test(expression)
+	if (looksLikeJsonPath) {
+		const result = JSONPath({ path: expression, json: data as object, wrap: false })
+		return result
 	}
-	const result = JSONPath({ path, json, wrap: false })
-	return result
+	// otherwise use JSONata
+	return interpolate(expression, data)
 }
 
 export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy }) => {
@@ -37,7 +48,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 		cache: "no-store",
 	})
 
-	if (res.status !== 200) {
+	if (!res.ok) {
 		return {
 			success: false,
 			title: "Error",
@@ -71,21 +82,23 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 		}
 	}
 
-	const mappedOutputs = finalOutputMap.map(({ pubField, responseField }) => {
-		if (responseField === undefined) {
-			throw new Error(`Field ${pubField} was not provided in the output map`)
-		}
-		const resValue = findNestedStructure(result, responseField)
-		if (resValue === undefined || (Array.isArray(resValue) && resValue.length === 0)) {
-			throw new Error(
-				`Field "${responseField}" not found in response. Response was ${JSON.stringify(result)}`
-			)
-		}
-		return { pubField, resValue }
-	})
+	const mappedOutputs = await Promise.all(
+		finalOutputMap.map(async ({ pubField, responseField }) => {
+			if (responseField === undefined) {
+				throw new Error(`Field ${pubField} was not provided in the output map`)
+			}
+			const resValue = await extractValue(result, responseField)
+			if (resValue === undefined || (Array.isArray(resValue) && resValue.length === 0)) {
+				throw new Error(
+					`Field "${responseField}" not found in response. Response was ${JSON.stringify(result)}`
+				)
+			}
+			return { pubField, resValue }
+		})
+	)
 
 	const pubValues = mappedOutputs.reduce((acc, { pubField, resValue }) => {
-		acc[pubField] = resValue
+		acc[pubField] = resValue as JsonValue
 		return acc
 	}, {} as PubValues)
 

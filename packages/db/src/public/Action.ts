@@ -13,6 +13,7 @@ export enum Action {
 	datacite = "datacite",
 	buildJournalSite = "buildJournalSite",
 	createPub = "createPub",
+	buildSite = "buildSite",
 }
 
 /** Zod schema for Action */

@@ -1,6 +1,7 @@
 // shared actions between server and client
 
 import * as buildJournalSite from "../buildJournalSite/action"
+import * as buildSite from "../buildSite/action"
 import * as createPub from "../createPub/action"
 import * as datacite from "../datacite/action"
 import * as email from "../email/action"
@@ -18,6 +19,7 @@ export const actions = {
 	[datacite.action.name]: datacite.action,
 	[buildJournalSite.action.name]: buildJournalSite.action,
 	[createPub.action.name]: createPub.action,
+	[buildSite.action.name]: buildSite.action,
 } as const
 
 export const getActionByName = <N extends keyof typeof actions>(name: N) => {

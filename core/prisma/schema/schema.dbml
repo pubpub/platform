@@ -673,6 +673,7 @@ Enum Action {
   googleDriveImport
   datacite
   buildJournalSite
+  buildSite
   createPub
 }
 

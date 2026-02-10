@@ -34,7 +34,7 @@ export const scheduleDelayedAutomation = async ({
 		throw new Error("Community not found")
 	}
 
-	const automation = await getAutomation(automationId)
+	const automation = await getAutomation(automationId, { communityId: community.id })
 	if (!automation) {
 		throw new Error(`Automation ${automationId} not found`)
 	}

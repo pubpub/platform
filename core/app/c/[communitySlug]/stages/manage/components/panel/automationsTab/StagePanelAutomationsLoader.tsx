@@ -23,7 +23,7 @@ export async function StagePanelAutomationsLoader(props: Props) {
 			}
 		).executeTakeFirst(),
 		getActionConfigDefaultsFields(props.communityId),
-		getStageAutomations(props.stageId),
+		getStageAutomations(props.stageId, { communityId: props.communityId }),
 	])
 
 	if (!stage) {

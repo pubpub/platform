@@ -26,7 +26,7 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 	if (!result || typeof result !== "object") {
 		return (
 			<div className={cn("text-sm", className)}>
-				<pre className="max-h-40 overflow-auto rounded bg-gray-100 p-2 font-mono text-xs">
+				<pre className="max-h-40 overflow-auto rounded bg-muted p-2 font-mono text-xs">
 					{JSON.stringify(result, null, 2)}
 				</pre>
 			</div>
@@ -66,7 +66,7 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 									</button>
 								</CollapsibleTrigger>
 								<CollapsibleContent>
-									<pre className="mt-2 max-h-40 overflow-auto rounded border bg-white p-2 font-mono text-xs">
+									<pre className="mt-2 max-h-40 overflow-auto rounded border bg-card p-2 font-mono text-xs">
 										{JSON.stringify(result.data, null, 2)}
 									</pre>
 								</CollapsibleContent>
@@ -86,7 +86,7 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 							<CollapsibleTrigger asChild>
 								<button
 									type="button"
-									className="flex items-center gap-1 rounded px-2 py-1 text-gray-600 text-xs hover:bg-gray-200"
+									className="flex items-center gap-1 rounded px-2 py-1 text-muted-foreground text-xs hover:bg-muted"
 								>
 									{showCause ? (
 										<ChevronDown size={12} />
@@ -109,7 +109,7 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 			)}
 
 			{!isSuccess && !isFailure && (
-				<pre className="max-h-40 overflow-auto rounded border bg-white p-2 font-mono text-xs">
+				<pre className="max-h-40 overflow-auto rounded border bg-card p-2 font-mono text-xs">
 					{JSON.stringify(result, null, 2)}
 				</pre>
 			)}
@@ -119,7 +119,7 @@ export const ActionRunResult = ({ actionRun, className }: Props) => {
 					<CollapsibleTrigger asChild>
 						<button
 							type="button"
-							className="flex items-center gap-1 rounded px-2 py-1 text-muted-foreground text-xs hover:bg-accent"
+							className="flex items-center gap-1 rounded px-2 py-1 text-muted-foreground text-xs hover:bg-muted"
 						>
 							{showConfig ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
 							Configuration

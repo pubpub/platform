@@ -135,7 +135,7 @@ async function loadAutomationContext(args: {
 					}
 				)
 			: null,
-		getAutomation(args.automationId),
+		getAutomation(args.automationId, { communityId: args.communityId }),
 		// query community directly from db instead of using memoized getCommunity
 		// to avoid cache issues in tests
 		db

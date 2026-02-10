@@ -72,7 +72,16 @@ const OutputMapField = ({
 									>
 										JSONPath
 									</a>{" "}
-									syntax to select a field from the JSON body.
+									(e.g., $.field.nested) or{" "}
+									<a
+										href="https://docs.jsonata.org/"
+										target="_blank"
+										rel="noreferrer"
+										className="font-bold underline"
+									>
+										JSONata
+									</a>{" "}
+									expressions to select a field from the response.
 								</TooltipContent>
 							</Tooltip>
 						</FieldLabel>

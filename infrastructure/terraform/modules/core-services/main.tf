@@ -178,6 +178,102 @@ module "assets_bucket" {
   }]
 }
 
+# cloudfront for serving static sites from s3
+# sites are uploaded to the assets bucket under the /sites prefix
+resource "aws_cloudfront_origin_access_control" "sites" {
+  name                              = "${var.cluster_info.name}-sites-oac-${var.cluster_info.environment}"
+  description                       = "OAC for static sites"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "sites" {
+  enabled             = true
+  default_root_object = "index.html"
+  comment             = "Static sites distribution for ${var.cluster_info.name}-${var.cluster_info.environment}"
+
+  origin {
+    domain_name              = module.assets_bucket.s3_bucket_bucket_regional_domain_name
+    origin_id                = "S3-sites"
+    origin_path              = "/sites"
+    origin_access_control_id = aws_cloudfront_origin_access_control.sites.id
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "S3-sites"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 0
+    default_ttl = 3600
+    max_ttl     = 86400
+  }
+
+  # custom error response for spa-style routing (serve index.html for 404s)
+  custom_error_response {
+    error_code         = 404
+    response_code      = 200
+    response_page_path = "/index.html"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = {
+    Name        = "${var.cluster_info.name}-sites-${var.cluster_info.environment}"
+    Environment = var.cluster_info.environment
+  }
+}
+
+# bucket policy to allow cloudfront access to sites prefix
+resource "aws_s3_bucket_policy" "sites_cloudfront_access" {
+  bucket = module.assets_bucket.s3_bucket_id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowCloudFrontServicePrincipalReadOnly"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${module.assets_bucket.s3_bucket_arn}/sites/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.sites.arn
+          }
+        }
+      },
+      {
+        Sid       = "PublicReadGetObject"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${module.assets_bucket.s3_bucket_arn}/*"
+      }
+    ]
+  })
+}
+
 # TODO: replace this with a role-based system for ECS containers
 resource "aws_iam_user" "asset_uploader" {
   name = "${var.cluster_info.name}-${var.cluster_info.environment}-asset-uploader"

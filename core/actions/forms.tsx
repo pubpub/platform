@@ -20,6 +20,7 @@ const map = {
 	[Action.log]: toDynamic("log"),
 	[Action.move]: toDynamic("move"),
 	[Action.createPub]: toDynamic("createPub"),
+	[Action.buildSite]: toDynamic("buildSite"),
 }
 
 export function getActionFormComponent(action: Action): ComponentType<{}> {

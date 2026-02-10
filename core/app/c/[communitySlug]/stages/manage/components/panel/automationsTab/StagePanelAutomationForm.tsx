@@ -410,34 +410,38 @@ const ResolverFieldSection = memo(
 				control={props.form.control}
 				name="resolver"
 				render={({ field, fieldState }) => (
-					<div>
+					<div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800 dark:bg-amber-950/20">
 						<div className="mb-2 flex items-center justify-between">
 							<div className="flex items-center gap-2">
 								<Tooltip delayDuration={300}>
 									<TooltipTrigger asChild>
-										<span className="cursor-help rounded bg-amber-100 px-1.5 py-0.5 font-medium text-amber-800 text-xs">
+										<span className="cursor-help rounded bg-amber-100 px-1.5 py-0.5 font-medium text-amber-800 text-xs dark:bg-amber-900 dark:text-amber-200">
 											Resolver
 										</span>
 									</TooltipTrigger>
 									<TooltipContent className="max-w-sm text-xs">
 										<p>
-											A JSONata expression to resolve a different Pub or
-											transform JSON input before actions run.
+											Find a different Pub or transform JSON input before
+											actions run.
 										</p>
 										<p className="mt-2">
-											<strong>Query:</strong>{" "}
-											<code className="text-xs">
-												{"$.pub.values.externalId = {{ $.json.body.id }}"}
-											</code>
+											<strong>Find Pub:</strong> Use{" "}
+											<code className="rounded bg-muted px-1 text-xs">
+												{"{{ $.json.* }}"}
+											</code>{" "}
+											to reference values from the incoming JSON
 										</p>
 										<p className="mt-1">
 											<strong>Transform:</strong>{" "}
-											<code className="text-xs">
-												{'{ "title": $.json.body.name }'}
+											<code className="rounded bg-muted px-1 text-xs">
+												{'{ "key": $.json.value }'}
 											</code>
 										</p>
 									</TooltipContent>
 								</Tooltip>
+								<span className="text-amber-700 text-xs dark:text-amber-300">
+									Find a pub or transform input
+								</span>
 							</div>
 							<Button
 								type="button"
@@ -454,10 +458,17 @@ const ResolverFieldSection = memo(
 							value={field.value ?? ""}
 							placeholder="$.pub.values.externalId = {{ $.json.body.articleId }}"
 							className={cn(
-								"min-h-[60px] border-amber-300 bg-white font-mono text-sm focus:border-amber-400 focus-visible:ring-amber-400 dark:bg-input/30 dark:text-white",
+								"min-h-[80px] border-amber-300 bg-white font-mono text-sm focus:border-amber-400 focus-visible:ring-amber-400 dark:border-amber-700 dark:bg-amber-950/30 dark:text-white",
 								fieldState.invalid && "border-red-300"
 							)}
 						/>
+						<p className="mt-2 text-amber-600 text-xs dark:text-amber-400">
+							Use{" "}
+							<code className="rounded bg-amber-100 px-1 dark:bg-amber-900">
+								{"{{ }}"}
+							</code>{" "}
+							to interpolate values from the automation context
+						</p>
 						{fieldState.error && (
 							<p className="mt-1 text-destructive text-xs">
 								{fieldState.error.message}

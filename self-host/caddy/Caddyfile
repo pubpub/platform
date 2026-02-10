@@ -17,6 +17,21 @@ example.com {
         reverse_proxy site-builder:4000
     }
 
+    # serve static sites from s3/minio
+    # requires caddy built with s3fs module (see Dockerfile.caddy)
+    handle_path /sites/* {
+        root * /sites
+        file_server {
+            fs s3 {
+                bucket {$ASSETS_BUCKET_NAME:assets}
+                region {$S3_REGION:us-east-1}
+                endpoint {$S3_ENDPOINT:http://minio:9000}
+                access_key {$ASSETS_UPLOAD_KEY}
+                secret_key {$ASSETS_UPLOAD_SECRET_KEY}
+            }
+        }
+    }
+
     handle {
         reverse_proxy platform:3000
     }

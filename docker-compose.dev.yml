@@ -67,6 +67,27 @@ services:
         networks:
             - app-network
 
+    # caddy with s3fs for serving static sites from minio
+    caddy-sites:
+        build:
+            context: .
+            dockerfile: Dockerfile.caddy
+        env_file:
+            - path: .env.docker-compose.dev
+              required: true
+        environment:
+            - S3_ENDPOINT=http://minio:9000
+            - S3_REGION=us-east-1
+        volumes:
+            - ./dev.Caddyfile:/etc/caddy/Caddyfile
+        ports:
+            - "8080:8080"
+        networks:
+            - app-network
+        depends_on:
+            minio:
+                condition: service_healthy
+
 networks:
     app-network:
 
