@@ -58,7 +58,7 @@ export default function Home() {
 
 	const handleSent = () => {
 		setPrefill(undefined)
-		fetchNotifications()
+		void fetchNotifications()
 	}
 
 	const receivedCount = notifications.filter((n) => n.direction === "received").length

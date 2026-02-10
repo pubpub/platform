@@ -1,9 +1,10 @@
 "use client"
 
 import type { StoredNotification } from "~/lib/store"
-import { getAvailableResponses, type PayloadTemplateType } from "~/lib/payloads"
 
 import { useState } from "react"
+
+import { getAvailableResponses, type PayloadTemplateType } from "~/lib/payloads"
 
 interface NotificationCardProps {
 	notification: StoredNotification
@@ -27,9 +28,8 @@ export function NotificationCard({ notification, onDelete, onRespond }: Notifica
 		? notification.payload.type
 		: [notification.payload.type]
 
-	const availableResponses = notification.direction === "received"
-		? getAvailableResponses(notification.payload)
-		: []
+	const availableResponses =
+		notification.direction === "received" ? getAvailableResponses(notification.payload) : []
 
 	const getTypeColor = (type: string) => {
 		if (type.includes("Offer")) return "bg-blue-100 text-blue-800"
@@ -134,8 +134,9 @@ export function NotificationCard({ notification, onDelete, onRespond }: Notifica
 					</p>
 
 					{notification.payload.object?.id && (
-						<p className="mt-1 truncate text-sm text-gray-500">
-							Object: <span className="font-mono">{notification.payload.object.id}</span>
+						<p className="mt-1 truncate text-gray-500 text-sm">
+							Object:{" "}
+							<span className="font-mono">{notification.payload.object.id}</span>
 						</p>
 					)}
 
@@ -163,12 +164,13 @@ export function NotificationCard({ notification, onDelete, onRespond }: Notifica
 					{/* Response buttons */}
 					{availableResponses.length > 0 && onRespond && (
 						<div className="mt-3 flex flex-wrap gap-2">
-							<span className="text-xs text-gray-500 self-center">Respond:</span>
+							<span className="self-center text-gray-500 text-xs">Respond:</span>
 							{availableResponses.map((responseType) => (
 								<button
+									type="button"
 									key={responseType}
 									onClick={() => handleRespond(responseType)}
-									className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${getResponseButtonColor(responseType)}`}
+									className={`rounded-md px-2.5 py-1 font-medium text-xs transition-colors ${getResponseButtonColor(responseType)}`}
 								>
 									{responseType}
 								</button>
