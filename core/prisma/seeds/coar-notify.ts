@@ -25,14 +25,13 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 		Published: "dddddddd-dddd-4ddd-dddd-dddddddddd14" as StagesId,
 		// Outbound review request stages (for our Submissions)
 		Submissions: "dddddddd-dddd-4ddd-dddd-dddddddddd17" as StagesId,
-		ReviewRequested: "dddddddd-dddd-4ddd-dddd-dddddddddd11" as StagesId,
 		AwaitingResponse: "dddddddd-dddd-4ddd-dddd-dddddddddd18" as StagesId,
 	}
 
 	const WEBHOOK_PATH = "coar-inbox"
 
 	// Default remote inbox URL - can be changed in UI for testing
-	const REMOTE_INBOX_URL = "http://localhost:4000/api/inbox"
+	const REMOTE_INBOX_URL = "http://localhost:4001/api/inbox"
 
 	return seedCommunity(
 		{
@@ -48,11 +47,13 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 				Payload: { schemaName: CoreSchemaType.String },
 				SourceURL: { schemaName: CoreSchemaType.String },
 				RelatedPub: { schemaName: CoreSchemaType.String, relation: true },
+				Author: { schemaName: CoreSchemaType.MemberId },
 			},
 			pubTypes: {
 				Submission: {
 					Title: { isTitle: true },
 					Content: { isTitle: false },
+					Author: { isTitle: false },
 				},
 				Notification: {
 					Title: { isTitle: true },
@@ -80,12 +81,23 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 					existing: true,
 					role: MemberRole.admin,
 				},
+				joeAuthor: {
+					id: "dddddddd-dddd-4ddd-dddd-dddddddddd02" as UsersId,
+					firstName: "Joe",
+					lastName: "Author",
+					email: "joe-author@pubpub.org",
+					password: "pubpub-joe",
+					role: MemberRole.contributor,
+				},
 			},
 			pubs: [
 				{
 					pubType: "Submission",
 					stage: "Submissions",
-					values: { Title: "Sample Submission for Review" },
+					values: {
+						Title: "Sample Submission for Review",
+						Author: "dddddddd-dddd-4ddd-dddd-dddddddddd02",
+					},
 				},
 			],
 			stages: {
@@ -103,6 +115,17 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 									config: { path: WEBHOOK_PATH },
 								},
 							],
+							// Only process incoming Offer notifications (review requests from external services)
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "'Offer' in $.json.type",
+									},
+								],
+							},
 							actions: [
 								{
 									action: Action.createPub,
@@ -211,13 +234,44 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 				// Entry point for our own submissions that we want to request reviews for
 				Submissions: {
 					id: STAGE_IDS.Submissions,
-					// No automations - this is just an entry/holding stage
-				},
-				// When we request a review from an external service
-				ReviewRequested: {
-					id: STAGE_IDS.ReviewRequested,
 					automations: {
-						"Offer Review": {
+						// Manual action to request a review from a remote repository
+						"Request Review": {
+							icon: {
+								name: "send",
+								color: "#f59e0b",
+							},
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "$.pub.pubType.name = 'Submission'",
+									},
+								],
+							},
+							actions: [
+								{
+									action: Action.move,
+									config: { stage: STAGE_IDS.AwaitingResponse },
+								},
+							],
+						},
+					},
+				},
+				// Waiting for response from external service after requesting a review
+				AwaitingResponse: {
+					id: STAGE_IDS.AwaitingResponse,
+					automations: {
+						// Send the Offer when a submission enters this stage
+						"Send Review Offer": {
 							icon: {
 								name: "send",
 								color: "#f59e0b",
@@ -228,6 +282,16 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 									config: {},
 								},
 							],
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "$.pub.pubType.name = 'Submission'",
+									},
+								],
+							},
 							actions: [
 								{
 									action: Action.http,
@@ -255,21 +319,53 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 												inbox: REMOTE_INBOX_URL,
 												type: "Service",
 											},
+											origin: {
+												id: "{{ $.env.PUBPUB_URL }}/c/{{ $.community.slug }}",
+												inbox: `{{ $.env.PUBPUB_URL }}/api/v0/c/{{ $.community.slug }}/site/webhook/${WEBHOOK_PATH}`,
+												type: "Service",
+											},
 										},
 									},
 								},
+							],
+						},
+						// Process incoming responses (Accept/Reject/Announce) from external services
+						"Process Response": {
+							icon: {
+								name: "mail",
+								color: "#3b82f6",
+							},
+							triggers: [
 								{
-									action: Action.move,
-									config: { stage: STAGE_IDS.AwaitingResponse },
+									event: AutomationEvent.webhook,
+									config: { path: WEBHOOK_PATH },
+								},
+							],
+							// Only process Accept, Reject, or Announce responses (not Offer)
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression:
+											"'Accept' in $.json.type or 'Reject' in $.json.type or 'Announce' in $.json.type",
+									},
+								],
+							},
+							// Resolver finds the Submission pub that matches the inReplyTo field
+							// The inReplyTo will be like "urn:uuid:<pub-id>" from our sent Offer
+							resolver: `{{ $replace($.json.inReplyTo, "http://localhost:3000/c/coar-notify/pub/", "") }} = $.pub.id`,
+							actions: [
+								{
+									action: Action.log,
+									config: {
+										text: "Received response: {{ $.json.type }} for pub {{ $.pub.values.title }} ({{ $.pub.id }})",
+									},
 								},
 							],
 						},
 					},
-				},
-				// Waiting for Accept/Reject response from external service
-				AwaitingResponse: {
-					id: STAGE_IDS.AwaitingResponse,
-					// No automations - we wait for incoming Accept/Reject notifications
 				},
 				Published: {
 					id: STAGE_IDS.Published,
@@ -299,7 +395,7 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 											"type": ["Announce", "coar-notify:ReviewAction"],
 											"id": "urn:uuid:" & $.pub.id,
 											"object": {
-												"id": $.env.PUBPUB_URL & "/c/" & $.community.slug & "/pub/" & $.pub.id,
+												"id": "http://localhost:8080" & $.community.slug & "/reviews/" & $.pub.id,
 												"type": ["Page", "sorg:Review"],
 												"as:inReplyTo": $.pub.out.RelatedPub.values.SourceURL
 											},
@@ -309,6 +405,119 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 												"type": "Service"
 											}
 										} >>>`,
+									},
+								},
+							],
+						},
+						"Build Site": {
+							icon: {
+								name: "globe",
+								color: "#6366f1",
+							},
+							triggers: [
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							condition: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression: "$.pub.pubType.name = 'Review'",
+									},
+								],
+							},
+							actions: [
+								{
+									action: Action.buildSite,
+									config: {
+										css: `:root {
+  --color-bg: #ffffff;
+  --color-text: #1a1a1a;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-accent: #3b82f6;
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  color: var(--color-text);
+  background: var(--color-bg);
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+h1, h2, h3 { line-height: 1.3; margin-bottom: 0.5em; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; color: var(--color-muted); }
+
+.pub-field { margin-bottom: 1.5rem; }
+.pub-field-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  margin-bottom: 0.25rem;
+}
+.pub-field-value { font-size: 1rem; }
+.pub-field-value:empty::after { content: "—"; color: var(--color-muted); }
+
+a { color: var(--color-accent); }
+pre, code { font-family: var(--font-mono); font-size: 0.875rem; }
+pre { background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+
+.review-list { list-style: none; }
+.review-list li { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
+.review-list li:last-child { border-bottom: none; }`,
+										subpath: "reviews",
+										pages: [
+											{
+												// Individual review page - one per Review pub
+												slug: "$.pub.id",
+												// Use all published pubs
+												filter: '$.pub.pubType.name = "Review"',
+												transform: `'<article>' &
+  '<h1>' & $.pub.title & '</h1>' &
+  $join(
+    $map(
+      $filter($keys($.pub.values), function($v){ $not($contains($v, ":")) }),
+      function($v){
+        '<div class="pub-field">' &
+          '<div class="pub-field-label">' & $v & '</div>' &
+          '<div class="pub-field-value">' & 
+            $string($lookup($.pub.values, $v)) & '</div>' &
+        '</div>'
+      }
+    ),
+    ''
+  ) &
+  '<p><a href="/">← Back to all reviews</a></p>' &
+'</article>'`,
+											},
+											{
+												// Index page - lists all published reviews
+												slug: '"/"',
+												filter: '$.pub.pubType.name = "Review"',
+												transform: `'<h1>Published Reviews</h1>' &
+'<ul class="review-list">' &
+  '<li><a href="/coar-notify/reviews/' & $.pub.id & '">' & $.pub.title & '</a></li>' &
+'</ul>'`,
+											},
+										],
+										outputMap: [],
 									},
 								},
 							],
@@ -492,9 +701,6 @@ export async function seedCoarNotify(communityId?: CommunitiesId) {
 				},
 				// Outbound request flow: our submissions requesting external reviews
 				Submissions: {
-					to: ["ReviewRequested"],
-				},
-				ReviewRequested: {
 					to: ["AwaitingResponse"],
 				},
 			},

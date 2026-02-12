@@ -4,17 +4,32 @@ import type { StoredNotification } from "~/lib/store"
 
 import { useState } from "react"
 
+import { getAvailableResponses, type PayloadTemplateType } from "~/lib/payloads"
+
 interface NotificationCardProps {
 	notification: StoredNotification
 	onDelete: () => void
+	onRespond?: (responseType: PayloadTemplateType, prefill: ResponsePrefill) => void
 }
 
-export function NotificationCard({ notification, onDelete }: NotificationCardProps) {
+export interface ResponsePrefill {
+	targetUrl: string
+	templateType: PayloadTemplateType
+	inReplyTo: string
+	inReplyToObjectUrl: string
+	originUrl: string
+	targetServiceUrl: string
+}
+
+export function NotificationCard({ notification, onDelete, onRespond }: NotificationCardProps) {
 	const [isExpanded, setIsExpanded] = useState(false)
 
 	const types = Array.isArray(notification.payload.type)
 		? notification.payload.type
 		: [notification.payload.type]
+
+	const availableResponses =
+		notification.direction === "received" ? getAvailableResponses(notification.payload) : []
 
 	const getTypeColor = (type: string) => {
 		if (type.includes("Offer")) return "bg-blue-100 text-blue-800"
@@ -22,6 +37,13 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 		if (type.includes("Accept")) return "bg-emerald-100 text-emerald-800"
 		if (type.includes("Reject")) return "bg-red-100 text-red-800"
 		return "bg-gray-100 text-gray-800"
+	}
+
+	const getResponseButtonColor = (responseType: string) => {
+		if (responseType === "Accept") return "bg-emerald-600 hover:bg-emerald-700 text-white"
+		if (responseType === "Reject") return "bg-red-600 hover:bg-red-700 text-white"
+		if (responseType.includes("Announce")) return "bg-green-600 hover:bg-green-700 text-white"
+		return "bg-gray-600 hover:bg-gray-700 text-white"
 	}
 
 	const getDirectionBadge = () => {
@@ -73,6 +95,24 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 		)
 	}
 
+	const handleRespond = (responseType: PayloadTemplateType) => {
+		if (!onRespond) return
+
+		const payload = notification.payload
+		const originInbox = payload.origin?.inbox ?? `${payload.origin?.id}/inbox/`
+
+		const prefill: ResponsePrefill = {
+			targetUrl: originInbox,
+			templateType: responseType,
+			inReplyTo: payload.id,
+			inReplyToObjectUrl: payload.object?.id ?? "",
+			originUrl: "http://localhost:4001",
+			targetServiceUrl: payload.origin?.id ?? "",
+		}
+
+		onRespond(responseType, prefill)
+	}
+
 	return (
 		<div className="px-6 py-4 hover:bg-gray-50">
 			<div className="flex items-start justify-between gap-4">
@@ -92,6 +132,13 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 					<p className="mt-2 truncate font-mono text-gray-600 text-sm">
 						{notification.payload.id}
 					</p>
+
+					{notification.payload.object?.id && (
+						<p className="mt-1 truncate text-gray-500 text-sm">
+							Object:{" "}
+							<span className="font-mono">{notification.payload.object.id}</span>
+						</p>
+					)}
 
 					{notification.direction === "sent" && notification.targetUrl && (
 						<p className="mt-1 truncate text-gray-500 text-sm">
@@ -113,6 +160,23 @@ export function NotificationCard({ notification, onDelete }: NotificationCardPro
 					<p className="mt-1 text-gray-400 text-xs">
 						{new Date(notification.timestamp).toLocaleString()}
 					</p>
+
+					{/* Response buttons */}
+					{availableResponses.length > 0 && onRespond && (
+						<div className="mt-3 flex flex-wrap gap-2">
+							<span className="self-center text-gray-500 text-xs">Respond:</span>
+							{availableResponses.map((responseType) => (
+								<button
+									type="button"
+									key={responseType}
+									onClick={() => handleRespond(responseType)}
+									className={`rounded-md px-2.5 py-1 font-medium text-xs transition-colors ${getResponseButtonColor(responseType)}`}
+								>
+									{responseType}
+								</button>
+							))}
+						</div>
+					)}
 				</div>
 
 				<div className="flex items-center gap-2">
