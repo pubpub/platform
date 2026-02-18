@@ -68,6 +68,7 @@ const seed = createSeed({
 			title: { isTitle: true },
 			content: { isTitle: false },
 			relatedpub: { isTitle: false },
+			sourceurl: { isTitle: false },
 		},
 	},
 	stages: {
@@ -121,6 +122,9 @@ const seed = createSeed({
 								formSlug: "review-default-editor",
 								pubValues: {
 									title: "Review for: {{ $.pub.values.title }}",
+									// Copy sourceurl from Notification to Review for use in Announce
+									// TODO: Investigate why relationship traversal ($.pub.out.relatedpub.values.sourceurl) isn't working
+									sourceurl: "{{ $.pub.values.sourceurl }}",
 								},
 								relationConfig: {
 									fieldSlug: `${COMMUNITY_SLUG}:relatedpub`,
@@ -222,7 +226,7 @@ const seed = createSeed({
 									"object": {
 										"id": $.env.PUBPUB_URL & "/c/" & $.community.slug & "/pub/" & $.pub.id,
 										"type": ["Page", "sorg:Review"],
-										"as:inReplyTo": $.pub.out.relatedpub.values.sourceurl
+										"as:inReplyTo": $.pub.values.sourceurl
 									},
 									"target": {
 										"id": "http://stubbed-remote-inbox",
@@ -333,7 +337,7 @@ test.describe("User Story 1 & 2: Review Request & Reception", () => {
 
 		// Verify that a Notification pub was created
 		await page.goto(`/c/${community.community.slug}/activity/automations`)
-		const card = page.getByTestId(/automation-run-card-.*-Process COAR Notification/)
+		const card = page.getByTestId(/automation-run-card-.*-Process COAR Notification/).first()
 		await expect(card).toBeVisible({ timeout: 15000 })
 
 		// The chain of automations should now run:
