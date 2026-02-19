@@ -44,11 +44,16 @@ export class MockPreprintRepo {
 				}
 			})
 
-			this.server.listen(0, () => {
+			// Listen on 0.0.0.0 to accept connections from Docker containers
+			// In CI, the app runs in a Docker container and needs to reach the host
+			this.server.listen(0, "0.0.0.0", () => {
 				const address = this.server?.address()
 				if (address && typeof address === "object") {
 					this.port = address.port
-					this.url = `http://localhost:${this.port}`
+					// In CI (Docker), use host.docker.internal to reach the host from inside containers
+					// Locally, use localhost
+					const hostname = process.env.CI ? "host.docker.internal" : "localhost"
+					this.url = `http://${hostname}:${this.port}`
 					resolve()
 				} else {
 					reject(new Error("Failed to get server address"))

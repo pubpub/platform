@@ -111,6 +111,9 @@ services:
             - 3000:3000
         networks:
             - app-network
+        # Enable host.docker.internal on Linux for mock server access during tests
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
 
     site-builder:
         image: ${SITE_BUILDER_IMAGE}
