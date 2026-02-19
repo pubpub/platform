@@ -185,7 +185,7 @@ const seed = createSeed({
 										name: "{{ $.community.name }}",
 									},
 									object: {
-										id: "{{ $.env.PUBPUB_URL }}/c/{{ $.community.slug }}/pub/{{ $.pub.id }}",
+										id: "{{ $.env.PUBPUB_URL }}/c/{{ $.community.slug }}/pubs/{{ $.pub.id }}",
 										type: ["Page", "sorg:AboutPage"],
 									},
 									target: {
@@ -224,7 +224,7 @@ const seed = createSeed({
 									"type": ["Announce", "coar-notify:ReviewAction"],
 									"id": "urn:uuid:" & $.pub.id,
 									"object": {
-										"id": $.env.PUBPUB_URL & "/c/" & $.community.slug & "/pub/" & $.pub.id,
+										"id": $.env.PUBPUB_URL & "/c/" & $.community.slug & "/pubs/" & $.pub.id,
 										"type": ["Page", "sorg:Review"],
 										"as:inReplyTo": $.pub.values.sourceurl
 									},
@@ -416,12 +416,22 @@ test.describe("User Story 3: Review Group Requests Ingestion By Aggregator", () 
 			.poll(() => mockPreprintRepo.getReceivedNotifications().length, { timeout: 15000 })
 			.toBeGreaterThan(0)
 
-		const announce = mockPreprintRepo
+		const announces = mockPreprintRepo
 			.getReceivedNotifications()
-			.find((n) =>
+			.filter((n) =>
 				Array.isArray(n.type) ? n.type.includes("Announce") : n.type === "Announce"
 			)
+
+		expect(announces.length).toBe(1)
+
+		const announce = announces[0]
+
 		expect(announce).toBeDefined()
+		expect(announce.type).toMatchObject(["Announce", "coar-notify:ReviewAction"])
+		expect(announce.object.id).toMatch(
+			`http://localhost:3000/c/${community.community.slug}/pubs/`
+		)
+		expect(announce.object.type).toMatchObject(["Page", "sorg:Review"])
 	})
 })
 
@@ -446,7 +456,11 @@ test.describe("User Story 4: Review Group Aggregation Announcement to Repositori
 
 		// Verify Notification pub creation
 		await page.goto(`/c/${community.community.slug}/stages`)
-		await expect(page.getByText("URL: ", { exact: false }).first()).toBeVisible({
+		await expect(
+			page
+				.getByText("URL: https://review-group.org/review/review-123", { exact: false })
+				.first()
+		).toBeVisible({
 			timeout: 15000,
 		})
 	})
