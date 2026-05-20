@@ -50,7 +50,9 @@ jobs:
             SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
     create-release:
-        needs: validate-tag
+        needs:
+            - validate-tag
+            - build-all
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -73,7 +75,6 @@ jobs:
         needs:
             - validate-tag
             - build-all
-        if: needs.validate-tag.outputs.prerelease == 'false'
         permissions:
             contents: read
         uses: ./.github/workflows/deploy-stack.yml

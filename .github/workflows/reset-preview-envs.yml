@@ -45,23 +45,85 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Find open PRs with preview label
+      - name: Find open PRs with deployable images
         id: find
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          previews=$(gh pr list --label preview --state open --json number,headRefOid --jq '[.[] | {number: .number, sha: .headRefOid}]')
-          count=$(echo "$previews" | jq length)
+          prs=$(gh pr list --label preview --state open --json number,headRefOid,headRefName)
+          count=$(echo "$prs" | jq length)
 
-          echo "found $count active preview(s)"
+          echo "found $count PR(s) with preview label"
 
           if [ "$count" -eq 0 ]; then
-              echo "has_previews=false" >> "$GITHUB_OUTPUT"
-              echo "matrix={\"include\":[]}" >> "$GITHUB_OUTPUT"
+            echo "has_previews=false" >> "$GITHUB_OUTPUT"
+            echo "matrix={\"include\":[]}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          REGISTRY_TOKEN=$(curl -s \
+            -u "x-access-token:${GH_TOKEN}" \
+            "https://ghcr.io/token?scope=repository:knowledgefutures/platform:pull&service=ghcr.io" \
+            | jq -r '.token')
+
+          image_exists() {
+            local tag="$1"
+            local status
+            status=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $REGISTRY_TOKEN" \
+              -H "Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.docker.distribution.manifest.list.v2+json" \
+              "https://ghcr.io/v2/knowledgefutures/platform/manifests/${tag}")
+            [ "$status" = "200" ]
+          }
+
+          results="[]"
+
+          for row in $(echo "$prs" | jq -r '.[] | @base64'); do
+            pr=$(echo "$row" | base64 -d)
+            pr_number=$(echo "$pr" | jq -r '.number')
+            head_sha=$(echo "$pr" | jq -r '.headRefOid')
+            branch=$(echo "$pr" | jq -r '.headRefName')
+
+            if image_exists "$head_sha"; then
+              echo "PR #${pr_number}: image exists for HEAD ($head_sha)"
+              results=$(echo "$results" | jq --arg n "$pr_number" --arg s "$head_sha" \
+                '. + [{"pr_number": ($n|tonumber), "sha": $s}]')
+              continue
+            fi
+
+            echo "PR #${pr_number}: no image for HEAD ($head_sha), searching previous builds..."
+
+            found_sha=""
+            run_ids=$(gh api "/repos/${{ github.repository }}/actions/workflows/on_pr.yml/runs?event=pull_request&branch=${branch}&per_page=10" \
+              --jq '[.workflow_runs[].id] | .[]' 2>/dev/null || echo "")
+
+            for run_id in $run_ids; do
+              build_ok=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}/jobs" \
+                --jq '[.jobs[] | select(.name | startswith("build-all")) | .conclusion] | if length > 0 and all(. == "success") then "yes" else "no" end' 2>/dev/null || echo "no")
+
+              if [ "$build_ok" = "yes" ]; then
+                found_sha=$(gh api "/repos/${{ github.repository }}/actions/runs/${run_id}" --jq '.head_sha')
+                echo "PR #${pr_number}: found built image at $found_sha (run $run_id)"
+                break
+              fi
+            done
+
+            if [ -n "$found_sha" ]; then
+              results=$(echo "$results" | jq --arg n "$pr_number" --arg s "$found_sha" \
+                '. + [{"pr_number": ($n|tonumber), "sha": $s}]')
+            else
+              echo "::warning::PR #${pr_number}: no deployable image found, skipping"
+            fi
+          done
+
+          count=$(echo "$results" | jq length)
+
+          if [ "$count" -eq 0 ]; then
+            echo "has_previews=false" >> "$GITHUB_OUTPUT"
+            echo "matrix={\"include\":[]}" >> "$GITHUB_OUTPUT"
           else
-              echo "has_previews=true" >> "$GITHUB_OUTPUT"
-              matrix=$(echo "$previews" | jq -c '{include: [.[] | {pr_number: .number, sha: .headRefOid}]}')
-              echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+            echo "has_previews=true" >> "$GITHUB_OUTPUT"
+            echo "matrix=$(echo "$results" | jq -c '{include: .}')" >> "$GITHUB_OUTPUT"
           fi
 
   reset-previews:
