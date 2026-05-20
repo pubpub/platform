@@ -60,7 +60,7 @@ jobs:
               echo "matrix={\"include\":[]}" >> "$GITHUB_OUTPUT"
           else
               echo "has_previews=true" >> "$GITHUB_OUTPUT"
-              matrix=$(echo "$previews" | jq -c '{include: [.[] | {pr_number: .number, sha: .headRefOid}]}')
+              matrix=$(echo "$previews" | jq -c '{include: [.[] | {pr_number: .number, sha: .sha}]}')
               echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           fi
 

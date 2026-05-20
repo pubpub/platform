@@ -75,7 +75,6 @@ jobs:
         needs:
             - validate-tag
             - build-all
-        if: needs.validate-tag.outputs.prerelease == 'false'
         permissions:
             contents: read
         uses: ./.github/workflows/deploy-stack.yml
