@@ -15,6 +15,23 @@
     }
 }
 
+# cannot be handled by simple redirects at eg cloudflare level
+# would strip credentials
+app.pubpub.org {
+    encode gzip
+
+    handle /api/* {
+        reverse_proxy platform:3000 {
+            # present the canonical hostname to the app
+            header_up Host {$PUBSTAR_HOSTNAME}
+        }
+    }
+
+    handle {
+        redir https://{$PUBSTAR_HOSTNAME}{uri} 301
+    }
+}
+
 :80 {
     respond "OK" 200
 }
