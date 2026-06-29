@@ -100,8 +100,10 @@ jobs:
                     ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
                     chmod 600 ~/.ssh/known_hosts
 
+
                     if [[ ! -d "${APP_DIR}/.git" ]]; then
-                      mkdir -p "${APP_DIR}"
+                      sudo mkdir -p "${APP_DIR}"
+                      sudo chown -R "$USER:$USER" "${APP_DIR}"
                       git clone --branch "${BRANCH}" "${REPO_SSH}" "${APP_DIR}"
                     fi
 
