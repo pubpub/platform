@@ -101,6 +101,13 @@ jobs:
                     ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
                     chmod 600 ~/.ssh/known_hosts
 
+                    if [[ ! -d "/home/deploy/.kube/config" ]]; then
+                      sudo mkdir -p /home/deploy/.kube
+                      sudo cp /etc/rancher/k3s/k3s.yaml /home/deploy/.kube/config
+                      sudo chown -R deploy:deploy /home/deploy/.kube
+                      sudo chmod 600 /home/deploy/.kube/config
+                    fi
+
 
                     if [[ ! -d "${APP_DIR}/.git" ]]; then
                       sudo mkdir -p "${APP_DIR}"
@@ -108,7 +115,7 @@ jobs:
                       git clone --branch "${BRANCH}" "${REPO_SSH}" "${APP_DIR}"
                     fi
 
-                    cd "${APP_DIR}"
+                    cd "${APP_DIR}
                     git fetch --prune --tags origin
                     git checkout --detach "origin/${BRANCH}"
 
