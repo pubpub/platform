@@ -82,6 +82,7 @@ jobs:
                   ssh "${SSH_USER}@${SSH_HOST}" \
                     "env GHCR_USER='${GHCR_USER}' GHCR_TOKEN='${GHCR_TOKEN}' IMAGE_TAG='${IMAGE_TAG}' NAMESPACE='${NAMESPACE}' ENV_FILE='${ENV_FILE}' OVERLAY='${OVERLAY}' PR_NUMBER='${PR_NUMBER}' bash -s -- '${REPO}' '${BRANCH}'" <<'EOS'
                     set -euo pipefail
+                    export KUBECONFIG="${HOME}/.kube/config"
 
                     REPO="${1:?missing repo}"
                     BRANCH="${2:-main}"
@@ -192,6 +193,7 @@ jobs:
                   ssh "${SSH_USER}@${SSH_HOST}" \
                     "env NAMESPACE='${NAMESPACE}' bash -s" <<'EOS'
                     set -euo pipefail
+                    export KUBECONFIG="${HOME}/.kube/config"
                     : "${NAMESPACE:?missing NAMESPACE}"
 
                     echo "tearing down namespace $NAMESPACE"
