@@ -115,7 +115,7 @@ jobs:
                       git clone --branch "${BRANCH}" "${REPO_SSH}" "${APP_DIR}"
                     fi
 
-                    cd "${APP_DIR}
+                    cd "${APP_DIR}"
                     git fetch --prune --tags origin
                     git checkout --detach "origin/${BRANCH}"
 
