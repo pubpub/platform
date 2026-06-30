@@ -153,21 +153,10 @@ jobs:
                     # build and apply manifests
                     cd k8s/overlays/"$OVERLAY"
 
-                    if [[ "$OVERLAY" == "preview" ]]; then
-                      kustomize build . \
-                        | sed "s/__PR_NUMBER__/${PR_NUMBER}/g" \
-                        | sed "s/newTag: IMAGE_TAG/newTag: ${IMAGE_TAG}/g" \
-                        | sed "s/image: \(ghcr\.io\/knowledgefutures\/[^:]*\):IMAGE_TAG/image: \1:${IMAGE_TAG}/g" \
-                        | kubectl apply -n "$NAMESPACE" -f -
-                    else
-                      kustomize edit set image \
-                        "ghcr.io/knowledgefutures/platform:${IMAGE_TAG}" \
-                        "ghcr.io/knowledgefutures/platform-jobs:${IMAGE_TAG}" \
-                        "ghcr.io/knowledgefutures/platform-site-builder:${IMAGE_TAG}" \
-                        "ghcr.io/knowledgefutures/mock-coar-notify-server:${IMAGE_TAG}"
-                      kustomize build . | kubectl apply -n "$NAMESPACE" -f -
-                      git checkout -- kustomization.yaml 2>/dev/null || true
-                    fi
+                    kubectl kustomize . \
+                      | sed "s/__PR_NUMBER__/${PR_NUMBER:-0}/g" \
+                      | sed "s/:IMAGE_TAG/:${IMAGE_TAG}/g" \
+                      | kubectl apply -n "$NAMESPACE" -f -
 
                     echo "waiting for core deployment rollout..."
                     kubectl rollout status deployment/core -n "$NAMESPACE" --timeout=600s
